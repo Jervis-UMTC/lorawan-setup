@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Weekly Standup: Smart Agriculture IoT & Technical Realizations</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #090d16;
+      --card-bg: #131c2e;
+      --card-inner: rgba(255, 255, 255, 0.035);
+      --border: #23324d;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent-blue: #38bdf8;
+      --accent-green: #34d399;
+      --accent-amber: #fbbf24;
+      --font: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font);
+      background-color: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .container {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      position: relative;
+    }
+
+    .slide {
+      position: absolute;
+      width: 95%;
+      max-width: 1440px;
+      height: 85vh;
+      max-height: 820px;
+      min-height: 600px;
+      padding: 2.5rem 3.5rem;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1), transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      transform: translateY(12px);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+      overflow: hidden;
+    }
+
+    .slide.active {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+
+    .slide-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 1rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .doc-tag {
+      font-size: clamp(0.8rem, 0.9vw, 0.95rem);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--accent-blue);
+      background: rgba(56, 189, 248, 0.1);
+      padding: 0.35rem 0.85rem;
+      border-radius: 6px;
+      border: 1px solid rgba(56, 189, 248, 0.2);
+    }
+
+    .slide-num {
+      font-size: clamp(0.9rem, 1vw, 1.05rem);
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    h1 {
+      font-size: clamp(2.75rem, 4vw, 4.25rem);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      color: var(--text);
+      line-height: 1.15;
+      margin-bottom: 0.85rem;
+    }
+
+    h2 {
+      font-size: clamp(1.8rem, 2.4vw, 2.4rem);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--text);
+      line-height: 1.2;
+      margin-bottom: 0.4rem;
+    }
+
+    .subtitle {
+      font-size: clamp(1.05rem, 1.3vw, 1.25rem);
+      color: var(--text-muted);
+      margin-bottom: 1.25rem;
+      line-height: 1.5;
+      font-weight: 400;
+    }
+
+    .grid-2 {
+      display: grid !important;
+      grid-template-columns: 1fr 1fr !important;
+      gap: 1.5rem;
+      flex: 1;
+      align-items: stretch;
+      min-height: 0;
+    }
+
+    .panel {
+      background: var(--card-inner);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.5rem 1.75rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+      min-height: 0;
+    }
+
+    .panel-blue {
+      border-color: rgba(56, 189, 248, 0.3);
+      background: rgba(56, 189, 248, 0.035);
+    }
+
+    .panel-green {
+      border-color: rgba(52, 211, 153, 0.3);
+      background: rgba(52, 211, 153, 0.035);
+    }
+
+    .panel-amber {
+      border-color: rgba(251, 191, 36, 0.3);
+      background: rgba(251, 191, 36, 0.035);
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      font-size: clamp(1.15rem, 1.4vw, 1.35rem);
+      font-weight: 700;
+    }
+
+    .panel-body {
+      font-size: clamp(0.98rem, 1.15vw, 1.15rem);
+      color: #cbd5e1;
+      line-height: 1.6;
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+    }
+
+    .panel-body p {
+      margin: 0;
+    }
+
+    .tech-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      background: rgba(255, 255, 255, 0.07);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 8px;
+      padding: 0.35rem 0.75rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #e2e8f0;
+      white-space: nowrap;
+    }
+
+    .tech-logo-img {
+      height: 28px;
+      width: auto;
+      max-width: 140px;
+      object-fit: contain;
+      display: block;
+      filter: drop-shadow(0 1px 2px rgba(0,0,0,0.3));
+    }
+
+    .tech-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.75rem;
+      margin-top: 1.25rem;
+    }
+
+    .highlight {
+      color: var(--accent-green);
+      font-weight: 600;
+    }
+
+    .highlight-blue {
+      color: var(--accent-blue);
+      font-weight: 600;
+    }
+
+    .highlight-amber {
+      color: var(--accent-amber);
+      font-weight: 600;
+    }
+
+    .slide-footer {
+      border-top: 1px solid var(--border);
+      padding-top: 1rem;
+      margin-top: 1rem;
+      font-size: clamp(0.85rem, 1vw, 0.95rem);
+      color: var(--text-muted);
+      display: flex;
+      justify-content: space-between;
+      font-weight: 500;
+    }
+
+    .progress {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 4px;
+      background: linear-gradient(90deg, var(--accent-blue), var(--accent-green));
+      transition: width 0.25s ease;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="progress" id="progress"></div>
+
+  <div class="container">
+
+    <!-- Slide 1 -->
+    <div class="slide active" data-slide="1">
+      <div class="slide-header">
+        <span class="doc-tag">Weekly Progress Update</span>
+        <span class="slide-num">01 / 10</span>
+      </div>
+
+      <div style="margin: auto 0;">
+        <h1>Weekly Standup</h1>
+        <p class="subtitle" style="font-size: clamp(1.3rem, 1.7vw, 1.6rem); max-width: 950px;">Local Setup Progress, Technical Discoveries & Real-World Agricultural Ideas</p>
+        
+        <div class="tech-row">
+          <span class="tech-pill">
+            <img src="LoRaWAN_Logo.svg.webp" class="tech-logo-img" alt="LoRaWAN">
+          </span>
+          <span class="tech-pill">
+            <img src="chirpstack.png" class="tech-logo-img" alt="ChirpStack">
+          </span>
+          <span class="tech-pill">
+            <img src="Postgresql_elephant.svg" class="tech-logo-img" alt="PostgreSQL">
+          </span>
+          <span class="tech-pill">
+            <img src="grafana.webp" class="tech-logo-img" alt="Grafana">
+          </span>
+          <span class="tech-pill">
+            <img src="node-red-icon.svg" class="tech-logo-img" alt="Node-RED"> Node-RED
+          </span>
+          <span class="tech-pill">
+            <img src="Raspberry-Pi-Logo-2012.png" class="tech-logo-img" alt="Raspberry Pi 4">
+          </span>
+          <span class="tech-pill">
+            <img src="hyperledgerfabric.png" class="tech-logo-img" alt="Hyperledger">
+          </span>
+        </div>
+      </div>
+
+      <div class="slide-footer">
+        <span>Jervis James Pedotim - Intern</span>
+      </div>
+    </div>
+
+    <!-- Slide 2: The Agricultural Data Gap -->
+    <div class="slide" data-slide="2">
+      <div class="slide-header">
+        <span class="doc-tag">Problem Statement</span>
+        <span class="slide-num">02 / 10</span>
+      </div>
+
+      <h2>The Agricultural Field Data Gap</h2>
+      <p class="subtitle">Why traditional farm monitoring methods fail to deliver real-time field visibility.</p>
+
+      <div class="grid-2">
+        <div class="panel panel-blue">
+          <div class="panel-header" style="color: var(--accent-blue);">
+            <span>The Limits of Standard Weather Stations</span>
+          </div>
+          <div class="panel-body">
+            <p>• Regional weather stations only measure ambient air on elevated towers miles away.</p>
+            <p>• They completely miss localized canopy microclimates, greenhouse humidity pockets, and low-lying frost valleys where crops actually live and grow.</p>
+          </div>
+        </div>
+
+        <div class="panel panel-amber">
+          <div class="panel-header" style="color: var(--accent-amber);">
+            <span>High Costs & Commercial Vendor Lock-In</span>
+            <span class="tech-pill">Cellular SIM</span>
+          </div>
+          <div class="panel-body">
+            <p>• Proprietary commercial farm sensors require expensive per-device SIM subscriptions ($5–$10/month per node).</p>
+            <p>• Commercial vendors often lock farm data behind proprietary cloud paywalls, making wide-scale deployment cost-prohibitive for large properties.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="slide-footer">
+        <span>Context: Why traditional farm monitoring falls short</span>
+      </div>
+    </div>
+
+    <!-- Slide 3: Wireless Architecture -->
+    <div class="slide" data-slide="3">
+      <div class="slide-header">
+        <span class="doc-tag">Wireless Architecture</span>
+        <span class="slide-num">03 / 10</span>
+      </div>
+
+      <h2>Long-Range, Zero-Subscription Field Coverage</h2>
+      <p class="subtitle">Establishing a private, low-cost LoRaWAN wireless network across farm terrain.</p>
+
+      <div class="grid-2">
+        <div class="panel panel-blue">
+          <div class="panel-header" style="color: var(--accent-blue);">
+            <span>Multi-Kilometer Canopy Penetration</span>
+            <span class="tech-pill"><img src="LoRaWAN_Logo.svg.webp" class="tech-logo-img" alt="LoRaWAN"></span>
+          </div>
+          <div class="panel-body">
+            <p>• Long-range LoRaWAN radio signals travel 5 to 15 kilometers across farm terrain.</p>
+            <p>• Low-frequency radio signals easily pass through dense crop foliage, tree lines, and greenhouse structures where higher-frequency Wi-Fi drops within 50 meters.</p>
+          </div>
+        </div>
+
+        <div class="panel panel-green">
+          <div class="panel-header" style="color: var(--accent-green);">
+            <span>Zero Monthly Data Fees & Complete Privacy</span>
+          </div>
+          <div class="panel-body">
+            <p>• One central base station gateway manages hundreds of field sensors for <span class="highlight">$0 monthly data fees</span>.</p>
+            <p>• Keeps operating expenses minimal while securing 100% data ownership without relying on third-party cloud vendors.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="slide-footer">
+        <span>Core Value Proposition</span>
+      </div>
+    </div>
+
+    <!-- Slide 4: Microclimate Intelligence -->
+    <div class="slide" data-slide="4">
+      <div class="slide-header">
+        <span class="doc-tag">ChirpStack Core Server</span>
+        <span class="slide-num">04 / 10</span>
+      </div>
+
+      <h2>Macro vs. Microclimate Intelligence</h2>
+      <p class="subtitle">Moving from general weather forecasts to canopy-level crop protection with ChirpStack.</p>
+
+      <div class="grid-2">
+        <div class="panel panel-blue">
+          <div class="panel-header" style="color: var(--accent-blue);">
+            <span>What I Explored in My Local Setup</span>
+            <span class="tech-pill"><img src="chirpstack.png" class="tech-logo-img" alt="ChirpStack"></span>
+          </div>
+          <div class="panel-body">
+            <p>I configured our central ChirpStack network server locally in our lab environment to process multi-sensor data streams.</p>
+            <p>As I set up the decoders, I realized how dense, ultra-low-power sensor arrays can capture micro-variations across different crop zones instead of relying on a single weather station.</p>
+          </div>
+        </div>
+
+        <div class="panel panel-green">
+          <div class="panel-header" style="color: var(--accent-green);">
+            <span>Real-World Impact: Disease Prevention</span>
+          </div>
+          <div class="panel-body">
+            <p>• <strong>Early Disease Modeling:</strong> Fungal blights and crop diseases thrive in localized humidity pockets inside crop canopies long before regional humidity changes.</p>
+            <p>• <strong>Targeted Protection:</strong> Continuous canopy tracking lets agronomists predict disease risks days early and apply targeted crop protection only where needed.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="slide-footer">
+        <span>Weekly Standup Presentation</span>
+      </div>
+    </div>
+
+    <!-- Slide 5: Field-Resilient Gateway -->
+    <div class="slide" data-slide="5">
+      <div class="slide-header">
+        <span class="doc-tag">Offline Access Point Mode</span>
+        <span class="slide-num">05 / 10</span>
+      </div>
+
+      <h2>Surviving Internet Dead Zones</h2>
+      <p class="subtitle">Ensuring farm operations never halt when cloud connections drop.</p>
+
+      <div class="grid-2">
+        <div class="panel panel-blue">
+          <div class="panel-header" style="color: var(--accent-blue);">
+            <span>What I Configured & Tested Locally</span>
+            <span class="tech-pill"><img src="LoRaWAN_Logo.svg.webp" class="tech-logo-img" alt="LoRaWAN AP"> AP Mode</span>
+          </div>
+          <div class="panel-body">
+            <p>I configured our gateway to broadcast its own local Wi-Fi Access Point and set up direct network routing on our server VM.</p>
+            <p>I created simple one-click controls to toggle smoothly between local gateway mode and internet mode during local testing.</p>
+          </div>
+        </div>
+
+        <div class="panel panel-green">
+          <div class="panel-header" style="color: var(--accent-green);">
+            <span>Real-World Impact: Remote Field Resilience</span>
+          </div>
+          <div class="panel-body">
+            <p>• <strong>Zero Cloud Reliance:</strong> Remote farmland frequently suffers from zero cellular coverage. Local edge processing ensures zero data loss during internet outages.</p>
+            <p>• <strong>On-Site Field Diagnostics:</strong> Enables technicians walking into disconnected fields to connect their tablets directly to the gateway's local Wi-Fi to inspect live crop health on-site.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="slide-footer">
+        <span>Weekly Standup Presentation</span>
+      </div>
+    </div>
+
+    <!-- Slide 6: Data Sovereignty -->
+    <div class="slide" data-slide="6">
+      <div class="slide-header">
+        <span class="doc-tag">PostgreSQL & Grafana</span>
+        <span class="slide-num">06 / 10</span>
+      </div>
+
+      <h2>Data Sovereignty & Visual Farm Scoreboards</h2>
+      <p class="subtitle">Storing readings safely in PostgreSQL and turning data into clear Grafana scoreboards.</p>
+
+      <div class="grid-2">
+        <div class="panel panel-blue">
+          <div class="panel-header" style="color: var(--accent-blue);">
+            <span>What I Configured & Tested Locally</span>
+            <div>
+              <span class="tech-pill"><img src="Postgresql_elephant.svg" class="tech-logo-img" alt="PostgreSQL"></span>
+              <span class="tech-pill"><img src="grafana.webp" class="tech-logo-img" alt="Grafana"></span>
+            </div>
+          </div>
+          <div class="panel-body">
+            <p>I connected a local PostgreSQL database to record sensor uploads and built visual Grafana scoreboards with color-coded gauges and trend graphs.</p>
+            <p>Storing data locally in a flexible format allows us to add new types of sensors in the future without changing our database setup.</p>
+          </div>
+        </div>
+
+        <div class="panel panel-green">
+          <div class="panel-header" style="color: var(--accent-green);">
+            <span>Real-World Impact: Data Sovereignty</span>
+          </div>
+          <div class="panel-body">
+            <p>• <strong>100% Data Sovereignty:</strong> All farm history remains stored on our own equipment—no third-party cloud vendors locking our farm data behind subscription paywalls.</p>
+            <p>• <strong>Data-Driven Decisions:</strong> Replaces manual field check trips with clear visual screens (soil moisture, temperature, humidity) and lets managers compare trends across crop seasons.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="slide-footer">
+        <span>Weekly Standup Presentation</span>
+      </div>
+    </div>
+
+    <!-- Slide 7: Automated Hazard Defense -->
+    <div class="slide" data-slide="7">
+      <div class="slide-header">
+        <span class="doc-tag">Node-RED Automation</span>
+        <span class="slide-num">07 / 10</span>
+      </div>
+
+      <h2>An Automated 24/7 Digital Farm Watchman</h2>
+      <p class="subtitle">Bridging field data directly to automated physical hazard protection using Node-RED.</p>
+
+      <div class="grid-2">
+        <div class="panel panel-blue">
+          <div class="panel-header" style="color: var(--accent-blue);">
+            <span>What I Configured & Tested Locally</span>
+            <span class="tech-pill"><img src="node-red-icon.svg" class="tech-logo-img" alt="Node-RED"> Node-RED</span>
+          </div>
+          <div class="panel-body">
+            <p>I wired automated logic rules in Node-RED using our local test environment to monitor live sensor streams against safety limits.</p>
+            <p>This showed me how raw sensor numbers can be processed in milliseconds to drive automated actions instead of waiting for a human operator to log into a dashboard.</p>
+          </div>
+        </div>
+
+        <div class="panel panel-green">
+          <div class="panel-header" style="color: var(--accent-green);">
+            <span>Real-World Impact: Proactive Defense</span>
+          </div>
+          <div class="panel-body">
+            <p>• <strong>Instant Hazard Warnings:</strong> System acts like an automated 24/7 watchman—immediately sending an SMS alert to farm managers if temperatures drop toward freezing or if soil gets dangerously dry.</p>
+            <p>• <strong>Automated Response:</strong> Can directly activate automated irrigation valves during emergencies, eliminating human delay and protecting crops before damage occurs.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="slide-footer">
+        <span>Weekly Standup Presentation</span>
+      </div>
+    </div>
+
+    <!-- Slide 8: Soil NPK Sensing -->
+    <div class="slide" data-slide="8">
+      <div class="slide-header">
+        <span class="doc-tag">Soil NPK Sensing</span>
+        <span class="slide-num">08 / 10</span>
+      </div>
+
+      <h2>Real-Time Soil NPK Nutrient Intelligence</h2>
+      <p class="subtitle">Replacing slow off-site lab testing with live root-zone soil monitoring using RAKwireless sensors.</p>
+
+      <div class="grid-2">
+        <div class="panel panel-amber">
+          <div class="panel-header" style="color: var(--accent-amber);">
+            <span>The Traditional Soil Testing Problem</span>
+          </div>
+          <div class="panel-body">
+            <p>• Standard soil testing requires taking manual soil core samples, mailing them to off-site labs, and waiting 2–3 weeks for lab results.</p>
+            <p>• By the time results arrive, soil conditions have shifted, leading to blind over-fertilization, high fertilizer expenses, and chemical runoff.</p>
+          </div>
+        </div>
+
+        <div class="panel panel-green">
+          <div class="panel-header" style="color: var(--accent-green);">
+            <span>RAKwireless Soil NPK Sensing & ROI</span>
+            <span class="tech-pill">RAKwireless NPK Sensor</span>
+          </div>
+          <div class="panel-body">
+            <p>• <strong>Live Nutrient Tracking:</strong> Integrating the industrial <strong>RAKwireless RS485 Soil NPK Sensor</strong> allows measuring <span class="highlight-amber">Nitrogen (N), Phosphorus (P), and Potassium (K)</span> directly in root soil in real time.</p>
+            <p>• <strong>Direct Cost Savings:</strong> Allows applying fertilizer only when and where crops actually need it—reducing fertilizer expenses, boosting crop yield, and protecting long-term soil health.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="slide-footer">
+        <span>Weekly Standup Presentation</span>
+      </div>
+    </div>
+
+    <!-- Slide 9: Hardware & Blockchain Roadmap -->
+    <div class="slide" data-slide="9">
+      <div class="slide-header">
+        <span class="doc-tag">Hardware & Blockchain Roadmap</span>
+        <span class="slide-num">09 / 10</span>
+      </div>
+
+      <h2>Next Phase: Prototyping & Blockchain Integrity</h2>
+      <p class="subtitle">Building RAKwireless WisBlock nodes and logging telemetry to a private Hyperledger blockchain.</p>
+
+      <div class="grid-2">
+        <div class="panel panel-blue">
+          <div class="panel-header" style="color: var(--accent-blue);">
+            <span>What I Plan to Build & Experiment</span>
+            <div>
+              <span class="tech-pill"><img src="Raspberry-Pi-Logo-2012.png" class="tech-logo-img" alt="Raspberry Pi 4"></span>
+              <span class="tech-pill"><img src="hyperledgerfabric.png" class="tech-logo-img" alt="Hyperledger"></span>
+            </div>
+          </div>
+          <div class="panel-body">
+            <p>For our next phase, I will assemble modular <strong>RAKwireless WisBlock</strong> solar sensor nodes (RAK4631 MCU + RAK19007 baseboard) and build a custom base station gateway using a Raspberry Pi 4 with an outdoor antenna (RAK5146 concentrator card).</p>
+            <p>I will test the <strong>RAKwireless Soil NPK Sensor</strong> and explore uploading telemetry logs to a private <strong>Hyperledger Fabric</strong> blockchain network.</p>
+          </div>
+        </div>
+
+        <div class="panel panel-green">
+          <div class="panel-header" style="color: var(--accent-green);">
+            <span>Real-World Impact: Hyperledger Traceability</span>
+          </div>
+          <div class="panel-body">
+            <p>• <strong>Immutable Crop History:</strong> Uploading telemetry to a Hyperledger Fabric blockchain creates tamper-proof records of soil nutrients, microclimate history, and irrigation events.</p>
+            <p>• <strong>Premium Certification:</strong> Provides food distributors and auditors with verifiable proof of sustainable farming for organic certification and supply chain transparency.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="slide-footer">
+        <span>Weekly Standup Presentation</span>
+      </div>
+    </div>
+
+    <!-- Slide 10: Summary & Next Steps -->
+    <div class="slide" data-slide="10">
+      <div class="slide-header">
+        <span class="doc-tag">Summary & Next Steps</span>
+        <span class="slide-num">10 / 10</span>
+      </div>
+
+      <h2>Summary & My Internship Takeaways</h2>
+      <p class="subtitle">Reflecting on completed setup milestones and the roadmap ahead.</p>
+
+      <div class="grid-2">
+        <div class="panel panel-green">
+          <div class="panel-header" style="color: var(--accent-green);">
+            <span>What We've Achieved So Far (Lab Setup)</span>
+          </div>
+          <div class="panel-body">
+            <p>• Configured & verified ChirpStack server decoders locally</p>
+            <p>• Set up and tested gateway offline AP mode locally</p>
+            <p>• Established local PostgreSQL database & Grafana scoreboards</p>
+            <p>• Wired Node-RED rule engine for instant hazard alerts</p>
+          </div>
+        </div>
+
+        <div class="panel panel-blue">
+          <div class="panel-header" style="color: var(--accent-blue);">
+            <span>My Next Steps (Prototyping Roadmap)</span>
+          </div>
+          <div class="panel-body">
+            <p>• Build Raspberry Pi 4 gateway base station (RAK5146 card)</p>
+            <p>• Assemble RAKwireless WisBlock solar field node prototypes</p>
+            <p>• Connect & calibrate RAKwireless Soil NPK sensor</p>
+            <p>• Integrate Hyperledger Fabric blockchain for immutable data logging</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="slide-footer">
+        <span>Weekly Standup Presentation | LoRaWAN Setup Project</span>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    let currentSlide = 1;
+    const totalSlides = 10;
+
+    function updateSlide() {
+      document.querySelectorAll('.slide').forEach(slide => slide.classList.remove('active'));
+      const active = document.querySelector(`.slide[data-slide="${currentSlide}"]`);
+      if (active) active.classList.add('active');
+
+      const progressPercent = ((currentSlide - 1) / (totalSlides - 1)) * 100;
+      document.getElementById('progress').style.width = `${progressPercent}%`;
+    }
+
+    function nextSlide() {
+      if (currentSlide < totalSlides) {
+        currentSlide++;
+        updateSlide();
+      }
+    }
+
+    function prevSlide() {
+      if (currentSlide > 1) {
+        currentSlide--;
+        updateSlide();
+      }
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') nextSlide();
+      if (e.key === 'ArrowLeft' || e.key === 'PageUp') prevSlide();
+    });
+
+    updateSlide();
+  </script>
+</body>
+</html>
