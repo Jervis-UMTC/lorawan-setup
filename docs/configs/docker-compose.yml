@@ -1,0 +1,93 @@
+version: '3.8'
+
+services:
+  chirpstack:
+    image: chirpstack/chirpstack:4
+    command: -c /etc/chirpstack
+    restart: unless-stopped
+    volumes:
+      - ./config/chirpstack:/etc/chirpstack
+      - ./lorawan-devices:/opt/lorawan-devices
+    ports:
+      - "8080:8080"
+    environment:
+      - POSTGRESQL_EQUAL_SECRET=chirpstack
+      - REDIS_EQUAL_SECRET=chirpstack
+    depends_on:
+      - postgres
+      - redis
+      - mosquitto
+
+  chirpstack-gateway-bridge:
+    image: chirpstack/chirpstack-gateway-bridge:4
+    restart: unless-stopped
+    ports:
+      - "1700:1700/udp"
+    volumes:
+      - ./config/chirpstack-gateway-bridge:/etc/chirpstack-gateway-bridge
+    environment:
+      - INTEGRATION__MQTT__EVENT_TOPIC_TEMPLATE=eu868/gateway/{{ .GatewayID }}/event/{{ .EventType }}
+      - INTEGRATION__MQTT__COMMAND_TOPIC_TEMPLATE=eu868/gateway/{{ .GatewayID }}/command/{{ .CommandType }}
+    depends_on:
+      - mosquitto
+
+  mosquitto:
+    image: eclipse-mosquitto:2
+    restart: unless-stopped
+    ports:
+      - "1883:1883"
+    volumes:
+      - ./config/mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf
+
+  postgres:
+    image: postgres:14-alpine
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./configuration/postgresql/initdb:/docker-entrypoint-initdb.d
+      - postgresqldata:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=chirpstack
+      - POSTGRES_USER=chirpstack
+      - POSTGRES_PASSWORD=chirpstack
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    volumes:
+      - redisdata:/data
+
+  grafana:
+    image: grafana/grafana-oss:latest
+    container_name: grafana
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin12345
+    volumes:
+      - grafana-storage:/var/lib/grafana
+    depends_on:
+      - postgres
+
+  node-red:
+    image: nodered/node-red:latest-22
+    container_name: node-red
+    restart: unless-stopped
+    ports:
+      - "1880:1880"
+    depends_on:
+      - mosquitto
+      - chirpstack
+    environment:
+      - TZ=Asia/Manila
+    volumes:
+      - node-red-data:/data
+
+volumes:
+  postgresqldata:
+  redisdata:
+  grafana-storage:
+  node-red-data:
