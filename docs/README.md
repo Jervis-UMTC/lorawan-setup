@@ -85,7 +85,9 @@ lorawan-setup/
 
 ## 📖 Sequential Documentation Reading Index
 
-Follow these guides sequentially from **01** to **05** to build, configure, persist, visualize, and automate your end-to-end LoRaWAN ecosystem:
+The original 01-05 path documents the existing Milesight/Dragino deployment. Documents 06-08 add RF/security work, while document 09 is the separate incoming RAK5146/WisBlock commissioning path.
+
+Follow these guides sequentially from **01** to **09** to build, configure, persist, visualize, automate, security-test, and commission the incoming RAK/WisBlock hardware:
 
 | Sequence | Document | Focus Area | Description |
 | :---: | :--- | :--- | :--- |
@@ -94,6 +96,10 @@ Follow these guides sequentially from **01** to **05** to build, configure, pers
 | **03** | **[03: PostgreSQL Integration Guide](./03-postgres-integration-guide.md)** | **Database Event Persistence** | Guide for creating the `chirpstack_integration` database, configuring DSN in `chirpstack.toml`, inspecting `event_up` schemas, and executing JSONB SQL queries for telemetry extraction. |
 | **04** | **[04: Grafana Integration Guide](./04-grafana-integration-guide.md)** | **Visualization & Dashboards** | Guide for containerizing Grafana (`:3000`), connecting PostgreSQL Data Source (`postgres:5432`), writing `$__timeFilter` SQL queries, and constructing live telemetry gauges and trend charts. |
 | **05** | **[05: Node-RED Integration Guide](./05-node-red-integration-guide.md)** | **Flow Automation & Alerts** | Guide for containerizing Node-RED (`:1880`), installing `@chirpstack/node-red-contrib-chirpstack` palette nodes, subscribing to MQTT uplinks (`mosquitto:1883`), and triggering threshold alerts. |
+| **06** | **[06: LoRaWAN RF and Security Toolkit Brief](./06-lorawan-rf-security-toolkit-brief.md)** | **Tool Selection & Architecture** | Boss-facing decision brief separating RF/PHY decoding, protocol crafting, packet inspection, network-server behavior, and replay/spoof detection. |
+| **07** | **[07: LoRaWAN RF and Protocol Testing Setup Guide](./07-lorawan-rf-and-protocol-testing-setup-guide.md)** | **RF-to-Protocol Test Bench** | Comprehensive setup and verification path for gr-lora_sdr, SDRangel, LoRa_Craft, Wireshark, LAF, and ChirpStack integration. |
+| **08** | **[08: LoRaWAN Security Testing Runbook](./08-lorawan-security-testing-runbook.md)** | **Authorized Test Operations** | Pre-flight checks, evidence handling, test cases, triage workflow, stop conditions, and reporting template for a private lab. |
+| **09** | **[09: RAK5146 + WisBlock Gateway Commissioning Manual](./09-rak5146-wisblock-gateway-commissioning-manual.md)** | **Incoming Hardware Commissioning** | Arrival acceptance, RAK5146 SPI/AS923 gateway assembly, packet-forwarder setup, WisBlock node programming, OTAA onboarding, and end-to-end acceptance gates. |
 | **Ref** | **[Docker Compose Configuration](./configs/docker-compose.yml)** | **Infrastructure Manifest** | Full `docker-compose.yml` service definition for ChirpStack, Gateway Bridge, Mosquitto, PostgreSQL, Redis, Grafana, and Node-RED. |
 | **Ref** | **[ChirpStack Config](./configs/chirpstack.toml)** | **Core Server Config** | Configuration parameters for PostgreSQL, Redis, MQTT topics, and region profiles. |
 | **Ref** | **[Gateway Bridge Config](./configs/chirpstack-gateway-bridge.toml)** | **Packet Forwarder Config** | UDP listener parameters and MQTT output topic mapping. |
@@ -107,6 +113,8 @@ Follow these guides sequentially from **01** to **05** to build, configure, pers
 * **Gateway**: Milesight UG65 / UG67 Industrial LoRaWAN Gateway (Semtech SX1302/SX1303 chipset).
 * **End-Node**: Dragino LSN50v2-S31 Temperature & Humidity Sensor (SHT31 probe, 868MHz / 915MHz).
 * **Host Platform**: Physical Host Machine with Virtualization enabled (Intel VT-x / AMD-V), minimum 8GB RAM, 100GB Disk.
+* **RF Security Test Bench (Optional)**: A band-appropriate SDR receiver, antenna or conducted RF path, storage for IQ captures, and a dedicated Linux analysis environment. Add an approved TX-capable SDR or regional LoRa transceiver only for authorized, isolated tests; see [07: RF and Protocol Testing Setup Guide](./07-lorawan-rf-and-protocol-testing-setup-guide.md).
+* **Incoming RAK/WisBlock Commissioning Path**: Raspberry Pi 4, RAK5146 SPI concentrator for AS923/900-928MHz, RAK5146 WisLink Pi HAT, 900-930MHz LoRa antenna, active GPS antenna, two u.FL/IPEX-to-SMA-family pigtails, 5V/3A USB-C supply, high-endurance microSD, Ethernet, RAK4631, RAK19007 or RAK19001, one compatible sensor, and a matching node antenna; see [09: RAK5146 + WisBlock Gateway Commissioning Manual](./09-rak5146-wisblock-gateway-commissioning-manual.md).
 
 ### 2. Software Requirements
 * **Hypervisor**: Oracle VM VirtualBox v7.0+ or VMware Workstation / Pro.
