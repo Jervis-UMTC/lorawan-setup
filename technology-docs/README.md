@@ -18,6 +18,8 @@ Each document below is a self-contained, educational handbook providing theoreti
 | **06** | **[06-node-red-automation-handbook.md](./06-node-red-automation-handbook.md)** | **Node-RED Rule Engine** | Flow-based visual programming, MQTT subscription pipelines, sub-second threshold event evaluation, automated SMS alert dispatching, and physical solenoid irrigation valve actuation. |
 | **07** | **[07-rakwireless-npk-sensing-handbook.md](./07-rakwireless-npk-sensing-handbook.md)** | **RAKwireless & RS485 Soil NPK** | RAKwireless WisBlock modular ecosystem (RAK4631 Nordic MCU + RAK19007 baseboard), RS485 Modbus RTU protocol, Soil NPK sensor chemistry (Nitrogen N, Phosphorus P, Potassium K), and precision fertilization ROI. |
 | **08** | **[08-hyperledger-fabric-blockchain-handbook.md](./08-hyperledger-fabric-blockchain-handbook.md)** | **Hyperledger Fabric Blockchain** | Enterprise permissioned blockchain architecture, channel configuration, chaincode (smart contracts), tamper-proof telemetry logging, and organic certification supply chain transparency. |
+| **09** | **[09-gr-lora-sdr-rf-phy-handbook.md](./09-gr-lora-sdr-rf-phy-handbook.md)** | **gr-lora-sdr GNU Radio Module** | Software Defined Radio (SDR) LoRa PHY layer implementation, C++/Python GRC blocks, RF signal acquisition, IQ sample capture, de-chirping/FFT, parameter sweeps, and RF transmission testing. |
+| **10** | **[10-wireshark-lorawan-security-handbook.md](./10-wireshark-lorawan-security-handbook.md)** | **Wireshark & Protocol Analysis** | Deep-packet inspection, native LoRaWAN dissectors, Semtech UDP 1700 captures, display filters, cryptographic key decryption (`NwkSKey`/`AppSKey`), replay audits, and TShark CLI automation. |
 
 ---
 
