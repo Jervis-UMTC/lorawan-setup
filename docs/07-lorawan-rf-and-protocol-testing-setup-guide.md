@@ -147,7 +147,7 @@ The Milesight gateway and Dragino sensor are enough to prove normal LoRaWAN oper
 
 ### 4.7 Transmit-capable setup
 
-For controlled TX experiments, use hardware supported by the selected software and approved for the test band. gr-lora_sdr documents testing with USRP-to-USRP and with commercial LoRa transceivers based on RFM95, SX1276, and SX1262 families. SDRangel supports multiple device backends, but TX capability and legal operating limits are hardware-specific.
+For controlled TX experiments, use hardware supported by `gr-lora-sdr` and approved for the test band. `gr-lora-sdr` documents testing with USRP-to-USRP and with commercial LoRa transceivers based on RFM95, SX1276, and SX1262 families. TX capability and legal operating limits are hardware-specific.
 
 Do not assume an RTL-SDR can transmit. It is normally a receive-only device. A transceiver board also needs a host controller, firmware, regional configuration, and a safe RF path.
 
@@ -369,13 +369,11 @@ Before enabling TX:
 
 The first TX acceptance test should prove only that the receiver recovers the expected bytes and CRC. It should not inject the frame into a production gateway or network server.
 
-## 7. SDRangel GUI path
+## 7. Optional GUI spectrum path
 
-### 7.1 Install
+While **gr-lora-sdr** and **Wireshark** form the primary standardized testing toolchain, operators requiring a visual spectrum/waterfall display can optionally use SDRangel for interactive spectrum observation before capturing traffic for `Wireshark` inspection.
 
-Use the official platform package or installer documented in the [SDRangel quick-start guide](https://github.com/f4exb/sdrangel/wiki/Quick-start). The project documents Windows installers, Ubuntu packages, Snap, Flatpak, macOS packages, and other platform-specific options.
-
-Do not mix SDRangel's bundled dependencies with a hand-built GNU Radio environment as a way to fix a GNU Radio problem. Treat SDRangel and GNU Radio as two alternative front ends until the RF capture format is intentionally shared.
+Do not mix SDRangel's bundled dependencies with a hand-built GNU Radio environment as a way to fix a GNU Radio problem. Treat SDRangel and GNU Radio as separate environments.
 
 ### 7.2 Receive workflow
 
@@ -405,13 +403,13 @@ The GUI is helpful for interactive experiments, but a scriptable gr-lora-sdr flo
 
 ### 8.1 Understand the compatibility boundary
 
-LoRa_Craft's public README lists GNU Radio 3.8 and the older gr-lora / gr-lorasdr families. It also describes a flowgraph-to-UDP path and a Python decoder script. The repository is therefore valuable, but it is not safe to assume that it consumes the current gr-lora_sdr message or UDP format unchanged.
+LoRa_Craft's public README lists GNU Radio 3.8 and older gr-lora families. The primary team workflow uses `gr-lora-sdr` for PHY decoding and `Wireshark` for protocol dissection and security testing.
 
 Use one of these two paths:
 
 #### Path A: legacy compatibility experiment
 
-Use the exact GNU Radio and older decoder combination documented by LoRa_Craft. Keep it in a separate VM or environment so it cannot disturb the current gr-lora_sdr installation.
+Use the exact GNU Radio and older decoder combination documented by LoRa_Craft in a separate VM so it cannot disturb the current `gr-lora-sdr` installation.
 
 #### Path B: current PHY plus adapter
 
@@ -453,7 +451,7 @@ If the parser has no help option, run it only with a saved lab capture or a know
 
 ### 8.4 Define the adapter contract
 
-The adapter between gr-lora_sdr and LoRa_Craft should preserve bytes and add metadata. A JSON-lines or length-prefixed binary format is easier to replay than an undocumented socket stream:
+The adapter between `gr-lora-sdr` and protocol inspectors should preserve bytes and add metadata. A JSON-lines or length-prefixed binary format is easier to replay than an undocumented socket stream:
 
 ~~~json
 {
@@ -569,7 +567,7 @@ captures/
 ├── pcap/<timestamp>-gateway.pcap
 ├── logs/<timestamp>-chirpstack.log
 ├── logs/<timestamp>-laf.log
-├── config/<timestamp>-grc-or-sdrangel.json
+├── config/<timestamp>-flowgraph.json
 └── reports/<timestamp>-test-summary.md
 ~~~
 
@@ -796,23 +794,17 @@ Only after the previous stages pass:
 
 At the end of an active test:
 
-1. Stop SDRangel transmitters and GNU Radio TX flowgraphs.
-2. Disconnect or terminate the RF path.
-3. Stop LAF senders, proxies, and fuzzers before collectors.
-4. Delete or securely archive synthetic keys according to the test plan.
-5. Revoke test device sessions and remove test applications from the private server.
-6. Export logs and preserve the original PCAP/IQ files before cleanup.
-7. Record the final state of the gateway, network server, device, and database.
+1. Stop `gr-lora-sdr` transmitters and GNU Radio TX flowgraphs.
+2. Confirm the RF power output is zero.
+3. Save all Wireshark PCAPs and flowgraph logs to the test directory.
 
-## 15. Sources
+## 15. References
 
-- [gr-lora_sdr README](https://github.com/tapparelj/gr-lora_sdr)
-- [GNU Radio Linux installation](https://wiki.gnuradio.org/index.php/LinuxInstall)
-- [SDRangel quick start](https://github.com/f4exb/sdrangel/wiki/Quick-start)
+- [gr-lora-sdr repository](https://github.com/tapparelj/gr-lora_sdr)
+- [Wireshark LoRaWAN display-filter reference](https://www.wireshark.org/docs/dfref/l/lorawan.html)
 - [SDRangel repository](https://github.com/f4exb/sdrangel)
 - [LoRa_Craft README](https://github.com/PentHertz/LoRa_Craft)
 - [IOActive LAF README](https://github.com/IOActive/laf)
-- [Wireshark LoRaWAN display-filter reference](https://www.wireshark.org/docs/dfref/l/lorawan.html)
 - [ChirpStack MQTT integration](https://www.chirpstack.io/docs/chirpstack/integrations/mqtt.html)
 - [ChirpStack gateway configuration](https://www.chirpstack.io/docs/gateway-configuration/index.html)
 - [LoRaWAN 1.0.4 specification package](https://lora-alliance.org/resource_hub/lorawan-104-specification-package/)
