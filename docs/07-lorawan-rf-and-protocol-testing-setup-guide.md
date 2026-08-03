@@ -200,7 +200,7 @@ For Ubuntu:
 
 ~~~bash
 sudo apt update
-sudo apt install -y gnuradio gnuradio-dev git cmake build-essential python3 python3-dev python3-venv
+sudo apt install -y gnuradio gnuradio-dev git cmake build-essential libboost-all-dev libvolk2-dev libuhd-dev pybind11-dev python3 python3-dev python3-venv wireshark tshark
 ~~~
 
 Verify the baseline before adding gr-lora-sdr:
@@ -283,28 +283,28 @@ conda install -c tapparelj -c conda-forge gnuradio-lora_sdr
 
 Treat this as an alternative to the source build, not a second install layered on top of it. Confirm the package's GNU Radio version and hardware bindings before using it for a team baseline.
 
-### 6.5 Verify the GNU Radio blocks
+### 6.5 Verify and troubleshoot GNU Radio blocks
 
 Start GNU Radio Companion inside the environment where the module was installed:
 
 ~~~bash
-conda activate gr310
 gnuradio-companion
 ~~~
 
-Confirm that the LoRa transmit and receive blocks appear in the block list. If they do not:
+Confirm that the LoRa transmit and receive blocks appear in the block list.
 
-1. Confirm the active Python and GNU Radio executables:
+#### Foolproof Troubleshooting Checklist:
 
-   ~~~bash
-   which python3
-   which gnuradio-companion
-   gnuradio-config-info --prefix
+1. **Missing GRC Blocks Fix**: If `gr-lora-sdr` blocks do not appear in GNU Radio Companion, create or update `~/.gnuradio/config.conf`:
+   ~~~ini
+   [grc]
+   local_blocks_path = /usr/local/share/gnuradio/grc/blocks
    ~~~
-
-2. Confirm the install prefix contains the module's Python and GRC files.
-3. Follow the project's documented PYTHONPATH, LD_LIBRARY_PATH, and GRC local-block-path troubleshooting.
-4. Do not immediately rebuild with a different compiler or a second GNU Radio version; record the first error.
+2. **QApplication / QWidget Error Fix**: If GRC throws a `Must create QApplication before QWidget` error, it indicates a Python environment mismatch (e.g. system Qt vs Conda Qt). Run `which gnuradio-companion` and ensure GRC is launched from the same Python environment where `gr-lora-sdr` was compiled.
+3. **Module Import Verification**: Test the Python module binding directly:
+   ~~~bash
+   python3 -c "import lora_sdr; print('gr-lora-sdr module loaded successfully!')"
+   ~~~
 
 ### 6.6 Run the upstream functionality check
 
@@ -538,17 +538,32 @@ sudo tcpdump -i any -s 0 -w captures/pcap/lab-semtech-udp-$(date -u +%Y%m%dT%H%M
 
 Do not assume that seeing UDP/1700 means the inner LoRaWAN PHYPayload will be automatically dissected. Preserve the PCAP anyway, and use the decoded payload from the PHY/protocol path as the canonical byte record.
 
-### 9.3 Useful display filters
+### 9.3 Wireshark display filter reference
 
-Start with the documented protocol filter:
+Use the following standardized display filters for security testing and packet inspection:
 
-~~~text
-lorawan
-~~~
+| Display Filter | Purpose / Target |
+|---|---|
+| `lorawan` | Filter all LoRaWAN traffic |
+| `lorawan.mtype == 0` | Filter Join-Request frames |
+| `lorawan.mtype == 1` | Filter Join-Accept frames |
+| `lorawan.mtype == 2` | Filter Unconfirmed Data Uplink frames |
+| `lorawan.mtype == 4` | Filter Confirmed Data Uplink frames |
+| `lorawan.devaddr == 01:02:03:04` | Filter by target synthetic DevAddr |
+| `lorawan.fcnt` | Track Frame Counter progression for replay audit |
+| `lorawan.mic` | Inspect Message Integrity Code (4 bytes) |
+| `lorawan.frmpayload_decrypted` | Display decrypted application payload |
 
-Then use the current [LoRaWAN display-filter reference](https://www.wireshark.org/docs/dfref/l/lorawan.html) for the exact field names supported by the installed Wireshark version. Save the Wireshark version with the capture because field availability changes across releases.
+### 9.4 Decrypting LoRaWAN payloads in Wireshark
 
-### 9.4 Key and privacy handling
+To perform payload inspection during authorized security audits:
+
+1. Open Wireshark and open your `.pcap` capture file.
+2. Go to **Edit → Preferences → Protocols → LoRaWAN**.
+3. Enter your synthetic lab **NwkSKey** and **AppSKey** in 32-character hexadecimal format (e.g. `2B7E151628AED2A6ABF7158809CF4F3C`).
+4. Apply settings and use `lorawan.frmpayload_decrypted` to inspect the decrypted bytes.
+
+### 9.5 Key and privacy handling
 
 - Prefer captures that contain encrypted application payloads and no keys.
 - If decryption is required, use synthetic lab keys.
