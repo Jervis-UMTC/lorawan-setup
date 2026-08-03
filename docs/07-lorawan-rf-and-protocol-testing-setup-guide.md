@@ -107,12 +107,12 @@ The Milesight gateway and Dragino sensor are enough to prove normal LoRaWAN oper
 
 | Test type | Minimum configuration |
 |---|---|
-| RF visibility only | Host + SDR receiver + antenna/cable + `gr-lora_sdr` or SDRangel |
-| RF visibility plus packet parsing | RF visibility setup + LoRa_Craft/adapter + capture storage |
+| RF visibility & PHY testing | Host + SDR receiver + antenna/cable + `gr-lora-sdr` |
+| Protocol capture & security testing | RF visibility setup + `gr-lora-sdr` + `Wireshark` + capture storage |
 | Normal ChirpStack application flow | Existing Milesight gateway + Dragino node + ChirpStack stack from docs 01/02 |
-| RF-to-ChirpStack correlation | RF visibility setup + existing gateway/server stack + synchronized timestamps |
-| Invalid MIC or frame-counter test | Private ChirpStack + dedicated lab device/session + protocol tooling; RF TX is optional if the test enters through an approved server-side lab interface |
-| Controlled RF replay/spoof test | Full RF setup + TX-capable hardware + shielding/attenuation + private gateway/server + LAF or equivalent analyzer |
+| RF-to-ChirpStack correlation | RF visibility setup + `gr-lora-sdr` + existing gateway/server stack + synchronized timestamps |
+| Invalid MIC or security test | Private ChirpStack + dedicated lab device/session + `Wireshark` protocol inspection |
+| Controlled RF replay/spoof security test | Full RF setup with `gr-lora-sdr` TX/RX + `Wireshark` + shielding/attenuation + private server |
 | Multi-gateway duplicate test | One lab device + two gateways or two independent receive paths + PostgreSQL/Grafana evidence |
 
 ### 4.4 What is optional
@@ -180,9 +180,8 @@ Keep the current GNU Radio 3.10 path separate from the legacy LoRa_Craft path. A
 
 ~~~text
 ~/lorawan-lab/
-├── gr-lora_sdr/       # current PHY path
-├── LoRa_Craft/        # legacy Scapy/protocol path
-├── laf/               # optional audit path
+├── gr-lora-sdr/       # primary PHY testing path (gr-lora-sdr)
+├── wireshark/         # Wireshark PCAPs & security analysis evidence
 ├── captures/
 │   ├── iq/
 │   ├── decoded/
@@ -204,7 +203,7 @@ sudo apt update
 sudo apt install -y gnuradio gnuradio-dev git cmake build-essential python3 python3-dev python3-venv
 ~~~
 
-Verify the baseline before adding gr-lora_sdr:
+Verify the baseline before adding gr-lora-sdr:
 
 ~~~bash
 gnuradio-config-info --version
@@ -213,14 +212,14 @@ python3 --version
 cmake --version
 ~~~
 
-If the distribution package is missing a dependency required by the gr-lora_sdr build, follow the project's own prerequisites and the GNU Radio installation guide. Do not mix a system GNU Radio ABI with a different Conda GNU Radio environment unless the active environment is explicit.
+If the distribution package is missing a dependency required by the gr-lora-sdr build, follow the project's own prerequisites and the GNU Radio installation guide. Do not mix a system GNU Radio ABI with a different Conda GNU Radio environment unless the active environment is explicit.
 
 ### 5.3 SDR access and permissions
 
 For USB SDRs:
 
 1. Install the vendor or distribution udev rules where required.
-2. Confirm the device appears before starting GNU Radio or SDRangel.
+2. Confirm the device appears before starting GNU Radio or gr-lora-sdr.
 3. Record the serial number so the wrong receiver cannot silently be selected.
 4. Keep the SDR disconnected from any other application that may claim the USB interface.
 
@@ -233,18 +232,18 @@ rtl_test -t
 
 'rtl_test' is only applicable to RTL-SDR devices. Use the hardware vendor's discovery command for USRP, bladeRF, LimeSDR, or other devices.
 
-## 6. Install and verify gr-lora_sdr
+## 6. Install and verify gr-lora-sdr
 
 ### 6.1 Why this is the primary path
 
-The project README describes gr-lora_sdr as a GNU Radio 3.10 out-of-tree module with both TX and RX hierarchical blocks. It exposes spreading factors, coding rates, explicit or implicit header mode, payload length, sync word, CRC verification, low-data-rate optimisation, and soft-decision decoding.
+`gr-lora-sdr` is the primary tool for testing and security testing at the RF/PHY layer. The project describes `gr-lora-sdr` as a GNU Radio 3.10 out-of-tree module with both TX and RX hierarchical blocks. It exposes spreading factors, coding rates, explicit or implicit header mode, payload length, sync word, CRC verification, low-data-rate optimisation, and soft-decision decoding.
 
 ### 6.2 Clone the repository
 
 ~~~bash
 cd ~/lorawan-lab
-git clone https://github.com/tapparelj/gr-lora_sdr.git
-cd gr-lora_sdr
+git clone https://github.com/tapparelj/gr-lora_sdr.git gr-lora-sdr
+cd gr-lora-sdr
 git rev-parse HEAD
 ~~~
 
@@ -400,7 +399,7 @@ The control labels can change between SDRangel releases. Record the application 
 5. Verify the output with a second receiver or the cabled receiver.
 6. Stop the transmitter immediately after the acceptance capture.
 
-The GUI is helpful for interactive experiments, but a scriptable gr-lora_sdr flowgraph is usually easier to reproduce in CI-like regression tests.
+The GUI is helpful for interactive experiments, but a scriptable gr-lora-sdr flowgraph is usually easier to reproduce in CI-like regression tests.
 
 ## 8. LoRa_Craft protocol path
 
@@ -416,7 +415,7 @@ Use the exact GNU Radio and older decoder combination documented by LoRa_Craft. 
 
 #### Path B: current PHY plus adapter
 
-Use gr-lora_sdr for RF/PHY decoding, then write or configure a small adapter that emits the raw LoRaWAN PHYPayload and metadata in the format expected by the selected Scapy layer.
+Use gr-lora-sdr for RF/PHY decoding, then export or pass the raw LoRaWAN PHYPayload and metadata to Wireshark for protocol and security inspection.
 
 Path B is the recommended team architecture because the PHY decoder and protocol parser can be upgraded independently.
 
@@ -525,11 +524,11 @@ Before using an RN2483-style device:
 
 If a real LoRaWAN packet is transmitted, the private network server must be the only authorized receiver in the test path and the packet must use synthetic device identities and keys.
 
-## 9. Wireshark evidence path
+## 9. Wireshark evidence & security testing path
 
-### 9.1 What Wireshark can and cannot do
+### 9.1 Wireshark for protocol inspection and security testing
 
-Wireshark is a packet analyzer. It is appropriate for decoded packet captures, gateway backhaul traffic, and other supported encapsulations. It is not an RF demodulator and cannot turn an IQ recording into a LoRaWAN frame by itself.
+Wireshark is the primary protocol analyzer for security testing. It is appropriate for inspecting captured packets, gateway backhaul traffic, checking Message Integrity Codes (MIC), analyzing frame counter progressions, and auditing security behaviors. Combine Wireshark PCAPs with `gr-lora-sdr` demodulated payloads to perform end-to-end security verification.
 
 ### 9.2 Install and capture
 

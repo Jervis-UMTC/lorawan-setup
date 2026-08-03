@@ -95,10 +95,8 @@ Stop immediately if any of the following occurs:
 
 ### Software
 
-- [ ] gr-lora_sdr or SDRangel version recorded.
-- [ ] LoRa_Craft environment is isolated and its commit recorded.
-- [ ] Wireshark version recorded.
-- [ ] LAF version/commit recorded if used.
+- [ ] gr-lora-sdr commit/version recorded for RF/PHY testing.
+- [ ] Wireshark version recorded for protocol dissection and security testing.
 - [ ] ChirpStack and gateway bridge logs are being saved.
 - [ ] Time synchronization is working on the SDR host, server, gateway, and capture host.
 
@@ -135,7 +133,7 @@ LW-001_20260801T032000Z_report_replay-test.md
 {
   "test_id": "LW-<ID>",
   "timestamp_utc": "<ISO-8601 UTC>",
-  "source": "<gr-lora_sdr|sdrangel|gateway|mqtt|laf>",
+  "source": "<gr-lora-sdr|wireshark|gateway|mqtt>",
   "frequency_hz": 0,
   "bandwidth_hz": 0,
   "spreading_factor": 0,
@@ -437,9 +435,7 @@ Depending on findings, recommendations may include:
 ## 10. References
 
 - [LoRaWAN 1.0.4 specification package](https://lora-alliance.org/resource_hub/lorawan-104-specification-package/)
-- [gr-lora_sdr](https://github.com/tapparelj/gr-lora_sdr)
-- [LoRa_Craft](https://github.com/PentHertz/LoRa_Craft)
-- [IOActive LAF](https://github.com/IOActive/laf)
+- [gr-lora-sdr](https://github.com/tapparelj/gr-lora_sdr)
 - [Wireshark LoRaWAN display-filter reference](https://www.wireshark.org/docs/dfref/l/lorawan.html)
 - [ChirpStack MQTT integration](https://www.chirpstack.io/docs/chirpstack/integrations/mqtt.html)
 - [ChirpStack gateway configuration](https://www.chirpstack.io/docs/gateway-configuration/index.html)
