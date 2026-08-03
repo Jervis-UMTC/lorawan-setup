@@ -3,22 +3,46 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Weekly Standup: Smart Agriculture IoT & Technical Realizations</title>
+  <title>Weekly Technical Standup | End-to-End Data Packet Lifecycle</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #090d16;
-      --card-bg: #131c2e;
-      --card-inner: rgba(255, 255, 255, 0.035);
-      --border: #23324d;
-      --text: #f8fafc;
-      --text-muted: #94a3b8;
-      --accent-blue: #38bdf8;
-      --accent-green: #34d399;
-      --accent-amber: #fbbf24;
-      --font: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      --bg: #f8fafc;
+      --slide-bg: #ffffff;
+      --card-bg: #ffffff;
+      --card-subtle: #f8fafc;
+      --border: #cbd5e1;
+      --border-accent: #94a3b8;
+      
+      --text-main: #0f172a;
+      --text-muted: #1e293b;
+      --text-light: #475569;
+      
+      --accent-green: #059669;
+      --accent-green-bg: #ecfdf5;
+      --accent-green-border: #a7f3d0;
+      
+      --accent-blue: #2563eb;
+      --accent-blue-bg: #eff6ff;
+      --accent-blue-border: #bfdbfe;
+      
+      --accent-amber: #d97706;
+      --accent-amber-bg: #fffbeb;
+      --accent-amber-border: #fde68a;
+      
+      --accent-purple: #7c3aed;
+      --accent-purple-bg: #f5f3ff;
+      --accent-purple-border: #ddd6fe;
+      
+      --accent-red: #dc2626;
+      --accent-red-bg: #fef2f2;
+      --accent-red-border: #fecaca;
+      
+      --font-display: 'Outfit', sans-serif;
+      --font-heading: 'Plus Jakarta Sans', sans-serif;
+      --font-body: 'Inter', sans-serif;
     }
 
     * {
@@ -27,45 +51,74 @@
       padding: 0;
     }
 
+    /* Hide scrollbars across all browsers while retaining smooth scroll functionality */
+    *, *::before, *::after {
+      scrollbar-width: none !important;
+      -ms-overflow-style: none !important;
+    }
+
+    *::-webkit-scrollbar {
+      display: none !important;
+      width: 0 !important;
+      height: 0 !important;
+    }
+
     body {
-      font-family: var(--font);
-      background-color: var(--bg);
-      color: var(--text);
+      font-family: var(--font-body);
+      background: radial-gradient(circle at 50% 0%, #f8fafc 0%, #e2e8f0 100%);
+      color: var(--text-main);
       height: 100vh;
+      width: 100vw;
       overflow: hidden;
       display: flex;
       flex-direction: column;
+      align-items: center;
+      justify-content: center;
       -webkit-font-smoothing: antialiased;
     }
 
-    .container {
-      flex: 1;
+    /* Top Progress Bar */
+    .progress-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 6px;
+      background: linear-gradient(90deg, #2563eb 0%, #059669 100%);
+      transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      z-index: 100;
+      box-shadow: 0 1px 4px rgba(37, 99, 235, 0.25);
+    }
+
+    /* Outer Wrapper for Spacious Slide Aspect Ratio */
+    .slide-wrapper {
+      width: 97vw;
+      max-width: 1520px;
+      height: 94vh;
+      max-height: 900px;
+      min-height: 650px;
+      position: relative;
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 1.5rem;
-      position: relative;
     }
 
+    /* Slide Card */
     .slide {
       position: absolute;
-      width: 95%;
-      max-width: 1440px;
-      height: 85vh;
-      max-height: 820px;
-      min-height: 600px;
-      padding: 2.5rem 3.5rem;
-      background: var(--card-bg);
+      width: 100%;
+      height: 100%;
+      background: var(--slide-bg);
       border: 1px solid var(--border);
       border-radius: 20px;
+      padding: 1.6rem 2.4rem;
       opacity: 0;
       visibility: hidden;
-      transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1), transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-      transform: translateY(12px);
+      transition: opacity 0.28s ease, transform 0.28s ease;
+      transform: translateY(8px);
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+      box-shadow: 0 20px 45px -10px rgba(15, 23, 42, 0.09), 0 1px 3px rgba(15, 23, 42, 0.04);
       overflow: hidden;
     }
 
@@ -75,137 +128,391 @@
       transform: translateY(0);
     }
 
+    /* Slide Header */
     .slide-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      border-bottom: 1px solid var(--border);
-      padding-bottom: 1rem;
-      margin-bottom: 1.25rem;
+      border-bottom: 2px solid var(--border);
+      padding-bottom: 0.5rem;
+      margin-bottom: 0.5rem;
+      flex-shrink: 0;
     }
 
     .doc-tag {
-      font-size: clamp(0.8rem, 0.9vw, 0.95rem);
-      font-weight: 700;
+      font-family: var(--font-display);
+      font-size: 0.85rem;
+      font-weight: 800;
       text-transform: uppercase;
       letter-spacing: 0.08em;
       color: var(--accent-blue);
-      background: rgba(56, 189, 248, 0.1);
-      padding: 0.35rem 0.85rem;
-      border-radius: 6px;
-      border: 1px solid rgba(56, 189, 248, 0.2);
+      background: var(--accent-blue-bg);
+      padding: 0.28rem 0.8rem;
+      border-radius: 8px;
+      border: 1px solid var(--accent-blue-border);
+      box-shadow: 0 1px 2px rgba(37, 99, 235, 0.05);
     }
 
+    .doc-tag.green { color: var(--accent-green); background: var(--accent-green-bg); border-color: var(--accent-green-border); }
+    .doc-tag.amber { color: var(--accent-amber); background: var(--accent-amber-bg); border-color: var(--accent-amber-border); }
+    .doc-tag.purple { color: var(--accent-purple); background: var(--accent-purple-bg); border-color: var(--accent-purple-border); }
+
+    /* Slide Number Badge */
     .slide-num {
-      font-size: clamp(0.9rem, 1vw, 1.05rem);
-      font-weight: 600;
-      color: var(--text-muted);
+      font-family: var(--font-display);
+      font-size: 0.85rem;
+      font-weight: 800;
+      color: var(--text-light);
+      background: #f1f5f9;
+      border: 1px solid #cbd5e1;
+      padding: 0.22rem 0.7rem;
+      border-radius: 8px;
     }
 
+    /* Headings */
     h1 {
-      font-size: clamp(2.75rem, 4vw, 4.25rem);
+      font-family: var(--font-display);
+      font-size: clamp(2.4rem, 3.4vw, 3.4rem);
       font-weight: 800;
-      letter-spacing: -0.03em;
-      color: var(--text);
-      line-height: 1.15;
-      margin-bottom: 0.85rem;
+      letter-spacing: -0.035em;
+      color: var(--text-main);
+      line-height: 1.12;
+      margin-bottom: 0.5rem;
     }
 
     h2 {
-      font-size: clamp(1.8rem, 2.4vw, 2.4rem);
-      font-weight: 700;
-      letter-spacing: -0.02em;
-      color: var(--text);
-      line-height: 1.2;
-      margin-bottom: 0.4rem;
+      font-family: var(--font-display);
+      font-size: clamp(1.7rem, 2.25vw, 2.25rem);
+      font-weight: 800;
+      letter-spacing: -0.025em;
+      color: var(--text-main);
+      line-height: 1.18;
+      margin-bottom: 0.2rem;
     }
 
     .subtitle {
-      font-size: clamp(1.05rem, 1.3vw, 1.25rem);
+      font-family: var(--font-heading);
+      font-size: clamp(1.08rem, 1.25vw, 1.22rem);
       color: var(--text-muted);
-      margin-bottom: 1.25rem;
-      line-height: 1.5;
-      font-weight: 400;
+      margin-bottom: 0.65rem;
+      line-height: 1.42;
+      font-weight: 600;
     }
 
-    .grid-2 {
-      display: grid !important;
-      grid-template-columns: 1fr 1fr !important;
-      gap: 1.5rem;
+    /* Dynamic Parent Container + Internal Sub-Node Flow Bar */
+    .top-node-path-bar {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 0.45rem 0.85rem;
+      margin-bottom: 0.75rem;
+      overflow-x: auto;
+      flex-shrink: 0;
+    }
+
+    .parent-node-group {
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 9px;
+      padding: 0.25rem 0.5rem;
+      transition: all 0.2s ease;
+    }
+
+    .parent-node-group.active {
+      border-color: #2563eb;
+      background: #f0f7ff;
+      box-shadow: 0 2px 6px rgba(37, 99, 235, 0.12);
+    }
+
+    .parent-group-label {
+      font-family: var(--font-display);
+      font-size: 0.8rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-light);
+      padding: 0.15rem 0.5rem;
+      border-right: 1px solid #cbd5e1;
+      margin-right: 0.25rem;
+    }
+
+    .parent-node-group.active .parent-group-label {
+      color: var(--accent-blue);
+      border-right-color: #bfdbfe;
+    }
+
+    .subnode-pill {
+      font-family: var(--font-display);
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--text-light);
+      padding: 0.22rem 0.55rem;
+      border-radius: 6px;
+      white-space: nowrap;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      transition: all 0.2s ease;
+      cursor: pointer;
+    }
+
+    .subnode-pill.done {
+      color: #047857;
+      background: #ecfdf5;
+      border-color: #a7f3d0;
+    }
+
+    .subnode-pill.active {
+      color: #ffffff;
+      background: var(--accent-blue);
+      border-color: #1d4ed8;
+      box-shadow: 0 2px 6px rgba(37, 99, 235, 0.35);
+    }
+
+    .path-arrow-divider {
+      color: #94a3b8;
+      font-weight: 800;
+      font-size: 0.8rem;
+    }
+
+    /* Dynamic Content View Transition Container */
+    .node-dynamic-wrapper {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      transition: opacity 0.22s ease, transform 0.22s ease;
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .node-dynamic-wrapper.switching {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+
+    /* Diagram Node Layout Grid */
+    .node-layout-grid {
+      display: grid;
+      grid-template-columns: 350px 1fr;
+      gap: 1.35rem;
+      flex: 1;
+      align-items: stretch;
+      min-height: 0;
+      margin-bottom: 0.25rem;
+    }
+
+    /* Left Diagram Node Card */
+    .diagram-node-card {
+      background: #ffffff;
+      border: 2px solid var(--border);
+      border-radius: 18px;
+      padding: 1.4rem 1.5rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 1.0rem;
+      box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.06), 0 1px 3px rgba(0, 0, 0, 0.04);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .diagram-node-card::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 6px;
+    }
+
+    .diagram-node-card.tier-1::before { background: linear-gradient(90deg, #059669, #10b981); }
+    .diagram-node-card.tier-2::before { background: linear-gradient(90deg, #0284c7, #38bdf8); }
+    .diagram-node-card.tier-3::before { background: linear-gradient(90deg, #2563eb, #6366f1); }
+    .diagram-node-card.tier-4::before { background: linear-gradient(90deg, #2563eb, #f97316); }
+    .diagram-node-card.tier-5::before { background: linear-gradient(90deg, #dc2626, #7c3aed); }
+    .diagram-node-card.future::before { background: linear-gradient(90deg, #d97706, #f59e0b); }
+
+    .node-card-title {
+      font-family: var(--font-display);
+      font-size: clamp(1.4rem, 1.7vw, 1.65rem);
+      font-weight: 800;
+      color: var(--text-main);
+      line-height: 1.22;
+      margin-top: 0.1rem;
+    }
+
+    .node-card-desc {
+      font-size: clamp(1.08rem, 1.22vw, 1.18rem);
+      color: var(--text-muted);
+      line-height: 1.5;
+      margin-top: 0.45rem;
+    }
+
+    /* Informative Details Box inside Left Node Card */
+    .node-card-highlights {
+      background: #f8fafc;
+      border: 1px solid #cbd5e1;
+      border-radius: 12px;
+      padding: 0.9rem 1.05rem;
+      margin-top: 0.95rem;
+      font-family: var(--font-body);
+      font-size: 1.0rem;
+      color: var(--text-main);
+      line-height: 1.56;
+    }
+
+    .node-card-highlights strong {
+      color: var(--accent-blue);
+      font-family: var(--font-display);
+    }
+
+    .node-card-badge {
+      font-family: var(--font-display);
+      font-size: 0.88rem;
+      font-weight: 700;
+      padding: 0.4rem 0.85rem;
+      border-radius: 8px;
+      align-self: flex-start;
+      margin-top: auto;
+    }
+
+    .tier-1 .node-card-badge { background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; }
+    .tier-2 .node-card-badge { background: #f0f9ff; color: #0284c7; border: 1px solid #bae6fd; }
+    .tier-3 .node-card-badge { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+    .tier-4 .node-card-badge { background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; }
+    .tier-5 .node-card-badge { background: #faf5ff; color: #7c3aed; border: 1px solid #ddd6fe; }
+    .future .node-card-badge { background: #fffbeb; color: #b45309; border: 1px solid #fde68a; }
+
+    /* Right 3-Column Explanation Cards Grid */
+    .node-content-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 1.1rem;
       flex: 1;
       align-items: stretch;
       min-height: 0;
     }
 
-    .panel {
-      background: var(--card-inner);
+    .info-card {
+      background: var(--card-subtle);
       border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 1.5rem 1.75rem;
+      border-radius: 16px;
+      padding: 1.5rem 1.6rem;
       display: flex;
       flex-direction: column;
-      gap: 0.85rem;
+      gap: 1.0rem;
+      overflow-y: auto;
+    }
+
+    .info-card-title {
+      font-family: var(--font-display);
+      font-size: clamp(0.95rem, 1.1vw, 1.05rem);
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--text-light);
+      padding-bottom: 0.35rem;
+      border-bottom: 1px dashed #cbd5e1;
+    }
+
+    .info-card-title.blue { color: var(--accent-blue); }
+    .info-card-title.green { color: var(--accent-green); }
+    .info-card-title.purple { color: var(--accent-purple); }
+
+    .info-card-body {
+      font-family: var(--font-body);
+      font-size: clamp(1.22rem, 1.42vw, 1.38rem);
+      color: var(--text-main);
+      line-height: 1.62;
+      font-weight: 500;
+    }
+
+    .info-card-body p { margin: 0; }
+
+    /* Standard Grid-2 Layout for Intro & Summary Slides */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.4rem;
+      flex: 1;
+      align-items: stretch;
       min-height: 0;
+      margin-bottom: 0.35rem;
     }
 
-    .panel-blue {
-      border-color: rgba(56, 189, 248, 0.3);
-      background: rgba(56, 189, 248, 0.035);
-    }
-
-    .panel-green {
-      border-color: rgba(52, 211, 153, 0.3);
-      background: rgba(52, 211, 153, 0.035);
-    }
-
-    .panel-amber {
-      border-color: rgba(251, 191, 36, 0.3);
-      background: rgba(251, 191, 36, 0.035);
+    .panel {
+      background: var(--card-subtle);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 1.8rem 2.0rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+      overflow-y: auto;
     }
 
     .panel-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 0.5rem;
-      font-size: clamp(1.15rem, 1.4vw, 1.35rem);
-      font-weight: 700;
+      gap: 0.75rem;
+      font-family: var(--font-display);
+      font-size: clamp(1.45rem, 1.75vw, 1.7rem);
+      font-weight: 800;
+      color: var(--text-main);
+      flex-shrink: 0;
+      padding-bottom: 0.5rem;
+      border-bottom: 2px dashed #cbd5e1;
     }
 
     .panel-body {
-      font-size: clamp(0.98rem, 1.15vw, 1.15rem);
-      color: #cbd5e1;
+      font-family: var(--font-body);
+      font-size: clamp(1.18rem, 1.38vw, 1.35rem);
+      color: var(--text-main);
       line-height: 1.6;
       display: flex;
       flex-direction: column;
-      gap: 0.85rem;
+      gap: 1.2rem;
+      flex: 1;
     }
 
-    .panel-body p {
-      margin: 0;
+    .bullet-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 1.2rem;
+      flex: 1;
+      justify-content: space-around;
     }
 
-    .tech-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.45rem;
-      background: rgba(255, 255, 255, 0.07);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      border-radius: 8px;
-      padding: 0.35rem 0.75rem;
-      font-size: 0.85rem;
-      font-weight: 600;
-      color: #e2e8f0;
-      white-space: nowrap;
+    .bullet-list li {
+      position: relative;
+      padding-left: 1.5rem;
+      font-size: clamp(1.18rem, 1.38vw, 1.35rem);
+      line-height: 1.58;
+      color: var(--text-main);
+      font-weight: 500;
     }
 
-    .tech-logo-img {
-      height: 28px;
-      width: auto;
-      max-width: 140px;
-      object-fit: contain;
-      display: block;
-      filter: drop-shadow(0 1px 2px rgba(0,0,0,0.3));
+    .bullet-list li strong {
+      font-family: var(--font-display);
+      font-size: clamp(1.22rem, 1.42vw, 1.38rem);
+      color: var(--text-main);
+    }
+
+    .bullet-list li::before {
+      content: "-";
+      position: absolute;
+      left: 0.2rem;
+      color: var(--accent-blue);
+      font-weight: 800;
+      font-size: 1.3rem;
     }
 
     .tech-row {
@@ -216,472 +523,692 @@
       margin-top: 1.25rem;
     }
 
-    .highlight {
-      color: var(--accent-green);
+    .tech-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0.4rem 0.85rem;
+      font-family: var(--font-heading);
+      font-size: 0.88rem;
       font-weight: 600;
+      color: var(--text-main);
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.04);
     }
 
-    .highlight-blue {
-      color: var(--accent-blue);
-      font-weight: 600;
-    }
-
-    .highlight-amber {
-      color: var(--accent-amber);
-      font-weight: 600;
+    .tech-logo-img {
+      height: 20px;
+      width: auto;
+      object-fit: contain;
+      display: block;
     }
 
     .slide-footer {
-      border-top: 1px solid var(--border);
-      padding-top: 1rem;
-      margin-top: 1rem;
-      font-size: clamp(0.85rem, 1vw, 0.95rem);
-      color: var(--text-muted);
+      border-top: 2px solid var(--border);
+      padding-top: 0.55rem;
+      margin-top: 0.55rem;
+      font-family: var(--font-heading);
+      font-size: 0.92rem;
+      color: var(--text-light);
       display: flex;
       justify-content: space-between;
-      font-weight: 500;
-    }
-
-    .progress {
-      position: absolute;
-      top: 0;
-      left: 0;
-      height: 4px;
-      background: linear-gradient(90deg, var(--accent-blue), var(--accent-green));
-      transition: width 0.25s ease;
+      font-weight: 600;
+      flex-shrink: 0;
     }
   </style>
 </head>
 <body>
 
-  <div class="progress" id="progress"></div>
+  <div class="progress-bar" id="progress"></div>
 
-  <div class="container">
+  <div class="slide-wrapper">
 
-    <!-- Slide 1 -->
+    <!-- SLIDE 1: Title & Overview -->
     <div class="slide active" data-slide="1">
       <div class="slide-header">
-        <span class="doc-tag">Weekly Progress Update</span>
-        <span class="slide-num">01 / 10</span>
+        <span class="doc-tag">Weekly Technical Standup</span>
+        <span class="slide-num">Slide 1 of 5</span>
       </div>
 
       <div style="margin: auto 0;">
-        <h1>Weekly Standup</h1>
-        <p class="subtitle" style="font-size: clamp(1.3rem, 1.7vw, 1.6rem); max-width: 950px;">Local Setup Progress, Technical Discoveries & Real-World Agricultural Ideas</p>
+        <span style="font-size: 1rem; font-weight: 700; color: var(--accent-blue); text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 0.5rem; font-family: var(--font-display);">Smart Agriculture Setup</span>
+        <h1>This Week's Technical Progress</h1>
+        <p class="subtitle" style="font-size: clamp(1.2rem, 1.5vw, 1.45rem); max-width: 980px;">Sequential Data Packet Lifecycle: System Topology & Node Architecture</p>
         
         <div class="tech-row">
-          <span class="tech-pill">
-            <img src="LoRaWAN_Logo.svg.webp" class="tech-logo-img" alt="LoRaWAN">
+          <span class="tech-badge" style="border-color: var(--accent-green-border);">
+            <img src="LoRaWAN_Logo.svg.webp" class="tech-logo-img" alt="Dragino"> Tier 1: Dragino Sensor Probe (Bench Hardware)
           </span>
-          <span class="tech-pill">
-            <img src="chirpstack.png" class="tech-logo-img" alt="ChirpStack">
+          <span class="tech-badge" style="border-color: var(--accent-green-border);">
+            <img src="LoRaWAN_Logo.svg.webp" class="tech-logo-img" alt="Milesight"> Tier 2: Milesight UG65 Gateway (Bench Hardware)
           </span>
-          <span class="tech-pill">
-            <img src="Postgresql_elephant.svg" class="tech-logo-img" alt="PostgreSQL">
+          <span class="tech-badge">
+            <img src="chirpstack.png" class="tech-logo-img" alt="ChirpStack"> Tier 3: ChirpStack v4 Server (Local VM)
           </span>
-          <span class="tech-pill">
-            <img src="grafana.webp" class="tech-logo-img" alt="Grafana">
+          <span class="tech-badge">
+            <img src="Postgresql_elephant.svg" class="tech-logo-img" alt="PostgreSQL"> Tier 4: PostgreSQL & Grafana (Local VM)
           </span>
-          <span class="tech-pill">
-            <img src="node-red-icon.svg" class="tech-logo-img" alt="Node-RED"> Node-RED
+          <span class="tech-badge">
+            <img src="node-red-icon.svg" class="tech-logo-img" alt="Node-RED"> Tier 5: Node-RED Watchman (Local VM)
           </span>
-          <span class="tech-pill">
-            <img src="Raspberry-Pi-Logo-2012.png" class="tech-logo-img" alt="Raspberry Pi 4">
+          <span class="tech-badge" style="border-color: var(--accent-amber-border);">
+            <img src="Raspberry-Pi-Logo-2012.png" class="tech-logo-img" alt="WisBlock/Pi"> WisBlock & Pi 4 Gateway (In Transit)
           </span>
-          <span class="tech-pill">
-            <img src="hyperledgerfabric.png" class="tech-logo-img" alt="Hyperledger">
+          <span class="tech-badge" style="border-color: var(--accent-purple-border);">
+            <img src="hyperledgerfabric.png" class="tech-logo-img" alt="Hyperledger"> Hyperledger Fabric (Future Concept)
           </span>
         </div>
       </div>
 
       <div class="slide-footer">
-        <span>Jervis James Pedotim - Intern</span>
+        <span>Presenter: Jervis James Pedotim</span>
+        <span>Weekly Technical Standup Presentation</span>
       </div>
     </div>
 
-    <!-- Slide 2: The Agricultural Data Gap -->
+    <!-- SLIDE 2: Step 0 • Problem Statement -->
     <div class="slide" data-slide="2">
       <div class="slide-header">
-        <span class="doc-tag">Problem Statement</span>
-        <span class="slide-num">02 / 10</span>
+        <span class="doc-tag amber">Step 0 • Setting the Stage</span>
+        <span class="slide-num">Slide 2 of 5</span>
       </div>
 
-      <h2>The Agricultural Field Data Gap</h2>
-      <p class="subtitle">Why traditional farm monitoring methods fail to deliver real-time field visibility.</p>
+      <h2>The Core Problem: Farm Data Blindspots</h2>
+      <p class="subtitle">Why traditional farm monitoring fails to deliver real-time field visibility.</p>
 
       <div class="grid-2">
-        <div class="panel panel-blue">
-          <div class="panel-header" style="color: var(--accent-blue);">
-            <span>The Limits of Standard Weather Stations</span>
+        <div class="panel">
+          <div class="panel-header">
+            <span>Limits of Standard Weather Reports</span>
           </div>
           <div class="panel-body">
-            <p>• Regional weather stations only measure ambient air on elevated towers miles away.</p>
-            <p>• They completely miss localized canopy microclimates, greenhouse humidity pockets, and low-lying frost valleys where crops actually live and grow.</p>
+            <ul class="bullet-list amber">
+              <li><strong>Broad Regional Forecasts:</strong> Commercial weather stations located miles away on high towers measure macro air currents, missing the distinct microclimates created inside dense crop foliage.</li>
+              <li><strong>Canopy Blindspots:</strong> Standard forecasts measure ambient air 10 meters off the ground, failing to detect leaf-level humidity trapped under plant leaves where fungal spores germinate.</li>
+              <li><strong>Delayed Local Readings:</strong> Public weather reports update hourly or daily, missing sudden microclimate shifts like flash humidity spikes after morning dew.</li>
+            </ul>
           </div>
         </div>
 
-        <div class="panel panel-amber">
-          <div class="panel-header" style="color: var(--accent-amber);">
-            <span>High Costs & Commercial Vendor Lock-In</span>
-            <span class="tech-pill">Cellular SIM</span>
+        <div class="panel">
+          <div class="panel-header">
+            <span>High Costs & Commercial Lock-In</span>
+            <span class="tech-badge" style="font-size: 0.85rem;">Cellular SIM</span>
           </div>
           <div class="panel-body">
-            <p>• Proprietary commercial farm sensors require expensive per-device SIM subscriptions ($5–$10/month per node).</p>
-            <p>• Commercial vendors often lock farm data behind proprietary cloud paywalls, making wide-scale deployment cost-prohibitive for large properties.</p>
+            <ul class="bullet-list amber">
+              <li><strong>Recurring SIM Costs:</strong> Commercial cellular ag-tech sensors charge $5 to $10/month per node in subscription fees, creating steep recurring bills for 50+ field nodes.</li>
+              <li><strong>Closed Cloud Portals:</strong> Commercial vendors lock farm data behind proprietary cloud paywalls, charging extra fees for raw data exports and API access.</li>
+              <li><strong>Proprietary Hardware Lock-In:</strong> Vendor lock-in forces farms to purchase expensive replacement probes from a single vendor with zero interoperability.</li>
+            </ul>
           </div>
         </div>
       </div>
 
       <div class="slide-footer">
-        <span>Context: Why traditional farm monitoring falls short</span>
+        <span>Weekly Technical Standup | Slide 2 of 5</span>
       </div>
     </div>
 
-    <!-- Slide 3: Wireless Architecture -->
+    <!-- SLIDE 3: System Architecture & Data Flow Map (SVG EMBEDDED) -->
     <div class="slide" data-slide="3">
       <div class="slide-header">
-        <span class="doc-tag">Wireless Architecture</span>
-        <span class="slide-num">03 / 10</span>
+        <span class="doc-tag green">Step 0 • System Topology Map</span>
+        <span class="slide-num">Slide 3 of 5</span>
       </div>
 
-      <h2>Long-Range, Zero-Subscription Field Coverage</h2>
-      <p class="subtitle">Establishing a private, low-cost LoRaWAN wireless network across farm terrain.</p>
+      <h2>Master Architecture & System Topology Map</h2>
+      <p class="subtitle">Comprehensive end-to-end dataflow diagram detailing microservices, protocols, and hardware tiers.</p>
 
-      <div class="grid-2">
-        <div class="panel panel-blue">
-          <div class="panel-header" style="color: var(--accent-blue);">
-            <span>Multi-Kilometer Canopy Penetration</span>
-            <span class="tech-pill"><img src="LoRaWAN_Logo.svg.webp" class="tech-logo-img" alt="LoRaWAN"></span>
-          </div>
-          <div class="panel-body">
-            <p>• Long-range LoRaWAN radio signals travel 5 to 15 kilometers across farm terrain.</p>
-            <p>• Low-frequency radio signals easily pass through dense crop foliage, tree lines, and greenhouse structures where higher-frequency Wi-Fi drops within 50 meters.</p>
-          </div>
-        </div>
-
-        <div class="panel panel-green">
-          <div class="panel-header" style="color: var(--accent-green);">
-            <span>Zero Monthly Data Fees & Complete Privacy</span>
-          </div>
-          <div class="panel-body">
-            <p>• One central base station gateway manages hundreds of field sensors for <span class="highlight">$0 monthly data fees</span>.</p>
-            <p>• Keeps operating expenses minimal while securing 100% data ownership without relying on third-party cloud vendors.</p>
-          </div>
-        </div>
+      <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 0; background: #ffffff; border: 1px solid var(--border); border-radius: 16px; padding: 0.7rem; box-shadow: 0 4px 12px rgba(15, 23, 42, 0.03); overflow: hidden; margin-bottom: 0.35rem;">
+        <img src="dataflow-diagram.svg" style="width: 100%; height: 100%; object-fit: contain;" alt="Comprehensive LoRaWAN Dataflow Architecture Diagram">
       </div>
 
       <div class="slide-footer">
-        <span>Core Value Proposition</span>
+        <span>Weekly Technical Standup | Slide 3 of 5</span>
       </div>
     </div>
 
-    <!-- Slide 4: Microclimate Intelligence -->
+    <!-- SLIDE 4: 3-CARD WORKBENCH (ACCURATE SCOPE LANGUAGE) -->
     <div class="slide" data-slide="4">
-      <div class="slide-header">
-        <span class="doc-tag">ChirpStack Core Server</span>
-        <span class="slide-num">04 / 10</span>
+      <!-- Dynamic Parent Container + Internal Sub-Node Flow Bar -->
+      <div class="top-node-path-bar" id="top-node-path-bar">
+        <!-- Dynamically rendered by JavaScript -->
       </div>
 
-      <h2>Macro vs. Microclimate Intelligence</h2>
-      <p class="subtitle">Moving from general weather forecasts to canopy-level crop protection with ChirpStack.</p>
+      <!-- Dynamic Node Content View -->
+      <div class="node-dynamic-wrapper" id="node-dynamic-wrapper">
+        <h2 id="dyn-node-heading">Node 1: Dragino LSN50v2-S31 Industrial Sensor Probe</h2>
+        <p class="subtitle" id="dyn-node-subtitle">Data packet originates as physical electrical resistance variations inside field crop probes.</p>
 
-      <div class="grid-2">
-        <div class="panel panel-blue">
-          <div class="panel-header" style="color: var(--accent-blue);">
-            <span>What I Explored in My Local Setup</span>
-            <span class="tech-pill"><img src="chirpstack.png" class="tech-logo-img" alt="ChirpStack"></span>
+        <div class="node-layout-grid">
+          <!-- Left Node Card -->
+          <div class="diagram-node-card tier-1" id="dyn-node-card">
+            <div>
+              <div class="node-card-title" id="dyn-card-title">Dragino LSN50v2-S31 Probe</div>
+              <div class="node-card-desc" id="dyn-card-desc">Measures air temperature, canopy relative humidity, and soil volumetric water content (VWC).</div>
+              <div class="node-card-highlights" id="dyn-card-highlights">
+                <!-- Informative role details rendered dynamically -->
+              </div>
+            </div>
+            <span class="node-card-badge" id="dyn-card-badge">S31 Multi-Sensor Transducer</span>
           </div>
-          <div class="panel-body">
-            <p>I configured our central ChirpStack network server locally in our lab environment to process multi-sensor data streams.</p>
-            <p>As I set up the decoders, I realized how dense, ultra-low-power sensor arrays can capture micro-variations across different crop zones instead of relying on a single weather station.</p>
-          </div>
-        </div>
 
-        <div class="panel panel-green">
-          <div class="panel-header" style="color: var(--accent-green);">
-            <span>Real-World Impact: Disease Prevention</span>
-          </div>
-          <div class="panel-body">
-            <p>• <strong>Early Disease Modeling:</strong> Fungal blights and crop diseases thrive in localized humidity pockets inside crop canopies long before regional humidity changes.</p>
-            <p>• <strong>Targeted Protection:</strong> Continuous canopy tracking lets agronomists predict disease risks days early and apply targeted crop protection only where needed.</p>
+          <!-- 3-Column Technology Focus Grid -->
+          <div class="node-content-grid">
+            <div class="info-card">
+              <div class="info-card-title blue">[UNDERLYING TECHNOLOGY]</div>
+              <div class="info-card-body" id="dyn-transformation">
+                <p>Industrial outdoor sensor probe evaluated on our lab bench that measures temperature, leaf humidity, and soil moisture directly inside plant foliage.</p>
+              </div>
+            </div>
+
+            <div class="info-card">
+              <div class="info-card-title green">[FARM BENEFIT]</div>
+              <div class="info-card-body" id="dyn-helpfulness">
+                <p>Measures moisture right at leaf level, giving farmers early warnings when high humidity (>85% RH) creates plant disease risks like mold or fungus.</p>
+              </div>
+            </div>
+
+            <div class="info-card">
+              <div class="info-card-title purple">[TECHNOLOGY COMPARISON]</div>
+              <div class="info-card-body" id="dyn-comparison">
+                <p>Beats distant weather stations miles away on high poles that measure high air, missing the moisture trapped deep inside crop rows.</p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
+      <!-- Clean Footer -->
       <div class="slide-footer">
-        <span>Weekly Standup Presentation</span>
+        <span>Weekly Technical Standup</span>
+        <span id="dyn-footer-status">Node 1 / 18</span>
       </div>
     </div>
 
-    <!-- Slide 5: Field-Resilient Gateway -->
+    <!-- SLIDE 5: EXECUTIVE SUMMARY & WEEKLY TAKEAWAYS -->
     <div class="slide" data-slide="5">
       <div class="slide-header">
-        <span class="doc-tag">Offline Access Point Mode</span>
-        <span class="slide-num">05 / 10</span>
+        <span class="doc-tag green">Summary & Weekly Takeaways</span>
+        <span class="slide-num">Slide 5 of 5</span>
       </div>
 
-      <h2>Surviving Internet Dead Zones</h2>
-      <p class="subtitle">Ensuring farm operations never halt when cloud connections drop.</p>
+      <h2>Executive Summary & Weekly Takeaways</h2>
+      <p class="subtitle">Reflecting on completed local software setup milestones and future hardware roadmap.</p>
 
       <div class="grid-2">
-        <div class="panel panel-blue">
-          <div class="panel-header" style="color: var(--accent-blue);">
-            <span>What I Configured & Tested Locally</span>
-            <span class="tech-pill"><img src="LoRaWAN_Logo.svg.webp" class="tech-logo-img" alt="LoRaWAN AP"> AP Mode</span>
+        <div class="panel">
+          <div class="panel-header">
+            <span>Verified Local VM Milestones (Present)</span>
           </div>
           <div class="panel-body">
-            <p>I configured our gateway to broadcast its own local Wi-Fi Access Point and set up direct network routing on our server VM.</p>
-            <p>I created simple one-click controls to toggle smoothly between local gateway mode and internet mode during local testing.</p>
+            <ul class="bullet-list green">
+              <li><strong>Hardware Bench Testing:</strong> Evaluated Dragino field probes & Milesight UG65 base station gateway in lab bench environment.</li>
+              <li><strong>Local VM Server Stack:</strong> Configured ChirpStack network server decoders, security keys, and data translators in local Docker VM.</li>
+              <li><strong>Time-Series Database & UI:</strong> Connected PostgreSQL time-series database & live Grafana visual scoreboards on local VM ports.</li>
+              <li><strong>Automated Rule Watchman:</strong> Built sub-second Node-RED rule engine for instant hazard detection and free Telegram mobile alerts.</li>
+            </ul>
           </div>
         </div>
 
-        <div class="panel panel-green">
-          <div class="panel-header" style="color: var(--accent-green);">
-            <span>Real-World Impact: Remote Field Resilience</span>
+        <div class="panel">
+          <div class="panel-header">
+            <span>Future Exploration & Transit Hardware Plan</span>
           </div>
           <div class="panel-body">
-            <p>• <strong>Zero Cloud Reliance:</strong> Remote farmland frequently suffers from zero cellular coverage. Local edge processing ensures zero data loss during internet outages.</p>
-            <p>• <strong>On-Site Field Diagnostics:</strong> Enables technicians walking into disconnected fields to connect their tablets directly to the gateway's local Wi-Fi to inspect live crop health on-site.</p>
+            <ul class="bullet-list amber">
+              <li><strong>Tower Gateway Masts:</strong> Assemble physical Raspberry Pi 4 + RAK5146 gateway tower masts once transit hardware arrives.</li>
+              <li><strong>Solar Field Nodes:</strong> Deploy solar-powered WisBlock field sensor nodes and calibrate Soil NPK nutrient probes.</li>
+              <li><strong>Enterprise Blockchain:</strong> Connect Node-RED automation to Hyperledger Fabric enterprise blockchain for immutable crop export logs.</li>
+            </ul>
           </div>
         </div>
       </div>
 
       <div class="slide-footer">
-        <span>Weekly Standup Presentation</span>
-      </div>
-    </div>
-
-    <!-- Slide 6: Data Sovereignty -->
-    <div class="slide" data-slide="6">
-      <div class="slide-header">
-        <span class="doc-tag">PostgreSQL & Grafana</span>
-        <span class="slide-num">06 / 10</span>
-      </div>
-
-      <h2>Data Sovereignty & Visual Farm Scoreboards</h2>
-      <p class="subtitle">Storing readings safely in PostgreSQL and turning data into clear Grafana scoreboards.</p>
-
-      <div class="grid-2">
-        <div class="panel panel-blue">
-          <div class="panel-header" style="color: var(--accent-blue);">
-            <span>What I Configured & Tested Locally</span>
-            <div>
-              <span class="tech-pill"><img src="Postgresql_elephant.svg" class="tech-logo-img" alt="PostgreSQL"></span>
-              <span class="tech-pill"><img src="grafana.webp" class="tech-logo-img" alt="Grafana"></span>
-            </div>
-          </div>
-          <div class="panel-body">
-            <p>I connected a local PostgreSQL database to record sensor uploads and built visual Grafana scoreboards with color-coded gauges and trend graphs.</p>
-            <p>Storing data locally in a flexible format allows us to add new types of sensors in the future without changing our database setup.</p>
-          </div>
-        </div>
-
-        <div class="panel panel-green">
-          <div class="panel-header" style="color: var(--accent-green);">
-            <span>Real-World Impact: Data Sovereignty</span>
-          </div>
-          <div class="panel-body">
-            <p>• <strong>100% Data Sovereignty:</strong> All farm history remains stored on our own equipment—no third-party cloud vendors locking our farm data behind subscription paywalls.</p>
-            <p>• <strong>Data-Driven Decisions:</strong> Replaces manual field check trips with clear visual screens (soil moisture, temperature, humidity) and lets managers compare trends across crop seasons.</p>
-          </div>
-        </div>
-      </div>
-
-      <div class="slide-footer">
-        <span>Weekly Standup Presentation</span>
-      </div>
-    </div>
-
-    <!-- Slide 7: Automated Hazard Defense -->
-    <div class="slide" data-slide="7">
-      <div class="slide-header">
-        <span class="doc-tag">Node-RED Automation</span>
-        <span class="slide-num">07 / 10</span>
-      </div>
-
-      <h2>An Automated 24/7 Digital Farm Watchman</h2>
-      <p class="subtitle">Bridging field data directly to automated physical hazard protection using Node-RED.</p>
-
-      <div class="grid-2">
-        <div class="panel panel-blue">
-          <div class="panel-header" style="color: var(--accent-blue);">
-            <span>What I Configured & Tested Locally</span>
-            <span class="tech-pill"><img src="node-red-icon.svg" class="tech-logo-img" alt="Node-RED"> Node-RED</span>
-          </div>
-          <div class="panel-body">
-            <p>I wired automated logic rules in Node-RED using our local test environment to monitor live sensor streams against safety limits.</p>
-            <p>This showed me how raw sensor numbers can be processed in milliseconds to drive automated actions instead of waiting for a human operator to log into a dashboard.</p>
-          </div>
-        </div>
-
-        <div class="panel panel-green">
-          <div class="panel-header" style="color: var(--accent-green);">
-            <span>Real-World Impact: Proactive Defense</span>
-          </div>
-          <div class="panel-body">
-            <p>• <strong>Instant Hazard Warnings:</strong> System acts like an automated 24/7 watchman—immediately sending an SMS alert to farm managers if temperatures drop toward freezing or if soil gets dangerously dry.</p>
-            <p>• <strong>Automated Response:</strong> Can directly activate automated irrigation valves during emergencies, eliminating human delay and protecting crops before damage occurs.</p>
-          </div>
-        </div>
-      </div>
-
-      <div class="slide-footer">
-        <span>Weekly Standup Presentation</span>
-      </div>
-    </div>
-
-    <!-- Slide 8: Soil NPK Sensing -->
-    <div class="slide" data-slide="8">
-      <div class="slide-header">
-        <span class="doc-tag">Soil NPK Sensing</span>
-        <span class="slide-num">08 / 10</span>
-      </div>
-
-      <h2>Real-Time Soil NPK Nutrient Intelligence</h2>
-      <p class="subtitle">Replacing slow off-site lab testing with live root-zone soil monitoring using RAKwireless sensors.</p>
-
-      <div class="grid-2">
-        <div class="panel panel-amber">
-          <div class="panel-header" style="color: var(--accent-amber);">
-            <span>The Traditional Soil Testing Problem</span>
-          </div>
-          <div class="panel-body">
-            <p>• Standard soil testing requires taking manual soil core samples, mailing them to off-site labs, and waiting 2–3 weeks for lab results.</p>
-            <p>• By the time results arrive, soil conditions have shifted, leading to blind over-fertilization, high fertilizer expenses, and chemical runoff.</p>
-          </div>
-        </div>
-
-        <div class="panel panel-green">
-          <div class="panel-header" style="color: var(--accent-green);">
-            <span>RAKwireless Soil NPK Sensing & ROI</span>
-            <span class="tech-pill">RAKwireless NPK Sensor</span>
-          </div>
-          <div class="panel-body">
-            <p>• <strong>Live Nutrient Tracking:</strong> Integrating the industrial <strong>RAKwireless RS485 Soil NPK Sensor</strong> allows measuring <span class="highlight-amber">Nitrogen (N), Phosphorus (P), and Potassium (K)</span> directly in root soil in real time.</p>
-            <p>• <strong>Direct Cost Savings:</strong> Allows applying fertilizer only when and where crops actually need it—reducing fertilizer expenses, boosting crop yield, and protecting long-term soil health.</p>
-          </div>
-        </div>
-      </div>
-
-      <div class="slide-footer">
-        <span>Weekly Standup Presentation</span>
-      </div>
-    </div>
-
-    <!-- Slide 9: Hardware & Blockchain Roadmap -->
-    <div class="slide" data-slide="9">
-      <div class="slide-header">
-        <span class="doc-tag">Hardware & Blockchain Roadmap</span>
-        <span class="slide-num">09 / 10</span>
-      </div>
-
-      <h2>Next Phase: Prototyping & Blockchain Integrity</h2>
-      <p class="subtitle">Building RAKwireless WisBlock nodes and logging telemetry to a private Hyperledger blockchain.</p>
-
-      <div class="grid-2">
-        <div class="panel panel-blue">
-          <div class="panel-header" style="color: var(--accent-blue);">
-            <span>What I Plan to Build & Experiment</span>
-            <div>
-              <span class="tech-pill"><img src="Raspberry-Pi-Logo-2012.png" class="tech-logo-img" alt="Raspberry Pi 4"></span>
-              <span class="tech-pill"><img src="hyperledgerfabric.png" class="tech-logo-img" alt="Hyperledger"></span>
-            </div>
-          </div>
-          <div class="panel-body">
-            <p>For our next phase, I will assemble modular <strong>RAKwireless WisBlock</strong> solar sensor nodes (RAK4631 MCU + RAK19007 baseboard) and build a custom base station gateway using a Raspberry Pi 4 with an outdoor antenna (RAK5146 concentrator card).</p>
-            <p>I will test the <strong>RAKwireless Soil NPK Sensor</strong> and explore uploading telemetry logs to a private <strong>Hyperledger Fabric</strong> blockchain network.</p>
-          </div>
-        </div>
-
-        <div class="panel panel-green">
-          <div class="panel-header" style="color: var(--accent-green);">
-            <span>Real-World Impact: Hyperledger Traceability</span>
-          </div>
-          <div class="panel-body">
-            <p>• <strong>Immutable Crop History:</strong> Uploading telemetry to a Hyperledger Fabric blockchain creates tamper-proof records of soil nutrients, microclimate history, and irrigation events.</p>
-            <p>• <strong>Premium Certification:</strong> Provides food distributors and auditors with verifiable proof of sustainable farming for organic certification and supply chain transparency.</p>
-          </div>
-        </div>
-      </div>
-
-      <div class="slide-footer">
-        <span>Weekly Standup Presentation</span>
-      </div>
-    </div>
-
-    <!-- Slide 10: Summary & Next Steps -->
-    <div class="slide" data-slide="10">
-      <div class="slide-header">
-        <span class="doc-tag">Summary & Next Steps</span>
-        <span class="slide-num">10 / 10</span>
-      </div>
-
-      <h2>Summary & My Internship Takeaways</h2>
-      <p class="subtitle">Reflecting on completed setup milestones and the roadmap ahead.</p>
-
-      <div class="grid-2">
-        <div class="panel panel-green">
-          <div class="panel-header" style="color: var(--accent-green);">
-            <span>What We've Achieved So Far (Lab Setup)</span>
-          </div>
-          <div class="panel-body">
-            <p>• Configured & verified ChirpStack server decoders locally</p>
-            <p>• Set up and tested gateway offline AP mode locally</p>
-            <p>• Established local PostgreSQL database & Grafana scoreboards</p>
-            <p>• Wired Node-RED rule engine for instant hazard alerts</p>
-          </div>
-        </div>
-
-        <div class="panel panel-blue">
-          <div class="panel-header" style="color: var(--accent-blue);">
-            <span>My Next Steps (Prototyping Roadmap)</span>
-          </div>
-          <div class="panel-body">
-            <p>• Build Raspberry Pi 4 gateway base station (RAK5146 card)</p>
-            <p>• Assemble RAKwireless WisBlock solar field node prototypes</p>
-            <p>• Connect & calibrate RAKwireless Soil NPK sensor</p>
-            <p>• Integrate Hyperledger Fabric blockchain for immutable data logging</p>
-          </div>
-        </div>
-      </div>
-
-      <div class="slide-footer">
-        <span>Weekly Standup Presentation | LoRaWAN Setup Project</span>
+        <span>Weekly Standup Presentation | Smart Agriculture Setup</span>
       </div>
     </div>
 
   </div>
 
   <script>
+    // System Architecture Groups & Accurate Scope Descriptions (NO CLAIMS OF MULTI-KILOMETER FIELD TESTING)
+    const parentContainerGroups = [
+      {
+        id: "sensor",
+        containerLabel: "FIELD SENSOR PROBE",
+        tierClass: "tier-1",
+        nodes: [
+          {
+            id: 1,
+            subnodeLabel: "1.1 Transducer",
+            heading: "Node 1: Dragino LSN50v2-S31 Industrial Sensor Probe",
+            subtitle: "Data packet originates as physical electrical resistance variations inside field crop probes.",
+            cardTitle: "Dragino LSN50v2-S31 Probe",
+            cardDesc: "Measures air temperature, canopy relative humidity, and soil volumetric water content (VWC).",
+            roleHighlights: "<strong>System Role:</strong> Foliage Transducer<br><strong>Location:</strong> Field Crop Canopy<br><strong>Output:</strong> Micro-Voltage Signals",
+            cardBadge: "S31 Multi-Sensor Transducer",
+            transformation: "<p>Industrial outdoor sensor technology evaluated on our lab bench that converts soil water content, leaf humidity, and air temperature into electrical signals right inside crop foliage.</p>",
+            helpfulness: "<p>Measures moisture right at leaf level, giving farmers early warnings when high humidity (>85% RH) creates plant disease risks like mold or fungus.</p>",
+            comparison: "<p>Beats distant weather stations miles away on high poles that measure high air, missing the moisture trapped deep inside crop rows.</p>"
+          },
+          {
+            id: 2,
+            subnodeLabel: "1.2 Class A Sleep",
+            heading: "Node 2: Class A Deep Sleep Duty Cycle (Ultra-Low Power)",
+            subtitle: "Data packet stays inside sensor while energy-saving sleep mode protects battery life.",
+            cardTitle: "Class A Sleep Protocol",
+            cardDesc: "Device sleeps 99.9% of the time (tiny 2-5 uA current draw), waking briefly to send data.",
+            roleHighlights: "<strong>System Role:</strong> Power Management<br><strong>State:</strong> 99.9% Deep Sleep<br><strong>Current Draw:</strong> 2-5 µA Tiny Standby",
+            cardBadge: "3-5 Year Battery Life",
+            transformation: "<p>Class A duty cycle technology (smart energy-saving sleep mode) configured in sensor firmware. The sensor stays in deep sleep 99.9% of the time, waking briefly every 10 minutes to transmit readings.</p>",
+            helpfulness: "<p>Allows field sensors to run continuously for 3 to 5 years on internal batteries without needing weekly maintenance or battery swaps.</p>",
+            comparison: "<p>Beats cellular SIM sensors that run continuously, draining batteries in days and requiring expensive solar panel setups on every node.</p>"
+          },
+          {
+            id: 3,
+            subnodeLabel: "1.3 Hex Encoding",
+            heading: "Node 3: 11-Byte Compressed Hexadecimal Payload",
+            subtitle: "Data packet is compressed inside the sensor into 11 raw hexadecimal bytes.",
+            cardTitle: "11-Byte Hex Payload",
+            cardDesc: "Compresses temperature, humidity, soil moisture, and battery voltage into 11 tiny bytes.",
+            roleHighlights: "<strong>System Role:</strong> Data Encoder<br><strong>Format:</strong> Packed Binary Hex<br><strong>Airtime:</strong> < 40 ms Ultra-Fast",
+            cardBadge: "11-Byte Hex Compression",
+            transformation: "<p>Binary payload compression technology. It squeezes floating-point temperature, humidity, soil moisture, and battery values into 11 tiny hexadecimal bytes before sending.</p>",
+            helpfulness: "<p>Shrinks wireless broadcast time to under 40 milliseconds, extending battery life and keeping radio channels clear for hundreds of farm sensors.</p>",
+            comparison: "<p>Beats long plain-text messages (like JSON strings) that take 4x to 7x longer to send, clogging radio channels and draining batteries fast.</p>"
+          },
+          {
+            id: 4,
+            subnodeLabel: "1.4 915 MHz RF",
+            heading: "Node 4: Sub-GHz Transceiver (915 MHz Long-Range Radio)",
+            subtitle: "Data packet leaves sensor antenna as long-distance 915 MHz radio waves.",
+            cardTitle: "915 MHz CSS Transceiver",
+            cardDesc: "Transmits compressed 11-byte hex data using long-range radio protocol.",
+            roleHighlights: "<strong>System Role:</strong> Radio Transceiver<br><strong>Bandwidth:</strong> 915 MHz Sub-GHz<br><strong>Designed Range:</strong> 5-15 km Range",
+            cardBadge: "915 MHz Long-Range Band",
+            transformation: "<p>Long-range Sub-GHz radio technology (915 MHz band) designed to transmit data across multi-kilometer field distances without cellular subscription fees.</p>",
+            helpfulness: "<p>Long-wavelength 915 MHz radio waves travel easily through dense, wet crop foliage over 5 to 15 kilometers without needing repeater towers.</p>",
+            comparison: "<p>Beats Wi-Fi and Bluetooth signals that get blocked by wet crop leaves and are limited to short distances (50 meters).</p>"
+          }
+        ]
+      },
+      {
+        id: "gateway",
+        containerLabel: "MILESIGHT UG65 GATEWAY",
+        tierClass: "tier-2",
+        nodes: [
+          {
+            id: 5,
+            subnodeLabel: "2.1 RF Capture",
+            heading: "Node 5: Milesight UG65 Edge Base Station Gateway",
+            subtitle: "Data packet arrives at gateway antenna, captured across 8 radio channels simultaneously.",
+            cardTitle: "Milesight UG65 Gateway",
+            cardDesc: "Industrial outdoor base station picking up multi-channel radio signals and sending them to IP.",
+            roleHighlights: "<strong>System Role:</strong> Base Station Gateway<br><strong>Channels:</strong> 8 Parallel SX1302<br><strong>Location:</strong> Bench Evaluated",
+            cardBadge: "Milesight UG65 Base Station",
+            transformation: "<p>Multi-channel base station gateway technology evaluated on our lab bench. It receives wireless radio signals across 8 parallel channels and bridges them onto IP networks.</p>",
+            helpfulness: "<p>Listens to up to 8 sensor transmissions at the same time, ensuring no sensor readings are missed or dropped during busy field hours.</p>",
+            comparison: "<p>Beats single-channel DIY receivers that drop over 80% of sensor messages when multiple field sensors transmit together.</p>"
+          },
+          {
+            id: 6,
+            subnodeLabel: "2.2 RF Metadata",
+            heading: "Node 6: RF Signal Quality Metadata (RSSI Signal Strength & SNR Clarity)",
+            subtitle: "Data packet gets tagged with RSSI (signal strength) and SNR (signal clarity) scores.",
+            cardTitle: "RF Signal Metadata",
+            cardDesc: "Measures RSSI (Received Signal Strength Indicator) and SNR (Signal-to-Noise Ratio).",
+            roleHighlights: "<strong>System Role:</strong> Link Quality Audit<br><strong>Power Meter:</strong> RSSI (-120 to -60 dBm)<br><strong>Signal Clarity:</strong> SNR Noise Ratio",
+            cardBadge: "RSSI / SNR Link Metrics",
+            transformation: "<p>Radio link analysis technology built into the gateway. It measures RSSI (signal power meter) and SNR (noise clarity score) for every incoming wireless packet.</p>",
+            helpfulness: "<p>Helps engineers monitor physical network health so they can identify weak sensor antennas, low batteries, or growing crop blockages early.</p>",
+            comparison: "<p>Beats basic routers that only show simple signal bars without exact numerical values for troubleshooting technical issues.</p>"
+          },
+          {
+            id: 7,
+            subnodeLabel: "2.3 UDP Forwarder",
+            heading: "Node 7: Semtech UDP Packet Forwarder (Network Sender)",
+            subtitle: "Data packet is packaged into a fast UDP socket packet for network transmission.",
+            cardTitle: "Semtech UDP Forwarder",
+            cardDesc: "Background program packaging sensor data and signal scores into UDP socket packets.",
+            roleHighlights: "<strong>System Role:</strong> Edge Network Sender<br><strong>Protocol:</strong> UDP Datagram Socket<br><strong>Network Port:</strong> UDP Port 1700",
+            cardBadge: "UDP Socket Port 1700",
+            transformation: "<p>Direct network packet forwarder technology running on the gateway OS that encapsulates sensor data and signal quality scores into direct UDP socket packets on Port 1700.</p>",
+            helpfulness: "<p>Sends sensor data instantly across the farm network using minimal computer memory and processing power on the gateway.</p>",
+            comparison: "<p>Beats slow HTTPS web connections by removing heavy handshake delays on edge hardware processors.</p>"
+          },
+          {
+            id: 8,
+            subnodeLabel: "2.4 Flash Buffer",
+            heading: "Node 8: In-Memory Flash Buffer & Offline Wi-Fi Hotspot",
+            subtitle: "Data packet is stored safely in local memory if the main internet disconnects.",
+            cardTitle: "Flash Queue & Direct AP",
+            cardDesc: "Stores readings in memory during internet drops; creates a Wi-Fi hotspot for tablets.",
+            roleHighlights: "<strong>System Role:</strong> Outage Buffer Memory<br><strong>Capacity:</strong> 500k Offline Logs<br><strong>Local AP:</strong> Direct Tablet Wi-Fi",
+            cardBadge: "Flash Memory Outage Buffer",
+            transformation: "<p>Edge outage resilience memory technology. If main internet goes down, the gateway saves readings in internal flash memory and opens a local Wi-Fi hotspot for farm staff.</p>",
+            helpfulness: "<p>Guarantees zero data loss during bad weather internet outages while letting staff connect tablets directly to the gateway in the field.</p>",
+            comparison: "<p>Beats cloud-only gateways that lose all live sensor data permanently the moment internet drops.</p>"
+          }
+        ]
+      },
+      {
+        id: "server",
+        containerLabel: "CHIRPSTACK NETWORK SERVER (LOCAL VM)",
+        tierClass: "tier-3",
+        nodes: [
+          {
+            id: 9,
+            subnodeLabel: "3.1 UDP Bridge",
+            heading: "Node 9: ChirpStack Gateway Bridge (Server Ingestion Listener)",
+            subtitle: "Data packet reaches our server VM, received on UDP Port 1700 by Gateway Bridge.",
+            cardTitle: "ChirpStack Gateway Bridge",
+            cardDesc: "Server program receiving UDP Port 1700 packets and organizing them into standard server events.",
+            roleHighlights: "<strong>System Role:</strong> Server Ingestion<br><strong>Location:</strong> Local Docker VM<br><strong>Standard:</strong> Unified Event Schema",
+            cardBadge: "ChirpStack Gateway Bridge",
+            transformation: "<p>Gateway bridge ingestion technology running inside our local Docker VM stack that receives incoming UDP network packets on Port 1700 and translates them into standard server events.</p>",
+            helpfulness: "<p>Standardizes data from different gateway brands (Milesight, Dragino, RAK) into one single format so all devices work together smoothly.</p>",
+            comparison: "<p>Beats locked commercial cloud systems that force you to buy only one brand of hardware.</p>"
+          },
+          {
+            id: 10,
+            subnodeLabel: "3.2 AES-128 Core",
+            heading: "Node 10: ChirpStack v4 Server & AES-128 Security Decryption",
+            subtitle: "Data packet is decrypted using secret keys and checked to filter out duplicate copies.",
+            cardTitle: "ChirpStack v4 Core",
+            cardDesc: "Decrypts AES-128 security keys, checks message numbers, and filters out duplicate readings.",
+            roleHighlights: "<strong>System Role:</strong> Security & Decryption<br><strong>Encryption:</strong> AES-128 Bit Keys<br><strong>Protection:</strong> Anti-Replay Guard",
+            cardBadge: "AES-128 Security Decryption",
+            transformation: "<p>Core Network Server cryptographic security technology running in our VM stack. It uses secret AES-128 encryption keys to unlock messages and filters out duplicate copies received by multiple gateways.</p>",
+            helpfulness: "<p>AES-128 encryption keeps farm data safe from hackers or tampering, while duplicate filtering keeps databases clean.</p>",
+            comparison: "<p>Beats unencrypted 433 MHz remote sensors that broadcast raw readable signals easily intercepted or jammed by anyone.</p>"
+          },
+          {
+            id: 11,
+            subnodeLabel: "3.3 JS Codec",
+            heading: "Node 11: JavaScript Payload Codec (Hex to Readable Numbers)",
+            subtitle: "Data packet is translated from raw hex code into clean, readable numbers.",
+            cardTitle: "JavaScript Payload Codec",
+            cardDesc: "Translates raw hex byte code into structured JSON numbers (e.g. temp: 28.4, humidity: 85%).",
+            roleHighlights: "<strong>System Role:</strong> Data Translator<br><strong>Script:</strong> JavaScript Decoders<br><strong>Output:</strong> Structured JSON",
+            cardBadge: "JavaScript Data Codec",
+            transformation: "<p>Data payload codec technology running inside ChirpStack in our VM stack. It decodes compressed hexadecimal code into clear, human-readable numbers (temperature, humidity, soil moisture).</p>",
+            helpfulness: "<p>Turns raw code into clean numbers (e.g. Temp: 28.4°C, Humidity: 85%) ready for dashboards and automated alerts.</p>",
+            comparison: "<p>Beats hardcoded fixed decoders by letting us update translator scripts easily in software without changing physical sensors.</p>"
+          },
+          {
+            id: 12,
+            subnodeLabel: "3.4 MQTT Broker",
+            heading: "Node 12: Mosquitto MQTT Broker (Message Post Office)",
+            subtitle: "Data packet is published to MQTT Port 1883 for database and alert programs to read.",
+            cardTitle: "Mosquitto MQTT Broker",
+            cardDesc: "Publishes decoded JSON metrics to structured MQTT topics on TCP Port 1883.",
+            roleHighlights: "<strong>System Role:</strong> Digital Post Office<br><strong>Protocol:</strong> MQTT Pub-Sub<br><strong>Network Port:</strong> TCP Port 1883",
+            cardBadge: "Mosquitto MQTT Port 1883",
+            transformation: "<p>Publish-subscribe MQTT messaging broker technology operating on Port 1883 in our VM stack. It acts like a digital post office, broadcasting decoded telemetry to downstream applications.</p>",
+            helpfulness: "<p>Separates server decoding from storage and alerts so multiple software programs can read live farm data at the exact same time.</p>",
+            comparison: "<p>Beats connecting sensors directly to databases, which creates bottlenecks when many apps try to write data simultaneously.</p>"
+          }
+        ]
+      },
+      {
+        id: "database",
+        containerLabel: "TIMESCALEDB & GRAFANA (LOCAL VM)",
+        tierClass: "tier-4",
+        nodes: [
+          {
+            id: 13,
+            subnodeLabel: "4.1 TimescaleDB",
+            heading: "Node 13: PostgreSQL 14 & TimescaleDB (Time-Series Database)",
+            subtitle: "Data packet is stored with exact time-stamps in PostgreSQL TimescaleDB on Port 5432.",
+            cardTitle: "PostgreSQL + TimescaleDB",
+            cardDesc: "Logs sensor data into time-partitioned tables built specifically for historical data.",
+            roleHighlights: "<strong>System Role:</strong> Time-Series Logging<br><strong>Engine:</strong> PostgreSQL + TimescaleDB<br><strong>Network Port:</strong> DB Port 5432",
+            cardBadge: "TimescaleDB Database Port 5432",
+            transformation: "<p>Time-series database technology extending PostgreSQL 14 with TimescaleDB hypertables on Port 5432 in our VM stack, optimized to store timestamped sensor records into organized time chunks.</p>",
+            helpfulness: "<p>Keeps data searching fast even with millions of historical records stored over years of crop seasons.</p>",
+            comparison: "<p>Beats standard database tables that slow down dramatically when storing millions of sensor log entries.</p>"
+          },
+          {
+            id: 14,
+            subnodeLabel: "4.2 Grafana UI",
+            heading: "Node 14: Grafana Scoreboard UI (Visual Color-Coded Dashboard)",
+            subtitle: "Data packet values update visual color-coded status scoreboards on Port 3000.",
+            cardTitle: "Grafana Dashboard UI",
+            cardDesc: "Reads database values every 5 seconds to update color-coded visual scoreboards on Port 3000.",
+            roleHighlights: "<strong>System Role:</strong> Visual Scoreboard<br><strong>Refresh:</strong> 5-Second Auto Loop<br><strong>Web Port:</strong> UI Port 3000",
+            cardBadge: "Grafana Scoreboard Port 3000",
+            transformation: "<p>Visual scoreboard dashboard technology running on Port 3000 in our VM stack. It queries database numbers every 5 seconds to render live color-coded status scoreboards and gauges.</p>",
+            helpfulness: "<p>Gives farm managers an instant color-coded visual check (Green = Good, Red = Alert) of environmental factors on an office screen.</p>",
+            comparison: "<p>Beats manual paper logs and spreadsheets by eliminating manual data entry drives around farm fields.</p>"
+          }
+        ]
+      },
+      {
+        id: "automation",
+        containerLabel: "AUTOMATION & ALERTS (LOCAL VM)",
+        tierClass: "tier-5",
+        nodes: [
+          {
+            id: 15,
+            subnodeLabel: "5.1 Node-RED Engine",
+            heading: "Node 15: Node-RED Sub-Second Flow Engine (24/7 Digital Watchman)",
+            subtitle: "Data packet is checked by Node-RED rule engine on Port 1880 against safety thresholds.",
+            cardTitle: "Node-RED Flow Engine",
+            cardDesc: "Visual automation program subscribing to MQTT data and evaluating hazard safety rules.",
+            roleHighlights: "<strong>System Role:</strong> Digital Watchman<br><strong>Engine:</strong> Node-RED Rules<br><strong>Response:</strong> Sub-Second Trigger",
+            cardBadge: "Node-RED Rule Engine Port 1880",
+            transformation: "<p>Automated rule engine technology running on Port 1880 in our VM stack. It acts like a digital watchman, continuously evaluating incoming sensor readings against safety limits.</p>",
+            helpfulness: "<p>Monitors crop safety 24/7 in real time, detecting environmental hazards in milliseconds while farm staff sleep overnight.</p>",
+            comparison: "<p>Beats manual checks by detecting crop risks instantly the second safety limits are crossed.</p>"
+          },
+          {
+            id: 16,
+            subnodeLabel: "5.2 Telegram Alert",
+            heading: "Node 16: Free Telegram Bot API Mobile Alerts ($0 Cost Push Warnings)",
+            subtitle: "Data packet triggers an instant alert sent directly to supervisor smartphones for $0.",
+            cardTitle: "Telegram Bot API Alerts",
+            cardDesc: "Sends instant mobile push warnings to Telegram on smartphones for $0 carrier costs.",
+            roleHighlights: "<strong>System Role:</strong> Mobile Push Alert<br><strong>Channel:</strong> Telegram Bot API<br><strong>Operating Cost:</strong> $0 Free Webhooks",
+            cardBadge: "$0 Telegram Push Webhooks",
+            transformation: "<p>Smartphone push notification webhook technology configured in our VM. When hazards are detected, Node-RED dispatches instant alerts directly to supervisor smartphones via Telegram.</p>",
+            helpfulness: "<p>Delivers urgent hazard alerts with exact field locations directly to supervisor phones without monthly SMS carrier bills.</p>",
+            comparison: "<p>Beats commercial cellular SMS services that charge per-message fees ($0.05/SMS) and paid commercial API plans.</p>"
+          },
+          {
+            id: 17,
+            subnodeLabel: "5.3 Solenoid Relay",
+            heading: "Node 17: Relay Output Logic (Future Field Solenoid Concept)",
+            subtitle: "Data packet triggers simulated software relay logic for future electric water valves.",
+            cardTitle: "Relay Output Logic",
+            cardDesc: "Generates control signals to open future electric solenoid water valves when soil is dry.",
+            roleHighlights: "<strong>System Role:</strong> Irrigation Control Logic<br><strong>Output:</strong> Digital Valve Switch<br><strong>Status:</strong> Simulated VM Concept",
+            cardBadge: "Simulated Solenoid Control",
+            transformation: "<p>Automated irrigation control logic technology evaluating soil moisture metrics to generate digital output signals for future electric solenoid water valves (simulated in VM, no physical valve actuated).</p>",
+            helpfulness: "<p>Protects crops from drying out by turning on water when soil gets dry, while automatically turning water off if rain is detected.</p>",
+            comparison: "<p>Beats simple clock timers that turn sprinklers on at fixed times even during heavy rainstorms, wasting water and power.</p>"
+          }
+        ]
+      },
+      {
+        id: "future",
+        containerLabel: "FUTURE ROADMAP & TRANSIT HW",
+        tierClass: "future",
+        nodes: [
+          {
+            id: 18,
+            subnodeLabel: "6.1 Transit HW & Fabric",
+            heading: "Node 18: Transit Hardware & Enterprise Blockchain Roadmap",
+            subtitle: "Future data will connect to Pi 4 gateway towers and Hyperledger Fabric enterprise blockchain.",
+            cardTitle: "Transit HW & Hyperledger",
+            cardDesc: "Assembles Pi 4 gateway masts, solar WisBlock nodes, and logs data to Hyperledger Fabric.",
+            roleHighlights: "<strong>System Role:</strong> Future System Expansion<br><strong>Hardware:</strong> Pi 4 Tower (In Transit)<br><strong>Blockchain:</strong> Hyperledger Fabric",
+            cardBadge: "Transit Hardware & Blockchain",
+            transformation: "<p>Enterprise blockchain telemetry logging technology combining solar field nodes, Raspberry Pi 4 gateway towers (hardware currently in transit), and Hyperledger Fabric private blockchain channels.</p>",
+            helpfulness: "<p>Creates tamper-proof QR codes on crop export packaging to prove true environmental growing conditions to international buyers.</p>",
+            comparison: "<p>Beats easily falsified paper labels by offering permanent, tamper-proof digital records with zero transaction fees.</p>"
+          }
+        ]
+      }
+    ];
+
+    // Flatten all nodes for indexing (0 to 17)
+    const allFlatNodes = [];
+    parentContainerGroups.forEach(group => {
+      group.nodes.forEach(n => {
+        allFlatNodes.push({ ...n, parentGroup: group });
+      });
+    });
+
     let currentSlide = 1;
-    const totalSlides = 10;
+    const totalSlides = 5;
+    let activeNodeIndex = 0; // 0 to 17
+
+    function renderDynamicNodePathBar() {
+      const bar = document.getElementById('top-node-path-bar');
+      if (!bar) return;
+      bar.innerHTML = '';
+
+      const currentActiveObj = allFlatNodes[activeNodeIndex];
+
+      parentContainerGroups.forEach((group, gIdx) => {
+        const isGroupActive = (currentActiveObj.parentGroup.id === group.id);
+
+        const groupDiv = document.createElement('div');
+        groupDiv.className = `parent-node-group ${isGroupActive ? 'active' : ''}`;
+
+        const groupLabel = document.createElement('span');
+        groupLabel.className = 'parent-group-label';
+        groupLabel.innerText = group.containerLabel;
+        groupDiv.appendChild(groupLabel);
+
+        group.nodes.forEach((nodeObj) => {
+          const globalIdx = allFlatNodes.findIndex(n => n.id === nodeObj.id);
+          const pill = document.createElement('div');
+          pill.className = `subnode-pill ${globalIdx === activeNodeIndex ? 'active' : (globalIdx < activeNodeIndex ? 'done' : '')}`;
+          pill.innerText = nodeObj.subnodeLabel;
+          pill.onclick = () => selectNode(globalIdx);
+          groupDiv.appendChild(pill);
+        });
+
+        bar.appendChild(groupDiv);
+
+        if (gIdx < parentContainerGroups.length - 1) {
+          const divider = document.createElement('span');
+          divider.className = 'path-arrow-divider';
+          divider.innerText = '->';
+          bar.appendChild(divider);
+        }
+      });
+
+      // Smoothly auto-scroll active container group into view without showing scrollbars
+      const activeGroupDiv = bar.querySelectorAll('.parent-node-group')[parentContainerGroups.findIndex(g => g.id === currentActiveObj.parentGroup.id)];
+      if (activeGroupDiv) {
+        activeGroupDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+      }
+    }
+
+    function selectNode(idx) {
+      if (idx < 0 || idx >= allFlatNodes.length) return;
+      activeNodeIndex = idx;
+
+      const wrapper = document.getElementById('node-dynamic-wrapper');
+      if (wrapper) wrapper.classList.add('switching');
+
+      setTimeout(() => {
+        const data = allFlatNodes[activeNodeIndex];
+        
+        document.getElementById('dyn-node-heading').innerText = data.heading;
+        document.getElementById('dyn-node-subtitle').innerText = data.subtitle;
+        
+        const card = document.getElementById('dyn-node-card');
+        card.className = `diagram-node-card ${data.parentGroup.tierClass}`;
+        
+        document.getElementById('dyn-card-title').innerText = data.cardTitle;
+        document.getElementById('dyn-card-desc').innerText = data.cardDesc;
+        document.getElementById('dyn-card-highlights').innerHTML = data.roleHighlights;
+        document.getElementById('dyn-card-badge').innerText = data.cardBadge;
+        
+        document.getElementById('dyn-transformation').innerHTML = data.transformation;
+        document.getElementById('dyn-helpfulness').innerHTML = data.helpfulness;
+        document.getElementById('dyn-comparison').innerHTML = data.comparison;
+
+        const counterEl = document.getElementById('workbench-node-counter');
+        if (counterEl) counterEl.innerText = `Node ${activeNodeIndex + 1} of ${allFlatNodes.length}`;
+
+        document.getElementById('dyn-footer-status').innerText = `Node ${activeNodeIndex + 1} / ${allFlatNodes.length}`;
+
+        renderDynamicNodePathBar();
+
+        if (wrapper) wrapper.classList.remove('switching');
+      }, 140);
+    }
 
     function updateSlide() {
       document.querySelectorAll('.slide').forEach(slide => slide.classList.remove('active'));
       const active = document.querySelector(`.slide[data-slide="${currentSlide}"]`);
       if (active) active.classList.add('active');
 
-      const progressPercent = ((currentSlide - 1) / (totalSlides - 1)) * 100;
+      const progressPercent = (currentSlide / totalSlides) * 100;
       document.getElementById('progress').style.width = `${progressPercent}%`;
+
+      if (currentSlide === 4) {
+        selectNode(activeNodeIndex);
+      }
     }
 
-    function nextSlide() {
-      if (currentSlide < totalSlides) {
+    function nextStep() {
+      if (currentSlide === 4) {
+        if (activeNodeIndex < allFlatNodes.length - 1) {
+          selectNode(activeNodeIndex + 1);
+        } else {
+          currentSlide = 5;
+          updateSlide();
+        }
+      } else if (currentSlide < totalSlides) {
         currentSlide++;
         updateSlide();
       }
     }
 
-    function prevSlide() {
-      if (currentSlide > 1) {
+    function prevStep() {
+      if (currentSlide === 4) {
+        if (activeNodeIndex > 0) {
+          selectNode(activeNodeIndex - 1);
+        } else {
+          currentSlide = 3;
+          updateSlide();
+        }
+      } else if (currentSlide > 1) {
         currentSlide--;
+        if (currentSlide === 4) activeNodeIndex = allFlatNodes.length - 1;
         updateSlide();
       }
     }
 
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') nextSlide();
-      if (e.key === 'ArrowLeft' || e.key === 'PageUp') prevSlide();
+      if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') nextStep();
+      if (e.key === 'ArrowLeft' || e.key === 'PageUp') prevStep();
+      if (e.key === 'Home') { currentSlide = 1; activeNodeIndex = 0; updateSlide(); }
+      if (e.key === 'End') { currentSlide = totalSlides; updateSlide(); }
+    });
+
+    // Touch Swipe Navigation for Tablets / Mobile Devices
+    let touchStartX = 0;
+    let touchEndX = 0;
+
+    document.addEventListener('touchstart', (e) => {
+      touchStartX = e.changedTouches[0].screenX;
+    });
+
+    document.addEventListener('touchend', (e) => {
+      touchEndX = e.changedTouches[0].screenX;
+      if (touchEndX < touchStartX - 50) nextStep();
+      if (touchEndX > touchStartX + 50) prevStep();
     });
 
     updateSlide();
