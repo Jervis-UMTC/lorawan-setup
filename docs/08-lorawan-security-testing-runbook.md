@@ -25,7 +25,7 @@ Device model / synthetic DevEUI:
 PHY decoder and commit:
 Protocol parser and commit:
 Wireshark version:
-LAF commit:
+gr-lora-sdr commit:
 RF path:
 Shielding / attenuation:
 Production systems excluded:
@@ -262,7 +262,7 @@ Keep raw artifacts immutable after hashing. Create redacted copies for sharing.
 
 1. Capture one known lab frame.
 2. Re-introduce the same frame only within the isolated test path and within the approved bounded test window.
-3. Monitor LAF, ChirpStack logs, gateway events, and MQTT.
+3. Monitor Wireshark PCAPs, ChirpStack logs, gateway events, and MQTT.
 
 **Expected result:** The event is either detected and reported, or the absence of detection is documented as a finding. A duplicate must not be described as an attack solely from the alert text.
 
@@ -310,7 +310,7 @@ When an alert or unexpected event appears, use this order:
 4. Compare MIC, FCnt, DevNonce, and join state
         |
         v
-5. Correlate gateway, ChirpStack, MQTT, and LAF records
+5. Correlate gateway, ChirpStack, MQTT, gr-lora-sdr, and Wireshark PCAP records
         |
         v
 6. Decide: duplicate gateway report, device retransmission,
@@ -326,7 +326,7 @@ When an alert or unexpected event appears, use this order:
 - Did the device join or reset before the counter changed?
 - Was the frame accepted by ChirpStack or only observed at the RF layer?
 - Did the application receive a decoded event?
-- Did LAF classify the event, and is that analyzer implemented in the pinned commit?
+- Did Wireshark or gr-lora-sdr flag frame anomalies, and is that finding verified by server logs?
 - Is the apparent duplicate explained by gateway deduplication or retransmission?
 
 ### 7.2 Classification labels
@@ -341,7 +341,7 @@ Use one primary classification:
 - GATEWAY_DUPLICATION
 - DEVICE_RETRANSMISSION
 - JOIN_STATE_CHANGE
-- LAF_ALERT_UNCORROBORATED
+- UNCORROBORATED_FRAME_ALERT
 - SUSPICIOUS_REPLAY_INDICATOR
 - UNAUTHORIZED_OR_OUT_OF_SCOPE_ACTIVITY
 
@@ -366,9 +366,7 @@ Do not use “attack confirmed” unless the evidence meets the team's incident-
 - Network server:
 - Gateway:
 - Device:
-- PHY decoder:
-- Protocol parser:
-- LAF:
+- gr-lora-sdr:
 - Wireshark:
 - RF path:
 
@@ -405,7 +403,7 @@ Do not use “attack confirmed” unless the evidence meets the team's incident-
 - PCAP:
 - ChirpStack logs:
 - MQTT export:
-- LAF output:
+- Wireshark PCAP output:
 - Configuration:
 - SHA-256 manifest:
 
@@ -429,7 +427,7 @@ Depending on findings, recommendations may include:
 - Protect gateway-to-server backhaul with authenticated and encrypted transport where supported.
 - Restrict ChirpStack, MQTT, database, and gateway management interfaces to authorized networks.
 - Preserve enough gateway metadata and timestamps to distinguish duplicate reception from replay.
-- Treat LAF findings as monitoring evidence and validate them against the network-server state.
+- Treat packet capture findings as evidence and validate them against network-server state.
 - Keep RF test equipment and active transmit paths physically isolated from production.
 
 ## 10. References
