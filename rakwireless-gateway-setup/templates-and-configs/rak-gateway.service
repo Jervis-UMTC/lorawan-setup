@@ -1,0 +1,17 @@
+[Unit]
+Description=RAKwireless LoRaWAN Gateway Packet Forwarder Daemon
+After=network-online.target time-sync.target
+Wants=network-online.target time-sync.target
+
+[Service]
+Type=simple
+User=root
+ExecStartPre=/usr/local/bin/reset_rak_gateway.sh
+ExecStart=/opt/rak_gateway/packet_forwarder/lora_pkt_fwd -c /etc/rak_gateway/global_conf.json
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
