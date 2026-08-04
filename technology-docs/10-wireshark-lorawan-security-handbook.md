@@ -2,14 +2,15 @@
 
 ## 1. Executive Summary & Overview
 
-`Wireshark` is the industry-standard network protocol analyzer used worldwide for deep-packet inspection, traffic capture, protocol debugging, and security auditing. When paired with its native **LoRaWAN Protocol Dissector**, Wireshark provides comprehensive visibility into over-the-air frame structures, Message Integrity Codes (MIC), Frame Counters (FCnt), MAC Command options, and payload encryption.
+`Wireshark` is the industry-standard network protocol analyzer used worldwide for deep-packet inspection, traffic capture, protocol debugging, and security auditing. When paired with its native **LoRaWAN Protocol Dissector**, Wireshark provides comprehensive visibility into frame structures, Message Integrity Codes (MIC), Frame Counters (FCnt), MAC Command options, and payload encryption.
 
-Within this repository's security testing architecture, Wireshark operates as the primary **Protocol Analysis and Security Evidence Engine**. While `gr-lora-sdr` handles RF PHY signal reception and demodulation, Wireshark dissects the resulting byte streams and packet captures (PCAP). This enables test leads and security analysts to:
+Within this repository's security architecture, Wireshark and TShark serve as the primary **Protocol Analysis and Security Evidence Engine**. Capturing Semtech UDP port 1700 packet forwarder traffic between the Milesight UG65 gateway and the ChirpStack network server enables security analysts to:
 
-- Inspect raw `PHYPayload` frames captured from gateways (Semtech UDP port 1700) or MQTT backhaul.
-- Validate cryptographic integrity by checking Message Integrity Codes (MIC) computed with `NwkSKey`.
+- Inspect raw `PHYPayload` frames captured live from gateway backhaul traffic.
+- Validate cryptographic integrity by verifying Message Integrity Codes (MIC) computed with `NwkSKey`.
 - Audit frame counter progression (`FCnt`) to identify replay attacks, counter stalls, or unauthorized resets.
 - Decrypt encrypted application payloads (`FRMPayload`) using synthetic lab `AppSKey` session keys.
+- Audit resilience against Man-in-the-Middle (MitM) payload modifications and join-request `DevNonce` replays.
 - Generate immutable `.pcap` evidence bundles for compliance reporting and security audits.
 
 ---
@@ -37,7 +38,7 @@ Wireshark dissects LoRaWAN traffic across three distinct encapsulation layers:
     └── Message Integrity Code (MIC)       --> 4-byte AES-128-CMAC signature
 
  3. Wireshark Dissector & Decryption Engine
-    ├── Protocol Dissector (`lorawan`)    --> Parses MHDR, FHDR, FPort, MAC Commands, & MIC
+    ├── Protocol Dissector (`lorawan`)     --> Parses MHDR, FHDR, FPort, MAC Commands, & MIC
     ├── Cryptographic Engine               --> Evaluates CMAC using NwkSKey & decrypts AES-CTR using AppSKey
     └── Decrypted Payload (`lorawan.frmpayload_decrypted`)
 ========================================================================================
@@ -59,11 +60,11 @@ Wireshark dissects LoRaWAN traffic across three distinct encapsulation layers:
 
 ---
 
-## 3. Installation & User Permissions Setup
+## 3. Installation & Non-Root Setup
 
 ### 3.1 Linux Installation (Ubuntu / Debian)
 
-Install Wireshark and TShark (command-line utility):
+Install Wireshark and TShark:
 
 ~~~bash
 sudo apt update
@@ -77,10 +78,10 @@ To allow packet capturing without running Wireshark as `root`:
 # 1. Reconfigure wireshark-common to allow non-superusers
 sudo dpkg-reconfigure wireshark-common
 
-# 2. Add your current user to the wireshark group
+# 2. Add current user to the wireshark group
 sudo usermod -aG wireshark $USER
 
-# 3. Apply group changes (or log out and log back in)
+# 3. Apply group changes
 newgrp wireshark
 ~~~
 
@@ -91,37 +92,14 @@ dumpcap -D
 
 ---
 
-## 4. Packet Capture Methodologies
+## 4. Packet Capture Methodology
 
 ### 4.1 Capturing Gateway UDP Port 1700 Traffic
-The Milesight UG65 gateway forwards raw LoRaWAN frames over Semtech UDP Protocol on port `1700`. Capture this backhaul traffic using `tcpdump`:
+The Milesight UG65 gateway forwards raw LoRaWAN frames over Semtech UDP Protocol on port `1700`. Capture this backhaul traffic using `tcpdump` or `tshark`:
 
 ~~~bash
 # Capture UDP 1700 traffic on all interfaces
 sudo tcpdump -i any -s 0 -w ~/lorawan-lab/captures/pcap/gateway-udp1700-$(date -u +%Y%m%dT%H%M%SZ).pcap udp port 1700
-~~~
-
-### 4.2 Converting Demodulated `gr-lora-sdr` Bytes to PCAP
-When capturing frames via `gr-lora-sdr`, use Python with `scapy` to package raw hex bytes into a `.pcap` file for Wireshark inspection:
-
-~~~python
-#!/usr/bin/env python3
-# Save as ~/lorawan-lab/scripts/hex_to_pcap.py
-import sys
-from scapy.all import IP, UDP, Raw, wrpcap
-
-def convert_hex_to_pcap(hex_str, output_pcap):
-    payload = bytes.fromhex(hex_str)
-    # Wrap in dummy UDP packet matching Semtech packet forwarder structure
-    pkt = IP(src="192.168.23.150", dst="192.168.23.137") / UDP(sport=1700, dport=1700) / Raw(load=payload)
-    wrpcap(output_pcap, pkt)
-    print(f"[+] Saved PCAP: {output_pcap}")
-
-if __name__ == "__main__":
-    if len(sys.argv) < 3:
-        print("Usage: python3 hex_to_pcap.py <hex_payload> <output.pcap>")
-        sys.exit(1)
-    convert_hex_to_pcap(sys.argv[1], sys.argv[2])
 ~~~
 
 ---
@@ -140,21 +118,10 @@ Use these standardized Wireshark display filters during protocol analysis and se
 | `lorawan.devaddr == 01:02:03:04` | Filter by synthetic DevAddr | Target device isolation |
 | `lorawan.fcnt` | Track Frame Counter | Replay attack audit |
 | `lorawan.mic` | Inspect 4-byte CMAC | Integrity checking |
+| `lorawan.mic_verified == False` | Filter failed MIC checks | Transit tampering detection |
 | `lorawan.fport == 1` | Filter by Application Port | Sensor data filtering |
 | `lorawan.frmpayload_decrypted` | Filter decrypted payload | Telemetry validation |
 | `lorawan.mac.cmd` | Filter MAC commands | Network management audit |
-
-### Advanced Boolean Filters
-Combine filters for targeted threat hunting:
-
-- **Isolate Uplinks for a Specific Device**:
-  ~~~text
-  lorawan.devaddr == 01:02:03:04 && (lorawan.mtype == 2 || lorawan.mtype == 4)
-  ~~~
-- **Detect Potential Frame Counter Stalls / Replays**:
-  ~~~text
-  lorawan.devaddr == 01:02:03:04 && lorawan.fcnt <= 10
-  ~~~
 
 ---
 
@@ -168,8 +135,8 @@ Wireshark includes a built-in LoRaWAN dissector capable of decrypting AES-128-CT
    ~~~bash
    wireshark ~/lorawan-lab/captures/pcap/gateway-udp1700.pcap
    ~~~
-2. Navigate to **Edit → Preferences → Protocols → LoRaWAN**.
-3. In the LoRaWAN preferences dialog, locate the session key fields:
+2. Navigate to **Edit $\rightarrow$ Preferences $\rightarrow$ Protocols $\rightarrow$ LoRaWAN**.
+3. In the LoRaWAN preferences dialog, enter session key values:
    - **NwkSKey (Network Session Key)**: Enter the 32-character hex key (e.g., `2B7E151628AED2A6ABF7158809CF4F3C`).
    - **AppSKey (Application Session Key)**: Enter the 32-character hex key (e.g., `2B7E151628AED2A6ABF7158809CF4F3C`).
 4. Click **OK** to apply.
@@ -177,42 +144,51 @@ Wireshark includes a built-in LoRaWAN dissector capable of decrypting AES-128-CT
 
 ---
 
-## 7. Security Audit & Vulnerability Testing Workflows
+## 7. Operational Security Analysis & Audit Workflows
 
 ### 7.1 Replay Attack Audit Workflow
 
 **Objective**: Verify whether the private network server detects and rejects replayed uplink frames.
 
-1. **Capture Frame**: Capture a valid unconfirmed uplink using `tcpdump` or `gr-lora-sdr`.
-2. **Inspect Counter**: Open PCAP in Wireshark and record `lorawan.fcnt` (e.g., `FCnt = 42`).
-3. **Re-transmit Frame**: Use `gr-lora-sdr` transmit script to re-send the exact byte payload over the lab RF path.
-4. **Inspect Wireshark PCAP**:
-   - Filter `lorawan.devaddr == 01:02:03:04`.
-   - Observe two identical packets with `FCnt = 42`.
-5. **Correlate Server Logs**:
-   - Open ChirpStack server logs (`docker logs chirpstack`).
-   - Verify server output: `frame counter rolled back` or `FCnt too low`.
-   - Confirm ChirpStack drops the duplicate frame without emitting an MQTT uplink event.
+1. **Capture Frame**: Capture a valid uplink frame from the Milesight gateway stream using `tshark`.
+2. **Inspect Counter**: Open PCAP in Wireshark and record `lorawan.fcnt` (e.g., `FCnt = 15`).
+3. **Simulate Replay**: Re-transmit the exact same Semtech UDP `PUSH_DATA` packet over UDP 1700 to ChirpStack when server state has reached `FCnt = 16`.
+4. **Inspect Server Response**: Observe ChirpStack server logs (`docker logs chirpstack`).
+5. **Correlate Server Behavior**:
+   - Verify server output: `frame counter rolled back` or `FCnt 15 <= 16`.
+   - Confirm ChirpStack drops duplicate frames without emitting an MQTT uplink event.
 
-### 7.2 Message Integrity Code (MIC) Tampering Workflow
+---
 
-**Objective**: Verify server rejection of frames with corrupted integrity signatures.
+### 7.2 Man-in-the-Middle (MitM) Payload Tampering Audit
 
-1. **Obtain Frame**: Take a valid 23-byte uplink payload:
-   `4004030201000100018593a2b1` (Last 4 bytes `8593a2b1` = MIC).
-2. **Mutate MIC**: Change the last byte to `FF`:
-   `4004030201000100018593a2FF`.
-3. **Transmit & Capture**: Transmit via `gr-lora-sdr` and capture via Wireshark.
-4. **Inspect Wireshark**:
-   - Wireshark flags MIC verification status as invalid.
+**Objective**: Verify server rejection of frames modified in transit.
+
+1. **Obtain Frame**: Inspect captured Semtech UDP `PUSH_DATA` datagram.
+2. **Mutate Payload Byte**: Flip or alter 1 byte in the base64-encoded `data` field of the UDP payload (simulating an adversary altering sensor telemetry or injecting fake MAC commands).
+3. **Send to Server**: Forward the altered datagram over UDP port 1700 to ChirpStack Gateway Bridge.
+4. **Inspect Wireshark Dissection**:
+   - Wireshark flags `lorawan.mic_verified == False`.
 5. **Correlate Server Logs**:
    - ChirpStack logs: `validate mic error: invalid mic`.
 
 ---
 
-## 8. Command-Line Automated Inspection with TShark
+### 7.3 OTAA Join-Request DevNonce Replay Audit
 
-`tshark` allows automated CI/CD security verification scripts to parse `.pcap` files without a GUI.
+**Objective**: Verify server prevention of Join-Request replay attacks by reusing `DevNonce` values.
+
+1. **Capture Join-Request**: Isolate Join-Request packet in Wireshark (`lorawan.mtype == 0`) and note the 2-byte `DevNonce`.
+2. **Simulate Replay**: Re-inject the identical `JoinRequest` packet over UDP port 1700.
+3. **Inspect Server Response**:
+   - ChirpStack logs: `validate devnonce error: devnonce has already been used`.
+   - Confirm server drops replayed join request without issuing a `JoinAccept`.
+
+---
+
+## 8. Command-Line Automated Inspection & Threat Hunting with TShark
+
+`tshark` allows automated security verification scripts to parse `.pcap` files without a GUI.
 
 ### 8.1 Extracting Frame Counters and DevAddrs
 ~~~bash
@@ -225,7 +201,18 @@ tshark -r ~/lorawan-lab/captures/pcap/gateway-udp1700.pcap \
     -e lorawan.mtype
 ~~~
 
-### 8.2 Automated Replay Detection Verification Script
+### 8.2 Threat Hunting for Invalid MICs or Dissector Errors
+~~~bash
+tshark -r ~/lorawan-lab/captures/pcap/gateway-udp1700.pcap \
+    -Y "lorawan.mic_verified == False" \
+    -T fields \
+    -e frame.number \
+    -e frame.time \
+    -e lorawan.devaddr \
+    -e lorawan.fcnt
+~~~
+
+### 8.3 Automated Replay Detection Script (`audit_replay.sh`)
 Save as `~/lorawan-lab/scripts/audit_replay.sh`:
 
 ~~~bash
@@ -254,10 +241,7 @@ chmod +x ~/lorawan-lab/scripts/audit_replay.sh
 
 ---
 
-## 9. Summary & Reference Matrix
-
-Wireshark is an indispensable component of the LoRaWAN security engineering stack. Combined with `gr-lora-sdr`, it provides verifiable evidence for protocol validation, replay auditing, and integrity testing.
+## 9. Summary & Reference Links
 
 - **Wireshark LoRaWAN Display Filter Reference**: [wireshark.org/docs/dfref/l/lorawan.html](https://www.wireshark.org/docs/dfref/l/lorawan.html)
-- **gr-lora-sdr Handbook**: [09: gr-lora-sdr RF PHY Handbook](./09-gr-lora-sdr-rf-phy-handbook.md)
-- **Security Testing Runbook**: [08: LoRaWAN Security Testing Runbook](../docs/08-lorawan-security-testing-runbook.md)
+- **LoRaWAN Security Testing Runbook**: [08: LoRaWAN Security Testing Runbook](../docs/08-lorawan-security-testing-runbook.md)

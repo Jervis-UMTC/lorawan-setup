@@ -1,440 +1,270 @@
-# LoRaWAN Security Testing Runbook
+# LoRaWAN Infrastructure Security Audit Runbook
 
-This runbook is the operational companion to the toolkit brief and setup guide. It is designed for a test lead, RF engineer, and network-server operator working together on an authorized private LoRaWAN lab.
+This runbook provides standardized operational tactics and step-by-step procedures for conducting security analysis, posture evaluations, and vulnerability auditing of **our owned LoRaWAN infrastructure** (Milesight UG65 Gateway, Dragino LSN50v2 Sensors, ChirpStack v4 Network Server, PostgreSQL, and Node-RED stack).
 
-For the incoming RAK5146 SPI / AS923 gateway and WisBlock nodes, complete [09: RAK5146 + WisBlock Gateway Commissioning Manual](./09-rak5146-wisblock-gateway-commissioning-manual.md) and pass its normal gateway/device acceptance gates before running security tests.
+> [!IMPORTANT]
+> **Internal Infrastructure Security Audit Scope**: All tactics and test cases herein evaluate confidentiality, cryptographic integrity, anti-replay protections, and transport security across **our private network deployment**. Operations are conducted using non-disruptive network packet taps (`TShark`/`tcpdump`), protocol dissectors, synthetic test packet generation over UDP Port 1700, and ChirpStack container log auditing.
 
-## 1. Test record header
+---
 
-Copy this section into every test report and fill it before starting:
+## 1. Test Record & Infrastructure Header
 
-~~~text
-Test ID:
-Test title:
-Owner:
-Approver:
-Start UTC:
-End UTC:
-Scope:
-Region / channel plan:
-LoRaWAN version:
-Activation mode:
-Network server and commit:
-Gateway model / ID:
-Device model / synthetic DevEUI:
-PHY decoder and commit:
-Protocol parser and commit:
-Wireshark version:
-gr-lora-sdr commit:
-RF path:
-Shielding / attenuation:
-Production systems excluded:
-Artifacts directory:
-~~~
-
-### Repository handoffs
-
-Use the existing deployment manuals for the network baseline, then use the RF documents for the PHY and security test layers. Do not create a second, conflicting copy of the gateway, device, database, dashboard, or Node-RED setup.
-
-| Need | Use this document | Handoff into this runbook |
-|---|---|---|
-| Deploy or validate the private ChirpStack, gateway bridge, MQTT, PostgreSQL, Redis, and Docker stack | [01: Master Deployment Guide](./01-master-deployment-guide.md) | Record the server version, gateway ID, device profile, and test tenant in the test record. |
-| Work from the Milesight gateway's isolated direct AP | [02: Offline Direct-AP Setup Guide](./02-offline-direct-ap-setup-guide.md) | Record the `192.168.23.0/24` path, gateway `192.168.23.150`, VM `192.168.23.137`, and UDP `1700` endpoint when used. |
-| Persist and query decoded device events | [03: PostgreSQL Integration Guide](./03-postgres-integration-guide.md) | Correlate database rows with capture timestamps, gateway events, and protocol-analysis artifacts. |
-| Visualize telemetry and security-related metrics | [04: Grafana Integration Guide](./04-grafana-integration-guide.md) | Capture dashboard state or query results as supporting evidence; dashboards do not replace raw evidence. |
-| Automate MQTT reactions and alerts | [05: Node-RED Integration Guide](./05-node-red-integration-guide.md) | Record flow version and alert output; keep automated actions disabled unless explicitly in scope. |
-| Select the tooling and lab architecture | [06: LoRaWAN RF and Security Toolkit Brief](./06-lorawan-rf-security-toolkit-brief.md) | Confirm whether the test is RF/PHY, protocol, network-server, or detection work. |
-| Build and verify the RF-to-protocol bench | [07: LoRaWAN RF and Protocol Testing Setup Guide](./07-lorawan-rf-and-protocol-testing-setup-guide.md) | Copy the SDR model, band, antenna/conducted path, decoder, parser, and TX safety details into the test record. |
-
-## 2. Roles
-
-| Role | Responsibility |
-|---|---|
-| Test lead | Owns scope, approval, stop conditions, and final report |
-| RF operator | Controls SDR, antenna/cable path, frequency, gain, and TX state |
-| Protocol analyst | Verifies PHYPayload bytes, LoRaWAN fields, MIC/counter expectations |
-| Network-server operator | Verifies ChirpStack, MQTT, gateway bridge, and device state |
-| Evidence custodian | Preserves IQ, PCAP, logs, configurations, hashes, and redacted copies |
-
-One person may hold multiple roles in a small lab, but the test lead should still perform an independent pre-TX confirmation.
-
-## 3. Stop conditions
-
-Stop immediately if any of the following occurs:
-
-- A transmitter is not confirmed to be behind the approved shielded or attenuated path.
-- The selected frequency, power, or region is not the approved test configuration.
-- A production DevEUI, JoinEUI, AppKey, NwkKey, AppSKey, or NwkSKey appears in the working set.
-- A frame is being accepted by a production network server.
-- The device behavior becomes unsafe or an actuator responds unexpectedly.
-- Packet volume exceeds the approved rate or duration.
-- The operator cannot identify which process currently owns the transmitter.
-
-## 4. Pre-flight checklist
-
-### Lab and authorization
-
-- [ ] Written scope includes the RF band, physical location, gateways, devices, time window, and allowed actions.
-- [ ] Private network-server tenant/application/device exists.
-- [ ] Synthetic keys and identifiers are documented in a protected local secret store.
-- [ ] Production DNS names, gateway addresses, and MQTT credentials are not in the lab configuration.
-- [ ] The test lead has a rollback and cleanup plan.
-
-### Hardware
-
-- [ ] SDR model and serial number match the test record.
-- [ ] The lab gateway is a documented Milesight UG65/UG67 or an explicitly approved alternative; it is not being treated as an IQ recorder.
-- [ ] The lab end-device is a dedicated Dragino LSN50v2-S31 or synthetic test node, with no production identifiers or keys.
-- [ ] The RF receiver, antenna/cable path, center frequency, bandwidth, spreading factor, and sample format are recorded.
-- [ ] Antenna or conducted cable path is correct.
-- [ ] Attenuators and termination are installed and rated for the expected power.
-- [ ] If TX is enabled, the approved RF path is connected before the transmitter process starts; shielding, fixed attenuation, and a 50-ohm termination are available where required.
-- [ ] No open RF connector is connected to an active TX chain.
-- [ ] Receiver gain is low enough to avoid front-end overload.
-- [ ] Device region and channel plan match the network-server profile.
-
-### Software
-
-- [ ] gr-lora-sdr commit/version recorded for RF/PHY testing.
-- [ ] Wireshark version recorded for protocol dissection and security testing.
-- [ ] ChirpStack and gateway bridge logs are being saved.
-- [ ] Time synchronization is working on the SDR host, server, gateway, and capture host.
-
-### Evidence
-
-- [ ] Test directory created.
-- [ ] Configuration files copied before changes.
-- [ ] Empty baseline capture started.
-- [ ] Hashing method selected for final artifacts.
-
-## 5. Evidence handling
-
-### 5.1 Naming convention
-
-Use UTC and a stable test ID:
+Copy this section into every internal security audit report before execution:
 
 ~~~text
-<test-id>_<utc>_<layer>_<source>_<short-description>.<extension>
+Audit ID: INFRA-SEC-<YYMMDD>-<NUMBER>
+Audit Title: Operational LoRaWAN Infrastructure Security Audit
+Auditor / Operator: Smart Agriculture Engineering Team
+Approver: Test Lead / Operations Manager
+Target Gateway: Milesight UG65 (IP: 192.168.23.150 / Gateway EUI: 24E124FFFEO159C3)
+Target Network Server: ChirpStack v4 Ubuntu VM (IP: 192.168.23.137)
+Target Sensor Nodes: Dragino LSN50v2-S31 (Class A, OTAA)
+LoRaWAN Protocol Version: 1.0.3 / 1.0.4
+Capture Engine: Wireshark & TShark (Interface: eth0, Filter: udp port 1700)
+Evidence Artifacts Path: ~/lorawan-lab/captures/pcap/
+SHA-256 Manifest: ~/lorawan-lab/captures/pcap/manifest-sha256.txt
 ~~~
 
-Examples:
+---
 
-~~~text
-LW-001_20260801T031500Z_phy_grlora_sdr_baseline.jsonl
-LW-001_20260801T031500Z_iq_rtlsdr_baseline.cf32
-LW-001_20260801T031700Z_pcap_gateway_udp1700.pcap
-LW-001_20260801T031900Z_server_chirpstack_events.jsonl
-LW-001_20260801T032000Z_report_replay-test.md
-~~~
+## 2. Infrastructure Security Audit Architecture
 
-### 5.2 Minimum frame record
+Our security analysis methodology targets four critical pillars of LoRaWAN network security:
 
-~~~json
-{
-  "test_id": "LW-<ID>",
-  "timestamp_utc": "<ISO-8601 UTC>",
-  "source": "<gr-lora-sdr|wireshark|gateway|mqtt>",
-  "frequency_hz": 0,
-  "bandwidth_hz": 0,
-  "spreading_factor": 0,
-  "coding_rate": "<...>",
-  "sync_word": "<...>",
-  "crc_ok": true,
-  "phy_payload_hex": "<LAB_BYTES>",
-  "lorawan_direction": "<uplink|downlink|join|unknown>",
-  "dev_eui": "<SYNTHETIC_OR_REDACTED>",
-  "dev_addr": "<SYNTHETIC_OR_REDACTED>",
-  "fcnt": null,
-  "f_port": null,
-  "mic_status": "<valid|invalid|not_checked|unknown>",
-  "server_disposition": "<accepted|rejected|not_sent|unknown>",
-  "alert_disposition": "<raised|not_raised|not_evaluated>"
-}
-~~~
+```text
++-----------------------------------------------------------------------------------+
+|                        INTERNAL NETWORK SECURITY AUDIT PILLARS                     |
+|                                                                                   |
+|  1. Confidentiality Audit  --> Over-the-air & UDP 1700 payload AES-128 encryption  |
+|  2. Integrity Audit        --> Cryptographic MIC validation & tampering detection |
+|  3. Anti-Replay Audit      --> Uplink/Downlink FCnt & OTAA DevNonce tracking       |
+|  4. Gateway Transport Audit--> Gateway EUI authentication & bridge protection      |
++-----------------------------------------------------------------------------------+
+```
 
-Do not populate key fields in this record. If a test requires decryption, reference a protected key identifier rather than copying the key into the evidence file.
+---
 
-### 5.3 Hash artifacts
+## 3. Tactical Pre-Flight Checklist
 
-After the test is complete, hash the original files and store the hash list with the report:
+### Environment & Network Isolation
+- [ ] Host laptop connected to Milesight UG65 Gateway Access Point (`Gateway_F94C0B`).
+- [ ] Static IP `192.168.23.137` active on Ubuntu VM with Layer-2 connectivity to `192.168.23.150`.
+- [ ] ChirpStack v4 Docker stack verified healthy (`docker compose ps`).
+- [ ] Synthetic lab session keys (`NwkSKey`, `AppSKey`) logged in secure local vault.
 
-~~~bash
-sha256sum captures/iq/* captures/decoded/* captures/pcap/* logs/* > reports/<TEST_ID>-sha256sums.txt
-~~~
+### Tooling & Environment Initialization
+- [ ] `Wireshark` and `TShark` installed with non-root capture privileges (`dumpcap -D`).
+- [ ] Python 3 installed with `scapy` for packet generation testing.
+- [ ] Evidence directory initialized:
+  ~~~bash
+  mkdir -p ~/lorawan-lab/captures/pcap/ ~/lorawan-lab/scripts/
+  ~~~
 
-Keep raw artifacts immutable after hashing. Create redacted copies for sharing.
+---
 
-## 6. Test case library
+## 4. Real-World Security Analysis Tactics & Test Cases
 
-### RF-001: Known-signal receive baseline
-
-**Objective:** Prove that the RF front end and PHY decoder can recover a known frame.
-
-**Setup:** Receive-only or cabled lab signal; known center frequency, BW, SF, coding rate, sync word, header, and CRC.
+### SEC-001: Gateway Transport Interception & Protocol Field Auditing
+**Tactical Objective:** Intercept Semtech UDP port 1700 traffic between the gateway and network server, verifying protocol framing, `Gateway EUI` binding, and header field integrity.
 
 **Procedure:**
+1. Execute `TShark` on the active network interface to capture gateway traffic:
+   ~~~bash
+   tshark -i eth0 -f "udp port 1700" -w ~/lorawan-lab/captures/pcap/sec-001-baseline.pcap
+   ~~~
+2. Trigger an uplink transmission from a Dragino LSN50v2 sensor node.
+3. Extract key fields using command-line `TShark` field filters:
+   ~~~bash
+   tshark -r ~/lorawan-lab/captures/pcap/sec-001-baseline.pcap \
+       -Y "lorawan" \
+       -T fields \
+       -e frame.time \
+       -e lorawan.mtype \
+       -e lorawan.devaddr \
+       -e lorawan.fcnt \
+       -e lorawan.mic
+   ~~~
 
-1. Start IQ recording.
-2. Start the decoder.
-3. Transmit or replay one bounded known-good lab frame.
-4. Stop the transmitter and recording.
-5. Compare the decoded payload to the expected byte vector.
+**Expected Result:**
+- `TShark` parses `MType` (e.g. `2` for Unconfirmed Data Uplink), `DevAddr`, `FCnt`, and 4-byte `MIC`.
+- Raw UDP packet contains Semtech protocol header bytes (`Protocol Version: 0x02`, `Token`, `PUSH_DATA: 0x00`, and `Gateway EUI`).
 
-**Expected result:** Stable payload and expected CRC result.
+---
 
-**Evidence:** IQ file, decoder output, configuration, expected vector, timestamp.
-
-### RF-002: Parameter mismatch
-
-**Objective:** Confirm that the decoder fails clearly when one PHY parameter is wrong.
-
-**Procedure:** Repeat RF-001 while changing exactly one parameter per run.
-
-**Expected result:** No frame, explicit mismatch, or CRC failure. A wrong parameter must not be silently reported as a valid payload.
-
-**Evidence:** One result per parameter with the changed value highlighted.
-
-### RF-003: Low-SNR and clipping boundary
-
-**Objective:** Characterize the usable signal range.
-
-**Procedure:** Vary attenuation or receiver gain in small, documented steps. Do not increase transmit power beyond the approved limit.
-
-**Expected result:** A documented transition between stable decode, intermittent decode, CRC failure, and no decode.
-
-**Evidence:** SNR/RSSI, gain, attenuation, CRC status, packet success rate.
-
-### PROTO-001: PHYPayload round trip
-
-**Objective:** Prove that the adapter and LoRa_Craft preserve bytes.
+### SEC-002: Message Integrity Code (MIC) Validation & Transit Tamper Audit
+**Tactical Objective:** Verify that any transit modification of frame control header (`FCtrl`), frame counter (`FCnt`), MAC payload (`FRMPayload`), or options (`FOpts`) causes immediate MIC validation failure and server-side packet drop.
 
 **Procedure:**
+1. Open baseline PCAP in Wireshark and configure lab `NwkSKey` under **Edit $\rightarrow$ Preferences $\rightarrow$ Protocols $\rightarrow$ LoRaWAN**.
+2. Confirm Wireshark marks the valid frame as `lorawan.mic_verified == True`.
+3. Create a python test script (`~/lorawan-lab/scripts/inject_mic_tamper.py`) to inject a altered byte into a captured datagram:
+   ~~~python
+   import socket, json, base64
 
-1. Take a decoded PHYPayload from RF-001.
-2. Parse it in LoRa_Craft.
-3. Serialize the packet if supported.
-4. Compare original and serialized bytes.
+   # Load valid Semtech UDP PUSH_DATA packet captured from gateway
+   server_address = ('192.168.23.137', 1700)
+   sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
-**Expected result:** Equal bytes or a documented reason for any representation difference, such as an intentionally removed PHY preamble.
+   # Sample UDP packet with altered payload byte to simulate transit tampering
+   # 12-byte header + JSON payload containing rxpk data
+   header = bytes([0x02, 0x12, 0x34, 0x00]) + bytes.fromhex("24E124FFFE0159C3")
+   payload_json = {
+       "rxpk": [{
+           "tmst": 12345678, "chan": 0, "rfch": 0, "freq": 923.2,
+           "stat": 1, "modu": "LORA", "datr": "SF7BW125", "codr": "4/5",
+           "lsnr": 9.5, "rssi": -45, "size": 17,
+           "data": "QAECAwSABQACBQAAAAAAAAD=" # Corrupted Base64 PHYPayload byte
+       }]
+   }
+   packet = header + json.dumps(payload_json).encode('utf-8')
+   sock.sendto(packet, server_address)
+   print("[+] Injected tampered datagram to ChirpStack Gateway Bridge.")
+   ~~~
+4. Execute tamper test script:
+   ~~~bash
+   python3 ~/lorawan-lab/scripts/inject_mic_tamper.py
+   ~~~
+5. Monitor ChirpStack network server logs:
+   ~~~bash
+   docker logs chirpstack --tail 50 | grep -i -E "mic|invalid|error"
+   ~~~
 
-**Evidence:** Original hex, parser output, serialized hex, diff.
+**Expected Result:**
+- Wireshark dissector flags `lorawan.mic_verified == False`.
+- ChirpStack logs `validate mic error: invalid mic` and immediately drops the frame without forwarding to MQTT.
 
-### PROTO-002: Join and data frame parsing
+---
 
-**Objective:** Verify the parser understands the test's LoRaWAN version and message types.
-
-**Procedure:** Use known lab vectors for JoinRequest, JoinAccept, uplink, and downlink frames.
-
-**Expected result:** Correct message type, identities, direction, frame counter, port, and MIC location.
-
-**Evidence:** Vector source, parser output, version metadata.
-
-### SEC-001: Invalid MIC rejection
-
-**Objective:** Verify that the private network server rejects a frame with an invalid integrity code.
-
-**Procedure:**
-
-1. Begin with a known-good synthetic lab vector.
-2. Modify only the MIC or another field without recomputing it.
-3. Submit through the isolated test path.
-4. Check gateway bridge, ChirpStack logs, MQTT events, and device state.
-
-**Expected result:** No accepted application event for the invalid frame.
-
-**Evidence:** Original frame, modified frame, server log, absence/presence of event, timestamp correlation.
-
-### SEC-002: Frame-counter regression
-
-**Objective:** Verify server behavior when the same session presents an older counter.
-
-**Procedure:** Use a synthetic device and a known lab session. Submit a frame with a lower counter than the last accepted frame, subject to the device profile and server policy.
-
-**Expected result:** Rejection or explicit policy behavior; no silent duplicate application action.
-
-**Evidence:** Counter timeline, server configuration, log/event result.
-
-### DET-001: Duplicate or replay indicator
-
-**Objective:** Check whether the monitoring path identifies repeated traffic.
+### SEC-003: Payload Encryption & Confidentiality Audit
+**Tactical Objective:** Audit `FRMPayload` confidentiality to ensure unencrypted application telemetry is not exposed over-the-air or across network backhaul without `AppSKey`.
 
 **Procedure:**
+1. Inspect captured frame in `TShark` without providing session keys:
+   ~~~bash
+   tshark -r ~/lorawan-lab/captures/pcap/sec-001-baseline.pcap \
+       -Y "lorawan.fport > 0" \
+       -T fields -e lorawan.frmpayload
+   ~~~
+2. Verify that raw ciphertext bytes are displayed and unreadable as plain ASCII/sensor text.
+3. Configure `AppSKey` in Wireshark preferences (**Edit $\rightarrow$ Preferences $\rightarrow$ Protocols $\rightarrow$ LoRaWAN**) or pass to `TShark`:
+   ~~~bash
+   tshark -r ~/lorawan-lab/captures/pcap/sec-001-baseline.pcap \
+       -o "lorawan.appskey:2B7E151628AED2A6ABF7158809CF4F3C" \
+       -Y "lorawan.frmpayload_decrypted" \
+       -T fields -e lorawan.frmpayload_decrypted
+   ~~~
 
-1. Capture one known lab frame.
-2. Re-introduce the same frame only within the isolated test path and within the approved bounded test window.
-3. Monitor Wireshark PCAPs, ChirpStack logs, gateway events, and MQTT.
+**Expected Result:**
+- Payload remains completely confidential ciphertext when `AppSKey` is absent.
+- Loading the correct 128-bit `AppSKey` allows exact recovery of sensor telemetry bytes matching the Dragino LSN50v2 payload codec output.
 
-**Expected result:** The event is either detected and reported, or the absence of detection is documented as a finding. A duplicate must not be described as an attack solely from the alert text.
+---
 
-**Evidence:** Original and repeated frame, timestamps, counter/MIC, server disposition, alert result.
-
-### DET-002: Join-state and DevNonce behavior
-
-**Objective:** Verify the private network's handling of repeated join material and device resets.
-
-**Procedure:** Use a synthetic device and approved test vectors. Observe whether repeated join values are accepted, rejected, or flagged according to the configured LoRaWAN version and server policy.
-
-**Expected result:** The result is compared to the documented version-specific expectation, not to a generic “join accepted” assumption.
-
-**Evidence:** LoRaWAN version, device state, join records, DevNonce timeline, alert result.
-
-### OPS-001: Class A downlink timing
-
-**Objective:** Verify that a queued downlink reaches the lab device at an expected receive window.
+### SEC-004: Frame Counter (FCnt) Replay Resilience Audit
+**Tactical Objective:** Audit ChirpStack anti-replay protection by injecting previously valid, captured uplink frames with stale frame counters ($FCnt \le FCnt_{last}$).
 
 **Procedure:**
+1. Record a valid sensor uplink frame where server state is at $FCnt = 15$.
+2. Allow sensor to send additional uplinks so ChirpStack session state advances to $FCnt = 16$.
+3. Create a replay test script (`~/lorawan-lab/scripts/replay_frame.py`) to re-transmit the $FCnt = 15$ datagram:
+   ~~~python
+   import socket
 
-1. Queue a harmless synthetic test command.
-2. Do not reset the device unless reset behavior is the subject of the test.
-3. Wait for the next natural uplink.
-4. Capture the uplink, downlink scheduling event, RF downlink, and device response.
+   server_address = ('192.168.23.137', 1700)
+   sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
-**Expected result:** The command is delivered or a clear failure reason is recorded.
+   # Raw Semtech UDP datagram recorded at FCnt = 15
+   replayed_packet = bytes.fromhex("0212340024E124FFFE0159C3...") # Full UDP byte string
+   sock.sendto(replayed_packet, server_address)
+   print("[+] Re-injected stale FCnt=15 frame to ChirpStack.")
+   ~~~
+4. Run the replay test script:
+   ~~~bash
+   python3 ~/lorawan-lab/scripts/replay_frame.py
+   ~~~
+5. Check ChirpStack container logs for anti-replay enforcement:
+   ~~~bash
+   docker logs chirpstack --tail 50 | grep -i -E "frame counter|fcnt|rollback"
+   ~~~
 
-**Evidence:** Queue record, uplink timestamp, RX window metadata, downlink event, device response.
+**Expected Result:**
+- ChirpStack logs `frame counter rolled back` or `FCnt 15 <= 16`.
+- ChirpStack drops the packet and does not issue an MQTT application message.
 
-## 7. Triage workflow for suspicious traffic
+---
 
-When an alert or unexpected event appears, use this order:
+### SEC-005: OTAA Join-Request DevNonce Replay Audit
+**Tactical Objective:** Verify server prevention of OTAA activation replay attacks by re-submitting previously used `DevNonce` values.
 
-~~~text
-1. Preserve raw bytes and timestamps
-        |
-        v
-2. Confirm RF/PHY validity and CRC
-        |
-        v
-3. Parse LoRaWAN fields and direction
-        |
-        v
-4. Compare MIC, FCnt, DevNonce, and join state
-        |
-        v
-5. Correlate gateway, ChirpStack, MQTT, gr-lora-sdr, and Wireshark PCAP records
-        |
-        v
-6. Decide: duplicate gateway report, device retransmission,
-   server behavior, test artifact, or suspicious event
-~~~
+**Procedure:**
+1. Capture an OTAA `JoinRequest` packet (`lorawan.mtype == 0`) and record its 2-byte `DevNonce`.
+2. Allow device activation to complete successfully and log new session keys.
+3. Re-inject the identical `JoinRequest` UDP datagram over port 1700 to ChirpStack.
+4. Inspect ChirpStack server logs:
+   ~~~bash
+   docker logs chirpstack --tail 50 | grep -i "devnonce"
+   ~~~
 
-### 7.1 Questions to answer
+**Expected Result:**
+- ChirpStack identifies `DevNonce` reuse, logging `validate devnonce error: devnonce has already been used`.
+- The server drops the replayed activation request and refuses to issue a `JoinAccept`.
 
-- Did more than one gateway receive the same frame?
-- Is the PHY CRC valid?
-- Is the LoRaWAN MIC valid, and was the correct direction used?
-- Is the frame counter new, repeated, lower, or impossible for the session?
-- Did the device join or reset before the counter changed?
-- Was the frame accepted by ChirpStack or only observed at the RF layer?
-- Did the application receive a decoded event?
-- Did Wireshark or gr-lora-sdr flag frame anomalies, and is that finding verified by server logs?
-- Is the apparent duplicate explained by gateway deduplication or retransmission?
+---
 
-### 7.2 Classification labels
+### SEC-006: Gateway EUI Authentication & Impersonation Audit
+**Tactical Objective:** Audit ChirpStack Gateway Bridge security behavior when an unauthorized entity attempts to inject traffic using an unregistered or spoofed `Gateway EUI`.
 
-Use one primary classification:
+**Procedure:**
+1. Generate a synthetic `PUSH_DATA` packet containing an unregistered Gateway EUI (`0000000000000000`):
+   ~~~python
+   import socket, json
 
-- RF_DECODE_FAILURE
-- PHY_PARAMETER_MISMATCH
-- PROTOCOL_PARSE_FAILURE
-- INVALID_MIC
-- COUNTER_POLICY_REJECTION
-- GATEWAY_DUPLICATION
-- DEVICE_RETRANSMISSION
-- JOIN_STATE_CHANGE
-- UNCORROBORATED_FRAME_ALERT
-- SUSPICIOUS_REPLAY_INDICATOR
-- UNAUTHORIZED_OR_OUT_OF_SCOPE_ACTIVITY
+   sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+   fake_eui_header = bytes([0x02, 0x99, 0x88, 0x00]) + bytes.fromhex("0000000000000000")
+   json_payload = {"rxpk": [{"freq": 923.2, "modu": "LORA", "datr": "SF7BW125", "data": "QAECAwS..."}]}
+   sock.sendto(fake_eui_header + json.dumps(json_payload).encode('utf-8'), ('192.168.23.137', 1700))
+   ~~~
+2. Check ChirpStack Gateway Bridge container logs:
+   ~~~bash
+   docker logs chirpstack-gateway-bridge --tail 50 | grep -i -E "gateway|unregistered|eui"
+   ~~~
 
-Do not use “attack confirmed” unless the evidence meets the team's incident-response standard.
+**Expected Result:**
+- ChirpStack Gateway Bridge drops datagrams originating from unregistered Gateway EUIs or flags unauthenticated connection attempts.
 
-## 8. Report template
+---
 
-~~~markdown
-# LoRaWAN Security Test Report: <TEST_ID>
+## 5. Security Hardening & Remediation Protocols
 
-## Executive result
+Based on audit outcomes, enforce the following hardening rules across production environments:
 
-- Outcome: pass | fail | partial | inconclusive
-- Scope:
-- Main finding:
-- Safety issues:
+1. **Root Key Protection**:
+   - Assign unique, cryptographically random `AppKey` / `NwkKey` values per end-device during manufacturing/provisioning.
+   - Never re-use default root keys across multiple sensor nodes.
+2. **LoRaWAN 1.0.4 / 1.1 Specification Enforcement**:
+   - Configure ChirpStack device profiles to enforce strict `DevNonce` tracking and 32-bit Frame Counters (`FCnt`).
+3. **Gateway Access Control**:
+   - Restrict incoming UDP port 1700 traffic at the host firewall (`ufw`) to authorized gateway IP addresses (`192.168.23.150`).
+4. **Transport Encryption**:
+   - Secure gateway-to-bridge communications using TLS (e.g. MQTT with TLS or Semtech Basics Station over WebSockets/TLS `wss://`).
+   - Wrap internal MQTT broker communications in TLS (`mqtts://`).
 
-## Environment
+---
 
-- Region:
-- LoRaWAN version:
-- Network server:
-- Gateway:
-- Device:
-- gr-lora-sdr:
-- Wireshark:
-- RF path:
+## 6. Audit Evidence Management & Forensics Hashing
 
-## Test cases
+1. Compute SHA-256 hashes for all PCAP captures and log dumps:
+   ~~~bash
+   sha256sum ~/lorawan-lab/captures/pcap/*.pcap > ~/lorawan-lab/captures/pcap/manifest-sha256.txt
+   ~~~
+2. Archive `.pcap` captures, script outputs, hash manifests, and server logs for compliance reporting.
 
-| ID | Result | Evidence | Notes |
-|---|---|---|---|
-| RF-001 |  |  |  |
-| RF-002 |  |  |  |
-| PROTO-001 |  |  |  |
-| SEC-001 |  |  |  |
-| SEC-002 |  |  |  |
-| DET-001 |  |  |  |
+---
 
-## Findings
+## 7. References & Linked Documentation
 
-### Finding <N>: <short title>
-
-- Severity:
-- Affected layer:
-- First observed UTC:
-- Reproduction status:
-- Evidence:
-- Server disposition:
-- Alert disposition:
-- Impact:
-- Recommendation:
-- Retest condition:
-
-## Evidence index
-
-- IQ:
-- Decoded frames:
-- PCAP:
-- ChirpStack logs:
-- MQTT export:
-- Wireshark PCAP output:
-- Configuration:
-- SHA-256 manifest:
-
-## Cleanup
-
-- Transmitters stopped:
-- Test devices reset or removed:
-- Synthetic keys destroyed or archived:
-- Private server state restored:
-- Production systems touched: no | yes, explain
-~~~
-
-## 9. Remediation themes
-
-Depending on findings, recommendations may include:
-
-- Keep OTAA/root keys unique per device and out of source control.
-- Use the most appropriate current LoRaWAN version supported by the device and server.
-- Enable and validate frame-counter checks according to the device's reset and persistence behavior.
-- Avoid ABP unless the lifecycle and security trade-offs are explicitly accepted.
-- Protect gateway-to-server backhaul with authenticated and encrypted transport where supported.
-- Restrict ChirpStack, MQTT, database, and gateway management interfaces to authorized networks.
-- Preserve enough gateway metadata and timestamps to distinguish duplicate reception from replay.
-- Treat packet capture findings as evidence and validate them against network-server state.
-- Keep RF test equipment and active transmit paths physically isolated from production.
-
-## 10. References
-
-- [LoRaWAN 1.0.4 specification package](https://lora-alliance.org/resource_hub/lorawan-104-specification-package/)
-- [gr-lora-sdr](https://github.com/tapparelj/gr-lora_sdr)
-- [Wireshark LoRaWAN display-filter reference](https://www.wireshark.org/docs/dfref/l/lorawan.html)
-- [ChirpStack MQTT integration](https://www.chirpstack.io/docs/chirpstack/integrations/mqtt.html)
-- [ChirpStack gateway configuration](https://www.chirpstack.io/docs/gateway-configuration/index.html)
-- [OWASP IoT Security Verification Standard communication requirements](https://owasp.org/IoT-Security-Verification-Standard-ISVS/en/V4-Communication_Requirements)
+- [01: Master Deployment Guide](./01-master-deployment-guide.md)
+- [02: Offline Direct AP Setup Guide](./02-offline-direct-ap-setup-guide.md)
+- [06: LoRaWAN Security Toolkit Brief](./06-lorawan-rf-security-toolkit-brief.md)
+- [10: Wireshark LoRaWAN Security Handbook](../technology-docs/10-wireshark-lorawan-security-handbook.md)
+- [Wireshark LoRaWAN Display Filter Reference](https://www.wireshark.org/docs/dfref/l/lorawan.html)

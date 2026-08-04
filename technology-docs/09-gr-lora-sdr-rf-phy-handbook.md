@@ -1,10 +1,14 @@
 # gr-lora-sdr GNU Radio RF & PHY Demodulation Handbook
 
+> [!WARNING]
+> **Hardware Prerequisite & Optional Status**: `gr-lora-sdr` requires external Software Defined Radio (SDR) hardware (e.g., RTL-SDR, HackRF, or USRP) or pre-recorded `.iq` sample files. If SDR hardware is not present in your setup, refer to [10: Wireshark LoRaWAN Security Handbook](./10-wireshark-lorawan-security-handbook.md) and [07: LoRaWAN Protocol and Security Testing Setup Guide](../docs/07-lorawan-rf-and-protocol-testing-setup-guide.md) for the active, software-only Wireshark packet capture toolchain.
+
 ## 1. Executive Summary & Overview
 
 `gr-lora-sdr` is an open-source, fully functional GNU Radio 3.10 out-of-tree (OOT) module developed by the EPFL Telecommunication Circuits Laboratory. It provides a complete Software Defined Radio (SDR) implementation of the LoRa Physical (PHY) layer, supporting both receiver (RX) and transmitter (TX) chains.
 
-Within this repository's operational architecture, `gr-lora-sdr` serves as the primary tool for RF signal acquisition, modulation/demodulation, parameter sweeps, and physical-layer security testing. Unlike commercial LoRaWAN gateways (such as the Milesight UG65 or RAK5146) which process received packets through hardware ASICs (SX1302/SX1303 chipsets) and output pre-parsed Semtech UDP frames, `gr-lora-sdr` operates directly on raw In-phase/Quadrature (IQ) radio frequency samples. This granular control allows engineers to:
+Within this repository's operational architecture, `gr-lora-sdr` serves as an optional tool for low-level RF signal acquisition, modulation/demodulation, parameter sweeps, and physical-layer security testing when an SDR hardware receiver is connected. Unlike commercial LoRaWAN gateways (such as the Milesight UG65) which process received packets through hardware ASICs (SX1302/SX1303 chipsets) and output pre-parsed Semtech UDP frames, `gr-lora-sdr` operates directly on raw In-phase/Quadrature (IQ) radio frequency samples. This granular control allows engineers to:
+
 
 - Inspect and analyze raw LoRa RF signals over the air (OTA) or across conducted coaxial cables.
 - Demodulate non-standard or custom LoRa PHY payloads where spreading factor (SF), bandwidth (BW), coding rate (CR), or preamble settings differ from default network parameters.
