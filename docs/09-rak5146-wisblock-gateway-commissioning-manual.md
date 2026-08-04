@@ -1,771 +1,575 @@
-# RAK5146 + WisBlock AS923 Gateway Commissioning Manual
+# RAK5146 + Raspberry Pi 4 All-In-One Gateway & ChirpStack v4 Master Setup Manual
 
-This is the arrival-to-working-system manual for the hardware listed in [hardware-checklist.pdf](../hardware-checklist.pdf).
+This is the definitive, step-by-step, zero-guesswork manual for commissioning the **Raspberry Pi 4 Model B + RAK5146 SPI Gateway** and deploying an **All-In-One Local ChirpStack v4 Network Server** on the same Raspberry Pi 4 (Region: **AS923**).
 
-It covers the incoming custom gateway and WisBlock field-node hardware:
+```text
+==================================================================================================
+                 STANDALONE ALL-IN-ONE SYSTEM ARCHITECTURE (RASPBERRY PI 4)
+==================================================================================================
 
-~~~text
-WisBlock node
-  RAK4631 + RAK19007 or RAK19001 + one sensor + LoRa antenna
-        |
-        | AS923 LoRaWAN radio, 900-928 MHz
-        v
-RAK5146 gateway
-  RAK5146 SPI concentrator + WisLink Pi HAT + Raspberry Pi 4
-        |
-        | Semtech UDP packet forwarder, UDP 1700
-        v
-Private ChirpStack v4
-  Gateway Bridge -> MQTT -> ChirpStack -> PostgreSQL / Grafana / Node-RED
-~~~
+ [Sub-GHz Outdoor Antenna (900-930 MHz) + Active GPS Antenna]
+                            |
+                            v
+ [RAK5146 SPI Concentrator Card (SX1303 ASIC) + WisLink Pi HAT]
+                            | Native SPI (/dev/spidev0.0)
+                            v
+ +-----------------------------------------------------------------------------------------------+
+ | RASPBERRY PI 4 MODEL B (ALL-IN-ONE HOST COMPUTER)                                             |
+ |                                                                                               |
+ |  [ChirpStack Concentratord SX1303 Daemon]                                                     |
+ |       | UDP Port 1700 on 127.0.0.1 (Loopback)                                                 |
+ |       v                                                                                       |
+ |  [Docker Container: ChirpStack Gateway Bridge]                                                |
+ |       | MQTT on 127.0.0.1:1883 (Topic: as923/gateway/...)                                     |
+ |       v                                                                                       |
+ |  [Docker Stack: Mosquitto <-> ChirpStack v4 LNS <-> PostgreSQL / Redis]                       |
+ |       | HTTP Port 8080                                                                        |
+ |       v                                                                                       |
+ |  [Web UI Dashboard] ---> Accessible at http://<PI_IP_ADDRESS>:8080                             |
+ +-----------------------------------------------------------------------------------------------+
+==================================================================================================
+```
 
-This is a separate hardware path from the existing Milesight UG65/UG67 and Dragino LSN50v2-S31 path described in documents 01-05. Do not substitute one architecture for the other without deliberately changing the gateway, region, packet-forwarder, device profile, and payload decoder.
+---
 
-## 0. Non-negotiable rules
+## 0. Non-Negotiable Safety & Hardware Rules
 
-1. The purchased radio variant must be RAK5146 SPI for the AS923 900-928 MHz band. Do not accept EU868, US915, USB-only, or unverified hardware as an equivalent replacement.
-2. Never power the gateway until the LoRa and GPS antenna paths are connected. RAK warns that powering the gateway without antennas can damage the radio hardware.
-3. The RAK5146 is a concentrator, not a complete gateway. It requires the WisLink Pi HAT, Raspberry Pi 4, software image, packet-forwarder, network, antennas, and power.
-4. Use a dedicated private test application and synthetic keys. Do not reuse the existing Dragino DevEUI, AppKey, or production credentials.
-5. Do not mix AS923 and EU868 settings. The current repository Gateway Bridge templates are EU868-oriented and require an explicit AS923 decision before this gateway is connected.
-6. Commission one gateway and one node on a bench before installing anything outdoors.
-7. Do not connect batteries, solar, actuators, or multiple sensors during the first bring-up.
+> [!CAUTION]
+> **RULE 1: ANTENNAS FIRST, POWER LAST**
+> **NEVER APPLY POWER TO THE RASPBERRY PI 4 UNTIL BOTH LORA AND GPS ANTENNAS ARE CONNECTED TO THE SMA BULKHEADS.** Powering the RAK5146 concentrator without RF termination will permanently burn out the SX1303 power amplifier within milliseconds.
 
-If any rule is not satisfied, stop and resolve it before continuing.
+> [!IMPORTANT]
+> **RULE 2: VERIFY HARDWARE CARD LABELS**
+> Check the physical label on your RAK5146 card. It **MUST** state **SPI** and **900–928 MHz (AS923/US915)**.
+> - If it says **868 MHz** or **USB**, STOP. Software cannot change physical RF SAW filters.
 
-## 1. What the PDF specifies
+> [!WARNING]
+> **RULE 3: USE OFFICIAL 5V/3A POWER SUPPLY**
+> Running Docker, PostgreSQL, Redis, ChirpStack v4, and the LoRa concentrator on a single Pi 4 requires clean, stable power. Use the official **5.1V / 3.0A USB-C Power Adapter**. Generic phone chargers cause under-voltage throttling (`0x50005`) and SD card corruption.
 
-### 1.1 Gateway materials
+---
 
-| Item | Expected specification | Acceptance check |
-|---|---|---|
-| Gateway computer | Raspberry Pi 4 Model B | Confirm Pi 4; do not substitute Pi 3 or Pi Zero. |
-| LoRa concentrator | RAK5146, SPI, 900-928 MHz / AS923 | Read the board label and order confirmation. |
-| Interface board | WisLink Pi HAT / RAK5146 Pi HAT | Must have the mini-PCIe socket and Pi 40-pin interface. |
-| LoRa antenna | Outdoor antenna for approximately 900-930 MHz | Must be a LoRa antenna, not GPS or cellular. |
-| GPS antenna | Active GPS antenna | Connect only to the GPS path. |
-| RF adapters | Two u.FL/IPEX-to-SMA-family pigtails | One LoRa path and one GPS path; do not force connectors. |
-| Power | Official or known-good 5 V / 3 A USB-C supply | Do not use a weak phone charger. |
-| Storage | 32 GB or 64 GB high-endurance microSD and reader | Keep the image and checksum record. |
-| Backhaul | Cat5e or Cat6 Ethernet | Use wired Ethernet first. |
-| Mechanical parts | Enclosure, brass standoffs, screws, weatherproof mounting | Leave the cover off until bench tests pass. |
+## 1. Verified Hardware Component Checklist
 
-### 1.2 WisBlock materials
+Verified from [hardware-checklist.pdf](../hardware-checklist.pdf):
 
-| Item | Expected part | First-test guidance |
-|---|---|---|
-| Core | RAK4631 WisBlock Core | Requires a compatible WisBlock base. |
-| Base | RAK19007 or RAK19001 | RAK19007 is the standard base; RAK19001 is expanded. |
-| Antenna | Matching 900 MHz LoRa antenna | Connect before radio testing. |
-| Programming | USB-C data cable | Use for power, programming, and serial logs. |
-| Sensor | One compatible sensor module | Use the module's current official example and library. |
-| Battery | 3.7-4.2 V rechargeable Li-Ion/LiPo | Optional; leave disconnected initially. |
-| Solar | 5 V solar panel only | Optional; never connect 12 V to the base-board solar input. |
-| Cellular | RAK5860 or RAK13101 | Not needed for the first LoRaWAN path; select None for cellular. |
+| Component | Verified Hardware Model | Role in All-In-One Architecture |
+| :--- | :--- | :--- |
+| **Gateway & Server Host** | **Raspberry Pi 4 Model B** (4GB or 8GB RAM recommended) | Host computer running Docker, ChirpStack v4 Server, PostgreSQL, Redis, and Concentratord daemon locally. |
+| **LoRa Concentrator** | **RAK5146 SPI Card** (Semtech SX1303, 900–928 MHz) | Listens on 8 channels simultaneously; hardware timestamping (TDoA). |
+| **Interface HAT** | **WisLink Pi HAT** | Connects RAK5146 mPCIe SPI lines directly to Raspberry Pi 4 GPIO header. |
+| **Antennas** | **Sub-GHz Outdoor Omni (900-930 MHz) + Active GPS** | Broadcasts/receives LoRa signals across farm terrain; precise GPS timing. |
+| **RF Jumpers** | **2x u.FL / IPEX to SMA Female Pigtails** | Adapts micro u.FL connectors on RAK5146 to external SMA female bulkheads. |
+| **Power Adapter** | **Official 5V / 3A (5.1V/3.0A) USB-C Supply** | Supplies continuous electrical power during radio & CPU load spikes. |
+| **Storage** | **32GB / 64GB High Endurance microSD Card** | Holds Raspberry Pi OS, Docker images, and PostgreSQL database volumes. |
 
-The PDF lists soil, environmental, UV, ambient-light, rain, RS485, 4-20 mA, and SDI-12 modules. These are application choices, not gateway prerequisites. Start with one sensor.
+---
 
-### 1.3 Important corrections
+### 1.1 Official RAK5146 Datasheet & Hardware Specification
 
-- The gateway forwards encrypted LoRaWAN frames. ChirpStack verifies and decrypts them only when the correct device configuration and keys are present.
-- The PDF's 5-15 km range is a planning estimate, not a test guarantee.
-- GPS is useful for timing, location, and advanced features, but a GPS fix is not required to prove basic packet forwarding.
-- The PDF's example sensor slot letters are illustrative. Use the actual base-board silkscreen and the module's current guide.
-- The existing Dragino JavaScript decoder is not automatically correct for a RAK4631 payload.
+Extracted directly from the official **RAK5146 WisLink LoRaWAN Concentrator Datasheet**:
 
-## 2. Relation to the existing Markdown manuals
+#### 1. Hardware Architecture & Transceivers
+* **Baseband ASIC:** Semtech **SX1303** (Emulates 8x8 parallel LoRa demodulation paths, 8x SF5-SF12 & 8x SF5-SF10 demodulators, 1x high-speed LoRa demodulator, 1x (G)FSK demodulator).
+* **RF Front-End Transceivers:** 2x Semtech **SX1250** (handles 50 $\Omega$ RF signal processing & digital filtering).
+* **Listen Before Talk (LBT):** Semtech **SX1261 / SX126X** (integrated LBT engine).
+* **GPS / GNSS Chipset:** Onboard **ZOE-M8Q** (Provides NMEA sentences over UART and generates 1PPS hardware timing pulse connected to SX1303 and mPCIe Pin 19 for Fine Timestamping / TDoA geolocation).
+* **Form Factor:** Standard 52-pin mini-PCIe card (30 mm x 50.96 mm x 5.5 mm, weight 16.3 g).
 
-| Document | Use here |
-|---|---|
-| [01: Master Deployment Guide](./01-master-deployment-guide.md) | Existing Ubuntu VM, Docker, ChirpStack v4, MQTT, PostgreSQL, Redis, and server operations. Its Milesight gateway section is not the RAK assembly procedure. |
-| [02: Offline Direct-AP Setup Guide](./02-offline-direct-ap-setup-guide.md) | Milesight UG65 direct-AP networking. Do not use Gateway_F94C0B or 192.168.23.150 for this Pi unless the network team explicitly creates that topology. |
-| [03: PostgreSQL Integration Guide](./03-postgres-integration-guide.md) | Persist RAK events after the first accepted uplink. |
-| [04: Grafana Integration Guide](./04-grafana-integration-guide.md) | Visualize RAK telemetry after it is stored. |
-| [05: Node-RED Integration Guide](./05-node-red-integration-guide.md) | Add automation only after a human-reviewed event is visible. |
-| [06: Toolkit Brief](./06-lorawan-rf-security-toolkit-brief.md) | RF, protocol, evidence, and security-tool boundaries. |
-| [07: RF and Protocol Setup Guide](./07-lorawan-rf-and-protocol-testing-setup-guide.md) | Optional SDR/IQ/PHY bench. Not required for normal gateway commissioning. |
-| [08: Security Testing Runbook](./08-lorawan-security-testing-runbook.md) | Use only after normal gateway and node operation passes. |
+#### 2. mPCIe 52-Pin Signal & WisLink Pi HAT Mapping
 
-The first successful path is:
+| mPCIe Pin No. | RAK5146 Signal Name | Signal Type | Description | WisLink Pi HAT Connection |
+| :--- | :--- | :--- | :--- | :--- |
+| **Pin 2, 24, 39, 41, 52** | `3V3` / `3.3Vaux` | Power Input | Module 3.3V DC Power Supply (3.0V – 3.6V DC) | Pi 4 3.3V Rail (Header Pins 1, 17) |
+| **Pin 4, 9, 15, 18, 21, 26, 27, 29, 34, 35, 37, 40, 43, 50** | `GND` | Ground | System Ground | Pi 4 GND (Header Pins 6, 9, 14, 20, 25, 30, 34, 39) |
+| **Pin 22** | `PERST#` / `SX1303_RESET` | Digital Input | Active HIGH reset signal ($\ge 100$ ns pulse) | **Pi 4 GPIO 17** (Header Pin 11) |
+| **Pin 19** | `RESERVED` / `PPS` | Digital Output | GPS 1PPS Time Pulse Output | SX1303 Internal Timestamp Engine |
+| **Pin 31** | `PETn0` / `PI_UART_TX` | Digital Input | Host UART TX $\rightarrow$ ZOE-M8Q GPS RX | **Pi 4 GPIO 14 / TXD0** (Header Pin 8) |
+| **Pin 33** | `PETp0` / `PI_UART_RX` | Digital Output | ZOE-M8Q GPS TX $\rightarrow$ Host UART RX | **Pi 4 GPIO 15 / RXD0** (Header Pin 10) |
+| **Pin 45** | `HOST_SCK` | Digital Input | SPI Clock (SCK) | **Pi 4 GPIO 11 / SPI0_SCLK** (Header Pin 23) |
+| **Pin 47** | `HOST_MISO` | Digital Output | SPI Master In Slave Out (MISO) | **Pi 4 GPIO 9 / SPI0_MISO** (Header Pin 21) |
+| **Pin 49** | `HOST_MOSI` | Digital Input | SPI Master Out Slave In (MOSI) | **Pi 4 GPIO 10 / SPI0_MOSI** (Header Pin 19) |
+| **Pin 51** | `HOST_CSN` | Digital Input | SPI Chip Select (CS0) | **Pi 4 GPIO 8 / SPI0_CE0_N** (Header Pin 24) |
 
-~~~text
-RAK5146 gateway online
-  -> one RAK4631 node joins over OTAA
-  -> one uplink appears in ChirpStack
-  -> raw payload is recorded
-  -> a WisBlock-specific decoder is added later
-  -> PostgreSQL/Grafana/Node-RED are enabled last
-~~~
+#### 3. Onboard LED Definitions
+* **`D1` (Red):** `TX_ON` (Illuminates when the gateway is transmitting LoRa RF packets).
+* **`D2` (Blue):** `RX_ON` (Illuminates when LoRa packets are received).
+* **`D3` (Green):** `CONFIG / POWER_OK` (Power & configuration status indicator).
 
-## 3. Freeze the plan before opening the box
+#### 4. Hardware Model Variant Table (PID)
 
-| Field | Value to record |
-|---|---|
-| Country and regulatory region | <COUNTRY_AND_REGION> |
-| LoRa region | AS923 and the approved local sub-band |
-| ChirpStack server IP or DNS | <CHIRPSTACK_SERVER_IP> |
-| RAK gateway IP or DHCP reservation | <RAK_GATEWAY_IP> |
-| Gateway Bridge UDP port | 1700 |
-| ChirpStack URL | http://<CHIRPSTACK_SERVER_IP>:8080 |
-| MQTT topic prefix | as923 |
-| Gateway EUI | <16_HEX_CHAR_GATEWAY_EUI> |
-| Node DevEUI | <16_HEX_CHAR_NODE_DEVEUI> |
-| Node JoinEUI/AppEUI | <16_HEX_CHAR_JOIN_EUI> |
-| Node AppKey | <32_HEX_CHAR_SYNTHETIC_APPKEY> |
-| LoRaWAN version | 1.0.3 for the first RAK example path |
-| Activation | OTAA |
-| Class | Class A |
+| Model Variant | Frequency Range | Interface | GPS | LBT | Product ID (PID) |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **RAK5146-115** *(Verified Card)* | **9XX MHz** (US915 / AS923 / AU915 / KR920) | **SPI** | **Yes (ZOE-M8Q)** | No | **`516010`** |
+| **RAK5146-110** | 9XX MHz | SPI | No | No | `516023` |
+| **RAK5146-126** | 9XX MHz | USB | Yes | Yes | `516013` |
+| **RAK5146-215** | 8XX MHz (EU868 / RU864 / IN865) | SPI | Yes | No | `515011` |
 
-### 3.1 Resolve the AS923 versus EU868 conflict
+#### 5. Electrical & RF Operating Parameters
+* **Operating Supply Voltage:** $3.3\text{ V DC} \pm 0.3\text{ V}$
+* **Max TX Current Draw:** $512\text{ mA}$ @ $+27\text{ dBm}$ Output Power
+* **RX Mode Current Draw:** $81.6\text{ mA}$
+* **Maximum RF Output Power:** $+27\text{ dBm}$
+* **Receive Sensitivity:** Down to $-139\text{ dBm}$ @ SF12, BW 125 kHz
+* **RF Impedance:** $50\ \Omega$ (via Hirose U.FL-R-SMT connector)
 
-The repository currently has:
+---
 
-- AS923 enabled in the ChirpStack region list.
-- EU868 topic templates in the Gateway Bridge TOML.
-- EU868 topic-template environment variables in Docker Compose.
+## 2. Phase 1: Physical Hardware Assembly (Power Disconnected)
 
-For an AS923 commissioning stack, the effective Gateway Bridge values must be:
+Perform all physical assembly on a dry, anti-static surface with power disconnected.
 
-~~~toml
-event_topic_template = "as923/gateway/{{ .GatewayID }}/event/{{ .EventType }}"
-command_topic_template = "as923/gateway/{{ .GatewayID }}/command/{{ .CommandType }}"
-~~~
+```text
+WisLink Pi HAT mPCIe Slot          RAK5146 Board           SMA Bulkheads
++-----------------------+     +--------------------+     +--------------+
+| Insert at 30° Angle   |---->| Fasten 2x M2 Screws|---->| Attach Pigtail|
++-----------------------+     +--------------------+     +--------------+
+                                                                |
+Raspberry Pi 4 GPIO Header                                      v
++-----------------------+                         +---------------------+
+| Press HAT down flush  |<------------------------| Thread Both Antennas|
++-----------------------+                         +---------------------+
+```
 
-If Docker environment variables override the file, they must also use AS923:
+### Step 1: Install RAK5146 Card on WisLink Pi HAT
+1. Place the WisLink Pi HAT on an anti-static surface.
+2. Insert the RAK5146 mini-PCIe card into the HAT mPCIe socket at a 30-degree angle.
+3. Press down gently until flush against standoffs and secure with two M2.0 screws.
 
-~~~yaml
-environment:
-  - INTEGRATION__MQTT__EVENT_TOPIC_TEMPLATE=as923/gateway/{{ .GatewayID }}/event/{{ .EventType }}
-  - INTEGRATION__MQTT__COMMAND_TOPIC_TEMPLATE=as923/gateway/{{ .GatewayID }}/command/{{ .CommandType }}
-~~~
+### Step 2: Attach Micro Coaxial Pigtails (u.FL / IPEX)
+1. Align u.FL pigtail 1 vertically over the connector labeled **LORA** (or **RF0**) on the RAK5146 card. Press straight down until you feel a light click.
+2. Align pigtail 2 over the connector labeled **GPS** and press down until it clicks.
 
-Choose one mode:
+### Step 3: Mount HAT on Raspberry Pi 4
+1. Screw four 11mm M2.5 brass standoffs into the Raspberry Pi 4 mounting holes.
+2. Align the 40-pin connector on the HAT with the Pi 4 GPIO header. Press down evenly until no gold pins are visible. Fasten with M2.5 screws.
 
-| Mode | Rule |
-|---|---|
-| Private AS923 test stack | Use AS923 in the Gateway Bridge, restart it, and test only the RAK path. |
-| Shared EU868 and AS923 service | Use a separate Gateway Bridge route or instance; do not repoint the only EU868 route. |
-| Temporary migration | Back up the current files, change both templates, test, then restore or formally document the new region. |
+### Step 4: Thread External Antennas (CRITICAL)
+1. Hand-tighten the 900–930 MHz outdoor LoRa fiberglass antenna onto the SMA female bulkhead connected to the **LORA** pigtail.
+2. Screw the active GPS antenna onto the SMA female bulkhead connected to the **GPS** pigtail.
 
-Do not connect the Pi until the mode is approved.
+---
 
-### 3.2 Server preflight
+### 3.1 OS Image Selection: Why RAK Docs Use Desktop/Pre-built Images vs. Raspberry Pi OS Lite
 
-Run on the Ubuntu VM hosting the private stack:
+> [!NOTE]
+> **Why RAK Official Docs Reference Raspberry Pi OS with Desktop or RAK Pre-built Images**:
+> 1. **Beginner Bench Setup**: RAK's official quickstart guides assume developers will plug an HDMI monitor, keyboard, and mouse directly into the Pi 4 to configure settings via a desktop GUI.
+> 2. **Legacy Script Dependencies**: Older RAK setup scripts (`rak_common_for_gateway`) relied on Python GUI libraries pre-installed in the Desktop edition.
+> 3. **RAK Pre-built WisGate OS**: RAK also provides custom pre-flashed OpenWrt images with their `gateway-config` web portal.
+> 
+> **Why Raspberry Pi OS Lite (64-bit) is Recommended for All-In-One Gateways**:
+> - **RAM & CPU Efficiency**: Lite uses only ~150 MB RAM compared to ~600 MB for Desktop (which wastes 450 MB+ RAM running background display managers like X11/Wayland). This leaves maximum memory for Docker, ChirpStack v4, PostgreSQL, and Redis.
+> - **Headless Production Standard**: Gateways run as headless network appliances managed via SSH and Web UI.
+> 
+> *(Note: You CAN use **Raspberry Pi OS (64-bit) with Desktop** if you want an HDMI monitor interface. Both OS versions use identical SPI kernel drivers and Docker commands).*
 
-~~~bash
+### 3.2 Flash OS with Raspberry Pi Imager v2.0.10
+1. Insert a 32GB or 64GB Class 10 High Endurance microSD card into your PC.
+2. Open **Raspberry Pi Imager v2.0.10**.
+3. Select Device: **Raspberry Pi 4**.
+4. Select OS: **Raspberry Pi OS (Other)** -> **Raspberry Pi OS Lite (64-bit)** *(or Raspberry Pi OS 64-bit Desktop if HDMI monitor is attached)*.
+5. Select target SD Card storage.
+6. Click **Edit Settings** (or **Customisation**):
+   - **Hostname Tab**: Set hostname to `rak-pi4-gateway` (resolves as `rak-pi4-gateway.local`).
+   - **User Tab**: Set Username `pi` and your secure Password.
+   - **Wi-Fi Tab**: Select **SECURE NETWORK**, enter SSID `IT`, and enter your Wi-Fi Password.
+   - **Remote access / SSH authentication Tab**:
+     - Toggle **`Enable SSH`** switch to **ON** (active maroon toggle switch).
+     - Select radio button **`Use password authentication`**.
+   - **Raspberry Pi Connect Tab**: **LEAVE DISABLED (OFF)**. *(Headless OS; disabling Pi Connect prevents unnecessary cloud background daemons from consuming RAM/CPU).*
+7. Click **SAVE**, then click **NEXT** / **YES** to write the card.
+
+### Step 2: First Boot & SSH Access
+1. Insert the flashed microSD card into the Raspberry Pi 4.
+2. Connect Ethernet cable (or rely on configured Wi-Fi network `IT`).
+3. Plug in the official 5V/3A USB-C power supply.
+4. Wait 60 seconds, then SSH into the Pi 4 from your terminal:
+   ```bash
+   ssh pi@rak-pi4-gateway.local   # or ssh pi@<PI_IP_ADDRESS>
+   ```
+
+### Step 3: Enable SPI Kernel Overlay & GPIO 17 Reset Script
+Execute this block of commands on the Raspberry Pi 4:
+
+```bash
+# 1. Update OS packages and install core tools required for Pi OS Lite barebones
+sudo apt-get update && sudo apt-get upgrade -y
+sudo apt-get install -y git build-essential raspi-config python3 curl net-tools tcpdump gpg ca-certificates
+
+# 2. Enable SPI interface in kernel
+sudo raspi-config nonint do_spi 0
+
+# 3. Disable serial console on UART to free port for GPS module
+sudo raspi-config nonint do_serial 2
+echo "dtoverlay=miniuart-bt" | sudo tee -a /boot/firmware/config.txt
+sudo systemctl disable hciuart
+
+# 4. Create RAK5146 GPIO 17 hardware reset script
+sudo tee /usr/local/bin/reset_rak_gateway.sh > /dev/null << 'EOF'
+#!/usr/bin/env bash
+RESET_PIN=17
+echo "Toggling RAK5146 Concentrator Reset on GPIO ${RESET_PIN}..."
+if [ -d /sys/class/gpio/gpio${RESET_PIN} ]; then
+    echo "${RESET_PIN}" > /sys/class/gpio/unexport 2>/dev/null || true
+fi
+echo "${RESET_PIN}" > /sys/class/gpio/export 2>/dev/null || true
+echo "out" > /sys/class/gpio/gpio${RESET_PIN}/direction
+echo "1" > /sys/class/gpio/gpio${RESET_PIN}/value
+sleep 0.1
+echo "0" > /sys/class/gpio/gpio${RESET_PIN}/value
+sleep 0.1
+echo "${RESET_PIN}" > /sys/class/gpio/unexport 2>/dev/null || true
+echo "Reset pulse delivered successfully."
+EOF
+
+sudo chmod +x /usr/local/bin/reset_rak_gateway.sh
+
+# 5. Create boot systemd reset service to guarantee hardware reset on startup
+sudo tee /etc/systemd/system/rak-gateway-reset.service > /dev/null << 'EOF'
+[Unit]
+Description=RAK5146 Concentrator Hardware Reset
+Before=chirpstack-concentratord-sx1302.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/reset_rak_gateway.sh
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+sudo systemctl daemon-reload
+sudo systemctl enable rak-gateway-reset.service
+
+# 6. Reboot to apply kernel overlays and systemd service
+sudo reboot
+```
+
+#### 3.3 Deep Technical Rationale: Why Every Command in Step 3 is Mandatory
+
+| Command / Component | Why It Is Technically Mandatory | What Fails If Omitted |
+| :--- | :--- | :--- |
+| **`sudo raspi-config nonint do_spi 0`** | By default, Linux disables the SPI hardware peripheral on the Broadcom BCM2711 SoC to save power. This command writes `dtparam=spi=on` into `/boot/firmware/config.txt` to load the `spidev` kernel module on boot. | `/dev/spidev0.0` will not exist. Concentratord / Semtech HAL will fail immediately with `lgw_connect failure: failed to open SPI device`. |
+| **`sudo raspi-config nonint do_serial 2`** | Disables the Linux interactive TTY login console on UART (`/dev/ttyAMA0` / GPIO 14 & 15) while keeping hardware serial active. | Linux will send OS shell login prompts (`raspberrypi login:`) to the GPS module, and read incoming GPS NMEA sentences as invalid shell commands, corrupting GPS parsing. |
+| **`echo "dtoverlay=miniuart-bt"` & `systemctl disable hciuart`** | By default, Raspberry Pi 4 attaches Bluetooth to the high-performance PL011 UART (`/dev/ttyAMA0`) and assigns mini-UART (`/dev/ttyS0`) to GPIO pins. Mini-UART lacks hardware flow control and changes baud rate whenever CPU frequency scales. This overlay moves Bluetooth to mini-UART and assigns PL011 UART directly to the GPS pin header. | GPS NMEA data streams will suffer bit errors and packet drops whenever the Pi 4 CPU throttles or scales frequency, breaking GPS PPS timing and TDoA precision. |
+| **`reset_rak_gateway.sh` (GPIO 17 Pulse)** | The Semtech SX1303 baseband chip on the RAK5146 concentrator requires a physical HIGH-to-LOW reset pulse on its reset line (hardwired to Pi GPIO 17 via WisLink Pi HAT) before SPI registers can be initialized. | The SX1303 stays in an uninitialized sleep state after boot. SPI read operations return corrupted data (`0x00` or `0xFF`), causing driver crashes during startup. |
+
+---
+
+### Step 4: Verification After Reboot
+SSH back in (`ssh pi@rak-pi4-gateway.local`) and verify SPI device nodes:
+
+```bash
+ls -l /dev/spidev0.*
+```
+*Expected Output*:
+```text
+crw-rw---- 1 root spi 153, 0 Aug 4 08:00 /dev/spidev0.0
+crw-rw---- 1 root spi 153, 1 Aug 4 08:00 /dev/spidev0.1
+```
+
+---
+
+## 4. Phase 3: Install Docker & Deploy Local ChirpStack v4 Stack
+
+Deploy the complete ChirpStack v4 server stack directly on the Raspberry Pi 4 using Docker Compose.
+
+### Step 1: Install Docker Engine & Docker Compose
+Run the official automated Docker installer script:
+
+```bash
+# Download and execute official Docker installer
+curl -fsSL https://get.docker.com | sudo sh
+
+# Add 'pi' user to docker group
+sudo usermod -aG docker pi
+
+# Apply group changes
+newgrp docker
+
+# Verify Docker version
+docker --version
+docker compose version
+```
+
+### Step 2: Create ChirpStack Docker Directory Structure
+Create project directory `/opt/chirpstack-docker`:
+
+```bash
+sudo mkdir -p /opt/chirpstack-docker/configuration/chirpstack
+sudo mkdir -p /opt/chirpstack-docker/configuration/chirpstack-gateway-bridge
+sudo chown -R pi:pi /opt/chirpstack-docker
+cd /opt/chirpstack-docker
+```
+
+### Step 3: Create Gateway Bridge Configuration
+Create `/opt/chirpstack-docker/configuration/chirpstack-gateway-bridge/chirpstack-gateway-bridge.toml`:
+
+```toml
+sudo tee /opt/chirpstack-docker/configuration/chirpstack-gateway-bridge/chirpstack-gateway-bridge.toml > /dev/null << 'EOF'
+[general]
+log_level="info"
+
+[integration.mqtt]
+server="tcp://mosquitto:1883"
+event_topic_template="as923/gateway/{{ .GatewayID }}/event/{{ .EventType }}"
+command_topic_template="as923/gateway/{{ .GatewayID }}/command/{{ .CommandType }}"
+
+[backend.semtech_udp]
+ip_arg="0.0.0.0"
+port=1700
+EOF
+```
+
+### Step 4: Create ChirpStack Server Configuration
+Create `/opt/chirpstack-docker/configuration/chirpstack/chirpstack.toml`:
+
+```toml
+sudo tee /opt/chirpstack-docker/configuration/chirpstack/chirpstack.toml > /dev/null << 'EOF'
+[logging]
+level="info"
+
+[postgresql]
+dsn="postgres://chirpstack:chirpstack@postgres/chirpstack?sslmode=disable"
+
+[redis]
+url="redis://redis:6379"
+
+[network]
+enabled_regions=["as923"]
+
+[integration]
+enabled=["mqtt"]
+
+[integration.mqtt]
+server="tcp://mosquitto:1883"
+json=true
+EOF
+```
+
+### Step 5: Create Production `docker-compose.yml`
+Create `/opt/chirpstack-docker/docker-compose.yml`:
+
+```yaml
+sudo tee /opt/chirpstack-docker/docker-compose.yml > /dev/null << 'EOF'
+services:
+  chirpstack:
+    image: chirpstack/chirpstack:4
+    command: -c /etc/chirpstack
+    restart: unless-stopped
+    volumes:
+      - ./configuration/chirpstack:/etc/chirpstack
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+      - redis
+      - mosquitto
+
+  chirpstack-gateway-bridge:
+    image: chirpstack/chirpstack-gateway-bridge:4
+    restart: unless-stopped
+    ports:
+      - "1700:1700/udp"
+    volumes:
+      - ./configuration/chirpstack-gateway-bridge:/etc/chirpstack-gateway-bridge
+    depends_on:
+      - mosquitto
+
+  mosquitto:
+    image: eclipse-mosquitto:2
+    restart: unless-stopped
+    ports:
+      - "1883:1883"
+    command: mosquitto -c /mosquitto-no-auth.conf
+
+  postgres:
+    image: postgres:14-alpine
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=chirpstack
+      - POSTGRES_PASSWORD=chirpstack
+      - POSTGRES_DB=chirpstack
+    volumes:
+      - postgresqldata:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    volumes:
+      - redisdata:/data
+
+volumes:
+  postgresqldata:
+  redisdata:
+EOF
+```
+
+### Step 6: Launch Local ChirpStack Stack
+Start all database, broker, bridge, and network server containers:
+
+```bash
+cd /opt/chirpstack-docker
+docker compose up -d
+```
+
+Verify that all 5 containers are running:
+```bash
 docker compose ps
-sudo ss -ulnp | grep ':1700'
-curl -I http://127.0.0.1:8080
-docker compose logs -f chirpstack-gateway-bridge
-~~~
-
-Expected:
-
-- Gateway Bridge is running.
-- UDP port 1700 is listening.
-- The web service answers on port 8080.
-- Active MQTT topic templates use AS923 for the RAK path.
-
-If a firewall is enabled, allow only the approved gateway source:
-
-~~~bash
-sudo ufw status verbose
-sudo ufw allow from <RAK_GATEWAY_SUBNET_OR_IP> to any port 1700 proto udp
-~~~
-
-Do not expose UDP 1700 to the public Internet.
-
-### 3.3 Prepare the workstation
-
-Have these ready:
-
-- Current RAK5146 image from the official RAK page.
-- microSD reader and balenaEtcher or an approved image writer.
-- Ethernet cable and laptop USB Ethernet adapter if needed.
-- USB-C data cable for the WisBlock node.
-- Screwdriver set, ESD protection, labels, notebook, and camera.
-- Arduino IDE and current RAKwireless Arduino BSP.
-- Serial terminal or Arduino Serial Monitor.
-- Private ChirpStack administrator account.
-- Approved password manager and secret storage.
-
-## 4. Arrival-day acceptance
-
-Do this before connecting power.
-
-1. Photograph the shipment, labels, board markings, connectors, and serial numbers.
-2. Label the equipment: GW-RAK-01, NODE-RAK-01, and so on.
-3. Record the RAK5146 variant, frequency, interface, Gateway EUI if printed, and Raspberry Pi model.
-4. Confirm the pigtails, LoRa antenna, GPS antenna, power supply, microSD, HAT, and enclosure are present.
-5. Confirm the WisBlock core, base, antenna, USB-C cable, and at least one sensor are present.
-6. Keep every original label and QR code.
-7. Do not write keys or passwords on the hardware.
-
-Stop and escalate if:
-
-- RAK5146 is EU868, EU433, USB-only, or not marked clearly.
-- The Pi HAT is not RAK5146-compatible.
-- The LoRa antenna is not a 900 MHz antenna.
-- The pigtails do not match the board and enclosure connectors.
-- The power supply is not a stable 5 V / 3 A supply.
-- The delivered core is RAK4631-R but the planned firmware is only for RAK4631, or vice versa.
-- Any PCB, connector, or antenna is damaged.
-
-Inventory record:
-
-| Item | Expected | Actual | Serial / EUI | Pass |
-|---|---|---|---|---|
-| Raspberry Pi | Pi 4 Model B |  |  |  |
-| Concentrator | RAK5146 SPI, AS923 |  |  |  |
-| Pi HAT | RAK5146/WisLink compatible |  |  |  |
-| LoRa antenna | 900-930 MHz |  |  |  |
-| GPS antenna | Active GPS |  |  |  |
-| Pigtails | Two u.FL/IPEX to SMA-family |  |  |  |
-| Power | 5 V / 3 A USB-C |  |  |  |
-| microSD | 32 or 64 GB high endurance |  |  |  |
-| RAK core | RAK4631 or RAK4631-R |  | DevEUI:  |  |
-| WisBlock base | RAK19007 or RAK19001 |  |  |  |
-| Sensor | One selected module |  |  |  |
-| Node antenna | Matching 900 MHz |  |  |  |
-
-## 5. Assemble the gateway with no power
-
-Work on a clean, dry, static-safe bench. Keep the Pi supply unplugged.
-
-### 5.1 Mount the concentrator
-
-1. Place the Pi HAT with the mini-PCIe socket visible.
-2. Identify the RAK5146 keyed edge and HAT orientation.
-3. Insert the RAK5146 into the mini-PCIe socket at approximately 45 degrees.
-4. Press it down gently until the screw holes align.
-5. Secure it with the supplied screws without flexing the PCB.
-6. If it does not seat easily, stop and re-check orientation.
-
-### 5.2 Mount the HAT on the Pi
-
-1. Fit the correct standoffs.
-2. Align the HAT's 40-pin connector with the Pi 4 GPIO header.
-3. Press straight down evenly.
-4. Secure the HAT and Pi.
-5. Check that no screw or spacer can touch exposed solder.
-6. Leave the cover off for first boot.
-
-### 5.3 Connect the pigtails
-
-| Path | Board connector | External connector | Destination |
-|---|---|---|---|
-| LoRa | RAK5146 LoRa IPEX/u.FL | LoRa SMA-family bulkhead | 900-930 MHz LoRa antenna |
-| GPS | RAK5146 GPS IPEX/u.FL | GPS SMA bulkhead | Active GPS antenna |
-
-1. Align each tiny connector vertically.
-2. Press straight down until it clicks.
-3. Do not twist or bend the cable at the connector.
-4. Label the external ends LORA and GPS.
-5. Verify bulkhead washers and nuts are secure.
-
-### 5.4 Attach antennas before power
-
-1. Attach the 900-930 MHz LoRa antenna to the LoRa connector.
-2. Attach the active GPS antenna to the GPS connector.
-3. Hand-tighten the connectors; do not use pliers.
-4. Keep the LoRa antenna vertical and away from metal during testing.
-5. Connect Ethernet.
-6. Insert the flashed microSD.
-7. Only now connect the 5 V / 3 A USB-C supply.
-
-Never test a powered gateway with its LoRa antenna disconnected. Disconnect power before removing any RF cable.
-
-## 6. Flash and first-boot the gateway
-
-### 6.1 Flash the RAK image
-
-Use the current image linked from the official [RAK5146 Quick Start Guide](https://docs.rakwireless.com/product-categories/wislink/rak5146/quickstart/).
-
-1. Insert the microSD into the workstation.
-2. Verify the selected drive by capacity twice.
-3. Flash the vendor image.
-4. Safely eject the card.
-5. Verify the checksum if RAK publishes one.
-6. Record image filename, version, date, and checksum.
-
-Do not flash the Ubuntu server image or a generic Pi image unless the RAK documentation explicitly confirms RAK5146 SPI support.
-
-### 6.2 First access by isolated Ethernet
-
-RAK documents these stock-image defaults, which may differ in a newer image:
-
-- Ethernet address: 192.168.10.10
-- Wi-Fi AP address: 192.168.230.1
-- AP name: RAKwireless_XXXX
-- AP password: rakwireless
-- SSH user/password: pi / raspberry
-
-Use the isolated Ethernet method first:
-
-1. Disconnect the laptop from other wired networks.
-2. Connect the laptop directly to the Pi Ethernet port.
-3. Temporarily set the laptop to 192.168.10.20/24 with no default gateway.
-4. Test reachability:
-
-~~~powershell
-ping 192.168.10.10
-~~~
-
-5. Connect:
-
-~~~powershell
-ssh pi@192.168.10.10
-~~~
-
-6. On this isolated cable only, use the stock default password if required.
-7. Change it immediately:
-
-~~~bash
-sudo passwd pi
-~~~
-
-8. Save the new password in the approved password manager, never in Git or Markdown.
-
-If Ethernet fails, use the isolated RAK Wi-Fi AP fallback. If the image does not present the documented defaults, stop guessing and check the release-specific image notes, SD card, link LEDs, and Pi model.
-
-### 6.3 Record identity and software
-
-~~~bash
-hostname
-uname -a
-ip -br address
-sudo gateway-version
-~~~
-
-Record:
-
-- Gateway EUI.
-- RAK image or Gateway OS version.
-- Raspberry Pi model.
-- RAK5146 variant and serial.
-- Ethernet MAC and IP.
-- First-boot date and time.
-
-The Gateway EUI entered in ChirpStack must be exactly the EUI reported by the running gateway software.
-
-### 6.4 Configure the packet-forwarder
-
-Run the RAK menu if available:
-
-~~~bash
-sudo gateway-config
-~~~
-
-Configure:
-
-1. Pi password.
-2. RAK Gateway LoRa concentrator.
-3. AS923 regional plan.
-4. ChirpStack as the network server.
-5. Server address: <CHIRPSTACK_SERVER_IP>.
-6. Uplink port: 1700.
-7. Downlink port: 1700.
-8. Save.
-9. Restart the packet-forwarder.
-
-If the menu lacks the required fields, locate the active files:
-
-~~~bash
-sudo find /etc /opt -type f \( -name 'global_conf.json' -o -name 'local_conf.json' \) 2>/dev/null
-~~~
-
-The effective Semtech UDP values must be equivalent to:
-
-~~~json
-{
-  "gateway_conf": {
-    "server_address": "<CHIRPSTACK_SERVER_IP>",
-    "serv_port_up": 1700,
-    "serv_port_down": 1700
-  }
-}
-~~~
-
-Preserve all other vendor fields. If both global and local configuration files exist, verify which values win.
-
-### 6.5 Join the real network
-
-Use wired Ethernet and a DHCP reservation first.
-
-1. Reserve the Pi's MAC address as <RAK_GATEWAY_IP>.
-2. Connect it to the approved switch or router.
-3. Restore the laptop's normal network settings.
-4. Restart the Pi network or reboot.
-5. From the Pi:
-
-~~~bash
-ip -br address
-ip route
-ping -c 4 <CHIRPSTACK_SERVER_IP>
-~~~
-
-6. From the server:
-
-~~~bash
-ping -c 4 <RAK_GATEWAY_IP>
-~~~
-
-Do not use the Milesight direct-AP values 192.168.23.150 and 192.168.23.137 unless the network design explicitly assigns them to the RAK path.
-
-## 7. Connect the gateway to ChirpStack
-
-### 7.1 Validate the regional route
-
-On the Ubuntu VM:
-
-~~~bash
-docker compose restart chirpstack-gateway-bridge
-docker compose ps
-docker compose logs --tail=100 chirpstack-gateway-bridge
-~~~
-
-Check:
-
-- UDP 1700 is listening.
-- MQTT topic templates use AS923, not EU868.
-- Gateway Bridge connects to MQTT.
-- Existing EU868 traffic is not being rerouted.
-
-If the server is shared, stop and use the approved separate multi-region Bridge design.
-
-### 7.2 Add the gateway
-
-1. Open http://<CHIRPSTACK_SERVER_IP>:8080.
-2. Sign in to the private tenant.
-3. Open Gateways and choose Add gateway.
-4. Name it RAK-AS923-GW-01.
-5. Enter the exact Gateway EUI from gateway-version.
-6. Select or record AS923 if the UI exposes a region field.
-7. Save.
-
-### 7.3 Verify statistics and UDP
-
-On the server:
-
-~~~bash
-sudo tcpdump -ni any host <RAK_GATEWAY_IP> and udp port 1700
-~~~
-
-In another terminal:
-
-~~~bash
-docker compose logs -f chirpstack-gateway-bridge
-~~~
-
-On the Pi, discover the service name:
-
-~~~bash
-systemctl list-units --type=service | grep -Ei 'packet|lora|gateway|forward'
-ps aux | grep -Ei 'packet_forwarder|gateway|lora' | grep -v grep
-~~~
-
-Expected:
-
-- Periodic gateway statistics leave the Pi.
-- The server sees UDP 1700.
-- The Bridge acknowledges the packet-forwarder.
-- ChirpStack shows a recent Last seen value.
-
-Interpret failures by layer:
-
-- No UDP: Pi network, server address, firewall, or packet-forwarder.
-- UDP but no Bridge event: Bridge backend, firewall, or MQTT route.
-- Bridge event but unknown gateway: wrong EUI or tenant.
-- Online gateway but no node frames: node RF or firmware.
-
-## 8. Assemble the first WisBlock node
-
-Start indoors with USB power only.
-
-### 8.1 Golden first node
-
-~~~text
-RAK4631
-  + RAK19007 or RAK19001
-  + one sensor with a matching official example
-  + one AS923 LoRa antenna
-  + USB-C data cable
-~~~
-
-If RAK1906 is included, it is a reasonable first environmental-sensor candidate if the current example supports the exact revision. Otherwise prove the core LoRaWAN example before adding a sensor.
-
-### 8.2 Assembly
-
-1. Disconnect USB, battery, and solar power.
-2. Install RAK4631 in the base board CPU/Core slot.
-3. Press evenly and install the retaining screw.
-4. Install one sensor into a compatible sensor slot identified by the base-board silkscreen.
-5. Install the sensor retaining screw.
-6. Connect the node's 900 MHz LoRa antenna.
-7. Confirm no cable is trapped under a board or screw.
-8. Connect only the USB-C data/power cable.
-
-A WisBlock core requires a base. A sensor module must use a compatible slot and current library.
-
-### 8.3 Battery and solar safety
-
-Leave both disconnected for the first test.
-
-Later:
-
-- Use only a 3.7-4.2 V rechargeable Li-Ion/LiPo battery.
-- Use only a 5 V solar panel on the RAK19007 solar input.
-- Confirm polarity.
-- Do not connect a non-rechargeable battery and USB together.
-- Never connect 12 V to the solar input.
-- Protect the battery from moisture, crushing, and overheating.
-
-## 9. Program the node for AS923 OTAA
-
-### 9.1 Tools and board identity
-
-Use the official [RAK4631 Quick Start Guide](https://docs.rakwireless.com/product-categories/wisblock/rak4631/quickstart/).
-
-1. Install the official Arduino IDE.
-2. Install the current RAKwireless Arduino BSP.
-3. Connect the node over USB-C.
-4. Identify the COM port.
-5. Confirm the board marking: RAK4631 or RAK4631-R.
-6. Select the matching board definition.
-7. Use the current RAK LoRaWAN OTAA example or the current WisBlock example matching the installed sensor libraries.
-
-A power-only USB-C cable will not program the node.
-
-### 9.2 Firmware values
-
-Replace every public example identity and key:
-
-| Setting | First-test value |
-|---|---|
-| Region | RAK_REGION_AS923 or the current BSP equivalent |
-| Activation | OTAA |
-| Class | Class A |
-| LoRaWAN version | Match the profile; use 1.0.3 for the first RAK example path |
-| Device EUI | Exact board DevEUI in the byte order required by the example |
-| JoinEUI/AppEUI | Exact value registered in ChirpStack |
-| AppKey | Newly generated synthetic 128-bit key |
-| Uplink interval | About 60 seconds for bench observation |
-| Payload | Documented test payload; not automatically Dragino-compatible |
-
-RAK documents MSB order for the EUI in its example path. Do not reverse bytes unless the selected sketch explicitly requires it.
-
-### 9.3 Upload and serial checks
-
-1. Compile before upload.
-2. Select the exact board and COM port.
-3. Upload.
-4. If upload fails, press reset twice or follow the exact board bootloader procedure.
-5. Open Serial Monitor at the example's baud rate. Many RAK examples use 115200.
-6. Record the firmware, libraries, board selection, port, and upload result.
-
-Expected state transitions:
-
-~~~text
-Region: AS923
-Type: OTAA
-LoRaWAN initialization succeeded
-Join request sent
-Join accepted
-Uplink sent
-~~~
-
-The wording may differ. The required states are AS923, OTAA, join request, join accept, and uplink.
-
-## 10. Add the node to ChirpStack
-
-### 10.1 Create a separate application
-
-1. Create an application named wisblock-as923-lab.
-2. Do not place it in the existing Dragino application unless approved.
-3. Leave the decoder empty for the first raw-payload test.
-
-### 10.2 Create a matching device profile
-
-Match the firmware:
-
-- Region: AS923 and the approved local regional-parameters revision.
-- MAC version: 1.0.3 for the first RAK example path unless firmware differs.
-- Activation: OTAA.
-- Class: A.
-- Join-server behavior: match the private ChirpStack deployment.
-- Uplink interval and payload: record in the device note.
-
-### 10.3 Create the device and key
-
-1. Create device wisblock-as923-01.
-2. Enter the exact DevEUI.
-3. Enter the exact JoinEUI/AppEUI.
-4. Generate an AppKey in ChirpStack.
-5. Copy it once into protected firmware configuration.
-6. Save the device.
-7. Remove the key from terminal history and screenshots.
-
-A one-character identity or key mismatch produces a failed join that can look like RF failure.
-
-## 11. End-to-end acceptance gates
-
-Do not install outdoors until every gate passes.
-
-### Gate 1: Power and RF
-
-- [ ] Gateway LoRa antenna connected.
-- [ ] Gateway GPS antenna connected.
-- [ ] Node LoRa antenna connected.
-- [ ] No active RF path is open.
-- [ ] Pi uses 5 V / 3 A.
-- [ ] Node uses USB only.
-
-### Gate 2: Gateway configuration
-
-- [ ] RAK5146 variant recorded as SPI and AS923.
-- [ ] Gateway image version recorded.
-- [ ] Gateway EUI recorded.
-- [ ] Packet-forwarder region is AS923.
-- [ ] Server address is reachable from the Pi.
-- [ ] Uplink and downlink are UDP 1700.
-- [ ] Firewall allows the approved source.
-- [ ] Gateway Bridge MQTT route is AS923.
-
-### Gate 3: Gateway online
-
-- [ ] Gateway exists in the correct tenant.
-- [ ] Last seen is recent.
-- [ ] Statistics are visible.
-- [ ] UDP or Bridge activity is logged.
-- [ ] No EU868 service was disrupted.
-
-### Gate 4: Node firmware
-
-- [ ] Correct RAK4631 or RAK4631-R board selected.
-- [ ] Region AS923.
-- [ ] OTAA.
-- [ ] Class A.
-- [ ] Synthetic DevEUI, JoinEUI/AppEUI, and AppKey recorded securely.
-- [ ] Serial log shows the intended region and activation.
-- [ ] Node antenna connected.
-
-### Gate 5: Join and uplink
-
-- [ ] Gateway frames show JoinRequest.
-- [ ] Device frames show JoinRequest.
-- [ ] JoinAccept is sent.
-- [ ] Node reports joined.
-- [ ] First uplink appears.
-- [ ] Raw payload is saved.
-- [ ] Dragino decoder was not assumed compatible.
-
-### Gate 6: Downstream services
-
-Only after Gate 5:
-
-- [ ] MQTT event visible.
-- [ ] PostgreSQL event visible through [document 03](./03-postgres-integration-guide.md).
-- [ ] Dedicated WisBlock dashboard added through [document 04](./04-grafana-integration-guide.md).
-- [ ] Node-RED automation reviewed and disabled by default.
-- [ ] Actuators and irrigation rules remain disabled.
-
-## 12. Troubleshooting matrix
-
-| Symptom | Likely layer | Checks |
-|---|---|---|
-| Pi will not boot | Power, SD, Pi | Antenna connected, 5 V / 3 A supply, correct image, card seating, Pi 4 model, LEDs. |
-| RAK5146 not detected | HAT or card | Power off, reseat at 45 degrees, inspect HAT connector, confirm SPI variant and vendor image. |
-| No Gateway EUI | Image or service | Run sudo gateway-version; inspect the service; do not invent an EUI. |
-| No Ethernet address | Network | Cable, link LEDs, DHCP reservation, ip -br address, switch port. |
-| Pi cannot ping server | Network/firewall | Server IP, route, firewall, and bridged VM address. |
-| No UDP 1700 | Packet-forwarder | Server address, both ports, service, region, tcpdump. |
-| UDP but gateway offline | Identity/Bridge | Gateway EUI, tenant, Bridge backend, MQTT prefix. |
-| Gateway online but no JoinRequest | Node/RF | Node antenna, AS923, node power, serial log, node transmission. |
-| JoinRequest but no JoinAccept | Keys/profile | DevEUI, JoinEUI, AppKey, MAC version, region, tenant. |
-| JoinAccept but node never joins | Downlink/timing | UDP downlink, antenna path, receive-window settings. |
-| Uplink accepted but no decoded data | Payload | Save raw bytes, confirm FPort, write WisBlock decoder. |
-| Sensor example does not compile | Board/library | Exact core, module revision, BSP, matching example and libraries. |
-| Node resets during transmit | Power | Return to USB, new data cable, battery/solar disconnected, supply path. |
-| GPS never fixes | GPS path | Correct pigtail, active antenna, sky view, time. Basic forwarding can be tested first. |
-
-## 13. Outdoor installation gate
-
-Do not install outdoors until the indoor acceptance gates pass.
-
-Before mounting:
-
-- Use a weatherproof enclosure and cable glands.
-- Add drip loops and strain relief.
-- Keep the LoRa antenna vertical and clear of nearby metal.
-- Use qualified grounding, surge, and lightning protection for the antenna mast.
-- Keep the Pi and supply dry and within their environmental limits.
-- Give GPS a suitable sky view if timing/location is required.
-- Use approved mains or solar/battery power; never improvise 12 V into a 5 V input.
-- Record antenna height, cable length, enclosure location, gateway IP, and node locations.
-- Repeat the gateway-online and node-join checks after installation.
-
-Use one node at a known distance for the first field test. Do not deploy every node until that test passes.
-
-## 14. Rollback and safe shutdown
-
-1. Stop the node firmware or disconnect node USB power.
-2. Disconnect Pi power only after the LoRa antenna remains connected until power is off.
-3. Never remove an RF cable from a powered gateway.
-4. Stop the packet-forwarder before changing its configuration.
-5. Restore the last known-good Gateway Bridge configuration if a shared service was changed.
-6. Disable or remove the test device from ChirpStack.
-7. Preserve logs, Gateway EUI, DevEUI, configuration versions, and UTC timestamps.
-8. Destroy synthetic keys according to project policy after the report is complete.
-
-## 15. Commissioning record
-
-~~~text
-Commissioning ID:
-Date / time UTC:
-Operator:
-Country / regulatory region:
-RAK image filename and checksum:
-Raspberry Pi model / serial:
-RAK5146 variant / serial:
-RAK5146 interface: SPI / USB:
-RAK5146 band:
-Gateway EUI:
-Gateway IP / DHCP reservation:
-Packet-forwarder type:
-Packet-forwarder version:
-ChirpStack server IP:
-Gateway Bridge UDP port:
-MQTT topic prefix:
-WisBlock core: RAK4631 / RAK4631-R:
-WisBlock base: RAK19007 / RAK19001:
-Sensor module and revision:
-Node DevEUI:
-Node JoinEUI/AppEUI:
-LoRaWAN MAC version:
-Activation / class:
-Firmware repository and commit:
-Arduino BSP / library versions:
-First JoinRequest UTC:
-JoinAccept UTC:
-First accepted uplink UTC:
-First raw payload:
-Decoder status:
-PostgreSQL/Grafana/Node-RED status:
-Known limitations:
-Operator sign-off:
-~~~
-
-## 16. Source references
-
-- [RAK5146 product overview](https://docs.rakwireless.com/product-categories/wislink/rak5146/overview/)
-- [RAK5146 Raspberry Pi quick-start guide](https://docs.rakwireless.com/product-categories/wislink/rak5146/quickstart/)
-- [RAK RPi DIY Gateway Kit installation guide](https://docs.rakwireless.com/product-categories/accessories/rak-rpi-diy-gateway-kit/installation-guide/)
-- [RAK4631 WisBlock quick-start guide](https://docs.rakwireless.com/product-categories/wisblock/rak4631/quickstart/)
-- [RAK19007 WisBlock base-board guide](https://docs.rakwireless.com/product-categories/wisblock/rak19007/quickstart/)
-- [WisBlock Agriculture Kit datasheet](https://docs.rakwireless.com/product-categories/wisblock/kit7-agriculture/datasheet/)
-- [ChirpStack: connecting a gateway](https://www.chirpstack.io/docs/guides/connect-gateway.html)
-- [ChirpStack: gateway configuration](https://www.chirpstack.io/docs/gateway-configuration/index.html)
-- [ChirpStack: Raspberry Pi Gateway Bridge installation](https://www.chirpstack.io/docs/gateway-bridge/install/raspberry-pi.html)
-- [ChirpStack: connecting a device](https://www.chirpstack.io/docs/guides/connect-device.html)
+```
+*Expected Output*: `chirpstack`, `chirpstack-gateway-bridge`, `mosquitto`, `postgres`, and `redis` all show status **running**.
+
+---
+
+## 5. Phase 4: Install Concentratord & Route to Localhost
+
+### Step 1: Install ChirpStack Concentratord Daemon on Pi 4
+Install the Concentratord SX1302/SX1303 driver package:
+
+```bash
+curl -s https://artifacts.chirpstack.io/key/chirpstack.key | sudo gpg --dearmor -o /usr/share/keyrings/chirpstack.gpg
+echo "deb [signed-by=/usr/share/keyrings/chirpstack.gpg] https://artifacts.chirpstack.io/packages/4.x/deb stable main" | sudo tee /etc/apt/sources.list.d/chirpstack.list
+
+sudo apt-get update
+sudo apt-get install -y chirpstack-concentratord-sx1302
+```
+
+### Step 2: Configure Concentratord to Forward to Localhost (`127.0.0.1:1700`)
+Edit `/etc/chirpstack-concentratord/sx1302/concentratord.toml`:
+
+```bash
+sudo tee /etc/chirpstack-concentratord/sx1302/concentratord.toml > /dev/null << 'EOF'
+[concentratord]
+gateway_id="0000000000000000"
+
+[gateway]
+model="rak_2287"
+
+[gateway.model_config]
+spidev="/dev/spidev0.0"
+reset_pin=17
+channel_plan="AS923"
+EOF
+```
+
+Restart Concentratord daemon service:
+```bash
+sudo systemctl restart chirpstack-concentratord-sx1302
+```
+
+### Step 3: Derive Unique 64-Bit Gateway EUI
+Execute this command to derive your Gateway EUI from the Pi 4 `eth0` MAC address:
+
+```bash
+MAC=$(cat /sys/class/net/eth0/address | tr -d ':')
+GATEWAY_EUI=$(echo "${MAC:0:6}fffe${MAC:6:6}" | tr '[:lower:]' '[:upper:]')
+echo "============================================="
+echo "YOUR LOCAL GATEWAY EUI: ${GATEWAY_EUI}"
+echo "============================================="
+```
+**Write down this 16-character Gateway EUI** (e.g. `B827EBFFFE94C0B2`).
+
+---
+
+## 6. Phase 5: Register Gateway in ChirpStack UI & End-to-End Verification
+
+### Step 1: Access Local ChirpStack Web UI
+Open your web browser and navigate to:
+```text
+http://<PI_IP_ADDRESS>:8080   (or http://rak-pi4-gateway.local:8080)
+```
+- **Default Username**: `admin`
+- **Default Password**: `admin`
+
+*(Change default password immediately under Settings -> Password).*
+
+### Step 2: Add Gateway in Web UI
+1. In ChirpStack Web UI, navigate to **Gateways** -> Click **+ Add Gateway**.
+2. Fill in details:
+   - **Name**: `RAK5146-Pi4-Local-Gateway`
+   - **Gateway ID (EUI)**: Paste your 16-character EUI (e.g. `B827EBFFFE94C0B2`).
+   - **Stats Interval**: `30` seconds.
+3. Click **Submit**.
+
+### Step 3: End-to-End Gateway Verification Checks
+
+#### Check A: Web UI Connection Status
+In Web UI under **Gateways**, click your gateway and verify:
+- **Last Seen**: Displays `A few seconds ago` with a green indicator.
+
+#### Check B: Loopback Packet Capture
+On the Raspberry Pi 4, inspect local UDP port 1700 traffic:
+```bash
+sudo tcpdump -ni lo port 1700
+```
+*Expected Output*: Continuous packet exchange between `127.0.0.1:1700` and `127.0.0.1`.
+
+#### Check C: Service Daemon Log Inspection
+On the Raspberry Pi 4, inspect Concentratord daemon logs:
+```bash
+sudo journalctl -u chirpstack-concentratord-sx1302 -f -o cat
+```
+*Expected Log Output*:
+```text
+INFO: concentrator started successfully
+INFO: [up] PULL_ACK received in response to PULL_DATA
+INFO: [stat] gateway statistics successfully forwarded to network server
+```
+
+---
+
+## 7. Standalone All-In-One Diagnostic & Troubleshooting Matrix
+
+### 7.1 Comprehensive Diagnostic Matrix
+
+| Symptom / Error | Verification Test / Diagnosis | Exact Solution |
+| :--- | :--- | :--- |
+| **`ssh: Connection refused` on Port 22** | Raspberry Pi 4 is online at `169.254.x.x` or DHCP IP, but SSH service is disabled | **10-Second SD Card Headless Fix**: Eject SD card, plug into PC, create a blank file named `ssh` (no extension) and `userconf.txt` in root `boot` drive. Re-insert & power on. Or re-flash SD card ensuring `Enable SSH` toggle is **ON** in Imager. |
+| **SD Card Partition Missing on Windows PC** | Windows fails to assign a drive letter to `boot` (FAT32) or prompts *"You must format the disk"* | **Disk Management Fix**: Open `diskmgmt.msc`, right-click the small FAT32 `boot` partition (~256MB) -> **Change Drive Letter and Paths** -> Add drive letter (e.g., `E:`). **Never click format on the `rootfs` partition!** |
+| **Windows Network Bridge Error / No Internet** | Wi-Fi 802.11 MAC restrictions block layer-2 network bridge, or ICS service is disabled | **Windows ICS Fix**: Delete existing `Network Bridge` in `ncpa.cpl`. Enable Internet Connection Sharing (ICS) on Wi-Fi adapter. If checkbox disabled, set `Internet Connection Sharing` service to **Automatic** in `services.msc`. |
+| **Pi 4 Unreachable / Cannot Ping** | Wi-Fi SSID mismatch or wrong static IP subnet | **Fix**: Re-flash SD card with exact Wi-Fi SSID and password matching your laptop's current network. **OR** plug an Ethernet cable into the Pi 4 for direct wired network access. |
+| **Web UI http://<PI_IP>:8080 Unreachable** | `docker compose ps` | Run `cd /opt/chirpstack-docker && docker compose up -d`. Verify port 8080 is open. |
+| **`lgw_connect failure` on Pi 4** | `sudo /usr/local/bin/reset_rak_gateway.sh` | Ensure SPI enabled (`raspi-config nonint do_spi 0`). Re-seat mPCIe card. |
+| **Gateway Offline in Local Web UI** | `docker compose logs chirpstack-gateway-bridge` | Verify Gateway EUI matches `eth0` MAC derivation. Restart Concentratord daemon (`sudo systemctl restart chirpstack-concentratord-sx1302`). |
+| **Docker Containers Resetting / OOM** | `free -m` | Check power supply! Use official 5.1V/3A supply. Ensure 4GB/8GB Pi 4 is used. |
+
+---
+
+### 7.2 Windows Internet Connection Sharing (ICS) vs. Network Bridge Guide
+
+If connecting the Raspberry Pi to a Windows PC via Ethernet cable to share the PC's Wi-Fi internet connection:
+
+1. **Why Bridge Fails on Wi-Fi:** Standard Wi-Fi adapters (802.11) do not support Layer-2 packet bridging without WDS mode. Attempting to bridge Wi-Fi + Ethernet in `ncpa.cpl` creates an error or cuts off internet access.
+2. **Proper ICS Configuration Steps:**
+   - Press `Win + R`, type `ncpa.cpl`, press Enter.
+   - If a **Network Bridge** adapter exists, right-click and **Delete** it.
+   - Right-click **Wi-Fi** connection -> **Properties** -> **Sharing** tab.
+   - Check *"Allow other network users to connect through this computer's Internet connection"*.
+   - Under *Home networking connection*, select your **Ethernet** adapter -> Click **OK**.
+3. **If ICS Checkbox is Disabled or Throws Service Error:**
+   - Press `Win + R`, type `services.msc`, press Enter.
+   - Locate **Internet Connection Sharing (ICS)** (`SharedAccess`).
+   - Double-click -> Change **Startup type** to **Automatic** -> Click **Start**.
+
+---
+
+### 7.3 SD Card Recovery & Headless User Configuration
+
+If the SD card partition does not appear in Windows File Explorer:
+
+1. **Assign Drive Letter in Disk Management:**
+   - Press `Win + X` -> Select **Disk Management** (`diskmgmt.msc`).
+   - Locate the SD Card disk at the bottom.
+   - Right-click the small FAT32 partition (~256MB to 512MB) named `boot` or `bootfs`.
+   - Select **Change Drive Letter and Paths...** -> **Add** -> Assign drive letter `E:` or `F:`.
+2. **Headless `userconf.txt` Creation:**
+   - Open drive `E:` (`boot`).
+   - Create a text file named `userconf.txt` containing the following exact line to create user `pi` with password `raspberry`:
+     ```text
+     pi:$6$c70VzhamVzEkjf0z$il14FrbdDpfiSFhLUBINITVQFUazwT.6v72ikiICMVJRvy36LjNPrpBxijTU5dKsKCXng57hWf5W49E10vfuK1
+     ```
+   - Create a blank file named `ssh` (no extension).
+   - Eject the SD card and boot the Raspberry Pi. You can now SSH directly using `ssh pi@<PI_IP_ADDRESS>` or `ssh pi@rak-pi4-gateway.local`.
 
