@@ -1,0 +1,1914 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>LoRaWAN Gateway & MDS Architecture — Technical Update</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800;900&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --bg-dark: #070c14;
+  --panel-matte: #0d1526;
+  --panel-matte-alt: #111a2e;
+  --panel-border: #1e293b;
+  --panel-border-hover: #334155;
+  
+  --text-main: #e2e8f0;
+  --text-muted: #94a3b8;
+  --text-dim: #64748b;
+  
+  --accent-cyan: #3898ec;
+  --accent-emerald: #10b981;
+  --accent-amber: #f59e0b;
+  --accent-indigo: #6366f1;
+  --accent-rose: #f43f5e;
+  
+  --font-heading: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  --font-body: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; height: 100%; width: 100%; background: var(--bg-dark); color: var(--text-main); font-family: var(--font-body); -webkit-font-smoothing: antialiased; }
+body { overflow: hidden; height: 100vh; width: 100vw; background: #070c14; }
+
+.deck-container { position: relative; width: 100vw; height: 100vh; z-index: 1; overflow: hidden; }
+
+/* Slide Elements - STRICT 100vh Fill */
+.slide {
+  position: absolute; inset: 0; display: none;
+  padding: clamp(16px, 2.5vh, 32px) clamp(24px, 3.5vw, 48px);
+  height: 100vh; width: 100vw; max-width: 1600px; margin: 0 auto;
+  box-sizing: border-box; flex-direction: column; justify-content: space-between;
+  gap: clamp(10px, 1.5vh, 16px);
+  opacity: 0; transform: translateY(4px) scale(0.997); transition: opacity 0.25s ease, transform 0.25s ease;
+  overflow: hidden;
+}
+
+.slide.active {
+  display: flex; opacity: 1; transform: translateY(0) scale(1);
+}
+
+.slide-header { flex: 0 0 auto; }
+.slide-body { flex: 1 1 auto; min-height: 0; display: grid; align-items: stretch; }
+.slide-footer-callout { flex: 0 0 auto; }
+
+/* Typography Utility */
+h1, h2, h3, h4, p { margin: 0; }
+h1, h2, h3, h4 { font-family: var(--font-heading); font-weight: 800; letter-spacing: -0.03em; color: #fff; }
+h1 { font-size: clamp(34px, 4.5vh, 52px); line-height: 1.05; }
+h2 { font-size: clamp(24px, 3.2vh, 38px); line-height: 1.1; }
+h3 { font-size: clamp(17.5px, 2.3vh, 23px); line-height: 1.25; font-weight: 800; }
+h4 { font-size: clamp(15px, 1.9vh, 18.5px); line-height: 1.3; font-weight: 700; }
+p, li { font-size: clamp(14.5px, 1.7vh, 17.5px); line-height: 1.48; color: var(--text-muted); }
+
+.mono { font-family: var(--font-mono); }
+.cyan { color: var(--accent-cyan); }
+.emerald { color: var(--accent-emerald); }
+.amber { color: var(--accent-amber); }
+.indigo { color: var(--accent-indigo); }
+.rose { color: var(--accent-rose); }
+.white { color: #ffffff !important; }
+
+.eyebrow {
+  display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-mono);
+  font-size: clamp(11.5px, 1.3vh, 13.5px); font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em;
+  color: var(--accent-cyan); margin-bottom: 2px;
+}
+.eyebrow::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--accent-cyan); }
+
+.subtitle { max-width: 1050px; font-size: clamp(14.5px, 1.8vh, 18.5px); color: var(--text-muted); line-height: 1.35; margin-top: 2px; }
+
+/* Grid Layouts */
+.grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(14px, 2vh, 24px); }
+.grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(14px, 2vh, 22px); }
+.grid-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: clamp(12px, 1.8vh, 18px); }
+
+/* Matte Cards */
+.card {
+  background: var(--panel-matte); border: 1px solid var(--panel-border); border-radius: 16px;
+  padding: clamp(16px, 2.4vh, 24px) clamp(18px, 1.8vw, 26px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4); transition: border-color 0.2s ease;
+  display: flex; flex-direction: column; justify-content: space-between; min-width: 0;
+}
+.card:hover { border-color: var(--panel-border-hover); }
+.card.featured-matte { background: var(--panel-matte-alt); border-color: #0369a1; }
+.card.emerald-matte { background: #0a1b14; border-color: #047857; }
+.card.amber-matte { background: #171207; border-color: #b45309; }
+
+/* Badges & Tags */
+.pill {
+  display: inline-flex; align-items: center; gap: 6px; background: #182232;
+  border: 1px solid #28364c; border-radius: 999px; padding: 5px 14px;
+  font-size: clamp(11.5px, 1.35vh, 13px); font-weight: 600; color: var(--text-main); font-family: var(--font-body);
+}
+.pill.cyan { background: rgba(14, 165, 233, 0.14); border-color: rgba(14, 165, 233, 0.35); color: var(--accent-cyan); }
+.pill.emerald { background: rgba(16, 185, 129, 0.14); border-color: rgba(16, 185, 129, 0.35); color: var(--accent-emerald); }
+.pill.amber { background: rgba(245, 158, 11, 0.14); border-color: rgba(245, 158, 11, 0.35); color: var(--accent-amber); }
+.pill.indigo { background: rgba(99, 102, 241, 0.14); border-color: rgba(99, 102, 241, 0.35); color: var(--accent-indigo); }
+
+/* Status Badges */
+.status-tag { display: inline-flex; align-items: center; gap: 4px; padding: 4px 9px; border-radius: 6px; font-size: 11px; font-weight: 700; font-family: var(--font-mono); text-transform: uppercase; }
+.status-tag.done { background: rgba(16, 185, 129, 0.16); color: var(--accent-emerald); border: 1px solid rgba(16, 185, 129, 0.35); }
+.status-tag.changed { background: rgba(14, 165, 233, 0.16); color: var(--accent-cyan); border: 1px solid rgba(14, 165, 233, 0.35); }
+.status-tag.next { background: rgba(245, 158, 11, 0.16); color: var(--accent-amber); border: 1px solid rgba(245, 158, 11, 0.35); }
+
+/* Lists & Checklists */
+ul { margin: 4px 0 0; padding-left: 18px; }
+li { margin-bottom: 5px; }
+li::marker { color: var(--accent-cyan); }
+
+.checklist { list-style: none; padding: 0; margin: 0; }
+.checklist li { position: relative; padding-left: 24px; margin-bottom: 7px; color: var(--text-main); font-weight: 500; font-size: clamp(14px, 1.6vh, 16.5px); }
+.checklist li::before { content: "✓"; position: absolute; left: 0; color: var(--accent-emerald); font-weight: 800; font-size: 14.5px; }
+
+/* Matte Callout Box */
+.callout {
+  background: #0b1726; border-left: 4px solid var(--accent-cyan);
+  border-radius: 0 12px 12px 0; padding: clamp(10px, 1.4vh, 15px) clamp(14px, 1.4vw, 20px);
+  font-size: clamp(13.5px, 1.6vh, 16px); color: var(--text-main);
+}
+.callout.amber { background: #171309; border-left-color: var(--accent-amber); }
+.callout.emerald { background: #0a1812; border-left-color: var(--accent-emerald); }
+.callout strong { color: #fff; }
+
+/* Dynamic Grid Pipeline Nodes */
+.pipeline-grid-5 {
+  display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px;
+  margin: clamp(6px, 1vh, 12px) 0; flex: 0 0 auto;
+}
+.pipeline-step {
+  background: #0f172a; border: 1px solid var(--panel-border); border-radius: 10px;
+  padding: clamp(10px, 1.4vh, 14px) clamp(10px, 1vw, 14px); text-align: center;
+  position: relative; box-shadow: 0 4px 12px rgba(0,0,0,0.3); min-width: 0; overflow: hidden;
+}
+.pipeline-step.primary { border-color: #0284c7; background: #0e2238; }
+.pipeline-step.amber { border-color: #d97706; background: #241b0b; }
+.pipeline-step.emerald { border-color: #059669; background: #0d241b; }
+.pipeline-step .title { font-size: clamp(13px, 1.5vh, 14.5px); font-weight: 700; color: #fff; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pipeline-step .sub { font-size: clamp(11px, 1.2vh, 12px); color: var(--text-muted); font-family: var(--font-mono); display: block; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.pipeline-grid-5 .pipeline-step:not(:last-child)::after {
+  content: "→"; position: absolute; right: -9px; top: 50%; transform: translateY(-50%);
+  color: var(--accent-cyan); font-weight: 900; font-size: 13px; z-index: 2;
+}
+
+/* Stack List & Flow Stack */
+.stack-list {
+  display: flex; flex-direction: column; justify-content: space-between;
+  gap: clamp(8px, 1.3vh, 12px); margin-top: clamp(8px, 1.2vh, 12px); flex: 1 1 auto;
+}
+
+.flow-stack {
+  display: flex; flex-direction: column; justify-content: space-around;
+  gap: clamp(6px, 1vh, 10px); margin-top: clamp(8px, 1.2vh, 12px); flex: 1 1 auto;
+}
+
+.stack-item {
+  display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 3px;
+  background: #0d1526; border: 1px solid var(--panel-border); border-radius: 10px;
+  padding: clamp(7px, 1.1vh, 11px) clamp(12px, 1vw, 15px);
+  min-width: 0; width: 100%; box-sizing: border-box; flex: 1 1 auto;
+}
+.flow-stack-step {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  background: #0d1526; border: 1px solid var(--panel-border); border-radius: 10px;
+  padding: clamp(8px, 1.2vh, 12px) clamp(14px, 1.2vw, 18px);
+  min-width: 0; width: 100%; box-sizing: border-box; flex: 1 1 auto;
+}
+.stack-item.primary, .flow-stack-step.primary { border-color: #0369a1; background: #0c1c2e; }
+.stack-item.amber, .flow-stack-step.amber { border-color: #b45309; background: #1a1409; }
+.stack-item.emerald, .flow-stack-step.emerald { border-color: #047857; background: #0a1c14; }
+
+.stack-item .title {
+  font-size: clamp(13px, 1.45vh, 14.5px); font-weight: 700; color: #fff;
+  white-space: normal; word-break: break-word; line-height: 1.25; text-align: left; width: 100%;
+}
+.flow-stack-step .step-label {
+  font-size: clamp(13.5px, 1.5vh, 15.5px); font-weight: 700; color: #fff;
+  flex: 1 1 auto; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.stack-item .tag {
+  font-family: var(--font-mono); font-size: clamp(11px, 1.2vh, 12px); font-weight: 500; color: var(--text-muted);
+  white-space: normal; word-break: break-word; line-height: 1.3; text-align: left; width: 100%;
+}
+.flow-stack-step .step-desc {
+  font-family: var(--font-mono); font-size: clamp(11.5px, 1.3vh, 12.5px); font-weight: 500; color: var(--text-muted);
+  flex: 0 0 auto; white-space: nowrap; text-align: right;
+}
+
+.flow-connector { text-align: center; color: var(--accent-cyan); font-size: 13px; font-weight: 900; margin: -1px 0; flex: 0 0 auto; }
+
+/* Real Data Flow Diagram (DFD) System - Compact 3-Row Layout */
+.dfd-canvas {
+  display: flex; flex-direction: column; gap: clamp(8px, 1.2vh, 14px);
+  background: #080d16; border: 1px solid var(--panel-border); border-radius: 16px;
+  padding: clamp(12px, 1.6vh, 18px); flex: 1 1 auto; justify-content: space-between;
+}
+
+.dfd-arrow-label {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  font-family: var(--font-mono); font-size: 11px; font-weight: 700; color: var(--accent-cyan);
+  margin: -2px 0; text-transform: uppercase; letter-spacing: 0.05em;
+}
+
+.dfd-cluster-row {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-top: 5px;
+}
+
+.dfd-cluster-box {
+  background: #0f172a; border: 1px solid var(--panel-border); border-radius: 10px;
+  padding: clamp(7px, 1vh, 10px) clamp(10px, 1vw, 13px); text-align: center;
+}
+.dfd-cluster-box.leader { border-color: #059669; background: #0c261a; }
+.dfd-cluster-box.replica { border-color: #0284c7; background: #0e2238; }
+.dfd-cluster-box.dcs-peer { border-color: #d97706; background: #241a0b; }
+
+/* Visual Tables */
+.table-container { overflow-x: auto; border: 1px solid var(--panel-border); border-radius: 14px; background: var(--panel-matte); flex: 1 1 auto; }
+table { width: 100%; height: 100%; border-collapse: collapse; text-align: left; font-size: clamp(12px, 1.4vh, 14px); }
+th, td { padding: clamp(8px, 1.2vh, 12px) clamp(12px, 1.2vw, 16px); border-bottom: 1px solid #1e293b; }
+th { background: #1e293b; color: var(--accent-cyan); font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: rgba(255, 255, 255, 0.02); }
+
+/* Timeline Steps */
+.timeline-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-top: 10px; flex: 1 1 auto; }
+.step-card { background: var(--panel-matte); border: 1px solid var(--panel-border); border-radius: 12px; padding: clamp(10px, 1.4vh, 14px); position: relative; display: flex; flex-direction: column; justify-content: space-between; }
+.step-card .num { font-family: var(--font-mono); font-size: 10.5px; font-weight: 800; color: var(--accent-cyan); text-transform: uppercase; margin-bottom: 2px; }
+.step-card h4 { font-size: clamp(13px, 1.5vh, 15px); margin-bottom: 3px; }
+.step-card p { font-size: clamp(11.5px, 1.3vh, 13px); line-height: 1.38; color: var(--text-muted); }
+
+/* Interactive Clickable Diagram Nodes */
+[data-jump] {
+  cursor: pointer !important;
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease !important;
+}
+[data-jump]:hover {
+  border-color: var(--accent-cyan) !important;
+  transform: translateY(-2px) scale(1.015) !important;
+  box-shadow: 0 6px 20px rgba(14, 165, 233, 0.25) !important;
+}
+
+/* High-Noticeability Real-World Analogy Component */
+.analogy-card {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.14) 0%, rgba(14, 165, 233, 0.08) 100%);
+  border: 1px solid rgba(245, 158, 11, 0.45);
+  border-left: 5px solid var(--accent-amber);
+  border-radius: 12px;
+  padding: clamp(10px, 1.4vh, 14px) clamp(14px, 1.2vw, 18px);
+  margin-top: clamp(8px, 1.2vh, 12px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+  flex: 0 0 auto;
+}
+.analogy-card .analogy-title {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-family: var(--font-mono); font-size: 11.5px; font-weight: 800;
+  text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent-amber);
+  margin-bottom: 4px;
+}
+.analogy-card p {
+  font-size: clamp(13.5px, 1.6vh, 15.5px); color: #f8fafc; line-height: 1.42; font-weight: 500;
+}
+.analogy-card strong { color: #ffffff; }
+
+@media (max-width: 1024px) {
+  .grid-2, .grid-3, .grid-4, .timeline-grid, .pipeline-grid-5, .dfd-cluster-row { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<div class="deck-container">
+
+<!-- SLIDE 1: COVER -->
+<section class="slide active" id="slide-1">
+  <div class="slide-header">
+    <div class="eyebrow">Weekly Technical Update · August 3–7, 2026</div>
+    <h1>LoRaWAN Gateway Progress<br><span class="cyan">→ Resilient MDS Architecture</span></h1>
+    <p class="subtitle">From a working Raspberry Pi OS Lite gateway prototype to a production-ready Multi-Device Server (MDS) architecture with automated database high availability.</p>
+  </div>
+  
+  <div class="slide-body grid-3">
+    <div class="card featured-matte">
+      <div>
+        <div class="pill cyan" style="width: fit-content; margin-bottom: 10px;">Phase 1 Verified</div>
+        <h3>Physical Radio Prototype</h3>
+        <p style="margin-top: 8px;">Raspberry Pi 4B + RAK5146 Concentratord SPI path proved end-to-end telemetry flow.</p>
+      </div>
+      <span class="mono cyan" style="font-size: 12.5px; margin-top: 14px;">Raspberry Pi OS Lite</span>
+    </div>
+    <div class="card featured-matte">
+      <div>
+        <div class="pill emerald" style="width: fit-content; margin-bottom: 10px;">Phase 2 Standardized</div>
+        <h3>Gateway OS Base Baseline</h3>
+        <p style="margin-top: 8px;">Configured local Mosquitto persistent disk queue for offline store-and-forward buffering.</p>
+      </div>
+      <span class="mono emerald" style="font-size: 12.5px; margin-top: 14px;">ChirpStack Gateway OS</span>
+    </div>
+    <div class="card featured-matte">
+      <div>
+        <div class="pill amber" style="width: fit-content; margin-bottom: 10px;">Phase 3 Designed</div>
+        <h3>MDS HA Database Stack</h3>
+        <p style="margin-top: 8px;">3× etcd Raft quorum + 3× Spilo/Patroni PostgreSQL + HAProxy + PgBouncer architecture.</p>
+      </div>
+      <span class="mono amber" style="font-size: 12.5px; margin-top: 14px;">Server Docker Lab</span>
+    </div>
+  </div>
+
+</section>
+
+<!-- SLIDE 2: THIS WEEK IN 60 SECONDS -->
+<section class="slide" id="slide-2">
+  <div class="slide-header">
+    <div class="eyebrow">Executive Summary</div>
+    <h2>This week in 60 seconds</h2>
+    <p class="subtitle">Major milestones achieved across physical gateway validation, OS baseline standardization, and server HA design.</p>
+  </div>
+  
+  <div class="slide-body grid-3">
+    <div class="card">
+      <div>
+        <span class="mono cyan" style="font-size: clamp(34px, 4.5vh, 48px); font-weight: 900; display: block; margin-bottom: 6px;">01</span>
+        <h3 style="margin-bottom: 8px;">Physical Gateway Built</h3>
+        <p>Assembled Raspberry Pi 4B + RAK5146 SPI concentrator hardware and initialized radio reception on <strong>Raspberry Pi OS Lite</strong>.</p>
+      </div>
+      <div style="margin-top: 14px;"><span class="pill cyan">Hardware Verified</span></div>
+    </div>
+    <div class="card">
+      <div>
+        <span class="mono emerald" style="font-size: clamp(34px, 4.5vh, 48px); font-weight: 900; display: block; margin-bottom: 6px;">02</span>
+        <h3 style="margin-bottom: 8px;">Gateway OS & Buffer Set</h3>
+        <p>Migrated to <strong>ChirpStack Gateway OS Base</strong> with local Mosquitto persistent disk queue for zero-loss uplink buffering.</p>
+      </div>
+      <div style="margin-top: 14px;"><span class="pill emerald">Edge Baseline Active</span></div>
+    </div>
+    <div class="card">
+      <div>
+        <span class="mono amber" style="font-size: clamp(34px, 4.5vh, 48px); font-weight: 900; display: block; margin-bottom: 6px;">03</span>
+        <h3 style="margin-bottom: 8px;">MDS HA Stack Designed</h3>
+        <p>Shifted to multi-node MDS architecture featuring PostgreSQL leader election, connection pooling, and transparent routing.</p>
+      </div>
+      <div style="margin-top: 14px;"><span class="pill amber">Architecture Finalized</span></div>
+    </div>
+  </div>
+  
+  <div class="callout slide-footer-callout">
+    <strong>Key Result:</strong> Edge hardware and store-and-forward buffering are fully standardized on Gateway OS Base. Next week's build order focuses on server software resilience so the database cluster recovers automatically under failure.
+  </div>
+</section>
+
+<!-- SLIDE 3: GATEWAY PROTOTYPE VERIFICATION -->
+<section class="slide" id="slide-3">
+  <div class="slide-header">
+    <div class="eyebrow">Milestone Verification</div>
+    <h2>Gateway prototype: verified baseline</h2>
+    <p class="subtitle">Physical radio hardware assembly and initial end-to-end data link validation.</p>
+  </div>
+  
+  <div class="slide-body grid-2">
+    <div class="card">
+      <h3>Verified Prototype Checklist</h3>
+      <ul class="checklist" style="margin-top: 12px; flex: 1 1 auto; display: flex; flex-direction: column; justify-content: space-around;">
+        <li>Assembled RAK5146-115 SPI module on Raspberry Pi 4B hardware.</li>
+        <li>Installed Raspberry Pi OS Lite prototype image and SPI drivers.</li>
+        <li>Configured Concentratord AS923 channel plan and packet reception.</li>
+        <li>Established ChirpStack Network Server connection over MQTT.</li>
+        <li>Verified live device payload decoding in Node-RED application flows.</li>
+        <li>Created real-time telemetry dashboard in Grafana.</li>
+      </ul>
+    </div>
+    
+    <div class="card featured-matte">
+      <div style="flex: 1 1 auto; display: flex; flex-direction: column; justify-content: space-between;">
+        <h3>Verified Radio-to-Application Data Flow</h3>
+        
+        <div class="flow-stack" style="margin-top: 10px;">
+          <div class="flow-stack-step primary">
+            <span class="step-label">1. LoRa Sensor</span>
+            <span class="step-desc">RF AS923 Uplink</span>
+          </div>
+          <div class="flow-connector">↓</div>
+          <div class="flow-stack-step primary">
+            <span class="step-label">2. RAK5146 Concentrator</span>
+            <span class="step-desc">SX1303 Baseband SPI</span>
+          </div>
+          <div class="flow-connector">↓</div>
+          <div class="flow-stack-step emerald">
+            <span class="step-label">3. ChirpStack Server</span>
+            <span class="step-desc">MAC & Session Handler</span>
+          </div>
+          <div class="flow-connector">↓</div>
+          <div class="flow-stack-step emerald">
+            <span class="step-label">4. Node-RED & Grafana</span>
+            <span class="step-desc">Telemetry & Dashboards</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SLIDE 4: OS MIGRATION RATIONALE -->
+<section class="slide" id="slide-4">
+  <div class="slide-header">
+    <div class="eyebrow">OS Baseline Evolution</div>
+    <h2>Why we migrated: Raspberry Pi OS Lite → Gateway OS Base</h2>
+    <p class="subtitle">Transitioning from a general-purpose Linux prototype to a power-loss safe, field-hardened OpenWrt edge baseline.</p>
+  </div>
+  
+  <div class="slide-body grid-2">
+    <div class="card">
+      <div class="pill amber" style="margin-bottom: 8px; width: fit-content;">Prototype Baseline</div>
+      <h3>Raspberry Pi OS Lite (Debian)</h3>
+      <ul style="flex: 1 1 auto; display: flex; flex-direction: column; justify-content: space-around; margin-top: 6px;">
+        <li><strong>Power-Loss Vulnerability:</strong> Uses a standard read-write <span class="mono">ext4</span> root filesystem. Sudden field power cuts easily corrupt system files and brick the SD card.</li>
+        <li><strong>Manual Build Overhead:</strong> Required manually building C driver libraries (<span class="mono">sx1302_hal</span>), setting up custom <span class="mono">systemd</span> unit files, and wiring SPI reset pins.</li>
+        <li><strong>Resource Bloat:</strong> General-purpose Debian runs background daemons, systemd overhead, and unnecessary packages (~150–250 MB RAM usage).</li>
+      </ul>
+    </div>
+    
+    <div class="card featured-matte">
+      <div class="pill emerald" style="margin-bottom: 8px; width: fit-content;">Production Baseline Standard</div>
+      <h3>ChirpStack Gateway OS Base (OpenWrt)</h3>
+      <ul style="flex: 1 1 auto; display: flex; flex-direction: column; justify-content: space-around; margin-top: 6px;">
+        <li><strong>Power-Loss Safe (SquashFS + OverlayFS):</strong> Immutably read-only root OS filesystem. System files remain 100% immune to abrupt power loss in field operations.</li>
+        <li><strong>Pre-Packaged C/Rust Daemons:</strong> Ships with native ChirpStack <span class="mono">concentratord</span> (Rust driver for SX1303 via SPI) and <span class="mono">mqtt-forwarder</span> managed via LuCI GUI & <span class="mono">uci</span>.</li>
+        <li><strong>Minimal Footprint (Base Variant):</strong> Minimalist OpenWrt footprint (~30–50 MB RAM, sub-10s boot). Base variant excludes heavy local server stacks.</li>
+      </ul>
+    </div>
+  </div>
+  
+  <div class="callout emerald slide-footer-callout">
+    <strong>Migration Result:</strong> Gateway OS Base provides a zero-maintenance, crash-resilient edge appliance foundation while connecting to external ChirpStack server infrastructure over mTLS.
+  </div>
+</section>
+
+<!-- SLIDE 5: EDGE UPLINK BUFFER & STORE-AND-FORWARD -->
+<section class="slide" id="slide-5">
+  <div class="slide-header">
+    <div class="eyebrow">Edge Resiliency</div>
+    <h2>Persistent local Mosquitto store-and-forward buffer</h2>
+    <p class="subtitle">Sizing mathematics, asymmetric QoS strategy, and flash wear protection during extended WAN internet outages.</p>
+  </div>
+  
+  <div class="slide-body grid-3">
+    <div class="card">
+      <div>
+        <div class="pill cyan" style="margin-bottom: 8px; width: fit-content;">Asymmetric QoS Strategy</div>
+        <h3>Uplink vs Downlink Queuing</h3>
+        <p style="margin-top: 6px; font-size: 13.5px;">Optimizing MQTT QoS and session persistence based on LoRaWAN timing contracts.</p>
+      </div>
+      
+      <div class="stack-list" style="margin-top: 8px; flex: 1 1 auto; justify-content: space-between;">
+        <div class="stack-item emerald">
+          <span class="title">Uplinks & State (QoS 1)</span>
+          <span class="tag">cleansession false · Spooled to disk</span>
+        </div>
+        <div class="stack-item amber">
+          <span class="title">Downlinks (QoS 0)</span>
+          <span class="tag">cleansession true · Non-persistent</span>
+        </div>
+        <div class="stack-item">
+          <span class="title">RX Window Protection</span>
+          <span class="tag">Drops stale downlinks post-outage</span>
+        </div>
+      </div>
+    </div>
+    
+    <div class="card featured-matte">
+      <div>
+        <div class="pill emerald" style="margin-bottom: 8px; width: fit-content;">Finite Sizing Math</div>
+        <h3>SD Card & Memory Protection</h3>
+        <p style="margin-top: 6px; font-size: 13.5px;">Mathematically calculated boundaries to prevent disk-full bricking and RAM OOM crashes.</p>
+      </div>
+      
+      <div class="stack-list" style="margin-top: 8px; flex: 1 1 auto; justify-content: space-between;">
+        <div class="stack-item primary">
+          <span class="title">100,000 Max Messages</span>
+          <span class="tag">~16.6 hrs buffer @ 50 sensors/30s</span>
+        </div>
+        <div class="stack-item emerald">
+          <span class="title">100 MB Max Bytes Cap</span>
+          <span class="tag">Hard limit on mosquitto.db size</span>
+        </div>
+        <div class="stack-item amber">
+          <span class="title">60s Autosave Interval</span>
+          <span class="tag">Reduces SD write cycles 60x</span>
+        </div>
+        <div class="stack-item">
+          <span class="title">50 MB Emergency Reserve</span>
+          <span class="tag">Protects syslog & uci on /</span>
+        </div>
+      </div>
+    </div>
+    
+    <div class="card">
+      <div>
+        <div class="pill indigo" style="margin-bottom: 8px; width: fit-content;">Bridge Rationale</div>
+        <h3>MQTT Forwarder vs Gateway Bridge</h3>
+        <p style="margin-top: 6px; font-size: 13.5px;">Why ChirpStack Gateway Bridge was replaced by MQTT Forwarder + Mosquitto persistent bridge.</p>
+      </div>
+      
+      <div class="stack-list" style="margin-top: 8px; flex: 1 1 auto; justify-content: space-between;">
+        <div class="stack-item primary">
+          <span class="title">Concentratord Deprecation</span>
+          <span class="tag">Gateway Bridge dropped Concentratord</span>
+        </div>
+        <div class="stack-item emerald">
+          <span class="title">Native Protobuf Egress</span>
+          <span class="tag">MQTT Forwarder lightweight C client</span>
+        </div>
+        <div class="stack-item indigo">
+          <span class="title">Durable Disk Spool</span>
+          <span class="tag">Mosquitto db handles offline store</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="callout emerald slide-footer-callout">
+    <strong>Resilience Guarantee:</strong> Edge uplinks accumulate safely on gateway disk during WAN loss and auto-drain to ChirpStack upon internet restoration without losing sensor telemetry or wearing out the SD card.
+  </div>
+</section>
+
+<!-- SLIDE 6: DETAILED GATEWAY DATA PATH -->
+<section class="slide" id="slide-6">
+  <div class="slide-header">
+    <div class="eyebrow">Edge Architecture</div>
+    <h2>Detailed gateway store-and-forward data path</h2>
+    <p class="subtitle">Actual daemon pipeline running on ChirpStack Gateway OS Base for outage resilience.</p>
+  </div>
+  
+  <div class="pipeline-grid-5">
+    <div class="pipeline-step primary">
+      <span class="title">RAK5146 Concentrator</span>
+      <span class="sub">Raw SPI /dev/spidev0.0</span>
+    </div>
+    <div class="pipeline-step primary">
+      <span class="title">Concentratord Daemon</span>
+      <span class="sub">IPC ipc:///tmp/concentratord</span>
+    </div>
+    <div class="pipeline-step primary">
+      <span class="title">MQTT Forwarder</span>
+      <span class="sub">Protobuf @ 127.0.0.1:1883</span>
+    </div>
+    <div class="pipeline-step amber">
+      <span class="title">Mosquitto Queue</span>
+      <span class="sub">mosquitto.db queue</span>
+    </div>
+    <div class="pipeline-step emerald">
+      <span class="title">mTLS Bridge</span>
+      <span class="sub">ssl://<BROKER>:8883</span>
+    </div>
+  </div>
+  
+  <div class="slide-body grid-2">
+    <div class="card emerald-matte">
+      <h3 class="emerald">What this Edge Pipeline Guarantees</h3>
+      <ul style="margin-top: 8px; flex: 1 1 auto; display: flex; flex-direction: column; justify-content: space-around;">
+        <li><strong>Concentratord Ownership:</strong> Single Rust daemon owns SX1303 hardware via SPI interface.</li>
+        <li><strong>Offline Uplink Buffering:</strong> Local Mosquitto stores uplinks on disk during WAN outages.</li>
+        <li><strong>Replay Capability:</strong> Queued uplinks auto-flush to server upon internet restoration.</li>
+        <li><strong>mTLS Egress:</strong> Authenticates via CA.crt + Gateway.crt (CN=<GATEWAY_EUI>).</li>
+      </ul>
+    </div>
+    
+    <div class="card amber-matte">
+      <h3 class="amber">Key Operational Rules</h3>
+      <ul style="margin-top: 8px; flex: 1 1 auto; display: flex; flex-direction: column; justify-content: space-around;">
+        <li><strong>Loopback Isolation:</strong> Local MQTT listener bound strictly to <span class="mono">127.0.0.1:1883</span>.</li>
+        <li><strong>Topic Prefix:</strong> Uplinks published to <span class="mono">as923/gateway/<EUI>/event/up</span> (QoS 1).</li>
+        <li><strong>Non-Persistent Downlinks:</strong> Downlinks use QoS 0 to meet receive window timing.</li>
+        <li><strong>No Direct WAN MQTT:</strong> Forwarder publishes to local broker, never directly to WAN.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- SLIDE 7: DISASTER RECOVERY & BACKUP STRATEGY -->
+<section class="slide" id="slide-7">
+  <div class="slide-header">
+    <div class="eyebrow">Field Maintenance Resilience</div>
+    <h2>Gateway disaster recovery & 1-click backup strategy</h2>
+    <p class="subtitle">Instant static baseline snapshot, 3-minute SD card replacement, and per-gateway EUI credential isolation.</p>
+  </div>
+  
+  <div class="slide-body grid-3">
+    <div class="card">
+      <div>
+        <div class="pill cyan" style="margin-bottom: 8px; width: fit-content;">Baseline Snapshot Concept</div>
+        <h3>Static Post-Setup Backup</h3>
+        <p style="margin-top: 6px; font-size: 13.5px;">Gateway static configuration is generated once post-commissioning and stored off-device.</p>
+      </div>
+      
+      <div class="stack-list" style="margin-top: 8px; flex: 1 1 auto; justify-content: space-between;">
+        <div class="stack-item primary">
+          <span class="title">Single Archive Creation</span>
+          <span class="tag">Generated via sysupgrade -b</span>
+        </div>
+        <div class="stack-item emerald">
+          <span class="title">Zero Drift Maintenance</span>
+          <span class="tag">Static config requires no daily edits</span>
+        </div>
+        <div class="stack-item">
+          <span class="title">Immutable Snapshot</span>
+          <span class="tag">Stored safely on backup server</span>
+        </div>
+      </div>
+    </div>
+    
+    <div class="card featured-matte">
+      <div>
+        <div class="pill emerald" style="margin-bottom: 8px; width: fit-content;">3-Step Recovery Workflow</div>
+        <h3>3-Minute SD Card Swap</h3>
+        <p style="margin-top: 6px; font-size: 13.5px;">Replacing a failed physical SD card in the field without manual reconfiguration.</p>
+      </div>
+      
+      <div class="stack-list" style="margin-top: 8px; flex: 1 1 auto; justify-content: space-between;">
+        <div class="stack-item primary">
+          <span class="title">Step 1: Flash SD Card</span>
+          <span class="tag">Write fresh Gateway OS Base image (~2m)</span>
+        </div>
+        <div class="stack-item emerald">
+          <span class="title">Step 2: Boot & Access</span>
+          <span class="tag">Insert card and log into LuCI Web GUI</span>
+        </div>
+        <div class="stack-item amber">
+          <span class="title">Step 3: Restore Archive</span>
+          <span class="tag">Upload backup.tar.gz & reboot (&lt;1m)</span>
+        </div>
+      </div>
+    </div>
+    
+    <div class="card">
+      <div>
+        <div class="pill amber" style="margin-bottom: 8px; width: fit-content;">Identity Isolation</div>
+        <h3>Per-Gateway EUI Backups</h3>
+        <p style="margin-top: 6px; font-size: 13.5px;">Ensuring each gateway retains its unique identity, mTLS certificates, and network configs.</p>
+      </div>
+      
+      <div class="stack-list" style="margin-top: 8px; flex: 1 1 auto; justify-content: space-between;">
+        <div class="stack-item primary">
+          <span class="title">EUI File Naming</span>
+          <span class="tag">gw-0016c00000000001.tar.gz</span>
+        </div>
+        <div class="stack-item emerald">
+          <span class="title">mTLS Cert Protection</span>
+          <span class="tag">Preserves gateway.key & EUI CN</span>
+        </div>
+        <div class="stack-item">
+          <span class="title">Zero Identity Collisions</span>
+          <span class="tag">Prevents IP/EUI fleet conflicts</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="callout emerald slide-footer-callout">
+    <strong>Disaster Recovery Guarantee:</strong> Flashing a new SD card and restoring a single EUI backup archive restores full radio operation, store-and-forward buffer settings, and mTLS cloud connectivity in under 3 minutes.
+  </div>
+</section>
+
+<!-- SLIDE 8: ARCHITECTURE PIVOT -->
+<section class="slide" id="slide-8">
+  <div class="slide-header">
+    <div class="eyebrow">Strategic Shift</div>
+    <h2>Why we shifted to the MDS architecture</h2>
+    <p class="subtitle">Transitioning from single-instance integration to enterprise multi-node resilience.</p>
+  </div>
+  
+  <div class="slide-body grid-2">
+    <div class="card">
+      <div class="pill cyan" style="width: fit-content; margin-bottom: 8px;">Single-Instance Prototype</div>
+      <h3>Proof-of-Concept Mindset</h3>
+      <ul style="flex: 1 1 auto; display: flex; flex-direction: column; justify-content: space-around; margin-top: 8px;">
+        <li>Focus on rapid end-to-end radio verification.</li>
+        <li>Single PostgreSQL container handling both MAC state and sensor telemetry.</li>
+        <li>Gateway connected directly to server without local store-and-forward queue.</li>
+        <li>Assumes permanent WAN connectivity and zero host hardware failures.</li>
+      </ul>
+    </div>
+    
+    <div class="card featured-matte">
+      <div class="pill amber" style="width: fit-content; margin-bottom: 8px;">Resilient MDS Architecture</div>
+      <h3>Production Infrastructure Mindset</h3>
+      <ul style="flex: 1 1 auto; display: flex; flex-direction: column; justify-content: space-around; margin-top: 8px;">
+        <li><strong>Gateway Offline Queue:</strong> Local Mosquitto bridge buffers uplinks to disk during WAN loss.</li>
+        <li><strong>Database Consensus:</strong> etcd Raft quorum prevents split-brain leader elections.</li>
+        <li><strong>Automated Failover:</strong> Patroni promotes a healthy PostgreSQL replica in under 5s.</li>
+        <li><strong>Transparent DSN Endpoint:</strong> PgBouncer & HAProxy insulate ChirpStack from primary shifts.</li>
+      </ul>
+    </div>
+  </div>
+  
+  <div class="callout amber slide-footer-callout">
+    <strong>Architecture Standard:</strong> Gateway baseline is standardized on <strong>ChirpStack Gateway OS Base</strong> with persistent disk queue, while the server side is configured as a Docker-orchestrated MDS lab.
+  </div>
+</section>
+
+<!-- SLIDE 9: MDS 3-TIER ARCHITECTURE -->
+<section class="slide" id="slide-9">
+  <div class="slide-header">
+    <div class="eyebrow">System Architecture Overview</div>
+    <h2>Multi-tier distribution system (MDS)</h2>
+    <p class="subtitle">Complete technical overview separating physical edge hardware, application ingress, and database HA consensus.</p>
+  </div>
+  
+  <div class="slide-body grid-3">
+    <div class="card">
+      <div class="pill cyan" style="margin-bottom: 6px; width: fit-content; flex: 0 0 auto;">Tier 1 · Edge Physical</div>
+      <h3 style="margin-bottom: 6px; flex: 0 0 auto;">Gateway Base Station</h3>
+      <div class="stack-list">
+        <div class="stack-item" data-jump="3">
+          <span class="title">RAK5146 SPI Module</span>
+          <span class="tag">SX1303 Transceiver</span>
+        </div>
+        <div class="stack-item primary" data-jump="4">
+          <span class="title">ChirpStack Gateway OS</span>
+          <span class="tag">OpenWrt Read-Only</span>
+        </div>
+        <div class="stack-item" data-jump="6">
+          <span class="title">Concentratord & Forwarder</span>
+          <span class="tag">Protobuf Packaging</span>
+        </div>
+        <div class="stack-item emerald" data-jump="5">
+          <span class="title">Local Mosquitto Buffer</span>
+          <span class="tag">Disk Spool (Offline)</span>
+        </div>
+        <div class="stack-item amber" data-jump="7">
+          <span class="title">1-Click Backup Archive</span>
+          <span class="tag">sysupgrade -b .tar.gz</span>
+        </div>
+      </div>
+    </div>
+    
+    <div class="card">
+      <div class="pill emerald" style="margin-bottom: 6px; width: fit-content; flex: 0 0 auto;">Tier 2 · Core Application</div>
+      <h3 style="margin-bottom: 6px; flex: 0 0 auto;">Application Ingress</h3>
+      <div class="stack-list">
+        <div class="stack-item" data-jump="10">
+          <span class="title">Mosquitto Server Broker</span>
+          <span class="tag">mTLS :8883 + ACLs</span>
+        </div>
+        <div class="stack-item primary" data-jump="10">
+          <span class="title">ChirpStack Server</span>
+          <span class="tag">MAC & Sessions</span>
+        </div>
+        <div class="stack-item">
+          <span class="title">Valkey Cache</span>
+          <span class="tag">Session State</span>
+        </div>
+        <div class="stack-item emerald" data-jump="20">
+          <span class="title">TimescaleDB & Grafana</span>
+          <span class="tag">Telemetry & Dash</span>
+        </div>
+      </div>
+    </div>
+    
+    <div class="card featured-matte">
+      <div class="pill amber" style="margin-bottom: 6px; width: fit-content; flex: 0 0 auto;">Tier 3 · Database HA</div>
+      <h3 style="margin-bottom: 6px; flex: 0 0 auto;">Patroni + etcd Cluster</h3>
+      <div class="stack-list">
+        <div class="stack-item primary" data-jump="16">
+          <span class="title">PgBouncer Pooler</span>
+          <span class="tag">Session Pool :6432</span>
+        </div>
+        <div class="stack-item primary" data-jump="15">
+          <span class="title">HAProxy Router</span>
+          <span class="tag">Health Check :5432</span>
+        </div>
+        <div class="stack-item emerald" data-jump="14">
+          <span class="title">3× Spilo (PostgreSQL 16)</span>
+          <span class="tag">Patroni HA</span>
+        </div>
+        <div class="stack-item amber" data-jump="12">
+          <span class="title">3× etcd Members</span>
+          <span class="tag">Raft DCS Quorum</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SLIDE 10: END-TO-END DATABASE HA DATA FLOW DIAGRAM -->
+<section class="slide" id="slide-10">
+  <div class="slide-header">
+    <div class="eyebrow">Low-Level Data Flow</div>
+    <h2>Database HA: end-to-end data flow diagram</h2>
+    <p class="subtitle">Exact step-by-step SQL write path, connection pooling, L4 health routing, WAL streaming, and etcd Raft lock sync. Click any node to jump to its deep-dive slide.</p>
+  </div>
+  
+  <div class="slide-body" style="display: flex; flex-direction: column;">
+    <div class="dfd-canvas">
+      
+      <!-- STAGE 1: INGRESS & POOLING ROW (STEPS 1 -> 2 -> 3) -->
+      <div style="background: #0c1827; border: 1px solid rgba(2,132,199,0.35); border-radius: 12px; padding: 10px 14px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+          <span class="mono cyan" style="font-size: 11px; font-weight: 700; text-transform: uppercase;">Stage 1 · Client Application Ingress & Routing Path (network: application · 172.22.0.0/16)</span>
+          <span class="pill cyan" style="font-size: 10.5px; padding: 2px 8px;">TCP SQL Ingress</span>
+        </div>
+        
+        <div class="dfd-cluster-row" style="grid-template-columns: 1fr auto 1fr auto 1fr; align-items: center;">
+          <!-- STEP 1 -->
+          <div class="dfd-cluster-box replica" data-jump="10" style="text-align: left; padding: 8px 12px;">
+            <span class="mono cyan" style="font-size: 10.5px; font-weight: 700;">STEP 1</span>
+            <h4 style="font-size: 13.5px; color: #fff; margin-top: 2px;">ChirpStack Core</h4>
+            <span class="mono" style="font-size: 11px; color: var(--text-muted); display: block;">172.22.0.5</span>
+            <span class="pill cyan" style="font-size: 10px; padding: 1px 6px; margin-top: 4px;">DSN → :6432</span>
+          </div>
+          
+          <!-- ARROW 1 -> 2 -->
+          <div class="mono cyan" style="font-size: 11px; font-weight: 700; text-align: center;">→ <span style="display: block; font-size: 9.5px; color: var(--text-muted);">SQL :6432</span> →</div>
+          
+          <!-- STEP 2 -->
+          <div class="dfd-cluster-box replica" data-jump="16" style="text-align: left; padding: 8px 12px;">
+            <span class="mono indigo" style="font-size: 10.5px; font-weight: 700;">STEP 2</span>
+            <h4 style="font-size: 13.5px; color: #fff; margin-top: 2px;">PgBouncer Pooler</h4>
+            <span class="mono" style="font-size: 11px; color: var(--text-muted); display: block;">172.22.0.20 :6432</span>
+            <span class="pill indigo" style="font-size: 10px; padding: 1px 6px; margin-top: 4px;">Session Pool</span>
+          </div>
+          
+          <!-- ARROW 2 -> 3 -->
+          <div class="mono cyan" style="font-size: 11px; font-weight: 700; text-align: center;">→ <span style="display: block; font-size: 9.5px; color: var(--text-muted);">Fwd :5432</span> →</div>
+          
+          <!-- STEP 3 -->
+          <div class="dfd-cluster-box replica" data-jump="15" style="text-align: left; padding: 8px 12px;">
+            <span class="mono cyan" style="font-size: 10.5px; font-weight: 700;">STEP 3</span>
+            <h4 style="font-size: 13.5px; color: #fff; margin-top: 2px;">HAProxy Router</h4>
+            <span class="mono" style="font-size: 11px; color: var(--text-muted); display: block;">172.22.0.10 :5432</span>
+            <span class="pill cyan" style="font-size: 10px; padding: 1px 6px; margin-top: 4px;">Checks :8008</span>
+          </div>
+        </div>
+      </div>
+      
+      <!-- CONNECTOR STAGE 1 -> STAGE 2 -->
+      <div class="dfd-arrow-label" style="color: var(--accent-emerald);">
+        <span>↓ 3. HAProxy Routes Active SQL Writes Strictly to HTTP 200 Leader (spilo-1) ↓</span>
+      </div>
+      
+      <!-- STAGE 2: POSTGRESQL HA CLUSTER ROW (STEP 4) -->
+      <div style="background: #0b1a13; border: 1px solid rgba(5,150,105,0.4); border-radius: 12px; padding: 10px 14px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+          <span class="mono emerald" style="font-size: 11px; font-weight: 700; text-transform: uppercase;">Stage 2 · Spilo PostgreSQL 16 HA Cluster (network: database · 172.21.0.0/16)</span>
+          <span class="status-tag done">WAL Streaming Active</span>
+        </div>
+        
+        <div class="dfd-cluster-row">
+          <div class="dfd-cluster-box leader" data-jump="14">
+            <span class="mono emerald" style="font-size: 10.5px; font-weight: 700;">STEP 4a · PRIMARY</span>
+            <h4 style="color: var(--accent-emerald); font-size: 13.5px; margin-top: 1px;">spilo-1 (LEADER)</h4>
+            <span class="mono" style="font-size: 11px; color: var(--text-muted); display: block; margin-top: 2px;">172.21.0.11 :5432</span>
+            <span class="pill emerald" style="font-size: 10px; padding: 2px 8px; margin-top: 4px;">HTTP 200 · Active Primary</span>
+          </div>
+          <div class="dfd-cluster-box replica" data-jump="14">
+            <span class="mono cyan" style="font-size: 10.5px; font-weight: 700;">STEP 4b · STANDBY</span>
+            <h4 style="color: var(--accent-cyan); font-size: 13.5px; margin-top: 1px;">spilo-2 (STANDBY)</h4>
+            <span class="mono" style="font-size: 11px; color: var(--text-muted); display: block; margin-top: 2px;">172.21.0.12 :5432</span>
+            <span class="pill cyan" style="font-size: 10px; padding: 2px 8px; margin-top: 4px;">HTTP 503 · WAL Receiver</span>
+          </div>
+          <div class="dfd-cluster-box replica" data-jump="14">
+            <span class="mono cyan" style="font-size: 10.5px; font-weight: 700;">STEP 4c · STANDBY</span>
+            <h4 style="color: var(--accent-cyan); font-size: 13.5px; margin-top: 1px;">spilo-3 (STANDBY)</h4>
+            <span class="mono" style="font-size: 11px; color: var(--text-muted); display: block; margin-top: 2px;">172.21.0.13 :5432</span>
+            <span class="pill cyan" style="font-size: 10px; padding: 2px 8px; margin-top: 4px;">HTTP 503 · WAL Receiver</span>
+          </div>
+        </div>
+      </div>
+      
+      <!-- CONNECTOR STAGE 2 -> STAGE 3 -->
+      <div class="dfd-arrow-label" style="color: var(--accent-amber);">
+        <span>↓ 4. Patroni Supervisor Renews Leader TTL Lock Key (/service/spilo-cluster/leader) ↓</span>
+      </div>
+      
+      <!-- STAGE 3: ETCD DCS CONSENSUS ROW (STEP 5) -->
+      <div style="background: #1c1409; border: 1px solid rgba(217,119,6,0.4); border-radius: 12px; padding: 10px 14px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+          <span class="mono amber" style="font-size: 11px; font-weight: 700; text-transform: uppercase;">Stage 3 · etcd DCS Consensus Quorum (network: dcs · 172.20.0.0/16)</span>
+          <span class="status-tag next">Raft Peer Sync :2380</span>
+        </div>
+        
+        <div class="dfd-cluster-row">
+          <div class="dfd-cluster-box dcs-peer" data-jump="12">
+            <span class="mono amber" style="font-size: 10.5px; font-weight: 700;">STEP 5a</span>
+            <h4 style="color: var(--accent-amber); font-size: 13.5px; margin-top: 1px;">etcd-1 (Member)</h4>
+            <span class="mono" style="font-size: 11px; color: var(--text-muted); display: block; margin-top: 2px;">172.20.0.2 :2379</span>
+          </div>
+          <div class="dfd-cluster-box dcs-peer" data-jump="12">
+            <span class="mono amber" style="font-size: 10.5px; font-weight: 700;">STEP 5b</span>
+            <h4 style="color: var(--accent-amber); font-size: 13.5px; margin-top: 1px;">etcd-2 (Member)</h4>
+            <span class="mono" style="font-size: 11px; color: var(--text-muted); display: block; margin-top: 2px;">172.20.0.3 :2379</span>
+          </div>
+          <div class="dfd-cluster-box dcs-peer" data-jump="12">
+            <span class="mono amber" style="font-size: 10.5px; font-weight: 700;">STEP 5c</span>
+            <h4 style="color: var(--accent-amber); font-size: 13.5px; margin-top: 1px;">etcd-3 (Member)</h4>
+            <span class="mono" style="font-size: 11px; color: var(--text-muted); display: block; margin-top: 2px;">172.20.0.4 :2379</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- SLIDE 11: DATABASE HA TRANSPARENT ACCESS PATH -->
+<section class="slide" id="slide-11">
+  <div class="slide-header">
+    <div class="eyebrow">Database Resilience</div>
+    <h2>Transparent SQL path for ChirpStack</h2>
+    <p class="subtitle">How PgBouncer and HAProxy decouple ChirpStack from backend database failover.</p>
+  </div>
+  
+  <!-- PIPELINE FLOW ROW WITH EXPLICIT ARROWS -->
+  <div style="display: grid; grid-template-columns: 1fr auto 1fr auto 1fr auto 1fr; align-items: center; gap: 8px; margin: 4px 0 12px; flex: 0 0 auto;">
+    <div class="pipeline-step primary" style="text-align: left; padding: 10px 14px;">
+      <span class="mono cyan" style="font-size: 10.5px; font-weight: 700; text-transform: uppercase;">1. Client App</span>
+      <span class="title" style="font-size: 13.5px; margin-top: 2px;">ChirpStack Server</span>
+      <span class="sub">DSN → pgbouncer:6432</span>
+    </div>
+    
+    <div class="mono cyan" style="font-size: 13px; font-weight: 900; text-align: center;">→</div>
+    
+    <div class="pipeline-step primary" style="text-align: left; padding: 10px 14px;">
+      <span class="mono indigo" style="font-size: 10.5px; font-weight: 700; text-transform: uppercase;">2. Pooler Layer</span>
+      <span class="title" style="font-size: 13.5px; margin-top: 2px;">PgBouncer Container</span>
+      <span class="sub">Session Pooler :6432</span>
+    </div>
+    
+    <div class="mono cyan" style="font-size: 13px; font-weight: 900; text-align: center;">→</div>
+    
+    <div class="pipeline-step primary" style="text-align: left; padding: 10px 14px;">
+      <span class="mono cyan" style="font-size: 10.5px; font-weight: 700; text-transform: uppercase;">3. L4 Router</span>
+      <span class="title" style="font-size: 13.5px; margin-top: 2px;">HAProxy Router</span>
+      <span class="sub">TCP :5432 (Checks :8008)</span>
+    </div>
+    
+    <div class="mono emerald" style="font-size: 13px; font-weight: 900; text-align: center;">→</div>
+    
+    <div class="pipeline-step emerald" style="text-align: left; padding: 10px 14px;">
+      <span class="mono emerald" style="font-size: 10.5px; font-weight: 700; text-transform: uppercase;">4. Write Leader</span>
+      <span class="title" style="font-size: 13.5px; margin-top: 2px;">Spilo Primary</span>
+      <span class="sub">PostgreSQL 16 Leader</span>
+    </div>
+  </div>
+  
+  <!-- 3 RICH CARDS FILLING HEIGHT BEAUTIFULLY -->
+  <div class="slide-body grid-3">
+    <div class="card">
+      <div>
+        <div class="pill amber" style="width: fit-content; margin-bottom: 8px;">etcd Quorum Tier</div>
+        <h3>DCS Leader Lock</h3>
+        <p style="margin-top: 6px; font-size: 13.5px;">Holds Patroni leader lock TTL key (<span class="mono amber">/service/spilo-cluster/leader</span>). Kept completely off the hot SQL data path.</p>
+      </div>
+      
+      <div class="stack-list" style="margin-top: 10px; flex: 1 1 auto; justify-content: space-between;">
+        <div class="stack-item amber">
+          <span class="title">Raft Heartbeat</span>
+          <span class="tag">TTL 10s Key Lease</span>
+        </div>
+        <div class="stack-item">
+          <span class="title">Split-Brain Protection</span>
+          <span class="tag">Strict 2/3 Majority</span>
+        </div>
+        <div class="stack-item">
+          <span class="title">Isolated Control Channel</span>
+          <span class="tag">Port :2379 / :2380</span>
+        </div>
+      </div>
+    </div>
+    
+    <div class="card featured-matte">
+      <div>
+        <div class="pill emerald" style="width: fit-content; margin-bottom: 8px;">Patroni Supervisor</div>
+        <h3>Automated Promotion</h3>
+        <p style="margin-top: 6px; font-size: 13.5px;">Monitors WAL replication lag and automatically promotes the healthiest standby replica upon primary failure.</p>
+      </div>
+      
+      <div class="stack-list" style="margin-top: 10px; flex: 1 1 auto; justify-content: space-between;">
+        <div class="stack-item emerald">
+          <span class="title">REST Health Endpoint</span>
+          <span class="tag">HTTP :8008 /primary</span>
+        </div>
+        <div class="stack-item primary">
+          <span class="title">Failover Speed</span>
+          <span class="tag">&lt; 5 Seconds Promotion</span>
+        </div>
+        <div class="stack-item emerald">
+          <span class="title">Rejoin Demotion</span>
+          <span class="tag">Auto-demotes old Primary</span>
+        </div>
+      </div>
+    </div>
+    
+    <div class="card">
+      <div>
+        <div class="pill cyan" style="width: fit-content; margin-bottom: 8px;">Zero DSN Reconfig</div>
+        <h3>Static Client DSN</h3>
+        <p style="margin-top: 6px; font-size: 13.5px;">ChirpStack database hostname connection string remains fixed even when Patroni promotes a new write primary.</p>
+      </div>
+      
+      <div class="stack-list" style="margin-top: 10px; flex: 1 1 auto; justify-content: space-between;">
+        <div class="stack-item primary">
+          <span class="title">Fixed DSN String</span>
+          <span class="tag">postgresql://...:6432</span>
+        </div>
+        <div class="stack-item">
+          <span class="title">Zero Container Restart</span>
+          <span class="tag">No ChirpStack reboot</span>
+        </div>
+        <div class="stack-item primary">
+          <span class="title">Transparent Routing</span>
+          <span class="tag">HAProxy L4 Redirect</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SLIDE 12: TECH DEEP-DIVE - ETCD -->
+<section class="slide" id="slide-12">
+  <div class="slide-header">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+      <div class="eyebrow">Technology Deep-Dive 1</div>
+      <span class="pill cyan" data-jump="10" style="cursor: pointer; font-size: 11px; padding: 3px 10px;">← Back to Data Flow Diagram</span>
+    </div>
+    <h2>etcd — consensus store & quorum</h2>
+    <p class="subtitle">Distributed key-value store maintaining cluster state for Patroni.</p>
+  </div>
+  
+  <div class="slide-body grid-2">
+    <div class="card">
+      <div>
+        <h3>Role in the MDS Architecture</h3>
+        <p style="margin-top: 6px;">etcd acts as the Distributed Consensus Store (DCS) for Patroni. It resolves a single critical question:</p>
+        <div class="callout amber" style="margin-top: 8px; font-weight: 700;">
+          "Which Spilo node currently owns the active Patroni leader lock TTL?"
+        </div>
+      </div>
+      
+      <div class="stack-list" style="margin-top: 8px;">
+        <div class="stack-item amber">
+          <span class="title">Raft Consensus Protocol</span>
+          <span class="tag">Ports :2379 / :2380</span>
+        </div>
+        <div class="stack-item">
+          <span class="title">Metadata Namespace</span>
+          <span class="tag">/service/spilo-cluster</span>
+        </div>
+        <div class="stack-item emerald">
+          <span class="title">SQL Path Isolation</span>
+          <span class="tag">0 Payload Overhead</span>
+        </div>
+      </div>
+      
+      <div class="analogy-card">
+        <div class="analogy-title">💡 ARCHITECTURAL ROLE</div>
+        <p>The <strong>distributed source of truth</strong>—holding the active Patroni leader lock TTL key in shared memory so nodes reach Raft consensus without split-brain conflicts.</p>
+      </div>
+    </div>
+    
+    <div class="card featured-matte">
+      <div>
+        <h3>Why 3 Members are Required for Quorum</h3>
+        <p style="margin-top: 6px;">Raft relies on strict majority voting: <span class="mono cyan">Quorum = (N/2) + 1</span></p>
+        
+        <div style="margin-top: 8px; background: #0b1320; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--panel-border);">
+          <div style="display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: 12.5px; margin-bottom: 4px;">
+            <span>3-Member etcd Cluster:</span> <span class="emerald">Quorum = 2 · Tolerates 1 Node Loss</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: 12.5px;">
+            <span>2-Member etcd Cluster:</span> <span class="rose">Quorum = 2 · Tolerates 0 Node Loss</span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="stack-list" style="margin-top: 6px;">
+        <div class="stack-item amber">
+          <span class="title">Raft Majority Rule</span>
+          <span class="tag">2 of 3 member votes required</span>
+        </div>
+        <div class="stack-item emerald">
+          <span class="title">Fault Tolerance</span>
+          <span class="tag">Survives 1 etcd node failure</span>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 8px;">
+        <div class="dfd-cluster-box dcs-peer">
+          <span class="mono amber" style="font-size: 10px; font-weight: 700;">MEMBER 1</span>
+          <h4 style="color: var(--accent-amber); font-size: 12.5px; margin-top: 1px;">etcd-1</h4>
+          <span class="mono" style="font-size: 10.5px; color: var(--text-muted); display: block;">172.20.0.2</span>
+        </div>
+        <div class="dfd-cluster-box dcs-peer">
+          <span class="mono amber" style="font-size: 10px; font-weight: 700;">MEMBER 2</span>
+          <h4 style="color: var(--accent-amber); font-size: 12.5px; margin-top: 1px;">etcd-2</h4>
+          <span class="mono" style="font-size: 10.5px; color: var(--text-muted); display: block;">172.20.0.3</span>
+        </div>
+        <div class="dfd-cluster-box dcs-peer">
+          <span class="mono amber" style="font-size: 10px; font-weight: 700;">MEMBER 3</span>
+          <h4 style="color: var(--accent-amber); font-size: 12.5px; margin-top: 1px;">etcd-3</h4>
+          <span class="mono" style="font-size: 10.5px; color: var(--text-muted); display: block;">172.20.0.4</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SLIDE 13: TECH DEEP-DIVE - PATRONI -->
+<section class="slide" id="slide-13">
+  <div class="slide-header">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+      <div class="eyebrow">Technology Deep-Dive 2</div>
+      <span class="pill cyan" data-jump="10" style="cursor: pointer; font-size: 11px; padding: 3px 10px;">← Back to Data Flow Diagram</span>
+    </div>
+    <h2>Patroni — PostgreSQL HA supervisor</h2>
+    <p class="subtitle">Python-based HA orchestrator managing PostgreSQL replication and failover.</p>
+  </div>
+  
+  <div class="slide-body grid-2">
+    <div class="card">
+      <div>
+        <h3>Patroni Supervisor Capabilities</h3>
+        <p style="margin-top: 4px; font-size: 13.5px;">Automates active-passive PostgreSQL cluster management and leader election.</p>
+      </div>
+      
+      <div class="stack-list" style="margin-top: 8px; flex: 1 1 auto; justify-content: space-between;">
+        <div class="stack-item amber">
+          <span class="title">Leader Lock TTL</span>
+          <span class="tag">Renews in etcd every 10s</span>
+        </div>
+        <div class="stack-item emerald">
+          <span class="title">Automated Failover</span>
+          <span class="tag">Promotes replica in &lt; 5s</span>
+        </div>
+        <div class="stack-item primary">
+          <span class="title">REST Health API</span>
+          <span class="tag">HTTP :8008 /primary</span>
+        </div>
+        <div class="stack-item">
+          <span class="title">Safe Node Rejoin</span>
+          <span class="tag">Demotes old Leader to Standby</span>
+        </div>
+      </div>
+      
+      <div class="analogy-card">
+        <div class="analogy-title">💡 ARCHITECTURAL ROLE</div>
+        <p>The <strong>automated PostgreSQL HA supervisor</strong>—continuously monitoring local database engine health and executing sub-5-second failover promotions when a primary drops.</p>
+      </div>
+    </div>
+    
+    <div class="card emerald-matte">
+      <div style="flex: 1 1 auto; display: flex; flex-direction: column; justify-content: space-between;">
+        <h3>Patroni Supervisor Loop</h3>
+        <div class="flow-stack" style="margin-top: 8px;">
+          <div class="flow-stack-step primary">
+            <span class="step-label">1. Process Monitor</span>
+            <span class="step-desc">Inspect local PostgreSQL engine</span>
+          </div>
+          <div class="flow-connector">↓</div>
+          <div class="flow-stack-step emerald">
+            <span class="step-label">2. Leader Heartbeat</span>
+            <span class="step-desc">Renew TTL lock key in etcd</span>
+          </div>
+          <div class="flow-connector">↓</div>
+          <div class="flow-stack-step amber">
+            <span class="step-label">3. REST Health API</span>
+            <span class="step-desc">Serve HTTP :8008 /primary for HAProxy</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SLIDE 14: TECH DEEP-DIVE - SPILO -->
+<section class="slide" id="slide-14">
+  <div class="slide-header">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+      <div class="eyebrow">Technology Deep-Dive 3</div>
+      <span class="pill cyan" data-jump="10" style="cursor: pointer; font-size: 11px; padding: 3px 10px;">← Back to Data Flow Diagram</span>
+    </div>
+    <h2>Spilo — containerized PostgreSQL + Patroni</h2>
+    <p class="subtitle">Standardized Zalando container image packaging PostgreSQL 16 and Patroni.</p>
+  </div>
+  
+  <div class="slide-body grid-2">
+    <div class="card featured-matte">
+      <div style="flex: 1 1 auto; display: flex; flex-direction: column; justify-content: space-between;">
+        <div class="pill cyan" style="margin-bottom: 8px; width: fit-content;">Spilo Container Architecture</div>
+        <h3>Inside Each Spilo Container</h3>
+        <div class="stack-list" style="margin-top: 8px;">
+          <div class="stack-item emerald">
+            <span class="title">PostgreSQL 16 Engine</span>
+            <span class="tag">Relational RDBMS</span>
+          </div>
+          <div class="stack-item primary">
+            <span class="title">Patroni Daemon</span>
+            <span class="tag">HA Supervisor</span>
+          </div>
+          <div class="stack-item">
+            <span class="title">Spilo Image Wrapper</span>
+            <span class="tag">Bootstrap & WAL-G</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="card">
+      <div>
+        <h3>Why Spilo is Selected</h3>
+        <p style="margin-top: 6px; font-size: 13.5px;">Encapsulates PostgreSQL engine and Patroni supervisor in a production-hardened image.</p>
+      </div>
+      
+      <div class="stack-list" style="margin-top: 8px; flex: 1 1 auto; justify-content: space-between;">
+        <div class="stack-item primary">
+          <span class="title">Repeatable Image</span>
+          <span class="tag">Bundles Postgres + Patroni</span>
+        </div>
+        <div class="stack-item emerald">
+          <span class="title">Auto Cluster Bootstrap</span>
+          <span class="tag">Node 1 Primary, 2/3 Replicas</span>
+        </div>
+        <div class="stack-item">
+          <span class="title">Parameter Consistency</span>
+          <span class="tag">postgresql.conf + Patroni</span>
+        </div>
+      </div>
+      
+      <div class="analogy-card">
+        <div class="analogy-title">💡 ARCHITECTURAL ROLE</div>
+        <p>The <strong>production-hardened container package</strong>—bundling PostgreSQL 16, Patroni, and WAL-G together so every cluster node boots up with identical configuration.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SLIDE 15: TECH DEEP-DIVE - HAPROXY -->
+<section class="slide" id="slide-15">
+  <div class="slide-header">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+      <div class="eyebrow">Technology Deep-Dive 4</div>
+      <span class="pill cyan" data-jump="10" style="cursor: pointer; font-size: 11px; padding: 3px 10px;">← Back to Data Flow Diagram</span>
+    </div>
+    <h2>HAProxy — primary-aware SQL router</h2>
+    <p class="subtitle">Layer 4 TCP load balancer dynamically routing SQL traffic to the active leader.</p>
+  </div>
+  
+  <div class="slide-body grid-2">
+    <div class="card">
+      <h3>Leader-Aware Routing Mechanism</h3>
+      <p style="margin-top: 6px;">HAProxy listens on TCP port <span class="mono cyan">:5432</span> and routes SQL traffic exclusively to whichever Spilo node reports itself as Patroni leader.</p>
+      
+      <div style="margin-top: 10px; background: #0b1320; padding: 12px; border-radius: 10px; border: 1px solid var(--panel-border);">
+        <div class="mono cyan" style="font-size: 13.5px; font-weight: 700; margin-bottom: 4px;">HAProxy HTTP Health Check Rule:</div>
+        <p style="font-size: 13.5px; color: var(--text-muted);">Queries <span class="mono emerald">http://&lt;spilo-ip&gt;:8008/primary</span> every 2 seconds.</p>
+        <p style="font-size: 13.5px; color: var(--text-muted); margin-top: 3px;">• Returns HTTP 200 → Node marked ACTIVE backend target.</p>
+        <p style="font-size: 13.5px; color: var(--text-muted); margin-top: 3px;">• Returns HTTP 503 → Node dropped from backend pool instantly.</p>
+      </div>
+    </div>
+    
+    <div class="card">
+      <div>
+        <h3>Why HAProxy is Essential</h3>
+        <p style="margin-top: 4px; font-size: 13.5px;">Provides strict Layer 4 isolation between database failover state and application clients.</p>
+      </div>
+      
+      <div class="stack-list" style="margin-top: 8px; flex: 1 1 auto; justify-content: space-between;">
+        <div class="stack-item primary">
+          <span class="title">Prevent Write Misrouting</span>
+          <span class="tag">Blocks writes to Replicas</span>
+        </div>
+        <div class="stack-item emerald">
+          <span class="title">Zero DNS Caching Lag</span>
+          <span class="tag">Fixed TCP Port :5432</span>
+        </div>
+        <div class="stack-item amber">
+          <span class="title">Sub-2s Target Switch</span>
+          <span class="tag">Instant L4 Switchover</span>
+        </div>
+      </div>
+      
+      <div class="analogy-card">
+        <div class="analogy-title">💡 ARCHITECTURAL ROLE</div>
+        <p>The <strong>primary-aware SQL traffic router</strong>—polling Patroni HTTP health endpoints (:8008/primary) to ensure SQL writes land strictly on the active leader node.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SLIDE 16: TECH DEEP-DIVE - PGBOUNCER -->
+<section class="slide" id="slide-16">
+  <div class="slide-header">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+      <div class="eyebrow">Technology Deep-Dive 5</div>
+      <span class="pill cyan" data-jump="10" style="cursor: pointer; font-size: 11px; padding: 3px 10px;">← Back to Data Flow Diagram</span>
+    </div>
+    <h2>PgBouncer — connection pooling layer</h2>
+    <p class="subtitle">Lightweight connection pooler protecting PostgreSQL from connection fork overhead.</p>
+  </div>
+  
+  <div class="slide-body grid-2">
+    <div class="card">
+      <div style="flex: 1 1 auto; display: flex; flex-direction: column; justify-content: space-between;">
+        <h3>Connection Pooling Efficiency</h3>
+        <p style="margin-top: 6px;">Opening raw PostgreSQL connections incurs memory and fork overhead. PgBouncer sits between ChirpStack and HAProxy on TCP port <span class="mono cyan">:6432</span>.</p>
+        
+        <div class="flow-stack" style="margin-top: 8px;">
+          <div class="flow-stack-step primary">
+            <span class="step-label">ChirpStack Workers</span>
+            <span class="step-desc">100s Client Connections</span>
+          </div>
+          <div class="flow-connector">↓</div>
+          <div class="flow-stack-step primary">
+            <span class="step-label">PgBouncer :6432</span>
+            <span class="step-desc">Session Pooler Layer</span>
+          </div>
+          <div class="flow-connector">↓</div>
+          <div class="flow-stack-step emerald">
+            <span class="step-label">HAProxy :5432</span>
+            <span class="step-desc">Small Reusable Server Pool</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="card featured-matte">
+      <div>
+        <h3>Session Pooling Selection</h3>
+        <p style="margin-top: 4px; font-size: 13.5px;">Selecting the optimal pooling mode for ChirpStack network server workloads.</p>
+      </div>
+      
+      <div class="stack-list" style="margin-top: 8px; flex: 1 1 auto; justify-content: space-between;">
+        <div class="stack-item primary">
+          <span class="title">Session Pooling (Selected)</span>
+          <span class="tag">Supports Advisory Locks & Prepared Stmts</span>
+        </div>
+        <div class="stack-item">
+          <span class="title">Transaction Pooling (Evaluated)</span>
+          <span class="tag">Binds per SQL Transaction</span>
+        </div>
+        <div class="stack-item emerald">
+          <span class="title">Connection Protection</span>
+          <span class="tag">Prevents Postgres Process Fork Bloat</span>
+        </div>
+      </div>
+      
+      <div class="analogy-card">
+        <div class="analogy-title">💡 ARCHITECTURAL ROLE</div>
+        <p>The <strong>high-efficiency connection pooler</strong>—multiplexing hundreds of ChirpStack worker threads into a small, reusable server connection pool to prevent RAM and process bloat.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SLIDE 17: HAPROXY VS PGBOUNCER COMPARISON -->
+<section class="slide" id="slide-17">
+  <div class="slide-header">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+      <div class="eyebrow">Role Separation</div>
+      <span class="pill cyan" data-jump="10" style="cursor: pointer; font-size: 11px; padding: 3px 10px;">← Back to Data Flow Diagram</span>
+    </div>
+    <h2>HAProxy vs PgBouncer comparison matrix</h2>
+    <p class="subtitle">Distinct, complementary roles across the database access layer.</p>
+  </div>
+  
+  <div class="slide-body">
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Evaluation Dimension</th>
+            <th>HAProxy (:5432)</th>
+            <th>PgBouncer (:6432)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Primary Responsibility</strong></td>
+            <td>Route SQL traffic to active Patroni leader</td>
+            <td>Manage & multiplex database connection pools</td>
+          </tr>
+          <tr>
+            <td><strong>Patroni Integration</strong></td>
+            <td><span class="status-tag done">Yes</span> (Queries REST API <span class="mono">:8008/primary</span>)</td>
+            <td><span class="status-tag next">No</span> (Connects statically to HAProxy :5432)</td>
+          </tr>
+          <tr>
+            <td><strong>Connection Overhead Reduction</strong></td>
+            <td>No (Passes raw TCP connections through)</td>
+            <td><span class="status-tag done">Yes</span> (Multiplexes client connections)</td>
+          </tr>
+          <tr>
+            <td><strong>ChirpStack Target Port</strong></td>
+            <td>Internal target behind PgBouncer</td>
+            <td><span class="mono cyan">Port :6432</span> (Configured in ChirpStack DSN)</td>
+          </tr>
+          <tr>
+            <td><strong>Failover Behavior</strong></td>
+            <td>Switches active TCP backend target to new primary</td>
+            <td>Drops stale server connections & reconnects via HAProxy</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  
+  <div class="callout slide-footer-callout">
+    <strong>Summary:</strong> PgBouncer keeps database connection handling light and reusable; HAProxy ensures those connections always land on the correct PostgreSQL primary.
+  </div>
+</section>
+
+<!-- SLIDE 18: FAILOVER SEQUENCE -->
+<section class="slide" id="slide-18">
+  <div class="slide-header">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+      <div class="eyebrow">Automated Failover</div>
+      <span class="pill cyan" data-jump="10" style="cursor: pointer; font-size: 11px; padding: 3px 10px;">← Back to Data Flow Diagram</span>
+    </div>
+    <h2>Automated PostgreSQL 5-step failover sequence</h2>
+    <p class="subtitle">Sequence executing automatically when a primary leader node drops offline.</p>
+  </div>
+  
+  <div class="slide-body" style="display: flex; flex-direction: column; justify-content: center;">
+    <div class="timeline-grid">
+      <div class="step-card">
+        <div class="num">Step 01</div>
+        <h4>Leader Drops</h4>
+        <p>Active Primary Spilo node crashes or suffers host network isolation.</p>
+      </div>
+      
+      <div class="step-card">
+        <div class="num">Step 02</div>
+        <h4>Lock Expires</h4>
+        <p>Patroni TTL leader lock key in etcd expires after 10s missing heartbeat.</p>
+      </div>
+      
+      <div class="step-card">
+        <div class="num">Step 03</div>
+        <h4>Replica Promoted</h4>
+        <p>Patroni standby nodes hold Raft election via etcd and promote safest replica.</p>
+      </div>
+      
+      <div class="step-card">
+        <div class="num">Step 04</div>
+        <h4>HAProxy Shifts</h4>
+        <p>HAProxy health check on <span class="mono">:8008/primary</span> passes on promoted node; traffic shifts.</p>
+      </div>
+      
+      <div class="step-card">
+        <div class="num">Step 05</div>
+        <h4>Pool Reconnects</h4>
+        <p>PgBouncer clears broken server connections and re-establishes pool through HAProxy.</p>
+      </div>
+    </div>
+  </div>
+  
+  <div class="callout emerald slide-footer-callout">
+    <strong>Recovery Standard:</strong> ChirpStack database write operations recover within 5 seconds without altering DSN configuration files.
+  </div>
+</section>
+
+<!-- SLIDE 19: WHY 3 ETCD + 3 SPILO -->
+<section class="slide" id="slide-19">
+  <div class="slide-header">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+      <div class="eyebrow">Topology Rationale</div>
+      <span class="pill cyan" data-jump="10" style="cursor: pointer; font-size: 11px; padding: 3px 10px;">← Back to Data Flow Diagram</span>
+    </div>
+    <h2>Why the lab deploys a 3 + 3 node topology</h2>
+    <p class="subtitle">Establishing mathematical quorum and split-brain protection.</p>
+  </div>
+  
+  <div class="slide-body grid-2">
+    <div class="card">
+      <div>
+        <div class="pill amber" style="margin-bottom: 6px; width: fit-content;">Consensus Tier</div>
+        <h3>3 × etcd Containers</h3>
+      </div>
+      
+      <div class="stack-list" style="margin-top: 8px; flex: 1 1 auto; justify-content: space-between;">
+        <div class="stack-item amber">
+          <span class="title">Raft Majority Voting</span>
+          <span class="tag">2 out of 3 votes required</span>
+        </div>
+        <div class="stack-item">
+          <span class="title">Single Node Fault Tolerance</span>
+          <span class="tag">Tolerates 1 node failure</span>
+        </div>
+        <div class="stack-item emerald">
+          <span class="title">Zero Split-Brain Risk</span>
+          <span class="tag">Prevents dual leaders</span>
+        </div>
+      </div>
+    </div>
+    
+    <div class="card emerald-matte">
+      <div>
+        <div class="pill emerald" style="margin-bottom: 6px; width: fit-content;">Database Tier</div>
+        <h3>3 × Spilo Containers</h3>
+      </div>
+      
+      <div class="stack-list" style="margin-top: 8px; flex: 1 1 auto; justify-content: space-between;">
+        <div class="stack-item emerald">
+          <span class="title">1 Primary + 2 Standbys</span>
+          <span class="tag">Active-passive replication</span>
+        </div>
+        <div class="stack-item primary">
+          <span class="title">Complex Failover Testing</span>
+          <span class="tag">Tests primary loss & rejoin</span>
+        </div>
+        <div class="stack-item emerald">
+          <span class="title">Zero Data Loss (RPO=0)</span>
+          <span class="tag">Synchronous WAL streaming</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="callout amber slide-footer-callout">
+    <strong>Lab vs Production Note:</strong> In this lab, containers share a single Ubuntu Server VM to test software failover logic. In production, containers are deployed across separate physical hosts or availability zones.
+  </div>
+</section>
+
+<!-- SLIDE 20: STORAGE DECOUPLING ARCHITECTURE -->
+<section class="slide" id="slide-20">
+  <div class="slide-header">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+      <div class="eyebrow">Data Boundary</div>
+      <span class="pill cyan" data-jump="10" style="cursor: pointer; font-size: 11px; padding: 3px 10px;">← Back to Data Flow Diagram</span>
+    </div>
+    <h2>Separating operational MAC state from telemetry</h2>
+    <p class="subtitle">Protecting network server responsiveness by isolating storage workloads.</p>
+  </div>
+  
+  <div class="slide-body grid-2">
+    <div class="card featured-matte">
+      <div>
+        <div class="pill cyan" style="margin-bottom: 6px; width: fit-content;">High-Availability Core</div>
+        <h3>Spilo PostgreSQL HA Cluster</h3>
+        <p style="font-size: 13.5px; margin-top: 2px;">Dedicated strictly to ChirpStack operational MAC state.</p>
+      </div>
+      
+      <div class="stack-list" style="margin-top: 8px; flex: 1 1 auto; justify-content: space-between;">
+        <div class="stack-item primary">
+          <span class="title">Device EUIs & Root Keys</span>
+          <span class="tag">Device Registration</span>
+        </div>
+        <div class="stack-item">
+          <span class="title">Active Frame Counters</span>
+          <span class="tag">Session Security</span>
+        </div>
+        <div class="stack-item primary">
+          <span class="title">Tenant & Gateway ACLs</span>
+          <span class="tag">Permissions State</span>
+        </div>
+      </div>
+    </div>
+    
+    <div class="card">
+      <div>
+        <div class="pill emerald" style="margin-bottom: 6px; width: fit-content;">Analytics & Retention</div>
+        <h3>TimescaleDB Instance (:5433)</h3>
+        <p style="font-size: 13.5px; margin-top: 2px;">Dedicated to high-volume time-series telemetry.</p>
+      </div>
+      
+      <div class="stack-list" style="margin-top: 8px; flex: 1 1 auto; justify-content: space-between;">
+        <div class="stack-item emerald">
+          <span class="title">Decoded Sensor Data</span>
+          <span class="tag">Payload Measurements</span>
+        </div>
+        <div class="stack-item">
+          <span class="title">Historical Retention Purges</span>
+          <span class="tag">Time-series Chunking</span>
+        </div>
+        <div class="stack-item emerald">
+          <span class="title">Grafana & Node-RED Traffic</span>
+          <span class="tag">Heavy Query Workloads</span>
+        </div>
+      </div>
+      
+      <div class="analogy-card">
+        <div class="analogy-title">💡 ARCHITECTURAL ROLE</div>
+        <p>The <strong>dedicated time-series telemetry engine</strong>—decoupling high-volume sensor payload data from operational MAC state so heavy analytical queries never slow down core network server performance.</p>
+      </div>
+    </div>
+  </div>
+  
+  <div class="callout slide-footer-callout">
+    <strong>Design Principle:</strong> Heavy dashboard queries or retention purge jobs will never compete for I/O with core LoRaWAN network server MAC processing.
+  </div>
+</section>
+
+<!-- SLIDE 21: PROJECT STATUS MATRIX -->
+<section class="slide" id="slide-21">
+  <div class="slide-header">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+      <div class="eyebrow">Project Deliverables</div>
+      <span class="pill cyan" data-jump="10" style="cursor: pointer; font-size: 11px; padding: 3px 10px;">← Back to Data Flow Diagram</span>
+    </div>
+    <h2>Current implementation matrix</h2>
+    <p class="subtitle">Tracking hardware assembly, gateway baseline, and server stack progress.</p>
+  </div>
+  
+  <div class="slide-body">
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Deliverable Module</th>
+            <th>Status</th>
+            <th>Implementation Details</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Physical Gateway Hardware Assembly</td>
+            <td><span class="status-tag done">DONE</span></td>
+            <td>Raspberry Pi 4B + RAK5146 SPI hardware operational</td>
+          </tr>
+          <tr>
+            <td>Raspberry Pi OS Lite Prototype Proof</td>
+            <td><span class="status-tag done">DONE</span></td>
+            <td>Validated radio reception and end-to-end data path</td>
+          </tr>
+          <tr>
+            <td>Gateway OS Base & Buffer Migration</td>
+            <td><span class="status-tag changed">MIGRATED</span></td>
+            <td>Standardized baseline image with local Mosquitto disk buffer</td>
+          </tr>
+          <tr>
+            <td>1-Click Disaster Recovery Specification</td>
+            <td><span class="status-tag done">DONE</span></td>
+            <td>Per-EUI snapshot backups & 3-minute SD replacement set</td>
+          </tr>
+          <tr>
+            <td>MDS Architecture Specification</td>
+            <td><span class="status-tag done">DONE</span></td>
+            <td>Deployment manuals and container topology finalized</td>
+          </tr>
+          <tr>
+            <td>Server Docker Lab Deployment</td>
+            <td><span class="status-tag next">NEXT WEEK</span></td>
+            <td>Deploying 3× etcd + 3× Spilo + HAProxy + PgBouncer</td>
+          </tr>
+          <tr>
+            <td>Automated Failover & Recovery Validation</td>
+            <td><span class="status-tag next">NEXT WEEK</span></td>
+            <td>Simulating primary node kills and WAN outage recovery</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- SLIDE 22: NEXT WEEK ROADMAP -->
+<section class="slide" id="slide-22">
+  <div class="slide-header">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+      <div class="eyebrow">Execution Order</div>
+      <span class="pill cyan" data-jump="10" style="cursor: pointer; font-size: 11px; padding: 3px 10px;">← Back to Data Flow Diagram</span>
+    </div>
+    <h2>Next week planned build order</h2>
+    <p class="subtitle">Sequential 6-phase deployment roadmap for the MDS server lab.</p>
+  </div>
+  
+  <div class="slide-body grid-3">
+    <div class="card">
+      <div>
+        <span class="mono cyan" style="font-size: clamp(22px, 3.2vh, 28px); font-weight: 800;">Phase 1</span>
+        <h3 style="margin-top: 6px;">VM Preparation</h3>
+        <p style="margin-top: 6px;">Provision Ubuntu VM, assign static IP, install Docker Engine & Compose v2.</p>
+      </div>
+    </div>
+    
+    <div class="card">
+      <div>
+        <span class="mono emerald" style="font-size: clamp(22px, 3.2vh, 28px); font-weight: 800;">Phase 2</span>
+        <h3 style="margin-top: 6px;">Deploy etcd & Spilo</h3>
+        <p style="margin-top: 6px;">Bring up 3× etcd DCS quorum and 3× Spilo Patroni PostgreSQL cluster.</p>
+      </div>
+    </div>
+    
+    <div class="card">
+      <div>
+        <span class="mono amber" style="font-size: clamp(22px, 3.2vh, 28px); font-weight: 800;">Phase 3</span>
+        <h3 style="margin-top: 6px;">Deploy HA Access</h3>
+        <p style="margin-top: 6px;">Configure HAProxy health routing and PgBouncer connection pooling.</p>
+      </div>
+    </div>
+    
+    <div class="card">
+      <div>
+        <span class="mono indigo" style="font-size: clamp(22px, 3.2vh, 28px); font-weight: 800;">Phase 4</span>
+        <h3 style="margin-top: 6px;">Core Services</h3>
+        <p style="margin-top: 6px;">Launch Mosquitto, Valkey, and ChirpStack pointing to PgBouncer :6432.</p>
+      </div>
+    </div>
+    
+    <div class="card">
+      <div>
+        <span class="mono cyan" style="font-size: clamp(22px, 3.2vh, 28px); font-weight: 800;">Phase 5</span>
+        <h3 style="margin-top: 6px;">Gateway Re-Link</h3>
+        <p style="margin-top: 6px;">Connect physical Gateway OS Base via mTLS bridge to server broker.</p>
+      </div>
+    </div>
+    
+    <div class="card">
+      <div>
+        <span class="mono emerald" style="font-size: clamp(22px, 3.2vh, 28px); font-weight: 800;">Phase 6</span>
+        <h3 style="margin-top: 6px;">Failover Testing</h3>
+        <p style="margin-top: 6px;">Execute node kills, verify 5s failover, and test WAN outage replay.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SLIDE 23: FUTURE ROADMAP - GATEWAY MESH -->
+<section class="slide" id="slide-23">
+  <div class="slide-header">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+      <div class="eyebrow">Long-Term Expansion</div>
+      <span class="pill cyan" data-jump="10" style="cursor: pointer; font-size: 11px; padding: 3px 10px;">← Back to Data Flow Diagram</span>
+    </div>
+    <h2>Future plan: Gateway Mesh & Relay expansion</h2>
+    <p class="subtitle">Evaluating wireless LoRaWAN Relay (TS011) and mesh topologies for remote dead-zone coverage and cellular cost reduction.</p>
+  </div>
+  
+  <div class="slide-body grid-3">
+    <div class="card">
+      <div>
+        <div class="pill cyan" style="margin-bottom: 8px; width: fit-content;">Relay Mesh Concept</div>
+        <h3>Wireless Multi-Hop Coverage</h3>
+        <p style="margin-top: 6px; font-size: 13.5px;">Extending network coverage into remote fields, valleys, or basements without internet cabling.</p>
+      </div>
+      
+      <div class="stack-list" style="margin-top: 8px; flex: 1 1 auto; justify-content: space-between;">
+        <div class="stack-item primary">
+          <span class="title">Remote Field Relay Nodes</span>
+          <span class="tag">Solar/battery-powered edge relays</span>
+        </div>
+        <div class="stack-item emerald">
+          <span class="title">Single Root 4G Egress</span>
+          <span class="tag">1 SIM card for the entire mesh</span>
+        </div>
+        <div class="stack-item">
+          <span class="title">SIM Cost Reduction</span>
+          <span class="tag">Eliminates multi-SIM subscriptions</span>
+        </div>
+      </div>
+    </div>
+    
+    <div class="card featured-matte">
+      <div>
+        <div class="pill emerald" style="margin-bottom: 8px; width: fit-content;">ChirpStack Integration</div>
+        <h3>LoRaWAN TS011 Standard</h3>
+        <p style="margin-top: 6px; font-size: 13.5px;">Leveraging ChirpStack's native support for official LoRaWAN Alliance Relay specifications.</p>
+      </div>
+      
+      <div class="stack-list" style="margin-top: 8px; flex: 1 1 auto; justify-content: space-between;">
+        <div class="stack-item emerald">
+          <span class="title">Native Relay Protocol</span>
+          <span class="tag">TS011 specification compliance</span>
+        </div>
+        <div class="stack-item primary">
+          <span class="title">Auto Frame Deduplication</span>
+          <span class="tag">ChirpStack filters multi-path copies</span>
+        </div>
+        <div class="stack-item amber">
+          <span class="title">Dynamic Relay Channel</span>
+          <span class="tag">Hops packets to nearest gateway</span>
+        </div>
+      </div>
+    </div>
+    
+    <div class="card">
+      <div>
+        <div class="pill amber" style="margin-bottom: 8px; width: fit-content;">Dual-Tier Buffering Strategy</div>
+        <h3>Durable Two-Layer Spooling</h3>
+        <p style="margin-top: 6px; font-size: 13.5px;">Differentiating buffer triggers for Forwarding Relays vs Root Egress Nodes.</p>
+      </div>
+      
+      <div class="stack-list" style="margin-top: 8px; flex: 1 1 auto; justify-content: space-between;">
+        <div class="stack-item primary">
+          <span class="title">Relay Gateway Buffer</span>
+          <span class="tag">Triggers when RF hop link to Root drops</span>
+        </div>
+        <div class="stack-item emerald">
+          <span class="title">Root Gateway Buffer</span>
+          <span class="tag">Triggers when 4G WAN internet drops</span>
+        </div>
+        <div class="stack-item amber">
+          <span class="title">Consolidated Mesh Spool</span>
+          <span class="tag">Root buffers all relayed & local uplinks</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="callout emerald slide-footer-callout">
+    <strong>Dual-Tier Resilience:</strong> Forwarding gateways buffer on RF link blockage; Root gateway buffers consolidated mesh traffic on 4G WAN drops—guaranteeing zero telemetry loss at both RF and IP transport layers.
+  </div>
+</section>
+
+<!-- SLIDE 24: KEY TAKEAWAYS & Q&A -->
+<section class="slide" id="slide-24">
+  <div class="slide-header">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+      <div class="eyebrow">Conclusion</div>
+      <span class="pill cyan" data-jump="10" style="cursor: pointer; font-size: 11px; padding: 3px 10px;">← Back to Data Flow Diagram</span>
+    </div>
+    <h2>Key takeaways & discussion</h2>
+  </div>
+  
+  <div class="slide-body">
+    <div class="card featured-matte" style="padding: clamp(24px, 3.5vh, 36px); height: 100%; justify-content: center;">
+      <h1 style="font-size: clamp(22px, 3.4vh, 38px); line-height: 1.25;">
+        "This week proved the radio data path & standardized Gateway OS Base.<br>
+        <span class="cyan">Next week proves automatic server recovery under failure."</span>
+      </h1>
+      
+      <div class="grid-3" style="margin-top: 24px;">
+        <div class="card" style="background: #09121f;">
+          <h4 class="amber" style="font-size: 17px;">Gateway OS Base</h4>
+          <p style="font-size: 13.5px; margin-top: 4px;">Read-Only Power-Loss Safe</p>
+        </div>
+        <div class="card" style="background: #09121f;">
+          <h4 class="emerald" style="font-size: 17px;">Mosquitto Disk Queue</h4>
+          <p style="font-size: 13.5px; margin-top: 4px;">Offline Store-and-Forward</p>
+        </div>
+        <div class="card" style="background: #09121f;">
+          <h4 class="cyan" style="font-size: 17px;">MDS HA Stack</h4>
+          <p style="font-size: 13.5px; margin-top: 4px;">etcd + Patroni Failover</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div style="display: flex; justify-content: space-between; align-items: center; flex: 0 0 auto;">
+    <div>
+      <h3 style="color: #fff;">Questions & Discussion</h3>
+      <p style="font-size: 14.5px; color: var(--text-muted);">LoRaWAN Infrastructure & MDS Architecture Stand-up</p>
+    </div>
+    <span class="pill cyan">Repository: lorawan-network-server-gateway</span>
+  </div>
+</section>
+
+</div> <!-- /.deck-container -->
+
+<script>
+(() => {
+  const slides = [...document.querySelectorAll('.slide')];
+  let index = 0;
+
+  const show = (n) => {
+    index = Math.max(0, Math.min(slides.length - 1, n));
+    slides.forEach((s, i) => {
+      s.classList.toggle('active', i === index);
+    });
+    history.replaceState(null, '', `#${index + 1}`);
+  };
+
+  window.jumpToSlide = (n) => {
+    show(n - 1);
+  };
+
+  // Event listener for data-jump clicks
+  document.addEventListener('click', (e) => {
+    const jumpTarget = e.target.closest('[data-jump]');
+    if (jumpTarget) {
+      const targetSlide = parseInt(jumpTarget.getAttribute('data-jump'), 10);
+      if (Number.isFinite(targetSlide)) {
+        e.preventDefault();
+        show(targetSlide - 1);
+      }
+    }
+  });
+
+  // Silent Keyboard navigation (NO on-screen UI overlay)
+  document.addEventListener('keydown', (e) => {
+    if (['ArrowRight', 'PageDown', ' '].includes(e.key)) { e.preventDefault(); show(index + 1); }
+    if (['ArrowLeft', 'PageUp'].includes(e.key)) { e.preventDefault(); show(index - 1); }
+    if (e.key === 'Home') show(0);
+    if (e.key === 'End') show(slides.length - 1);
+  });
+
+  // Touch Swipe navigation
+  let touchStartX = 0;
+  document.addEventListener('touchstart', (e) => { touchStartX = e.changedTouches[0].screenX; }, false);
+  document.addEventListener('touchend', (e) => {
+    const touchEndX = e.changedTouches[0].screenX;
+    if (touchEndX < touchStartX - 50) show(index + 1);
+    if (touchEndX > touchStartX + 50) show(index - 1);
+  }, false);
+
+  // Hash Initialization
+  const hash = parseInt(location.hash.replace('#', ''), 10);
+  show(Number.isFinite(hash) ? hash - 1 : 0);
+})();
+</script>
+</body>
+</html>
