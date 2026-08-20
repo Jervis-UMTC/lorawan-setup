@@ -1,0 +1,500 @@
+--- PAGE 1 ---
+CHAPTER IV 
+RESULTS AND DISCUSSION
+4.1 Prototype Design and Implementation
+This section answers Problem 1.
+4.2 Prototype Performance under Normal Operating Conditions 
+This answers Problem 2. 
+4.2.1 Packet-Delivery Rate
+4.2.2 End-to-End Latency
+4.2.3 Transaction Success Rate
+4.2.4 System Throughput
+4.2.5 Raspberry Pi CPU and Memory Utilization
+4.3 Security and Resilience Evaluation 
+This answers Problem 3. 
+4.3.1 Authentication and Access-Control Test 
+This section presents the results of the authentication and access-control tests  
+conducted at the LoRaWAN, MQTT, and Hyperledger Fabric layers. The tests  
+examined whether authorized devices and identities were correctly accepted and  
+whether invalid credentials and prohibited actions were rejected. The results were  
+assessed using the correct-decision rate, false acceptances, false rejections, response  
+time, and unauthorized state changes. Table 12 summarizes the results of the 90 test  
+attempts.  
+Table 12. Results of the Authentication and Access-Control Tests 
+--- PAGE 2 ---
+89
+Test layer Test 
+condition
+Trials Expected 
+decision
+Allowed Rejected Correct 
+decisions, 
+n (%)
+False 
+acceptance
+False 
+rejection
+LoRaWAN Registered 
+device with 
+correct 
+OTAA 
+credentials
+10 Allow    —  
+Registered 
+DevEUI with 
+incorrect 
+AppKey
+10 Reject     —
+Unregistered 
+DevEUI
+10 Reject     —
+MQTT Authorized 
+account 
+publishes to 
+an allowed 
+topic
+10 Allow    —  
+Account uses 
+an incorrect 
+password
+10 Reject     —
+Limited 
+account 
+publishes to a 
+prohibited 
+topic
+10 Reject     —
+Hyperledger Authorized 
+writer 
+submits a 
+10 Allow    —  
+--- PAGE 3 ---
+90
+Fabric sensor hash
+Identity 
+without 
+writer 
+permission 
+submits a 
+hash
+10 Reject     —
+Invalid or 
+untrusted 
+identity 
+submits a 
+transaction
+10 Reject     —
+Note. False acceptance refers to an unauthorized request that was incorrectly allowed. False rejection  
+refers to an authorized request that was incorrectly denied. An unauthorized state change occurs when a 
+prohibited request successfully creates, modifies, or commits protected data. The dash indicates that the 
+measure is not applicable to the test condition. 
+4.3.2 Replay and Spoofing Resistance Test 
+This section presents the results of the replay and spoofing tests conducted at the  
+LoRaWAN layer. The assessment examined whether legitimate uplink messages were  
+processed normally and whether previously accepted or forged packets were rejected  
+before reaching the application, database, and blockchain layers. The results were  
+evaluated using the number of accepted and rejected packets, correct decisions, false  
+acceptances, false rejections, unauthorized propagation, and decision time. Table 13  
+summarizes the results of the 40 test attempts. 
+Table 13. Results of the Replay and Spoofing Tests 
+Test Test 
+conditi
+on
+Trials Expect
+ed 
+decisi
+Receiv
+ed by 
+gatewa
+Accept
+ed by 
+ChirpS
+Reject
+ed by 
+Chirp
+Reach
+ed 
+MQTT
+Databa
+se 
+record
+Fabric 
+transa
+ctions 
+Correc
+t 
+decisi
+False 
+accept
+False 
+rejecti
+Mean 
+decisio
+n time 
+--- PAGE 4 ---
+91
+on y, n tack, n Stack, 
+n
+/Node-
+RED, 
+n
+s 
+create
+d, n
+create
+d, n
+ons, n 
+(%)
+ance, n on, n ± SD 
+(s)
+Repla
+y
+New 
+legitim
+ate 
+uplink
+10 Accep
+t
+—
+Previo
+usly 
+accept
+ed 
+uplink 
+with 
+an old 
+frame 
+counte
+r
+10 Reject —
+Spoofi
+ng
+Genui
+ne 
+uplink 
+from 
+the 
+registe
+red 
+sensor
+10 Accep
+t
+—
+Forged 
+uplink 
+using 
+the 
+legitim
+ate 
+device 
+addres
+s but 
+an 
+invalid 
+MIC
+10 Reject —
+Overal
+l
+All 
+conditi
+ons
+40 — —
+Note. False acceptance refers to a replayed or forged packet that was incorrectly accepted. False rejection 
+refers to a legitimate packet that was incorrectly rejected. Unauthorized propagation occurs when an  
+--- PAGE 5 ---
+92
+attack packet reaches MQTT, Node-RED, PostgreSQL/TimescaleDB, or Hyperledger Fabric. Attack  
+attempts not received by the gateway should be repeated and should not be counted as security decisions. 
+The dash indicates that the measure is not applicable to the condition. 
+4.3.3 Data-Integrity Test 
+This section presents the results of the data integrity assessment conducted at  
+the application and storage layers. The tests examined whether unchanged sensor  
+records retained matching SHA-256 hashes and whether deliberately altered records  
+were detected before valid storage or during comparison with the original hash recorded 
+in Hyperledger Fabric. The results were evaluated using hash matches and mismatches, 
+correct integrity decisions, false positives, false negatives, unauthorized storage, and  
+verification time. Table 14 summarizes the results of the 40 data integrity test attempts. 
+Table 14. Results of the Data Integrity Tests 
+Test 
+area
+Test 
+conditio
+n
+Trial
+s
+Expected 
+result
+Hash 
+match, 
+n
+Hash 
+mismat
+ch, n
+Correct 
+decision
+s, n (%)
+False 
+positive
+s, n
+False 
+negativ
+es, n
+Unauth
+orized 
+storage, 
+n
+Verifica
+tion 
+time, 
+mean ± 
+SD (s)
+Applica
+tion-
+layer 
+integrit
+y
+Record 
+process
+ed 
+without 
+alteratio
+n
+10 Hashes 
+match, and 
+record is 
+stored
+— —
+Applica
+tion-
+layer 
+integrit
+y
+Sensor 
+value 
+altered 
+before 
+storage
+10 Hash 
+mismatch; 
+record is 
+blocked or 
+quarantine
+d
+—
+Post- Databas 10 Database — —
+--- PAGE 6 ---
+93
+storage 
+integrit
+y
+e record 
+remains 
+unchan
+ged
+hash 
+matches 
+the Fabric 
+hash
+Post-
+storage 
+integrit
+y
+Databas
+e value 
+altered 
+after 
+Fabric 
+commit
+ment
+10 Recompute
+d hash 
+differs 
+from the 
+Fabric hash
+— —
+Overall All test 
+conditio
+ns
+40 — —
+Note. A false positive occurs when an unchanged record is incorrectly identified as altered. A  
+false negative occurs when an altered record is incorrectly reported as valid. Unauthorized  
+storage refers to an application-layer altered record that is accepted and stored as a valid  
+operational record. A dash indicates that the measure is not applicable to the condition.
+4.3.4 Traceability Test 
+This section presents the results of the traceability assessment. The tests  
+examined whether individual sensor readings and groups of consecutive readings could 
+be completely retrieved and correctly linked across PostgreSQL/TimescaleDB and  
+Hyperledger Fabric. Table 15 summarizes the retrieval, completeness, linkage,  
+chronological accuracy, and time required for the traceability tests. 
+Table 15. Results of the Traceability Tests 
+Traceabi
+lity test
+Trials Records 
+tested
+Successf
+ully 
+retrieved
+, n (%)
+Complet
+e 
+records, 
+n (%)
+Correct 
+database
+–
+blockch
+Correct 
+chronolo
+gical 
+order,  n 
+Missing 
+records, 
+n
+Duplicat
+e 
+records, 
+n
+Mean 
+retrieval 
+time  ± 
+SD (s)
+--- PAGE 7 ---
+94
+ain 
+links,  n 
+(%)
+(%)
+Individu
+al 
+sensor-
+record 
+trace
+10 10    Not 
+applicab
+le
+   
+Device-
+history 
+reconstr
+uction
+10 
+sequenc
+es
+50        
+Overall 20 trials 60       —
+4.3.5 DoS and Flooding Resistance Test 
+This section presents the results of the MQTT connection-flooding and invalid  
+application-message flooding tests under normal, moderate, and high traffic conditions. 
+The results were assessed using legitimate-message delivery, invalid-traffic rejection,  
+end-to-end latency, resource utilization, service availability, unauthorized records, and 
+recovery time. Table 16 summarizes the results of the 18 experimental runs. 
+Table 16. Results of the DoS or Flooding Tests 
+Test area Traffic 
+condition
+Valid 
+messages 
+delivered, n 
+(%)
+Invalid 
+traffic 
+rejected, n 
+(%)
+Mean 
+latency ± SD 
+(s)
+Mean CPU 
+use (%)
+Mean 
+memory use 
+(%)
+Service 
+available
+Unauthorize
+d records, n
+Mean 
+recovery 
+time ± SD 
+(s)
+MQTT 
+connection 
+flooding
+Normal Not 
+applicable
+Not 
+applicable
+--- PAGE 8 ---
+95
+Moderate
+High
+Invalid 
+application-
+message 
+flooding
+Normal Not 
+applicable
+Not 
+applicable
+Moderate
+High
+Note. Each condition consists of three five-minute runs. Approximately 60 legitimate sensor readings are 
+expected for each condition. Moderate and high flooding generate approximately 9,000 and 45,000  
+invalid requests, respectively, across the three runs. Service availability should be reported as Available 
+or Unavailable. 
+4.3.6 Resilience and Recovery Test 
+This section presents the results of the Internet-connectivity interruption and  
+recovery test. The assessment examined whether the prototype continued collecting,  
+processing, storing, displaying, and recording sensor data while Internet access was  
+unavailable and whether normal connectivity was restored without missing, duplicate,  
+or incorrectly linked records. Table 17 summarizes the results from the three  
+experimental runs. 
+Table 17. Results of the Internet-Connectivity Interruption and Recovery Test 
+Test period Total 
+duration 
+across three 
+runs
+Expected 
+readings
+Readings 
+stored in 
+database, n 
+(%)
+Fabric 
+records 
+created, n 
+(%)
+Missing 
+records, n
+Duplicate 
+records, n
+Local 
+services 
+available
+Mean end-
+to-end 
+latency ± SD 
+(s)
+Mean 
+recovery 
+time ± SD 
+(s)
+Normal 
+operation 
+before 
+interruption
+90 minutes 360 Not 
+applicable
+Internet 
+interruption
+180 minutes 720 Not 
+applicable
+--- PAGE 9 ---
+96
+Recovery 
+after 
+reconnection
+90 minutes 360
+Overall 360 minutes 1,440 — — —
+Note. Local services include ChirpStack, Mosquitto MQTT, Node-RED, PostgreSQL/TimescaleDB,  
+Grafana, and Hyperledger Fabric. Service availability should be reported as Available, Partially  
+Available, or Unavailable. Recovery time refers to the period from restoration of Internet connectivity  
+until external connectivity and related services return to normal operation. 
