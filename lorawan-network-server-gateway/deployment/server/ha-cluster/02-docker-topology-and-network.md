@@ -209,10 +209,10 @@ Stop and investigate when a container stays above about 85% of its memory limit,
 
 Use the same reviewed Spilo, PostgreSQL major, Patroni, HAProxy, PgBouncer, and ChirpStack versions that are being validated for the cloud deployment. See:
 
-- [cloud etcd manual](../cloud-production/06-etcd-cluster.md)
-- [cloud Spilo / Patroni manual](../cloud-production/07-spilo-patroni-postgresql-cluster.md)
-- [cloud HAProxy / PgBouncer manual](../cloud-production/08-haproxy-and-pgbouncer.md)
-- [cloud MQTT / Valkey manual](../cloud-production/09-mqtt-and-valkey.md)
+- [cloud etcd manual](../cloud-production/05-etcd-cluster.md)
+- [cloud Spilo / Patroni manual](../cloud-production/06-spilo-patroni-postgresql-cluster.md)
+- [cloud HAProxy / PgBouncer manual](../cloud-production/07-haproxy-and-pgbouncer.md)
+- [cloud MQTT / Valkey manual](../cloud-production/08-mqtt-and-valkey.md)
 
 Pull and inspect the selected images:
 

@@ -65,7 +65,7 @@ Use one DigitalOcean Reserved IPv4 and reuse HAProxy on `ha-01` and `ha-02` as t
 
 DNS for both `chirpstack.<DOMAIN>` and `mqtt.<DOMAIN>` points to the Reserved IP. The address is assigned to only one app Droplet at a time. There is **no managed Network Load Balancer** in the minimum POC.
 
-See [03a-self-managed-public-ingress.md](03a-self-managed-public-ingress.md).
+See [10-self-managed-public-ingress.md](10-self-managed-public-ingress.md).
 
 ## 2A.3 Exact machine layout
 
@@ -289,25 +289,20 @@ If 2 GiB fails, move to 4 GiB and record that result. The purpose of the POC is 
 
 ## 2A.12 Build order
 
+Do not maintain a second frozen deployment order in this sizing file. The canonical live order and status are in [00-README.md](00-README.md), while [00-build-execution-log.md](00-build-execution-log.md) records what actually happened.
+
+The completed sequence so far is:
+
 ```text
-1. VPC + ha-01/02/03 + one Reserved IPv4 initially assigned to ha-01
-2. firewall + record ha-01/ha-02 anchor IPs and Droplet IDs
-3. etcd-1/2/3
-4. PostgreSQL/Patroni-1/2/3
-5. install/verify the same TimescaleDB extension build on PostgreSQL-1/2/3
-6. create `chirpstack` + `lorawan_telemetry`; enable TimescaleDB in `lorawan_telemetry`
-7. HAProxy + PgBouncer on all three hosts
-8. Valkey-1/2/3 + Sentinel-1/2/3
-9. Mosquitto-1/2
-10. ChirpStack-1/2
-11. public HAProxy listeners on anchor IPs + Reserved-IP manual/automatic failover
-12. gateway LTE + real OTAA/uplink/downlink
-13. Timescale telemetry hypertables + ordinary `fabric_outbox` in `lorawan_telemetry`
-14. Node-RED on ha-03
-15. Grafana on ha-03
-16. OpenBao-1/2/3
-17. Fabric adapter-1/2 after the implementation readiness gate passes; if the implementation is unavailable, record the overall full-feature POC as BLOCKED and continue other tests only as partial infrastructure evidence
-18. one-failure-at-a-time HA tests; a final full-feature PASS requires every required runtime test, including Fabric adapter failover/reconciliation, to pass
+three active Droplets / host baseline
+        -> host hardening
+        -> Docker runtime + 10.104 east-west validation
+        -> three-member etcd bootstrap and quorum
+        -> STOP / next technology remains standby
 ```
 
-Continue with [03-digitalocean-vpc-droplets-and-firewalls.md](03-digitalocean-vpc-droplets-and-firewalls.md).
+The DigitalOcean Cloud Firewall is externally controlled, and Reserved-IP/public-DNS commissioning is not evidenced as a prerequisite that occurred before etcd. Do not rewrite history by placing those provider-side steps into the completed sequence.
+
+When work resumes, activate only the next numbered standby manual, re-check it against the live servers, document the result, then update the canonical sequence/status table.
+
+Continue with [03-digitalocean-vpc-droplets-and-firewalls.md](03-digitalocean-vpc-droplets-and-firewalls.md) for foundation evidence boundaries.

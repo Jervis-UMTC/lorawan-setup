@@ -1,4 +1,6 @@
-# 12. Minimal POC Backup and Recovery
+# 13. Minimal POC Backup and Recovery
+
+> **Status: STANDBY / DRAFT.** The final backup set cannot be fixed until the dependent services are actually deployed. Keep the etcd guidance aligned with the validated cluster, but re-check PostgreSQL, OpenBao, application, and configuration backup commands as each technology becomes active.
 
 This HA POC is **not** trying to prove a production disaster-recovery platform. It still needs a real rollback boundary before we deliberately kill leaders, members, and hosts.
 
@@ -6,7 +8,7 @@ The rule is simple:
 
 > Do not inject a destructive failure until the state needed to rebuild the POC exists somewhere outside the three target Droplets and at least the PostgreSQL dump has been read/restore-tested.
 
-## 12.1 What to protect
+## 13.1 What to protect
 
 Before destructive tests keep copies of:
 
@@ -30,7 +32,7 @@ Fabric adapter config/image reference when an implementation exists
 
 Do not create paid object storage only because a future production design normally would. For this POC, the administration workstation or another protected system outside `ha-01/02/03` is sufficient as the off-host copy.
 
-## 12.2 Create one protected backup directory
+## 13.2 Create one protected backup directory
 
 Run on the host from which backups are being collected:
 
@@ -45,7 +47,7 @@ Store the test/run identifier beside the backup so later evidence shows which fa
 
 Do not put database passwords, private keys, or OpenBao recovery material in the general command transcript.
 
-## 12.3 PostgreSQL logical dumps through the stable HA path
+## 13.3 PostgreSQL logical dumps through the stable HA path
 
 Both logical databases live on the same Patroni cluster:
 
@@ -62,7 +64,7 @@ Example using the stable pool path:
 
 ```bash
 pg_dump \
-  --host=pgbouncer.internal.<DOMAIN> \
+  --host=pgbouncer.internal.lorawan.com \
   --port=6432 \
   --username=<BACKUP_ROLE> \
   --dbname=chirpstack \
@@ -70,7 +72,7 @@ pg_dump \
   --file="$BACKUP_DIR/chirpstack.dump"
 
 pg_dump \
-  --host=pgbouncer.internal.<DOMAIN> \
+  --host=pgbouncer.internal.lorawan.com \
   --port=6432 \
   --username=<BACKUP_ROLE> \
   --dbname=lorawan_telemetry \
@@ -93,7 +95,7 @@ sha256sum "$BACKUP_DIR/chirpstack.dump" "$BACKUP_DIR/lorawan_telemetry.dump" \
 
 Why both dumps matter: `lorawan_telemetry` contains the Timescale hypertables **and** `telemetry.fabric_outbox`.
 
-## 12.4 Copy PostgreSQL backups off the three Droplets
+## 13.4 Copy PostgreSQL backups off the three Droplets
 
 If the backup was created on `ha-01`, `ha-02`, or `ha-03`, copy the entire protected backup directory to the administration workstation or another approved off-host location before the destructive test.
 
@@ -101,27 +103,23 @@ Then recalculate the checksums at the destination and compare with `SHA256SUMS`.
 
 A dump that exists only on a Droplet scheduled for failure is not a useful rollback copy.
 
-## 12.5 etcd snapshot before destructive coordination tests
+## 13.5 etcd snapshot before destructive coordination tests
 
 For a normal single-member loss, the preferred recovery is to restore/rejoin the missing member using the normal etcd member procedure. A cluster snapshot is still mandatory safety evidence before deliberately changing membership or performing a destructive quorum-recovery test.
 
-Using the pinned `etcdctl` and the approved admin certificate:
+Using a compatible `etcdctl` against the currently tested east-west endpoints:
 
 ```bash
-etcdctl \
-  --endpoints=https://<ETCD_1>:2379,https://<ETCD_2>:2379,https://<ETCD_3>:2379 \
-  --cacert=<ETCD_CA> \
-  --cert=<ETCD_ADMIN_CERT> \
-  --key=<ETCD_ADMIN_KEY> \
-  endpoint health --cluster
+ETCDCTL_API=3 etcdctl \
+  --endpoints=http://10.104.0.2:2379,http://10.104.0.4:2379,http://10.104.0.8:2379 \
+  endpoint health
 
-etcdctl \
-  --endpoints=https://<HEALTHY_ETCD_MEMBER>:2379 \
-  --cacert=<ETCD_CA> \
-  --cert=<ETCD_ADMIN_CERT> \
-  --key=<ETCD_ADMIN_KEY> \
+ETCDCTL_API=3 etcdctl \
+  --endpoints=http://10.104.0.2:2379 \
   snapshot save "$BACKUP_DIR/etcd.snapshot"
 ```
+
+These commands match the current HTTP-only etcd deployment on `10.104.0.0/20`. If etcd transport TLS is deployed later, update this procedure and use the tested CA/client credentials; do not mix the two transport modes.
 
 Inspect the snapshot using the status command supported by the pinned etcd release (`etcdutl snapshot status` on releases that use `etcdutl`). Record:
 
@@ -134,7 +132,7 @@ snapshot hash/revision/status
 
 The etcd snapshot contains coordination state, not PostgreSQL rows.
 
-## 12.6 OpenBao recovery material and Raft snapshot
+## 13.6 OpenBao recovery material and Raft snapshot
 
 Keep Shamir/recovery/unseal material **outside** `ha-01/02/03` and outside the general configuration archive.
 
@@ -159,7 +157,7 @@ Then copy that snapshot off the three Droplets and retain the protected recovery
 
 The Fabric adapter must not receive root, recovery, or snapshot privileges.
 
-## 12.7 Configuration snapshot
+## 13.7 Configuration snapshot
 
 Capture the non-secret configuration that would be needed to reconstruct the scale model:
 
@@ -183,7 +181,7 @@ Fabric adapter non-secret config/image digest when available
 
 Keep private keys/passwords in their designated protected recovery location, not in a general tar archive. In particular, do **not** copy the live `DIGITALOCEAN_TOKEN` from `/etc/lorawan-cloud/public-ingress.env` into the ordinary configuration bundle. Record its secret-store reference and required permission scope, then restore the token separately through the approved secret workflow.
 
-## 12.8 Isolated PostgreSQL restore rehearsal
+## 13.8 Isolated PostgreSQL restore rehearsal
 
 Do this before the first destructive HA test and after any PostgreSQL-major/TimescaleDB change.
 
@@ -213,7 +211,7 @@ Procedure:
 
 Do not call a backup tested merely because `pg_dump` exited zero. The restore rehearsal is what proves the dump is usable.
 
-## 12.9 Outbox recovery rule
+## 13.9 Outbox recovery rule
 
 After restoring `lorawan_telemetry`:
 
@@ -231,7 +229,7 @@ Why: a Fabric transaction may have committed even when the client timed out. Bli
 
 If the adapter implementation is not yet available, preserve the outbox and mark this operational step blocked rather than pretending reconciliation has been tested.
 
-## 12.10 What is deliberately deferred
+## 13.10 What is deliberately deferred
 
 Not required to pass the **structural HA POC**:
 
@@ -247,7 +245,7 @@ production RPO/RTO certification
 
 These are future deployment hardening, not reasons to remove Patroni, TimescaleDB, OpenBao, or the outbox from the POC.
 
-## 12.11 Destructive-test go/no-go
+## 13.11 Destructive-test go/no-go
 
 Proceed only when all are true:
 
@@ -262,4 +260,4 @@ Proceed only when all are true:
 - both app-host anchor listeners have passed local health and one manual Reserved-IP move has been proven before automatic public-ingress failure testing;
 - the Fabric outbox recovery state machine is understood, even if adapter execution is currently blocked by a missing implementation.
 
-Next: [13-observability-alerting-and-logging.md](13-observability-alerting-and-logging.md).
+Next: [14-observability-alerting-and-logging.md](14-observability-alerting-and-logging.md).

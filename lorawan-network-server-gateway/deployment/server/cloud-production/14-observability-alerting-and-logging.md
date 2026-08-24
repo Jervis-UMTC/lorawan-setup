@@ -1,4 +1,6 @@
-# 13. Minimal POC Observability and Evidence Capture
+# 14. Minimal POC Observability and Evidence Capture
+
+> **Status: STANDBY / DRAFT.** The observability checklist contains planned checks for technologies that are not deployed yet. Refine each section only after its service exists so the commands and evidence fields match the live implementation.
 
 The POC needs **repeatable evidence**, not a production monitoring platform.
 
@@ -8,7 +10,7 @@ The important rule is:
 
 > Capture the same evidence before, during, and after each failure so the result can be compared instead of remembered.
 
-## 13.1 What every failure run must answer
+## 14.1 What every failure run must answer
 
 For each run be able to answer:
 
@@ -30,7 +32,7 @@ what was the measured recovery time?
 was full 3-node redundancy restored before the next run?
 ```
 
-## 13.2 Create one evidence directory per test
+## 14.2 Create one evidence directory per test
 
 On the administration workstation or another approved evidence host:
 
@@ -65,7 +67,7 @@ final result: PASS / FAIL / BLOCKED
 
 Do not copy passwords, private keys, AppKeys, bearer tokens, complete DSNs, or OpenBao recovery material into the evidence folder.
 
-## 13.3 Host resource snapshot
+## 14.3 Host resource snapshot
 
 Run on **ha-01, ha-02, and ha-03** before/during/after the test and save the output under the matching evidence subdirectory:
 
@@ -90,32 +92,25 @@ journalctl -k --since today --no-pager | grep -Ei 'oom|out of memory|killed proc
 
 Why: with 2-GiB shared-CPU nodes, an OOM **or a functional failover failure caused by sustained CPU contention** is a sizing result. Do not restart the process and erase the evidence before recording it. Use the functional recovery criteria rather than inventing a universal CPU-utilization threshold.
 
-## 13.4 etcd snapshot
+## 14.4 etcd snapshot
 
-From the approved etcd administration environment:
+From an approved administrative shell, using the currently tested east-west endpoints:
 
 ```bash
-etcdctl \
-  --endpoints=https://<ETCD_1>:2379,https://<ETCD_2>:2379,https://<ETCD_3>:2379 \
-  --cacert=<ETCD_CA> \
-  --cert=<ETCD_ADMIN_CERT> \
-  --key=<ETCD_ADMIN_KEY> \
-  endpoint health --cluster
+ETCDCTL_API=3 etcdctl \
+  --endpoints=http://10.104.0.2:2379,http://10.104.0.4:2379,http://10.104.0.8:2379 \
+  endpoint health
 
-etcdctl \
-  --endpoints=https://<ETCD_1>:2379,https://<ETCD_2>:2379,https://<ETCD_3>:2379 \
-  --cacert=<ETCD_CA> \
-  --cert=<ETCD_ADMIN_CERT> \
-  --key=<ETCD_ADMIN_KEY> \
-  endpoint status --cluster -w table
+ETCDCTL_API=3 etcdctl \
+  --endpoints=http://10.104.0.2:2379,http://10.104.0.4:2379,http://10.104.0.8:2379 \
+  endpoint status --write-out=table
 
-etcdctl \
-  --endpoints=https://<HEALTHY_ETCD>:2379 \
-  --cacert=<ETCD_CA> \
-  --cert=<ETCD_ADMIN_CERT> \
-  --key=<ETCD_ADMIN_KEY> \
-  member list -w table
+ETCDCTL_API=3 etcdctl \
+  --endpoints=http://10.104.0.2:2379,http://10.104.0.4:2379,http://10.104.0.8:2379 \
+  member list --write-out=table
 ```
+
+These commands match the current HTTP-only etcd deployment on `10.104.0.0/20`. Add CA/client options only after an etcd TLS rollout has been completed and tested.
 
 Record:
 
@@ -130,7 +125,7 @@ revision
 
 A `2/3` state is acceptable only **during the single-failure test**. Do not begin another fault until it is back to `3/3`.
 
-## 13.5 PostgreSQL / Patroni snapshot
+## 14.5 PostgreSQL / Patroni snapshot
 
 Use the exact pinned Patroni configuration:
 
@@ -142,7 +137,7 @@ Then verify the normal client route from the host being tested:
 
 ```bash
 psql \
-  'host=pgbouncer.internal.<DOMAIN> port=6432 dbname=postgres user=<MONITOR_ROLE> sslmode=verify-full' \
+  'host=pgbouncer.internal.lorawan.com port=6432 dbname=postgres user=<MONITOR_ROLE> sslmode=verify-full' \
   -c 'SELECT now() AT TIME ZONE '\''UTC'\'' AS utc_time, inet_server_addr(), pg_is_in_recovery();'
 ```
 
@@ -169,17 +164,17 @@ chirpstack
 lorawan_telemetry
 ```
 
-## 13.6 TimescaleDB snapshot
+## 14.6 TimescaleDB snapshot
 
 Against `lorawan_telemetry` through the normal PgBouncer path:
 
 ```bash
 psql \
-  'host=pgbouncer.internal.<DOMAIN> port=6432 dbname=lorawan_telemetry user=telemetry_reader sslmode=verify-full' \
+  'host=pgbouncer.internal.lorawan.com port=6432 dbname=lorawan_telemetry user=telemetry_reader sslmode=verify-full' \
   -c "SELECT extname, extversion FROM pg_extension WHERE extname='timescaledb';"
 
 psql \
-  'host=pgbouncer.internal.<DOMAIN> port=6432 dbname=lorawan_telemetry user=telemetry_reader sslmode=verify-full' \
+  'host=pgbouncer.internal.lorawan.com port=6432 dbname=lorawan_telemetry user=telemetry_reader sslmode=verify-full' \
   -c "SELECT hypertable_schema, hypertable_name FROM timescaledb_information.hypertables ORDER BY 1,2;"
 ```
 
@@ -201,7 +196,7 @@ LIMIT 20;
 
 After PostgreSQL promotion, repeat the extension/hypertable queries. A promoted member that cannot load TimescaleDB is not an acceptable HA recovery.
 
-## 13.7 PgBouncer / HAProxy snapshot
+## 14.7 PgBouncer / HAProxy snapshot
 
 On each host that owns PgBouncer:
 
@@ -225,7 +220,7 @@ reconnect behavior
 
 For the PostgreSQL HAProxy route, a read-only SQL query through `:15432` must reach a writable primary. For MQTT/Valkey/OpenBao, use the component-specific checks below rather than assuming an HAProxy process means every backend is healthy.
 
-## 13.8 Valkey / Sentinel snapshot
+## 14.8 Valkey / Sentinel snapshot
 
 Check all three data nodes:
 
@@ -269,7 +264,7 @@ HAProxy endpoint role
 
 The application endpoint must always report the writable primary/master.
 
-## 13.9 MQTT snapshot
+## 14.9 MQTT snapshot
 
 The cloud port ownership must be:
 
@@ -300,7 +295,7 @@ On the Raspberry Pi also record the local queue/persistence indicators described
 
 Do not call successful reconnection proof of broker-session replication. The POC is testing service failover plus the gateway's bounded persistent uplink buffer.
 
-## 13.10 ChirpStack snapshot
+## 14.10 ChirpStack snapshot
 
 Record:
 
@@ -314,9 +309,9 @@ fresh uplink event ID / sequence
 downlink result when that test is selected
 ```
 
-A running process is not enough. The recovery timer ends only on the first **new post-fault** staging-device uplink accepted through the surviving path, using the definition in [14-failover-chaos-and-acceptance-testing.md](14-failover-chaos-and-acceptance-testing.md).
+A running process is not enough. The recovery timer ends only on the first **new post-fault** staging-device uplink accepted through the surviving path, using the definition in [15-failover-chaos-and-acceptance-testing.md](15-failover-chaos-and-acceptance-testing.md).
 
-## 13.11 OpenBao snapshot
+## 14.11 OpenBao snapshot
 
 From an approved OpenBao admin environment:
 
@@ -347,7 +342,7 @@ Transit sign/verify result
 
 Do not put root tokens, recovery shares, or unseal material in the evidence folder.
 
-## 13.12 Fabric outbox and conditional adapter evidence
+## 14.12 Fabric outbox and conditional adapter evidence
 
 The outbox exists even when the adapter implementation is unavailable.
 
@@ -398,7 +393,7 @@ LoRaWAN stays healthy
 outbox later reconciles/drains
 ```
 
-## 13.13 Grafana
+## 14.13 Grafana
 
 Grafana is visual confirmation, not the source of truth for failover timing.
 
@@ -413,7 +408,7 @@ small history view
 
 Keep a slow refresh interval appropriate to the few-sensor POC. Do not change the 2-GiB resource profile by running aggressive dashboard polling during the sizing test.
 
-## 13.14 Before / during / after capture pattern
+## 14.14 Before / during / after capture pattern
 
 For each component, save the same command output three times:
 
@@ -442,7 +437,7 @@ For each component, save the same command output three times:
 
 Screenshots may supplement the folder, but do not replace machine-readable command output.
 
-## 13.15 Pass condition
+## 14.15 Pass condition
 
 Observability is ready only when a dry run can produce evidence answering all of these without undocumented memory:
 
@@ -463,4 +458,4 @@ full redundancy restored before next test
 
 Production monitoring, centralized logs, long retention, alert routing, and SLO dashboards are later deployment hardening. They are not prerequisites for proving this small architecture.
 
-Next: [13a-grafana-cloud-deployment.md](13a-grafana-cloud-deployment.md).
+Next: [14a-grafana-cloud-deployment.md](14a-grafana-cloud-deployment.md).

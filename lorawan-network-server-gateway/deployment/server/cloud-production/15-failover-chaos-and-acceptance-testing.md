@@ -1,4 +1,6 @@
-# 14. POC Failover and Acceptance Tests
+# 15. POC Failover and Acceptance Tests
+
+> **Status: STANDBY / DRAFT.** Do not run full-stack failure tests until every dependency named by a test is deployed and individually accepted. Refine each failure procedure from the live architecture immediately before testing.
 
 This file proves the **small HA model**, not production capacity.
 
@@ -42,7 +44,7 @@ Use this sequence for **every** failure scenario:
 
 **Do not continue to the next test from a degraded state.** A second failure while a quorum group is still at `2/3` changes the experiment into a two-failure scenario.
 
-## 14.1 Baseline before every failure
+## 15.1 Baseline before every failure
 
 Capture:
 
@@ -76,8 +78,13 @@ command -v vmstat >/dev/null && vmstat 1 5 || true
 docker stats --no-stream
 journalctl -k --since today | grep -Ei 'oom|out of memory|killed process' || true
 
-# etcd administration host
-etcdctl --endpoints=<ETCD_ENDPOINTS> --cacert=<CA> --cert=<CERT> --key=<KEY> endpoint health --cluster
+# etcd administration host - current validated transport baseline
+ETCDCTL_API=3 etcdctl \
+  --endpoints=http://10.104.0.2:2379,http://10.104.0.4:2379,http://10.104.0.8:2379 \
+  endpoint health
+
+# If etcd transport TLS is deliberately deployed and validated before these tests,
+# update this command to the matching tested https endpoints and CA/client credentials.
 
 # PostgreSQL administration host
 patronictl -c <PATRONI_CONFIG> list <PG_SCOPE> --extended
@@ -88,7 +95,7 @@ psql '<PGBOUNCER_ADMIN_DSN>' -c 'SHOW POOLS;'
 
 Also record Valkey/Sentinel, Mosquitto, OpenBao, and Fabric-outbox states using their component manuals. Do not print secrets into the evidence bundle.
 
-## 14.2 Lose ha-01
+## 15.2 Lose ha-01
 
 Fault injection procedure:
 
@@ -120,15 +127,15 @@ Record recovery time and memory on `ha-02`/`ha-03`.
 
 Restore `ha-01` and wait for full replication/quorum before continuing.
 
-## 14.3 Lose ha-02
+## 15.3 Lose ha-02
 
-Use the same host-loss procedure as 14.2, but first deliberately assign the Reserved IPv4 to **ha-02**, prove `ha-01` is a healthy ingress candidate, then power off **ha-02 only**. Record its current roles before failure because the PostgreSQL/Valkey primary may have moved during earlier tests.
+Use the same host-loss procedure as 15.2, but first deliberately assign the Reserved IPv4 to **ha-02**, prove `ha-01` is a healthy ingress candidate, then power off **ha-02 only**. Record its current roles before failure because the PostgreSQL/Valkey primary may have moved during earlier tests.
 
 Expected: the Reserved IPv4 automatically reassigns to `ha-01`, DNS remains unchanged, and quorum groups remain at 2/3.
 
 Restore `ha-02`, wait for full membership/replication, and send a post-restore uplink before continuing.
 
-## 14.4 Lose ha-03
+## 15.4 Lose ha-03
 
 Before fault injection, prove one telemetry row is committed and identify any existing eligible outbox row. Then power off **ha-03 only**.
 
@@ -153,7 +160,7 @@ This test specifically proves that telemetry/outbox **storage** is no longer a s
 
 Restore `ha-03`, wait for PostgreSQL/etcd/Valkey/OpenBao membership to return to 3/3, then restart/verify Node-RED and Grafana. Send a new uplink and prove telemetry ingestion resumes before the next test.
 
-## 14.5 Planned PostgreSQL switchover
+## 15.5 Planned PostgreSQL switchover
 
 Use Patroni to move the primary deliberately.
 
@@ -170,7 +177,7 @@ deployed Fabric adapters keep same DB endpoint; otherwise the outbox itself rema
 
 Verify both databases after the switchover. In `lorawan_telemetry`, also verify the TimescaleDB extension version and query `timescaledb_information.hypertables`; `telemetry.uplinks` and `telemetry.measurements` must still be present as hypertables.
 
-## 14.6 Unplanned PostgreSQL primary loss
+## 15.6 Unplanned PostgreSQL primary loss
 
 Stop only the current PostgreSQL/Patroni primary process or its host as planned.
 
@@ -185,13 +192,13 @@ Timescale-enabled lorawan_telemetry is writable again
 Timescale hypertables are queryable on the promoted primary
 ```
 
-## 14.7 Valkey primary loss
+## 15.7 Valkey primary loss
 
 Stop the current Valkey primary.
 
 Pass when Sentinel promotes a replica and ChirpStack recovers without endpoint edits.
 
-## 14.8 Preferred Mosquitto loss
+## 15.8 Preferred Mosquitto loss
 
 Stop **Mosquitto-1 only**, not HAProxy and not the whole `ha-01` host. This isolates broker-service failover from host failover.
 
@@ -207,13 +214,13 @@ new real uplink reaches ChirpStack
 
 Restore Mosquitto-1, prove HAProxy returns to the intended preferred/backup ordering, and verify the gateway local queue is back at its normal drained state.
 
-## 14.9 One ChirpStack process loss
+## 15.9 One ChirpStack process loss
 
 Stop ChirpStack-1 only.
 
 Pass when ChirpStack-2 processes a fresh real uplink and the public UI/API path still works through the unchanged Reserved IPv4. A single ChirpStack process loss should normally be handled by HAProxy backend routing without moving the Reserved IP.
 
-## 14.10 One OpenBao member loss
+## 15.10 One OpenBao member loss
 
 Stop one OpenBao member.
 
@@ -227,9 +234,9 @@ adapter does not need a local fallback key
 
 Restore 3/3.
 
-## 14.11 One Fabric adapter loss
+## 15.11 One Fabric adapter loss
 
-First check the adapter implementation readiness gate in [19-openbao-and-fabric-adapter.md](19-openbao-and-fabric-adapter.md).
+First check the adapter implementation readiness gate in [20-openbao-and-fabric-adapter.md](20-openbao-and-fabric-adapter.md).
 
 If the reviewed adapter implementation/image is absent, mark this test **BLOCKED** and do not substitute Node-RED or an invented container.
 
@@ -243,7 +250,7 @@ If it is deployed:
 
 Do not accept simultaneous ownership of one live lease.
 
-## 14.12 External Fabric outage
+## 15.12 External Fabric outage
 
 If the adapter implementation is absent, the full reconcile/drain part of this test is **BLOCKED**. You may still prove that Node-RED can commit telemetry + an outbox row without a live Fabric path.
 
@@ -266,7 +273,7 @@ Restore Fabric connectivity.
 
 Pass when the adapter reconciles uncertain submissions and the outbox drains without conflicting duplicate state.
 
-## 14.13 4G outage
+## 15.13 4G outage
 
 Disconnect the test gateway's LTE backhaul without changing RF settings, Gateway EUI, MQTT configuration, or local Mosquitto data. Do not stop the gateway-local broker; the purpose is to test its persistent queue.
 
@@ -282,7 +289,7 @@ after LTE returns, queue drains and fresh uplinks resume
 
 This is a gateway-buffer test, not the same experiment as the local-VM dissertation WAN interruption.
 
-## 14.14 2-GiB resource test
+## 15.14 2-GiB resource test
 
 During each failure run:
 
@@ -298,7 +305,7 @@ The 2-GiB shared-CPU profile fails if an essential surviving service is OOM-kill
 
 If that happens, resize and repeat the same test. The resize result is part of the POC finding.
 
-## 14.15 Acceptance matrix
+## 15.15 Acceptance matrix
 
 | Test | Required POC result |
 |---|---|
@@ -316,7 +323,7 @@ If that happens, resize and repeat the same test. The resize result is part of t
 | LTE outage | local gateway queue drains after recovery |
 | 2-GiB resource floor | no essential OOM during accepted tests |
 
-## 14.16 What passing means
+## 15.16 What passing means
 
 Passing means:
 
@@ -326,4 +333,4 @@ A `BLOCKED` Fabric adapter test is useful partial infrastructure evidence, but i
 
 It does not mean the same 2-GiB machines should be used for the final deployment.
 
-Next: [15-operations-upgrades-and-scaling.md](15-operations-upgrades-and-scaling.md).
+Next: [16-operations-upgrades-and-scaling.md](16-operations-upgrades-and-scaling.md).

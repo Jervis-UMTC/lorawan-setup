@@ -1,8 +1,10 @@
-# 17. Commissioning and Incident Runbook
+# 18. Commissioning and Incident Runbook
+
+> **Status: STANDBY / DRAFT.** Final commissioning and handoff cannot be accepted until the remaining technology phases are deployed and tested. Update this runbook incrementally from the execution log.
 
 Use this runbook after the detailed gateway and cloud guides have been completed. It verifies the live system in dependency order and provides focused procedures for certificate rotation, Gateway OS upgrades, and buffer incidents.
 
-## 17.1 Keep the values needed to operate and recover the system
+## 18.1 Keep the values needed to operate and recover the system
 
 Store these non-secret values with the encrypted configuration and backup references:
 
@@ -26,7 +28,7 @@ Store these non-secret values with the encrypted configuration and backup refere
 
 Do not store passwords, private keys, AppKeys, NwkKeys, or live tokens in this table.
 
-## 17.2 Verify the public and private network boundary
+## 18.2 Verify the public and private network boundary
 
 From an authorized administration host, inspect DNS, TLS, and the externally reachable ports. On each server and gateway, inspect local listeners and firewall rules.
 
@@ -53,7 +55,7 @@ Healthy evidence:
 
 An open TCP port without a certificate/ACL test proves only socket reachability. Any unexpected public listener must be removed or restricted before device commissioning.
 
-## 17.3 Verify the gateway from hardware to cloud
+## 18.3 Verify the gateway from hardware to cloud
 
 1. Confirm the installed Raspberry Pi, RAK5146 frequency variant, Pi HAT, antenna band/gain, cable loss, and legal region match the retained configuration.
 2. In Gateway OS, verify Concentratord initializes the radio and reports the expected stable Gateway EUI.
@@ -71,7 +73,7 @@ An open TCP port without a certificate/ACL test proves only socket reachability.
 
 A healthy gateway keeps receiving packets and growing its local queue during a remote outage, then drains after recovery without duplicate application rows. A connected bridge with no ChirpStack last-seen update points to topic prefix, ACL, Protobuf, or region configuration rather than RF hardware.
 
-## 17.4 Verify remote MQTT and ChirpStack
+## 18.4 Verify remote MQTT and ChirpStack
 
 1. Verify the broker certificate SAN contains `mqtt.<DOMAIN>` and the public connection requires a trusted client certificate.
 2. Confirm each gateway has a unique certificate and exact EUI ACL; ChirpStack and integrations use separate identities.
@@ -88,7 +90,7 @@ A healthy gateway keeps receiving packets and growing its local queue during a r
 
 A broker login is not enough. Wrong region prefixes, read/write ACL direction, client key format, or application integration topics can leave the connection established while no usable device event is processed.
 
-## 17.5 Rotate a gateway MQTT certificate
+## 18.5 Rotate a gateway MQTT certificate
 
 1. Confirm the Gateway EUI, active certificate fingerprint/expiry, queue state, and encrypted rollback bundle.
 2. Drain the local queue when the remote path is healthy.
@@ -102,7 +104,7 @@ A broker login is not enough. Wrong region prefixes, read/write ACL direction, c
 
 Do not change MQTT Forwarder's loopback endpoint, Gateway EUI, region, or RF plan during certificate rotation. If the new identity fails, restore the previous certificate bundle and broker ACL before changing any other layer.
 
-## 17.6 Upgrade Gateway OS
+## 18.6 Upgrade Gateway OS
 
 1. Read the target release notes and verify Raspberry Pi 4B, RAK5146, Concentratord, MQTT Forwarder, required Mosquitto packages, and the reviewed journal implementation/source interface are supported.
 2. Inspect the queue and drain it when possible; upload/verify closed journal segments and create/record a final healthy checkpoint when connectivity permits.
@@ -115,7 +117,7 @@ Do not change MQTT Forwarder's loopback endpoint, Gateway EUI, region, or RF pla
 
 A service that starts with a changed UCI schema, volatile queue path, or missing package is not a successful upgrade. Restore the previous tested image on spare media rather than improvising on the only production card.
 
-## 17.7 Respond to a growing or full gateway buffer
+## 18.7 Respond to a growing or full gateway buffer
 
 1. Confirm Concentratord and MQTT Forwarder are healthy and MQTT Forwarder still uses loopback QoS 1.
 2. Inspect local Mosquitto logs, `mosquitto.db` size, configured message/byte limits, filesystem free space, and the free-space reserve.
@@ -128,7 +130,7 @@ A service that starts with a changed UCI schema, volatile queue path, or missing
 
 Stop new non-essential changes when the queue is near its finite limit or the filesystem reserve is threatened. Deleting the persistence database destroys recoverable uplinks and transport evidence.
 
-## 17.7A Respond to a growing or stale gateway evidence journal
+## 18.7A Respond to a growing or stale gateway evidence journal
 
 1. Confirm Concentratord and the journal service are healthy and the sequence is still advancing for known real uplinks.
 2. Inspect journal budget utilization, unuploaded closed-segment count/bytes, open segment, last valid record/segment hash, filesystem reserve, and latest accepted server checkpoint age.
@@ -140,13 +142,13 @@ Stop new non-essential changes when the queue is near its finite limit or the fi
 
 A healthy MQTT bridge does not clear a stale-checkpoint alert. Delivery and evidence are different paths.
 
-## 17.8 Stop conditions
+## 18.8 Stop conditions
 
 Do not continue with a destructive or transmitting step when the target gateway/EUI is uncertain, the legal region or antenna path is unconfirmed, the only recoverable SD card or backup could be overwritten, the queue path is volatile, storage is near exhaustion, queue limits are unlimited, a CA private key may be exposed, management access may be lost, stale downlink replay is observed, or the required database/gateway rollback has not been tested.
 
 Resolve the lowest failing layer first and repeat the affected acceptance test before resuming.
 
-## 17.9 Handoff demonstration
+## 18.9 Handoff demonstration
 
 The person receiving the system should be able to use the repository without relying on undocumented memory. Have them demonstrate:
 

@@ -1,4 +1,6 @@
-# 18. Absolute-Minimum 3-Server HA POC Runbook
+# 19. Absolute-Minimum 3-Server HA POC Runbook
+
+> **Status: STANDBY / SEQUENCE REFERENCE.** This file describes the intended full build shape. The current evidence covers the three active hosts, host hardening, Docker runtime, host-observed `10.104.0.0/20` east-west networking, and the core etcd bootstrap/quorum. It does **not** prove the DigitalOcean Cloud Firewall, Reserved IPv4, public DNS, or later application technologies are commissioned. Do not treat later command blocks as final; refine each linked technology manual as the build reaches it.
 
 Use this runbook to build a **small scale model of the future deployment**.
 
@@ -19,7 +21,7 @@ When a detailed component manual says otherwise, follow the component manual's n
 
 Before starting, fill the non-secret resource/software worksheet in [02-capacity-cost-and-ip-plan.md](02-capacity-cost-and-ip-plan.md) and complete the certificate/SAN gate in [04-host-hardening-dns-pki-and-secrets.md](04-host-hardening-dns-pki-and-secrets.md).
 
-## 18.1 Create only these cloud resources
+## 19.1 Create only these cloud resources
 
 ```text
 OS on ha-01/02/03: Ubuntu Server 24.04 LTS x64
@@ -50,7 +52,7 @@ Prometheus stack unless a test needs it
 
 The 2-GiB size is an experimental starting floor. If a node OOMs during the failover rehearsal, resize and record the real minimum.
 
-## 18.2 Put these services on the three hosts
+## 19.2 Put these services on the three hosts
 
 ```text
 ha-01
@@ -86,7 +88,7 @@ ha-03
   Grafana
 ```
 
-## 18.3 What the POC is trying to prove
+## 19.3 What the POC is trying to prove
 
 Think of the test as asking:
 
@@ -110,7 +112,7 @@ Fabric worker failover is required for the final full-feature PASS; until the re
 
 We do not care yet about production throughput, months of telemetry retention, or large user counts.
 
-## 18.4 Use one iteration loop
+## 19.4 Use one iteration loop
 
 For every layer:
 
@@ -125,21 +127,28 @@ DEPLOY
 
 Never inject the next failure while the previous layer is still degraded.
 
-## 18.5 Foundation
+## 19.5 Foundation
 
-Create:
+Current host-side evidence:
 
 ```text
-one VPC
-ha-01
-ha-02
-ha-03
-cloud firewall
-one Reserved IPv4 initially assigned to ha-01
-ha-01/ha-02 Droplet IDs + anchor IPv4 addresses
+ha-01 / ulc-01 exists
+ha-02 / ulc-02 exists
+replacement ha-03 / ulc-03 exists
+10.104.0.2 / .4 / .8 host-side east-west reachability is proven
 ```
 
-Record the actual private IPs.
+Target provider-side resources still require provider-owner evidence before they can be marked complete:
+
+```text
+DigitalOcean VPC object/CIDR confirmation
+DigitalOcean Cloud Firewall state/rules
+one Reserved IPv4 and its owner
+ha-01/ha-02 anchor IPv4 addresses and Droplet IDs where needed for ingress
+public DNS
+```
+
+The current operator is not authorized to change the DigitalOcean Cloud Firewall. Do not turn this reference runbook into an instruction to do so.
 
 On every host:
 
@@ -157,29 +166,27 @@ timedatectl
 systemctl --failed
 ```
 
-Before any step that runs `docker compose`, complete the **Ubuntu Server 24.04 LTS Docker Engine + rotating log-driver procedure** in [04-host-hardening-dns-pki-and-secrets.md](04-host-hardening-dns-pki-and-secrets.md) on all three Droplets. Verify the OS release gate, numeric DigitalOcean image metadata is recorded, time is synchronized, `docker version`, `docker compose version`, the installed package versions, and that the default logging driver is `local`.
+Docker Engine itself is already evidenced on all three hosts as version `29.7.2` with `overlayfs`, the systemd cgroup driver, and cgroup v2; `docker compose` functionality was also proven during etcd configuration. However, the captured execution log does **not** preserve the exact Compose plugin version, Docker package-source output, or the current default logging driver. Before the next container phase, run the verification in [04-host-hardening-dns-pki-and-secrets.md](04-host-hardening-dns-pki-and-secrets.md) and record those missing values instead of assuming they were already checked.
 
-A small host swap file is optional as an emergency cushion for non-OpenBao processes. Do not call sustained swapping a successful size, and do not allow OpenBao to page secrets into ordinary unencrypted swap; follow the OpenBao-specific swap rule in Section 4.
+A small host swap file is optional as an emergency cushion for non-OpenBao processes. Do not call sustained swapping a successful size, and do not allow OpenBao to page secrets into ordinary unencrypted swap; follow the explicit **OpenBao and swap** rule in [04-host-hardening-dns-pki-and-secrets.md](04-host-hardening-dns-pki-and-secrets.md).
 
-## 18.6 etcd first
+## 19.6 etcd first
 
-Follow [06-etcd-cluster.md](06-etcd-cluster.md).
+Follow [05-etcd-cluster.md](05-etcd-cluster.md).
 
-Required:
+Current captured evidence proves:
 
 ```text
 3 members
 1 leader
-3/3 healthy
+3/3 endpoint status healthy
 ```
 
-Stop one member.
+A deliberate one-member-loss rehearsal is **not recorded as completed** in the current execution log. When failover testing becomes active, stop one member under the controlled procedure in [15-failover-chaos-and-acceptance-testing.md](15-failover-chaos-and-acceptance-testing.md), prove the other two retain quorum, then restore 3/3. Do not mark that resilience test PASS merely from the initial healthy-cluster result.
 
-Pass when the other two still have quorum. Restore 3/3.
+## 19.7 PostgreSQL/Patroni
 
-## 18.7 PostgreSQL/Patroni
-
-Follow [07-spilo-patroni-postgresql-cluster.md](07-spilo-patroni-postgresql-cluster.md).
+Follow [06-spilo-patroni-postgresql-cluster.md](06-spilo-patroni-postgresql-cluster.md).
 
 Use small POC memory settings:
 
@@ -210,9 +217,9 @@ Create separate roles for ChirpStack, telemetry writer/reader, and Fabric adapte
 
 Take simple logical dumps before destructive tests. Do not add object storage/WAL-G merely to prove HA.
 
-## 18.8 HAProxy + PgBouncer on all three
+## 19.8 HAProxy + PgBouncer on all three
 
-Follow [08-haproxy-and-pgbouncer.md](08-haproxy-and-pgbouncer.md).
+Follow [07-haproxy-and-pgbouncer.md](07-haproxy-and-pgbouncer.md).
 
 Database path everywhere:
 
@@ -235,7 +242,7 @@ Prove a planned Patroni switchover and verify all clients keep the same endpoint
 
 `ha-01` and `ha-02` also carry the public MQTT/ChirpStack and private OpenBao routing roles. `ha-03` carries only the private DB route plus private MQTT `:18883` so Node-RED can follow Mosquitto failover without depending on one app host.
 
-## 18.9 Valkey + Sentinel
+## 19.9 Valkey + Sentinel
 
 Deploy:
 
@@ -256,7 +263,7 @@ quorum 2
 
 Stop the primary and prove Sentinel promotes a replica and HAProxy follows it. Restore full redundancy.
 
-## 18.10 MQTT
+## 19.10 MQTT
 
 Deploy:
 
@@ -271,7 +278,7 @@ Stop Mosquitto-1 and prove the gateway reconnects to Mosquitto-2 and drains its 
 
 Do not claim broker-state replication.
 
-## 18.11 ChirpStack
+## 19.11 ChirpStack
 
 Deploy:
 
@@ -293,9 +300,9 @@ secrets
 
 Stop ChirpStack-1 and prove ChirpStack-2 still processes a real uplink.
 
-## 18.12 Self-managed public ingress
+## 19.12 Self-managed public ingress
 
-Follow [03a-self-managed-public-ingress.md](03a-self-managed-public-ingress.md).
+Follow [10-self-managed-public-ingress.md](10-self-managed-public-ingress.md).
 
 Required shape:
 
@@ -323,7 +330,7 @@ Do these in order:
 
 Keep MQTT TLS pass-through so Mosquitto validates the gateway certificate.
 
-## 18.13 Physical gateway
+## 19.13 Physical gateway
 
 Required path:
 
@@ -347,7 +354,7 @@ real uplink
 one safe downlink
 ```
 
-## 18.14 Timescale telemetry inside the Patroni cluster
+## 19.14 Timescale telemetry inside the Patroni cluster
 
 There is no **separate TimescaleDB server**. TimescaleDB runs inside the existing PostgreSQL/Patroni cluster.
 
@@ -386,7 +393,7 @@ Node-RED transaction
 
 Do not let Node-RED call Fabric directly.
 
-## 18.15 Node-RED then Grafana
+## 19.15 Node-RED then Grafana
 
 Run both only on `ha-03`.
 
@@ -399,7 +406,7 @@ Node-RED -> mqtt-ha.internal.<DOMAIN>:18883
          -> Mosquitto-1 preferred / Mosquitto-2 backup
 
 DATABASE
-Node-RED -> pgbouncer.internal.<DOMAIN>:6432
+Node-RED -> pgbouncer.internal.lorawan.com:6432
          -> local PgBouncer
          -> local HAProxy :15432
          -> current Patroni primary
@@ -414,7 +421,7 @@ Node-RED -> pgbouncer.internal.<DOMAIN>:6432
 6. First deploy only `mqtt in -> json -> debug` and prove one real **EMU-01 Agriculture Kit payload-v2** ChirpStack application uplink arrives with `payload_version=2`, `test_sequence`, `sensor_validity_bitmap`, and the expected decoded sensor fields.
 7. Then enable the parameterized PostgreSQL writes and prove that EMU-01 uplink produces one canonical `telemetry.uplinks` row plus the reviewed `telemetry.measurements` rows; invalid sensor bits must not be stored as measured stale values.
 8. Deliberately replay the same event and prove the uniqueness rules prevent duplicates.
-9. Only after Node-RED storage is correct, deploy Grafana using [13a-grafana-cloud-deployment.md](13a-grafana-cloud-deployment.md).
+9. Only after Node-RED storage is correct, deploy Grafana using [14a-grafana-cloud-deployment.md](14a-grafana-cloud-deployment.md).
 
 Visible data path:
 
@@ -426,9 +433,9 @@ ChirpStack -> Node-RED -> TimescaleDB hypertables -> Grafana
 
 If `ha-03` disappears, Node-RED/Grafana may pause. That is acceptable for this control-plane POC because PostgreSQL/outbox data still exist on the other Patroni members.
 
-## 18.16 OpenBao
+## 19.16 OpenBao
 
-Follow [19-openbao-and-fabric-adapter.md](19-openbao-and-fabric-adapter.md).
+Follow [20-openbao-and-fabric-adapter.md](20-openbao-and-fabric-adapter.md).
 
 Deploy:
 
@@ -450,9 +457,9 @@ restore 3/3
 
 Keep the signing key non-exportable.
 
-## 18.17 Fabric adapters
+## 19.17 Fabric adapters
 
-Collect the real external Fabric handoff first, then complete the **adapter implementation readiness gate** in [19-openbao-and-fabric-adapter.md](19-openbao-and-fabric-adapter.md).
+Collect the real external Fabric handoff first, then complete the **adapter implementation readiness gate** in [20-openbao-and-fabric-adapter.md](20-openbao-and-fabric-adapter.md).
 
 The repository's detailed adapter reference currently states that a completed reviewed adapter image is not yet present. Therefore:
 
@@ -485,7 +492,7 @@ Block only the external Fabric endpoint and prove telemetry commits continue whi
 
 If the adapter is still missing, other HA tests may continue as partial infrastructure evidence, but every result sheet and the overall commissioning result must mark the **full-feature POC BLOCKED**, not passed. The adapter is not removed from the architecture or from the RAM budget.
 
-## 18.18 Three host-failure tests
+## 19.18 Three host-failure tests
 
 Run one at a time.
 
@@ -527,7 +534,7 @@ Grafana pauses
 
 This is better than the previous standalone-Timescale design because losing `ha-03` no longer removes the telemetry/outbox database itself.
 
-## 18.19 Resource acceptance
+## 19.19 Resource acceptance
 
 During every host test capture:
 
@@ -555,7 +562,7 @@ recovery time
 
 2 GiB is accepted only if the host does not OOM, does not remain swap-bound, and the expected failover completes under the few-sensor workload **with every required deployed feature included**. For final full-feature acceptance this includes the real Fabric adapter workers.
 
-## 18.20 POC cost
+## 19.20 POC cost
 
 Planning floor checked on 2026-08-20:
 
@@ -571,7 +578,7 @@ Keep the Reserved IPv4 assigned to one app Droplet. Leaving an IPv4 reserved but
 
 If 2 GiB fails, resize only after observing the failure. The POC exists to discover this boundary.
 
-## 18.21 Final pass
+## 19.21 Final pass
 
 The architecture POC passes when:
 

@@ -1,12 +1,14 @@
-# 11. Gateway and Device Migration
+# 12. Gateway and Device Migration
+
+> **Status: STANDBY / DRAFT.** Do not migrate a gateway or device until the preceding cloud services and public gateway path are validated. Rebuild this cutover procedure from the actual source/target versions and backups when migration becomes active.
 
 This guide covers migration from an older all-in-one or server-hosted ChirpStack deployment to the current cloud architecture. The `source` host is the machine that currently runs ChirpStack and its Compose project; it is **not** the Raspberry Pi Gateway OS appliance described elsewhere in this repository. Set `<SOURCE_COMPOSE_DIR>` to the directory containing that source host's active Compose file. Confirm it with `docker compose ls`, the running container labels, or the service administrator before using the commands below.
 
-## 11.1 Goal
+## 12.1 Goal
 
 Move the existing ChirpStack state from the **source application/server host** to the cloud without running two authoritative network servers for the same gateway and devices. The Raspberry Pi remains the physical gateway. Preserve tenants, applications, profiles, gateways, devices, root-key state, sessions, frame counters, and integration settings when technically compatible.
 
-## 11.2 Migration strategy decision
+## 12.2 Migration strategy decision
 
 Choose one:
 
@@ -20,7 +22,7 @@ Use when the source database is incompatible, small enough to rebuild, or securi
 
 Do not partially copy tables by hand. Use supported database migration or explicit reprovisioning.
 
-## 11.3 Source inventory
+## 12.3 Source inventory
 
 On the legacy source application host, capture the running services without exposing secrets:
 
@@ -37,21 +39,21 @@ Export or capture the source counts and identifiers for users, tenants, applicat
 
 Keep only key references and protected storage locations, not AppKey/NwkKey values or live API tokens.
 
-## 11.4 Back up and identify the source state
+## 12.4 Back up and identify the source state
 
-Create a protected custom-format ChirpStack PostgreSQL dump and configuration archive using the logical-backup controls in [12-backup-restore-and-disaster-recovery.md](12-backup-restore-and-disaster-recovery.md). Back up the physical gateway separately with [Gateway Backup and Recovery](../../gateway/operations/02-backup-and-recovery.md). Validate the dump catalog, calculate its checksum, and copy both backup sets off their source systems.
+Create a protected custom-format ChirpStack PostgreSQL dump and configuration archive using the logical-backup controls in [13-backup-restore-and-disaster-recovery.md](13-backup-restore-and-disaster-recovery.md). Back up the physical gateway separately with [Gateway Backup and Recovery](../../gateway/operations/02-backup-and-recovery.md). Validate the dump catalog, calculate its checksum, and copy both backup sets off their source systems.
 
 Keep the source ChirpStack image/version, PostgreSQL major/version, schema or migration state, active region-file hashes, Gateway EUI, Concentratord channel plan, effective MQTT region prefix, and last successful uplink time. When gateway integrity is enabled, also retain the journal implementation/format versions, latest local sequence/segment hash, latest accepted server checkpoint/receipt, evidence endpoint identity, and any unuploaded closed-segment inventory. These values let the target be compared with the authoritative source without copying live root keys into documentation.
 
 **Stop here. Do not cut over** if the source backup is unreadable, exists only on the source host, or the target restore has not succeeded in staging.
 
-## 11.5 Build and validate the cloud before migration
+## 12.5 Build and validate the cloud before migration
 
 The cloud environment must pass:
 
 - etcd quorum and snapshot test;
 - Patroni cluster, replication, and switchover test;
-- validated logical dumps of `chirpstack` and `lorawan_telemetry` plus an isolated restore rehearsal per [12-backup-restore-and-disaster-recovery.md](12-backup-restore-and-disaster-recovery.md); WAL/base-backup/PITR evidence is required only if that later production backup profile has actually been enabled;
+- validated logical dumps of `chirpstack` and `lorawan_telemetry` plus an isolated restore rehearsal per [13-backup-restore-and-disaster-recovery.md](13-backup-restore-and-disaster-recovery.md); WAL/base-backup/PITR evidence is required only if that later production backup profile has actually been enabled;
 - PgBouncer pooling and HAProxy primary routing;
 - Valkey replication + Sentinel automatic failover test;
 - MQTT TLS and per-gateway ACL test using a staging identity;
@@ -64,7 +66,7 @@ Use a reserved staging gateway/device or synthetic application event. Do not con
 
 **Stop here. Do not migrate production state** while any dependency above is being tested for the first time. First-time HA debugging and a live migration should not happen in the same window.
 
-## 11.6 Version compatibility
+## 12.6 Version compatibility
 
 The safest full migration sequence uses the same ChirpStack application version in source and target for the initial restore. Upgrade only after the cloud copy is stable.
 
@@ -81,7 +83,7 @@ Verify:
 
 Do not restore a newer database into an older application image.
 
-## 11.7 Maintenance window preparation
+## 12.7 Maintenance window preparation
 
 Define:
 
@@ -99,7 +101,7 @@ Rollback decision deadline:
 
 Lower public DNS TTL ahead of the window only when DNS records will change. Confirm local access to the gateway and provider console access to cloud nodes.
 
-## 11.8 Final cutover sequence
+## 12.8 Final cutover sequence
 
 ### Step 1: Freeze source changes
 
@@ -139,7 +141,7 @@ Review migration logs. Verify users, tenants, applications, profiles, gateways, 
 
 ### Step 6: Reconfigure Gateway OS MQTT
 
-Follow [05-raspberry-pi-4g-backhaul.md](05-raspberry-pi-4g-backhaul.md).
+Follow [11-raspberry-pi-4g-backhaul.md](11-raspberry-pi-4g-backhaul.md).
 
 Keep Gateway OS Base, the Concentratord RAK5146 profile, Gateway ID, approved channel plan, and MQTT Forwarder loopback endpoint unchanged.
 
@@ -183,13 +185,13 @@ Observe:
 
 ### Step 8: Start the second cloud ChirpStack node
 
-Verify it independently first. Then prove both `ha-01` and `ha-02` HAProxy anchor listeners are healthy and complete the manual Reserved-IP reassignment test from [03a-self-managed-public-ingress.md](03a-self-managed-public-ingress.md). Do not enable automatic public failover until both candidates pass.
+Verify it independently first. Then prove both `ha-01` and `ha-02` HAProxy anchor listeners are healthy and complete the manual Reserved-IP reassignment test from [10-self-managed-public-ingress.md](10-self-managed-public-ingress.md). Do not enable automatic public failover until both candidates pass.
 
 ### Step 9: Validate integrations and downlinks
 
 Confirm webhook/MQTT/database integrations and one safe Class A downlink. A queued downlink is not proof of device receipt.
 
-## 11.9 Session and device behavior
+## 12.9 Session and device behavior
 
 A full database migration can preserve sessions and frame counters when versions and data are compatible. Still verify every critical device class.
 
@@ -203,7 +205,7 @@ A device may need OTAA rejoin when:
 
 Do not reset frame counters or regenerate root keys as a troubleshooting shortcut. Confirm the vendor-supported rejoin method and expected battery or access impact before the window.
 
-## 11.10 Prevent dual processing
+## 12.10 Prevent dual processing
 
 At no point should the same production gateway publish to two authoritative broker/network-server paths unless a controlled duplicate-handling experiment is explicitly approved.
 
@@ -221,7 +223,7 @@ sudo ss -lntup
 
 Keep source application containers stopped, not deleted, during the rollback window.
 
-## 11.11 Rollback triggers
+## 12.11 Rollback triggers
 
 Examples:
 
@@ -233,7 +235,7 @@ Examples:
 - cloud application/database failover is unstable;
 - integrations lose or duplicate data beyond the accepted limit.
 
-## 11.12 Rollback procedure
+## 12.12 Rollback procedure
 
 1. stop both cloud ChirpStack nodes and prevent cloud MQTT command publication;
 2. when gateway integrity is enabled, stop accepting new target-side gateway evidence before switching the uploader back, preserve every target checkpoint/segment, and record the last accepted target anchor;
@@ -247,7 +249,7 @@ Examples:
 
 Do not run both sides while deciding. Select one authoritative path.
 
-## 11.13 Source decommissioning
+## 12.13 Source decommissioning
 
 After the agreed observation period and a successful cloud backup/restore drill:
 
@@ -259,7 +261,7 @@ After the agreed observation period and a successful cloud backup/restore drill:
 - update asset inventory and diagrams;
 - destroy old backups only after the required retention period, legal holds, rollback window, and tested cloud recovery make them unnecessary.
 
-## 11.14 Final checks
+## 12.14 Final checks
 
 - Cloud and source versions were reconciled before restore.
 - Final source dump and configuration archives are validated and off-host.
@@ -269,4 +271,4 @@ After the agreed observation period and a successful cloud backup/restore drill:
 - When gateway integrity is enabled, the migration preserves an explicit checkpoint boundary/epoch and one fresh target-side lineage verifies before v2 evidence resumes.
 - Rollback was demonstrated in staging and remains possible during the observation window.
 
-Next: [12-backup-restore-and-disaster-recovery.md](12-backup-restore-and-disaster-recovery.md)
+Next: [13-backup-restore-and-disaster-recovery.md](13-backup-restore-and-disaster-recovery.md)

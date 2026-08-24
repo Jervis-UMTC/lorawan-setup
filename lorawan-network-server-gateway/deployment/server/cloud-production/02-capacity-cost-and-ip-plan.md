@@ -81,13 +81,15 @@ ulc-01
   Root filesystem: ext4, approximately 48 GiB usable, approximately 46 GiB free
   Public IPv4: 143.198.205.54/20 on eth0
   Additional eth0 address: 10.15.0.5/16
-  Candidate cluster/VPC IPv4: 10.104.0.2/20 on eth1
+  Operationally validated HA/east-west IPv4: 10.104.0.2/20 on eth1
   Default route: eth0 via 143.198.192.1
 
 ulc-02
   Provider: DigitalOcean
   OS: Ubuntu 24.04.4 LTS (Noble)
   Kernel before initial hardening patch: 6.8.0-124-generic
+  Kernel after initial patch/reboot: 6.8.0-138-generic
+  Patch/reboot status: PASS on 2026-08-20
   Architecture: x86-64
   vCPU: 1
   RAM: 1.9 GiB
@@ -95,7 +97,7 @@ ulc-02
   Root filesystem: ext4, approximately 48 GiB usable, approximately 46 GiB free
   Public IPv4: 165.22.253.127/20 on eth0
   Additional eth0 address: 10.15.0.7/16
-  Candidate cluster/VPC IPv4: 10.104.0.4/20 on eth1
+  Operationally validated HA/east-west IPv4: 10.104.0.4/20 on eth1
   Default route: eth0 via 165.22.240.1
 
 ulc-03 (replacement Droplet after retirement of the original host)
@@ -111,7 +113,7 @@ ulc-03 (replacement Droplet after retirement of the original host)
   Root filesystem: ext4, approximately 48 GiB usable, approximately 46 GiB free
   Public IPv4: 159.223.50.57/20 on eth0
   Additional eth0 address: 10.15.0.6/16
-  Candidate cluster/VPC IPv4: 10.104.0.8/20 on eth1
+  Operationally validated HA/east-west IPv4: 10.104.0.8/20 on eth1
   Default route: eth0 via 159.223.48.1
 
 All three:
@@ -121,7 +123,7 @@ All three:
   Failed systemd units: 0
 ```
 
-The active-host addresses `10.104.0.2/20`, `10.104.0.4/20`, and `10.104.0.8/20` are treated as the **candidate VPC/east-west addresses** until the DigitalOcean VPC view confirms that `10.104.0.0/20` is the intended project VPC. The retired original `ulc-03` address `10.104.0.3/20` must not be reused in quorum/service configuration. Once the provider VPC is confirmed, use the active exact addresses for east-west configuration; do not replace them with the example `10.60.1.x` addresses elsewhere in the manuals.
+The active-host addresses `10.104.0.2/20`, `10.104.0.4/20`, and `10.104.0.8/20` are the **operationally validated HA/east-west addresses**. Cross-node ICMP succeeded on `eth1`, and TCP `2380` was proven between hosts before the etcd bootstrap. The `10.15.0.x` secondary addresses on `eth0` failed cross-node neighbor resolution and are not used for HA service traffic. The operator still has no DigitalOcean control-plane access, so this statement records what was proven from the hosts and does not claim independent provider-console confirmation of the VPC object. The retired original `ulc-03` address `10.104.0.3/20` must not be reused.
 
 ### 2.2B Record the software baseline
 
@@ -132,14 +134,21 @@ Host OS image/release: Ubuntu Server 24.04 LTS x64
 DigitalOcean image slug: ubuntu-24-04-x64
 DigitalOcean image numeric ID used at creation:
 DigitalOcean image Created timestamp:
-Kernel release after initial patch/reboot:
-Docker/container runtime:
+Kernel release after initial patch/reboot: 6.8.0-138-generic
+Docker/container runtime: Docker Engine 29.7.2; overlayfs; systemd cgroup driver; cgroup v2
+Docker Compose plugin version: v5.5.0 on ulc-01/02/03 (captured 2026-08-21)
+Docker default logging driver: json-file on ulc-01/02/03 (captured 2026-08-21; bounded logging still needs an explicit decision before Spilo)
+Docker package/source details: NOT CAPTURED in the current execution evidence
 
-etcd version:
-Spilo source commit/image digest:
-PostgreSQL major/minor:
-Patroni version:
-TimescaleDB extension version/build:
+etcd version: 3.5.15 (`quay.io/coreos/etcd:v3.5.15`)
+Spilo candidate source commit: 95139b4de7a33aec1f788ad7bb863c92edbe2ee8 (trigger observed and exact detached checkout verified on ulc-03, 2026-08-21)
+Spilo upstream comparison image: ghcr.io/zalando/spilo-18:4.1-p2
+Spilo comparison OCI index digest: sha256:258a87d34699387f3b6b45d30874c21c6b838ed51c9371ae2a70151d57137990
+Spilo comparison linux/amd64 manifest digest: sha256:cfd11c4e237777b03d9867bf53ae33a77980e1826c07d7c053de034dce695392
+Spilo functional POC candidate digest: sha256:cfd11c4e237777b03d9867bf53ae33a77980e1826c07d7c053de034dce695392 (linux/amd64). Content inspection, exact-image etcd3 validation, PostgreSQL 18.3 startup, TimescaleDB 2.26.2 extension load, hypertable creation, and telemetry insert/read all passed. Retention and compression are confirmed unavailable under the Apache-only TimescaleDB build, which is acceptable only for the narrow POC because those destructive/optional features are intentionally disabled. Final deployment approval still waits on exact-image security/provenance review
+PostgreSQL major/minor: candidate PostgreSQL 18.3 from immutable upstream amd64 image; disposable init/start plus TimescaleDB hypertable insert/read test passed; final image approval still waits on the optional-feature/security decision
+Patroni version: immutable upstream image contains 4.1.0; later pinned source contains 4.1.3 and is separate evidence. The published image's own `patroni.dcs.etcd3` module and Spilo `ETCD3_*` parser were isolated and verified PASS.
+TimescaleDB extension version/build: immutable upstream amd64 image contains TimescaleDB OSS 2.26.2 for PostgreSQL 18; loader 2.26.2; control `default_version=2.26.2`; Toolkit absent. Isolated tests passed `CREATE EXTENSION`, hypertable creation, insert/read, catalog verification, and clean shutdown. `add_retention_policy()` is unsupported under the Apache license (`RETENTION_RC=1`). Compression enabling is also unsupported (`ENABLE_COMPRESSION_RC=1`), and `add_compression_policy()` is unsupported (`COMPRESSION_POLICY_RC=1`). Core hypertables are unaffected; wider retention/compression claims must not be attached to this digest.
 HAProxy version:
 PgBouncer version:
 Mosquitto image/version/digest:
@@ -156,7 +165,9 @@ Also record configuration hashes for files that must be identical or intentional
 
 **Why:** after a failover, version drift can look like an HA bug. Reproducing the exact tested scale model requires knowing both the topology and the software baseline.
 
-## 2.3 Service placement
+## 2.3 Target service placement
+
+This is the intended full placement, not the current runtime inventory. At the present checkpoint etcd is the only clustered application technology in this list with a live-validated deployment; later components remain standby.
 
 ```text
 ha-01

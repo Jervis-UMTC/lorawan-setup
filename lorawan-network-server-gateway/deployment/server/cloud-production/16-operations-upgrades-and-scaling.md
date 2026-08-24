@@ -1,12 +1,14 @@
-# 15. Operations, Upgrades, Rotation, Scaling, and Decommissioning
+# 16. Operations, Upgrades, Rotation, Scaling, and Decommissioning
 
-## 15.1 Operating rule
+> **Status: STANDBY / DRAFT.** These operating procedures depend on the final deployed versions and service layout. Keep them as design guidance and refine each section only after the corresponding technology has been validated.
+
+## 16.1 Operating rule
 
 Change one failure domain at a time. Preserve quorum, database redundancy, application capacity, gateway backhaul, and rollback evidence throughout the maintenance window.
 
 Do not combine operating-system upgrades, PostgreSQL role changes, certificate rotation, firewall changes, and ChirpStack migrations in one unbounded change.
 
-## 15.2 Routine checks
+## 16.2 Routine checks
 
 ### Daily or automated
 
@@ -43,7 +45,7 @@ Do not combine operating-system upgrades, PostgreSQL role changes, certificate r
 - reconcile cloud inventory, cost, tags, DNS, and ownership;
 - validate runbook contacts and provider console access.
 
-## 15.3 Prepare a bounded maintenance procedure
+## 16.3 Prepare a bounded maintenance procedure
 
 Before changing a production failure domain, write down only the information needed to execute and reverse the work:
 
@@ -60,7 +62,7 @@ Exact rollback image, configuration, or restore steps
 
 Run the procedure on staging or a restored copy when possible. A useful maintenance procedure lets another qualified engineer identify the target, stop at the same failure signal, and return to the last tested state; it does not need unrelated approval or operator fields.
 
-## 15.4 Certificate rotation
+## 16.4 Certificate rotation
 
 Use overlap where the protocol permits.
 
@@ -112,7 +114,7 @@ Maintain quorum. Rotate peer/server certificates one member at a time and Patron
 
 Update replicas before primary where possible, maintaining CA overlap and client verification. Validate PgBouncer-to-PostgreSQL `verify-full` after every node.
 
-## 15.5 Secret rotation
+## 16.5 Secret rotation
 
 Use dual-secret overlap only when the service supports it. Otherwise schedule a bounded restart/reconnect.
 
@@ -145,7 +147,7 @@ For a PostgreSQL application-role password rotation in this POC:
 
 Do not forget `ha-03`: PgBouncer runs on all three POC hosts.
 
-## 15.6 Operating-system patching for the three co-located POC hosts
+## 16.6 Operating-system patching for the three co-located POC hosts
 
 Every POC Droplet carries multiple quorum roles. Treat the **host** as the failure domain; do not follow a separate "app-node then DB-node" recipe that accidentally reboots the same machine twice.
 
@@ -178,7 +180,7 @@ Patch **one host at a time**:
 
 A future deployment that moves etcd/database/application roles onto dedicated machines needs a different maintenance sequence; do not copy that future topology back onto this POC runbook.
 
-## 15.7 etcd upgrades
+## 16.7 etcd upgrades
 
 Read the official upgrade guide for the exact source/target versions. Verify supported upgrade order and downgrade behavior.
 
@@ -191,7 +193,7 @@ Read the official upgrade guide for the exact source/target versions. Verify sup
 
 **Stop here. Do not proceed** if quorum is degraded, snapshot validation fails, or the version path is unsupported.
 
-## 15.8 Spilo and Patroni updates within the same PostgreSQL major
+## 16.8 Spilo and Patroni updates within the same PostgreSQL major
 
 Build, scan, and pin a new image. Test it against a restored copy and staging failovers.
 
@@ -208,7 +210,7 @@ Rolling sequence:
 
 Do not update all members simultaneously.
 
-## 15.8A TimescaleDB extension updates
+## 16.8A TimescaleDB extension updates
 
 TimescaleDB is part of the telemetry feature set and must remain promotion-safe on every Patroni member.
 
@@ -228,7 +230,7 @@ For an extension update within a compatible PostgreSQL major:
 
 **Why:** applying the extension catalog update before every promotion candidate has compatible TimescaleDB binaries can create a promoted primary that cannot load the telemetry extension.
 
-## 15.9 PostgreSQL major upgrades
+## 16.9 PostgreSQL major upgrades
 
 A major upgrade is a migration project, not a normal container restart.
 
@@ -251,7 +253,7 @@ Required:
 
 Never attach an existing data directory to a different PostgreSQL major image and hope it starts.
 
-## 15.10 ChirpStack upgrades
+## 16.10 ChirpStack upgrades
 
 1. read release notes and breaking configuration/schema changes;
 2. test against an isolated restored database;
@@ -266,7 +268,7 @@ Never attach an existing data directory to a different PostgreSQL major image an
 
 An irreversible database migration may make image rollback impossible without a database restore. State this before the maintenance window and verify the restore path first.
 
-## 15.10A Gateway OS / journal upgrades
+## 16.10A Gateway OS / journal upgrades
 
 Treat Gateway OS, Concentratord, and journal changes as one source-evidence compatibility boundary.
 
@@ -283,7 +285,7 @@ Before upgrading a gateway:
 
 Do not keep the same journal version identifier if the serialized record meaning or hashing bytes changed.
 
-## 15.11 MQTT upgrades
+## 16.11 MQTT upgrades
 
 For a true clustered broker, follow its rolling-upgrade and compatibility documentation.
 
@@ -301,7 +303,7 @@ For active/standby Mosquitto:
 
 Preserve certificate and ACL consistency. Define the expected clean-session and in-flight-message loss, then compare the observed reconnect with that boundary.
 
-## 15.12 Self-managed Valkey/Sentinel maintenance
+## 16.12 Self-managed Valkey/Sentinel maintenance
 
 Valkey/Sentinel is **self-managed on ha-01/02/03** in this POC; there is no provider-managed Valkey maintenance window.
 
@@ -322,7 +324,7 @@ Use a rolling procedure:
 
 Do not manually edit three nodes into competing primaries. Sentinel owns promotion during normal HA operation.
 
-## 15.12A OpenBao and Fabric-adapter rolling changes
+## 16.12A OpenBao and Fabric-adapter rolling changes
 
 For OpenBao, change one Raft member at a time. Before each member restart, prove 3/3 health and keep recovery/unseal material outside the nodes; after restart, explicitly verify the member is unsealed, rejoined, and the stable `:18200` KMS endpoint still signs/verifies before touching the next voter.
 
@@ -330,7 +332,7 @@ For Fabric adapters, update the standby/idle worker first when possible, verify 
 
 If the reviewed Fabric adapter image still does not exist, this section remains a documented future procedure and is not executable evidence.
 
-## 15.12B Scaling gateway evidence services
+## 16.12B Scaling gateway evidence services
 
 Scale the evidence roles independently:
 
@@ -344,7 +346,7 @@ Before adding collector/verifier replicas, prove their concurrency/idempotency m
 
 Capacity acceptance is based on the worst supported post-outage backlog, not only steady-state events/second.
 
-## 15.13 Scaling application nodes
+## 16.13 Scaling application nodes
 
 Add an app node only when:
 
@@ -357,7 +359,7 @@ Add an app node only when:
 
 Adding nodes without shared-subscription or duplicate-handling validation can duplicate event processing.
 
-## 15.14 Scaling PostgreSQL
+## 16.14 Scaling PostgreSQL
 
 ### Vertical scaling
 
@@ -371,13 +373,13 @@ Add only through Patroni/Spilo supported cloning. Read replicas do not increase 
 
 PostgreSQL streaming replication remains one writable primary. If write capacity is exhausted, optimize workload/indexes/connection pooling, scale the primary, or redesign data placement. Do not distribute ChirpStack writes across replicas.
 
-## 15.15 etcd scaling
+## 16.15 etcd scaling
 
 Three members tolerate one failure. Five tolerate two but add write latency and operational cost. Do not add members to solve client load or disk problems.
 
 Change membership one member at a time using `etcdctl member add/remove`, with snapshots and quorum evidence. Never use an even voting-member count as an availability improvement.
 
-## 15.16 Storage expansion
+## 16.16 Storage expansion
 
 Before resizing a PostgreSQL volume:
 
@@ -391,7 +393,7 @@ Before resizing a PostgreSQL volume:
 
 A provider volume cannot necessarily be shrunk. Keep the tested restore or replacement-volume path as the rollback method.
 
-## 15.17 Decommissioning a node
+## 16.17 Decommissioning a node
 
 ### Application node
 
@@ -421,7 +423,7 @@ Confirm the device or gateway is being decommissioned. When the evidence path is
 
 Do not delete the authoritative server checkpoint merely because the physical gateway is gone.
 
-## 15.18 Configuration drift
+## 16.18 Configuration drift
 
 Regularly compare:
 
@@ -441,7 +443,7 @@ Regularly compare:
 
 Do not auto-remediate destructive drift without review.
 
-## 15.19 Maintenance final checks
+## 16.19 Maintenance final checks
 
 Close a change only when:
 
@@ -455,4 +457,4 @@ Close a change only when:
 - Git/provider inventory is cleanly reconciled;
 - residual risk and unverified runtime items are documented.
 
-Next: [16-troubleshooting.md](16-troubleshooting.md)
+Next: [17-troubleshooting.md](17-troubleshooting.md)

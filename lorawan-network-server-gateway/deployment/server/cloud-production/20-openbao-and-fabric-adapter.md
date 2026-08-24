@@ -1,6 +1,8 @@
-# 19. OpenBao + Fabric Adapter for the Tiny HA POC
+# 20. OpenBao + Fabric Adapter for the Tiny HA POC
 
-## 19.1 Goal
+> **Status: STANDBY / DRAFT.** OpenBao and the Fabric adapter are not yet deployed or live-validated in the current cloud build. Keep this as architecture guidance until the external Fabric handoff, exact OpenBao version, adapter implementation/image, policies, and failure behavior are available.
+
+## 20.1 Goal
 
 Keep the future security/integration **shape** in the POC without creating another database server.
 
@@ -16,7 +18,7 @@ submission/reconciliation logic
 
 The external Fabric team owns its Fabric network, Gateway endpoint, organizations, channel, and chaincode.
 
-## 19.2 Placement
+## 20.2 Placement
 
 ```text
 ha-01
@@ -35,7 +37,7 @@ The outbox is not on `ha-03`. It is a table in `lorawan_telemetry` on the **thre
 
 That means a PostgreSQL primary change automatically carries the outbox with the rest of the database state.
 
-## 19.3 Architecture
+## 20.3 Architecture
 
 ```text
 ChirpStack event
@@ -82,7 +84,7 @@ telemetry row              fabric_outbox row
                          update fabric_outbox
 ```
 
-## 19.4 Database path
+## 20.4 Database path
 
 Both adapters use their host-local database route:
 
@@ -97,7 +99,7 @@ Fabric adapter
 
 Do not give the adapters a fixed PostgreSQL node IP.
 
-## 19.5 OpenBao POC cluster
+## 20.5 OpenBao POC cluster
 
 Use [../fabric-attestation/01-deploy-openbao-kms.md](../fabric-attestation/01-deploy-openbao-kms.md) as the detailed OpenBao command/config reference, but apply this **cloud POC mapping** instead of copying its larger production example blindly:
 
@@ -125,7 +127,7 @@ Bootstrap step-by-step:
 9. repeat for OpenBao-3;
 10. verify all three members are initialized, unsealed, and one is active;
 11. enable/configure the Transit engine and create/verify the non-exportable `lorawan-evidence` key under the approved policy;
-12. only now enable the HAProxy `:18200` frontend from [08-haproxy-and-pgbouncer.md](08-haproxy-and-pgbouncer.md);
+12. only now enable the HAProxy `:18200` frontend from [07-haproxy-and-pgbouncer.md](07-haproxy-and-pgbouncer.md);
 13. call `/v1/sys/health?standbyok=true` and a harmless Transit sign/verify through the stable endpoint;
 14. stop one OpenBao member and prove the stable endpoint still works at 2/3;
 15. restore/unseal/rejoin it before proceeding to adapters.
@@ -162,7 +164,7 @@ restore 3/3
 
 The evidence signing key stays non-exportable. An adapter never falls back to a local signing key.
 
-## 19.6 Outbox
+## 20.6 Outbox
 
 Create the outbox inside the Timescale-enabled `lorawan_telemetry` database on the Patroni cluster. Keep `telemetry.fabric_outbox` as an **ordinary PostgreSQL table** with the documented lease, index, permission, and immutability rules; do not convert the work queue itself into a hypertable. The telemetry event tables in the same database remain Timescale hypertables.
 
@@ -179,7 +181,7 @@ Then the adapters process the outbox asynchronously.
 
 Why: Fabric or KMS downtime should make the queue wait, not make sensor telemetry disappear.
 
-## 19.7 Two workers
+## 20.7 Two workers
 
 ```text
 ha-01 -> adapter-1
@@ -201,7 +203,7 @@ adapter-2 can reclaim
 
 A timeout after Fabric submission must be reconciled before retrying so the POC does not demonstrate duplicate conflicting submissions.
 
-## 19.8 External Fabric handoff
+## 20.8 External Fabric handoff
 
 Follow [../fabric-attestation/01-collect-external-fabric-handoff.md](../fabric-attestation/01-collect-external-fabric-handoff.md) and collect these real values from the other team:
 
@@ -221,7 +223,7 @@ client identity
 
 Do not deploy a Fabric test network on these three Droplets.
 
-## 19.8A Adapter implementation readiness gate
+## 20.8A Adapter implementation readiness gate
 
 The detailed outbox/adapter reference currently states that this repository **does not yet contain a completed reviewed Fabric adapter image**. `<PINNED_FABRIC_ADAPTER_IMAGE>` is therefore an unresolved implementation input, not a deployable image name.
 
@@ -242,7 +244,7 @@ Then follow [../fabric-attestation/02-create-outbox-and-adapter.md](../fabric-at
 
 ```text
 lab DB host telemetry-db:5432
-  -> cloud pgbouncer.internal.<DOMAIN>:6432 / lorawan_telemetry
+  -> cloud pgbouncer.internal.lorawan.com:6432 / lorawan_telemetry
 
 lab OpenBao service openbao:8200
   -> cloud https://openbao-kms.internal.<DOMAIN>:18200
@@ -256,7 +258,7 @@ one lab adapter
 
 Gateway-integrity v2 has a similar implementation gate for its reviewed ingestor/collector/verifier components. Do not turn documented v2 contracts into a claimed runtime result until those implementations exist.
 
-## 19.9 Failure behavior
+## 20.9 Failure behavior
 
 ### External Fabric unavailable
 
@@ -297,7 +299,7 @@ existing eligible outbox work can continue
 
 This is a stronger POC shape than keeping the outbox in a single standalone telemetry database.
 
-## 19.10 Minimal monitoring
+## 20.10 Minimal monitoring
 
 For this POC, command-line evidence is enough:
 
@@ -314,7 +316,7 @@ Fabric tx ID / commit status
 
 Do not deploy a large monitoring stack solely for this integration proof.
 
-## 19.11 POC backup
+## 20.11 POC backup
 
 Before destructive tests keep:
 
@@ -328,7 +330,7 @@ adapter configuration/image reference
 
 Production backup/retention is not what this POC is trying to certify.
 
-## 19.12 Iteration order
+## 20.12 Iteration order
 
 ```text
 1. create lorawan_telemetry + fabric_outbox
@@ -353,7 +355,7 @@ IF adapter is available and reviewed:
   14. include the path in the full ha-01/02/03 failure rehearsal
 ```
 
-## 19.13 Pass condition
+## 20.13 Pass condition
 
 ### Architecture/infrastructure pass
 
@@ -380,4 +382,4 @@ Claim this **only when a reviewed adapter implementation/image exists** and all 
 
 If the adapter is unavailable, report this second block as **blocked by missing implementation**, not failed architecture and not passed execution. Because this deployment target now requires **all features with no feature omission**, the overall full-feature POC/commissioning status also remains **BLOCKED** until this Full Fabric execution pass succeeds. The other HA layers may still have their own valid PASS evidence, but they do not substitute for the missing adapter runtime.
 
-Return to [18-cloud-ha-grafana-deployment-day-runbook.md](18-cloud-ha-grafana-deployment-day-runbook.md).
+Return to [19-cloud-ha-grafana-deployment-day-runbook.md](19-cloud-ha-grafana-deployment-day-runbook.md).

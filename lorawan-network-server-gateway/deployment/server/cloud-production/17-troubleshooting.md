@@ -1,4 +1,6 @@
-# 16. Cloud Troubleshooting
+# 17. Cloud Troubleshooting
+
+> **Status: STANDBY / LIVING DRAFT.** Keep only troubleshooting that matches deployed components. The etcd/network lessons can be retained now; future service sections must be refined from real failure evidence as those technologies are introduced.
 
 Start at the lowest layer that does not show a healthy result. Do not restart every node or rotate credentials until the failing boundary is identified.
 
@@ -25,7 +27,7 @@ lorawan_telemetry.fabric_outbox -> Fabric adapter-1/2 -> OpenBao-1/2/3 -> extern
 
 Gateway commands in Sections 16.1–16.3 run over SSH on the Raspberry Pi. Cloud commands run on the host that owns the named service. Use one reserved gateway and device event to compare timestamps across layers.
 
-## 16.1 Radio or Gateway ID failure
+## 17.1 Radio or Gateway ID failure
 
 **Failing layer:** RAK5146 hardware access or Concentratord configuration.
 
@@ -41,7 +43,7 @@ Healthy output shows one running Concentratord instance, the RAK5146/SX1302-or-S
 
 Correct only the first observed mismatch. Power down before reseating hardware, and stop RF transmission when the region is wrong. Verify by rebooting and confirming the same Gateway ID and channel plan without error loops.
 
-## 16.2 MQTT Forwarder cannot publish locally
+## 17.2 MQTT Forwarder cannot publish locally
 
 **Failing layer:** MQTT Forwarder to the gateway-local Mosquitto listener.
 
@@ -58,7 +60,7 @@ Healthy configuration uses `tcp://127.0.0.1:1883`, QoS 1, Protobuf, backend `con
 
 Validate the broker configuration, correct the differing address, QoS, backend, or listener, and restart only the affected process. Verify with one real gateway event at the local broker.
 
-## 16.3 The local queue grows and does not drain
+## 17.3 The local queue grows and does not drain
 
 **Failing layer:** gateway backhaul, DNS, time, TLS, broker ACL, remote MQTT availability, or queue capacity.
 
@@ -85,7 +87,7 @@ ls -l /etc/mosquitto/data/mosquitto.db
 
 Healthy recovery reconnects both bridge clients, preserves the queue database, drains old events, and continues accepting new uplinks. Verify at the remote broker and then at ChirpStack; do not delete the queue to make disk usage fall.
 
-## 16.3A Journal does not advance while MQTT is healthy
+## 17.3A Journal does not advance while MQTT is healthy
 
 **Failing layer:** independent Concentratord evidence path.
 
@@ -106,7 +108,7 @@ sequence advances, writes fail
 
 Do not point the journal at Mosquitto as a shortcut. Preserve the first affected time/sequence and classify unrecoverable source evidence as `evidence_gap`.
 
-## 16.3B MQTT is healthy but cloud checkpoint is stale
+## 17.3B MQTT is healthy but cloud checkpoint is stale
 
 **Failing layer:** evidence uploader, DNS/4G route to `evidence.<DOMAIN>`, mTLS identity, ingest API, or evidence-store write path.
 
@@ -124,7 +126,7 @@ API rejection/conflict logs
 
 Healthy MQTT does not clear this incident. Restore upload and prove the next accepted segment/checkpoint extends the previous server anchor.
 
-## 16.3C Journal hash, checkpoint, or journal-to-MQTT conflict
+## 17.3C Journal hash, checkpoint, or journal-to-MQTT conflict
 
 **Failing layer:** evidence integrity/correlation boundary.
 
@@ -139,7 +141,7 @@ missing required evidence with no contradictory bytes -> evidence_gap
 proven hash/payload/rollback conflict                -> integrity_failure
 ```
 
-## 16.4 The remote broker receives events but ChirpStack does not
+## 17.4 The remote broker receives events but ChirpStack does not
 
 **Failing layer:** remote MQTT authorization or the ChirpStack regional MQTT backend.
 
@@ -147,7 +149,7 @@ On the MQTT host, confirm the gateway event topic and certificate identity. On e
 
 Healthy behavior updates the registered Gateway EUI's last-seen time after a fresh event. If the broker has the message and ChirpStack does not, correct only the differing regional backend, topic prefix, ACL, or credential and restart the affected ChirpStack node. This architecture does not require ChirpStack Gateway Bridge.
 
-## 16.5 Duplicate application or telemetry rows
+## 17.5 Duplicate application or telemetry rows
 
 **Failing layer:** application idempotency after valid at-least-once MQTT delivery.
 
@@ -155,7 +157,7 @@ Verify the Node-RED stable event key, ChirpStack `deduplicationId` use, Timescal
 
 If inserts fail only after a Patroni promotion, first verify the promoted node has the compatible TimescaleDB library/preload configuration and that `SELECT extversion FROM pg_extension WHERE extname='timescaledb';` succeeds. A PostgreSQL replica is not a valid telemetry primary if its TimescaleDB runtime is missing or mismatched.
 
-## 16.5A Telemetry row exists but v2 verification fails
+## 17.5A Telemetry row exists but v2 verification fails
 
 **Failing layer:** application evidence comparison, not necessarily Node-RED ingestion availability.
 
@@ -172,7 +174,7 @@ verification ID/reason
 
 Do not change the database value merely to make the evidence green. Determine whether the trusted decoder, Node-RED mapping, source bytes, or correlation policy is wrong, then correct the implementation and process a new governed result according to the incident procedure.
 
-## 16.6 A stale downlink appears after reconnect
+## 17.6 A stale downlink appears after reconnect
 
 **Failing layer:** downlink session cleanup or an automation publisher.
 
@@ -180,7 +182,7 @@ Confirm the gateway's `cloud-downlink` bridge uses `cleansession true` and comma
 
 Disable automatic downlinks until the retaining session or publisher is removed, then verify with one harmless, observable command.
 
-## 16.7 Reserved-IP / MQTT public failover does not preserve service
+## 17.7 Reserved-IP / MQTT public failover does not preserve service
 
 **Failing layer:** Reserved-IP ownership, failover agent, etcd lock, DigitalOcean API, HAProxy routing, backend health, timeout behavior, or broker session design.
 
@@ -218,7 +220,7 @@ If HAProxy and Mosquitto are both trying to bind the same VPC `:8883`, the old p
 
 Reserved-IP/HAProxy failover does not synchronize independent Mosquitto sessions, retained messages, or queues. Broker service failover still depends on the gateway's bounded local QoS 1 queue and reconnection behavior.
 
-## 16.8 UDP Forwarder traffic appears
+## 17.8 UDP Forwarder traffic appears
 
 **Failing layer:** an unsupported gateway backend is enabled.
 
@@ -231,7 +233,7 @@ monit status
 
 Healthy output has no UDP server and the service disabled. Remove the unintended entries, disable only the UDP Forwarder, and verify the MQTT path with a real uplink.
 
-## 16.9 ChirpStack reports database or state errors
+## 17.9 ChirpStack reports database or state errors
 
 **Failing layer:** ChirpStack, PgBouncer, HAProxy, PostgreSQL/Patroni, or Valkey/Sentinel.
 
@@ -259,7 +261,7 @@ Exactly one should be the primary according to the pinned Patroni endpoint seman
 ### Step 2 - HAProxy DB route
 
 ```bash
-psql 'host=postgres-ha.internal.<DOMAIN> hostaddr=<THIS_HOST_PRIVATE_IP> port=15432 dbname=postgres user=<MONITOR_ROLE> sslmode=verify-full' \
+psql 'host=postgres-ha.internal hostaddr=<THIS_HOST_PRIVATE_IP> port=15432 dbname=postgres user=<MONITOR_ROLE> sslmode=verify-full' \
   -c 'SELECT inet_server_addr(), pg_is_in_recovery();'
 ```
 
@@ -282,23 +284,23 @@ An authentication error calls for checking the exact role/verifier/secret refere
 
 Restarting all application/database nodes together destroys evidence and can remove quorum. Correct the first failing dependency, then verify one harmless API/SQL operation and one fresh uplink.
 
-## 16.9A etcd quorum is unhealthy
+## 17.9A etcd quorum is unhealthy
 
 **Failing layer:** Patroni coordination/DCS.
 
-From an approved etcd administration environment:
+From an approved administrative shell, first use the transport that is actually deployed. The current cluster uses HTTP on `10.104.0.0/20`:
 
 ```bash
-etcdctl \
-  --endpoints=https://<ETCD_1>:2379,https://<ETCD_2>:2379,https://<ETCD_3>:2379 \
-  --cacert=<ETCD_CA> --cert=<ETCD_ADMIN_CERT> --key=<ETCD_ADMIN_KEY> \
-  endpoint health --cluster
+ETCDCTL_API=3 etcdctl \
+  --endpoints=http://10.104.0.2:2379,http://10.104.0.4:2379,http://10.104.0.8:2379 \
+  endpoint health
 
-etcdctl \
-  --endpoints=https://<HEALTHY_ETCD>:2379 \
-  --cacert=<ETCD_CA> --cert=<ETCD_ADMIN_CERT> --key=<ETCD_ADMIN_KEY> \
-  member list -w table
+ETCDCTL_API=3 etcdctl \
+  --endpoints=http://10.104.0.2:2379,http://10.104.0.4:2379,http://10.104.0.8:2379 \
+  member list --write-out=table
 ```
+
+If etcd TLS has been deployed since this baseline, use the matching tested CA/client credentials instead. A protocol mismatch (`https://` against the current HTTP listener, or the reverse) can look like a service failure.
 
 Interpretation:
 
@@ -310,7 +312,7 @@ Interpretation:
 
 Do not remove/re-add multiple members at once. Preserve the member IDs and the pre-test snapshot before destructive membership repair.
 
-## 16.9B Fabric outbox grows while telemetry is healthy
+## 17.9B Fabric outbox grows while telemetry is healthy
 
 **Failing layer:** Fabric adapter worker, OpenBao KMS, external Fabric Gateway, or commit reconciliation.
 
@@ -329,7 +331,7 @@ submitted_unknown reconciliation state
 
 Do not make Node-RED call Fabric synchronously to reduce the queue. Restore the first failing asynchronous dependency and let the durable outbox drain under the normal retry/reconciliation rules.
 
-## 16.9C OpenBao is sealed, degraded, or has no quorum
+## 17.9C OpenBao is sealed, degraded, or has no quorum
 
 **Failing layer:** evidence KMS.
 
@@ -354,7 +356,7 @@ If HAProxy reports a sealed/uninitialized node healthy, its KMS health check has
 
 Never export/create a replacement local signing key in the Fabric adapter to bypass OpenBao. If the historical Transit key cannot be recovered, stop attestation recovery and preserve the affected sealed/unsealed evidence for governance review.
 
-## 16.9D Valkey/Sentinel does not fail over or HAProxy routes a replica
+## 17.9D Valkey/Sentinel does not fail over or HAProxy routes a replica
 
 **Failing layer:** Valkey replication, Sentinel quorum/authentication, or HAProxy primary-role health check.
 
@@ -387,7 +389,7 @@ Expected: the HAProxy endpoint reports primary/master. If direct Sentinel state 
 
 Restore 3 data nodes + 3 Sentinels and a passing `CKQUORUM` before another failure test.
 
-## 16.10 An upgrade causes a regression
+## 17.10 An upgrade causes a regression
 
 Preserve the Gateway OS image, local broker data/configuration, journal implementation/configuration and continuity metadata, certificates, latest accepted checkpoint/evidence objects, cloud image digests, database versions, active schema state, and logs from the failed attempt.
 

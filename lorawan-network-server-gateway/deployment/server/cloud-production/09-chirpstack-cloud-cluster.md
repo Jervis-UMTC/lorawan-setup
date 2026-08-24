@@ -1,6 +1,8 @@
-# 10. Two-Node ChirpStack HA on the Minimum Three-Droplet Cluster
+# 9. Two-Node ChirpStack HA on the Minimum Three-Droplet Cluster
 
-## 10.1 Goal
+> **Status: STANDBY / DRAFT.** ChirpStack has not yet been deployed or live-validated in this cloud build. Re-check the exact ChirpStack version, configuration schema, region files, database/Valkey/MQTT settings, migrations, and listeners when this phase becomes active.
+
+## 9.1 Goal
 
 The minimum HA test profile runs two interchangeable ChirpStack v4 instances:
 
@@ -11,7 +13,7 @@ ha-02 -> ChirpStack-2
 
 Both use the same PostgreSQL HA endpoint, Valkey HA endpoint, active MQTT service, secrets, region files, and integration policy. A third ChirpStack instance on ha-03 is unnecessary for the defined one-Droplet-failure target.
 
-## 10.2 Preconditions
+## 9.2 Preconditions
 
 - PgBouncer -> HAProxy -> Patroni-primary routing works on ha-01 and ha-02.
 - ChirpStack database exists and a validated backup is available.
@@ -24,7 +26,7 @@ Both use the same PostgreSQL HA endpoint, Valkey HA endpoint, active MQTT servic
 
 **Stop here. Do not run migrations or start both nodes** until every dependency and the database backup are verified.
 
-## 10.3 Obtain the version-specific configuration
+## 9.3 Obtain the version-specific configuration
 
 Use the official ChirpStack release image and documentation for the pinned version. Keep the ChirpStack version and image digest, configuration-template source, enabled integrations, active region filenames and hashes, observed database-migration behavior, and rollback digest together. These values identify the configuration schema and region files that both application nodes must share.
 
@@ -37,7 +39,7 @@ docker run --rm <PINNED_CHIRPSTACK_IMAGE> configfile > /tmp/chirpstack.toml.exam
 
 Inspect the image's supported command before using `configfile`; command names may change.
 
-## 10.4 Shared configuration directory
+## 9.4 Shared configuration directory
 
 Create a root-owned directory on each app node:
 
@@ -55,15 +57,15 @@ Keep both nodes synchronized through configuration management. Compare a hash of
 sudo find /etc/lorawan-cloud/chirpstack -type f -exec sha256sum {} +
 ```
 
-## 10.5 Core database connection
+## 9.5 Core database connection
 
 ChirpStack connects to the PgBouncer instance on its own application host. Because ChirpStack is containerized, use a logical name mapped to that host's private VPC IP:
 
 ```text
-ChirpStack-1 -> pgbouncer.internal.<DOMAIN>:6432 -> PgBouncer on ha-01
-ChirpStack-2 -> pgbouncer.internal.<DOMAIN>:6432 -> PgBouncer on ha-02
+ChirpStack-1 -> pgbouncer.internal.lorawan.com:6432 -> PgBouncer on ha-01
+ChirpStack-2 -> pgbouncer.internal.lorawan.com:6432 -> PgBouncer on ha-02
 
-PgBouncer -> postgres-ha.internal.<DOMAIN>:15432 -> local HAProxy
+PgBouncer -> postgres-ha.internal:15432 -> local HAProxy
 HAProxy -> current Patroni primary :5432
 ```
 
@@ -72,7 +74,7 @@ The application DSN stays stable during PostgreSQL failover because neither the 
 Illustrative values stored in the protected environment/config workflow:
 
 ```dotenv
-CHIRPSTACK_POSTGRESQL_DSN=postgresql://chirpstack:<SECRET_REFERENCE>@pgbouncer.internal.<DOMAIN>:6432/chirpstack?sslmode=verify-full
+CHIRPSTACK_POSTGRESQL_DSN=postgresql://chirpstack:<SECRET_REFERENCE>@pgbouncer.internal.lorawan.com:6432/chirpstack?sslmode=verify-full
 ```
 
 In the pinned ChirpStack configuration set the PostgreSQL CA path as well:
@@ -84,9 +86,9 @@ ca_cert="/run/pgbouncer-ca/ca.crt"
 connection_recycling_method="fast"
 ```
 
-`fast` is used here because the architecture deliberately places the external PgBouncer pooler in front of PostgreSQL. Mount the CA so ChirpStack can verify the PgBouncer certificate for `pgbouncer.internal.<DOMAIN>`. PgBouncer's server connection through HAProxy to PostgreSQL separately uses `verify-full` against `postgres-ha.internal.<DOMAIN>`. Do not put live credentials in Compose files, documentation, or logs.
+`fast` is used here because the architecture deliberately places the external PgBouncer pooler in front of PostgreSQL. Mount the CA so ChirpStack can verify the PgBouncer certificate for `pgbouncer.internal.lorawan.com`. PgBouncer's server connection through HAProxy to PostgreSQL separately uses `verify-full` against `postgres-ha.internal`. Do not put live credentials in Compose files, documentation, or logs.
 
-## 10.6 Valkey configuration
+## 9.6 Valkey configuration
 
 Configure ChirpStack to use a logical local-HAProxy Valkey name. Map that name to the current app host's private IP inside each ChirpStack container:
 
@@ -114,7 +116,7 @@ The current configuration template exposes `rediss://` URLs but no separate Redi
 
 **Stop here** if a direct TLS connection from inside the ChirpStack container cannot validate `valkey-ha.internal.<DOMAIN>` without an insecure/skip-verification option.
 
-## 10.7 Gateway MQTT backend and application integration
+## 9.7 Gateway MQTT backend and application integration
 
 Configure every active ChirpStack region on **ha-01 and ha-02** to use the same logical HAProxy MQTT name and region prefix. Map `mqtt-ha.internal.<DOMAIN>` to the current app host's private IP inside each ChirpStack container. Both Mosquitto server certificates must include this internal SAN as well as the public `mqtt.<DOMAIN>` SAN.
 
@@ -133,7 +135,7 @@ Configure `[integration.mqtt]` separately when applications consume MQTT events.
 
 For `[integration.mqtt]`, configure the same `share_name` on both ChirpStack instances. The current ChirpStack configuration explicitly defines this value for shared subscriptions across multiple instances. Keep distinct client IDs where required for diagnostics.
 
-## 10.8 Region configuration
+## 9.8 Region configuration
 
 Use the exact active region-file model for the pinned ChirpStack version. For an approved AS923-3 deployment, the identifier is commonly `as923_3`, but copy it from the active region file rather than inferring it from a display label.
 
@@ -154,13 +156,13 @@ Local regulatory authorization
 
 **Stop here. Do not transmit** if any layer differs or the legal plan is unconfirmed.
 
-## 10.9 Token and encryption secrets
+## 9.9 Token and encryption secrets
 
 Both application nodes must use the same ChirpStack token/JWT secret and any shared application encryption secret. Generate independent strong values through the approved secret store.
 
 Never rotate the token secret on one node only. A staggered mismatch causes tokens issued by one node to fail on the other.
 
-## 10.10 Container definition
+## 9.10 Container definition
 
 Illustrative per-node Compose file:
 
@@ -182,7 +184,7 @@ services:
       # system-trust import path when it is not signed by a public/system CA.
       - /etc/lorawan-pki/valkey/ca.crt:/run/valkey-ca/ca.crt:ro
     extra_hosts:
-      - "pgbouncer.internal.<DOMAIN>:<APP_PRIVATE_IP>"
+      - "pgbouncer.internal.lorawan.com:<APP_PRIVATE_IP>"
       - "valkey-ha.internal.<DOMAIN>:<APP_PRIVATE_IP>"
       - "mqtt-ha.internal.<DOMAIN>:<APP_PRIVATE_IP>"
     ports:
@@ -196,7 +198,7 @@ The `extra_hosts` entries are deliberate: they force each ChirpStack container's
 
 Do not publish optional gRPC/REST listeners unless an approved integration requires them. Bind them privately and apply authentication/TLS.
 
-## 10.11 Database migration control
+## 9.11 Database migration control
 
 Only one designated node runs schema migrations during an upgrade.
 
@@ -214,7 +216,7 @@ Procedure:
 
 Do not allow both nodes to race an irreversible migration unless the upstream version explicitly documents that as safe.
 
-## 10.12 First deployment order
+## 9.12 First deployment order
 
 1. Start only ChirpStack-1 on `ha-01`.
 2. Watch logs for database migrations, MQTT, Valkey, and region loading.
@@ -226,7 +228,7 @@ Do not allow both nodes to race an irreversible migration unless the upstream ve
 8. Configure both HAProxy public candidates and prove manual Reserved-IP reassignment between them.
 9. Prove session/token behavior while alternating ChirpStack backends without changing the public hostname.
 
-## 10.13 HAProxy HTTPS frontend and public access
+## 9.13 HAProxy HTTPS frontend and public access
 
 Use one explicit POC TLS boundary:
 
@@ -304,7 +306,7 @@ Administrative protection options:
 
 Do not expose the UI with a default password during commissioning.
 
-## 10.14 Health checks
+## 9.14 Health checks
 
 Use two levels.
 
@@ -324,7 +326,7 @@ Before declaring either ChirpStack node ready, separately confirm it can:
 
 Do not invent a writable health endpoint. If the pinned ChirpStack version later provides an official read-only readiness endpoint, replace the simple `/` backend check only after staging verification. For this POC, dependency health is proven during commissioning and failure tests in addition to the HAProxy HTTP check.
 
-## 10.15 Application validation
+## 9.15 Application validation
 
 From an approved workstation:
 
@@ -343,7 +345,7 @@ Then verify:
 - successful operation when either application node is stopped;
 - database primary switchover without DSN changes.
 
-## 10.16 Final checks
+## 9.16 Final checks
 
 - Two nodes use the same approved digest, configuration hashes, token secret, regions, and integrations.
 - Both use local PgBouncer + HAProxy and the same Valkey/Sentinel and active/standby MQTT services.
@@ -352,4 +354,4 @@ Then verify:
 - HAProxy backend health handles individual service failures, while the Reserved-IP failover agent moves public ingress only when the current app host/public path is persistently unavailable.
 - Gateway stats, real uplinks, and downlinks continue with one app node unavailable.
 
-Next: [11-gateway-and-device-migration.md](11-gateway-and-device-migration.md)
+Next standby phase: [10-self-managed-public-ingress.md](10-self-managed-public-ingress.md).

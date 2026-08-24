@@ -1,4 +1,6 @@
-# 3A. Self-Managed Public Ingress with HAProxy + Reserved IP
+# 10. Self-Managed Public Ingress with HAProxy + Reserved IP
+
+> **Status: STANDBY / DRAFT.** Public HAProxy/Reserved-IP failover has not yet been deployed or live-validated in the current build. Do not execute this manual yet. Re-check provider access, current etcd transport, HAProxy listeners, health probes, DNS, Reserved-IP behavior, and failover safeguards when this phase becomes active.
 
 This POC does **not** buy a DigitalOcean Network Load Balancer.
 
@@ -41,7 +43,7 @@ Why this fits the POC:
 
 This is still a real dependency: automated public failover now depends on the DigitalOcean Reserved-IP API and our failover controller. Do not describe it as a managed load balancer.
 
-## 3A.1 Provider behavior to understand first
+## 10.1 Provider behavior to understand first
 
 For this design:
 
@@ -63,7 +65,7 @@ An assigned Reserved IPv4 is free under the current DigitalOcean pricing model. 
 
 DigitalOcean recommends binding highly available public services to each Droplet's **anchor IP**. This prevents users from bypassing the Reserved IP by connecting to the Droplet's ordinary public address.
 
-## 3A.2 Record the ingress worksheet
+## 10.2 Record the ingress worksheet
 
 From `ADMIN`, record:
 
@@ -86,7 +88,7 @@ Do not put the DigitalOcean API token value in this worksheet.
 
 **Hard stop:** `ha-01`, `ha-02`, and the Reserved IP must be in the same DigitalOcean datacenter/region that supports reassignment between those Droplets.
 
-## 3A.3 Get the Droplet IDs
+## 10.3 Get the Droplet IDs
 
 From `ADMIN` with an authenticated `doctl` context:
 
@@ -97,7 +99,7 @@ doctl compute droplet get ha-02 --format ID,Name,Region,PublicIPv4,PrivateIPv4 -
 
 Record the numeric IDs. The failover controller uses IDs, not hostnames, when assigning the Reserved IP.
 
-## 3A.4 Create one Reserved IPv4 and assign it immediately
+## 10.4 Create one Reserved IPv4 and assign it immediately
 
 Create it assigned to `ha-01` initially:
 
@@ -121,7 +123,7 @@ ha-01
 
 Do not deliberately leave the IPv4 unassigned between tests.
 
-## 3A.5 Find the anchor IPv4 on ha-01 and ha-02
+## 10.5 Find the anchor IPv4 on ha-01 and ha-02
 
 Run on **each app Droplet**:
 
@@ -146,7 +148,7 @@ ha-02 -> <HA02_ANCHOR_IP>
 
 **Why:** the public HAProxy listeners bind to these anchor addresses. Internal HAProxy/PgBouncer/Valkey/OpenBao routes continue using the VPC/private addresses documented elsewhere.
 
-## 3A.6 Bind only public HAProxy frontends to anchor IPs
+## 10.6 Bind only public HAProxy frontends to anchor IPs
 
 The two public listeners are:
 
@@ -193,7 +195,7 @@ sudo ss -lntp | grep -E ':(443|8883|15432|16379|18883)\b'
 
 Pass only when `443` and `8883` are on the anchor address while the internal listeners remain on the intended private address.
 
-## 3A.7 Point both public DNS names at the Reserved IP
+## 10.7 Point both public DNS names at the Reserved IP
 
 Create/update:
 
@@ -211,7 +213,7 @@ getent ahostsv4 mqtt.<DOMAIN>
 
 Both should resolve to the same Reserved IPv4.
 
-## 3A.8 Prove manual reassignment before automating it
+## 10.8 Prove manual reassignment before automating it
 
 First prove `ha-01` serves both public paths through the Reserved IP:
 
@@ -249,7 +251,7 @@ doctl compute reserved-ip-action assign <RESERVED_IP> <HA01_DROPLET_ID>
 
 **Stop here** if manual reassignment does not preserve both public endpoints. Automation cannot fix an incorrect anchor-IP, HAProxy, certificate, firewall, or DNS design.
 
-## 3A.9 Failover-controller safety model
+## 10.9 Failover-controller safety model
 
 Run one small failover agent on `ha-01` and one on `ha-02`.
 
@@ -299,7 +301,7 @@ The etcd lock matters. If both app hosts observe the same outage simultaneously,
 
 If etcd quorum is unavailable, **automatic public takeover must stop**. Do not bypass the lock automatically because that would turn a network partition into a public-ingress split-brain/flapping problem.
 
-## 3A.10 Install the failover prerequisites on ha-01 and ha-02
+## 10.10 Install the failover prerequisites on ha-01 and ha-02
 
 Required:
 
@@ -322,7 +324,7 @@ openssl version
 
 The failover identity needs only the DigitalOcean permissions required to inspect/reassign the Reserved IP under the account's current token model. Do not reuse a human administrator's broad everyday token if a narrower automation identity is available.
 
-## 3A.11 Create the protected environment file
+## 10.11 Create the protected environment file
 
 On `ha-01` and `ha-02`:
 
@@ -346,17 +348,14 @@ MQTT_MONITOR_CERT=/etc/lorawan-pki/mqtt/monitor.crt
 MQTT_MONITOR_KEY=/etc/lorawan-pki/mqtt/monitor.key
 DIGITALOCEAN_TOKEN=<LOAD_FROM_PROTECTED_SECRET>
 
-ETCDCTL_ENDPOINTS=https://<HA01_PRIVATE_IP>:2379,https://<HA02_PRIVATE_IP>:2379,https://<HA03_PRIVATE_IP>:2379
-ETCDCTL_CACERT=/etc/lorawan-pki/etcd-client/ca.crt
-ETCDCTL_CERT=/etc/lorawan-pki/etcd-client/public-ingress.crt
-ETCDCTL_KEY=/etc/lorawan-pki/etcd-client/public-ingress.key
+ETCDCTL_ENDPOINTS=http://10.104.0.2:2379,http://10.104.0.4:2379,http://10.104.0.8:2379
 ```
 
-Use a dedicated etcd client identity for the public-ingress lock when practical. It does not need PostgreSQL, MQTT, OpenBao, or application credentials.
+The currently tested etcd transport is HTTP on the private `10.104.0.0/20` east-west network, so no etcd client certificate is configured at this checkpoint. If etcd TLS is introduced later, give the public-ingress lock a dedicated client identity rather than reusing PostgreSQL, MQTT, OpenBao, or application credentials.
 
 The MQTT monitor certificate should have only the broker permission needed for the health workflow; do not reuse a gateway identity.
 
-## 3A.12 Create the common health helper
+## 10.12 Create the common health helper
 
 Create `/usr/local/sbin/lorawan-ingress-health` on `ha-01` and `ha-02`:
 
@@ -418,7 +417,7 @@ sudo /usr/local/sbin/lorawan-ingress-health public
 
 `local` must succeed on **both** app hosts before automatic failover is enabled.
 
-## 3A.13 Create the takeover action
+## 10.13 Create the takeover action
 
 Create `/usr/local/sbin/lorawan-ingress-takeover`:
 
@@ -479,7 +478,7 @@ sudo chown root:root /usr/local/sbin/lorawan-ingress-takeover
 sudo chmod 750 /usr/local/sbin/lorawan-ingress-takeover
 ```
 
-## 3A.14 Create the evaluator
+## 10.14 Create the evaluator
 
 Create `/usr/local/sbin/lorawan-ingress-evaluate`:
 
@@ -512,9 +511,6 @@ export ETCDCTL_API=3
 # The command inside this distributed lock re-checks health before moving the IP.
 timeout 25 etcdctl \
   --endpoints="${ETCDCTL_ENDPOINTS}" \
-  --cacert="${ETCDCTL_CACERT}" \
-  --cert="${ETCDCTL_CERT}" \
-  --key="${ETCDCTL_KEY}" \
   lock --ttl=15 /lorawan/public-ingress \
   /usr/local/sbin/lorawan-ingress-takeover
 
@@ -530,7 +526,7 @@ sudo chmod 750 /usr/local/sbin/lorawan-ingress-evaluate
 
 The three-failure gate reduces needless failover from a single transient probe failure. With a 15-second timer, takeover normally starts after roughly 30-45 seconds plus API reassignment/recovery time. Record the measured value instead of promising a fixed RTO.
 
-## 3A.15 Run it with systemd
+## 10.15 Run it with systemd
 
 Create `/etc/systemd/system/lorawan-public-ingress.service`:
 
@@ -578,7 +574,7 @@ Watch:
 journalctl -u lorawan-public-ingress.service -f
 ```
 
-## 3A.16 Automatic failover acceptance test
+## 10.16 Automatic failover acceptance test
 
 Start with:
 
@@ -611,7 +607,7 @@ Then:
 
 Pass when no DNS, certificate, gateway MQTT endpoint, or application URL changes are required.
 
-## 3A.17 Restore without automatic failback
+## 10.17 Restore without automatic failback
 
 When `ha-01` returns, **do not automatically move the Reserved IP back**.
 
@@ -634,7 +630,7 @@ Then repeat the public health tests.
 
 For the `ha-02` host-loss test, deliberately assign the Reserved IP to `ha-02` first, verify both candidates are healthy, then fail `ha-02` and prove automatic movement to `ha-01`.
 
-## 3A.18 Failure cases and what they mean
+## 10.18 Failure cases and what they mean
 
 ```text
 ha-01 dies while it owns Reserved IP
@@ -659,7 +655,7 @@ both public HAProxy candidates unhealthy
   -> do not move the IP back and forth; fix the application/host problem
 ```
 
-## 3A.19 Troubleshooting commands
+## 10.19 Troubleshooting commands
 
 Current Reserved-IP owner:
 
@@ -697,12 +693,9 @@ sudo /usr/local/sbin/lorawan-ingress-health public
 etcd quorum/lock dependency:
 
 ```bash
-etcdctl \
+ETCDCTL_API=3 etcdctl \
   --endpoints="${ETCDCTL_ENDPOINTS}" \
-  --cacert="${ETCDCTL_CACERT}" \
-  --cert="${ETCDCTL_CERT}" \
-  --key="${ETCDCTL_KEY}" \
-  endpoint health --cluster
+  endpoint health
 ```
 
 HAProxy config/listeners:
@@ -712,17 +705,17 @@ sudo haproxy -c -V -f /etc/haproxy/haproxy.cfg
 sudo ss -lntp | grep -E ':(443|8883|8080|8884)\b'
 ```
 
-## 3A.20 Security rules
+## 10.20 Security rules
 
 - Keep the DigitalOcean token in a root-readable protected file/secret path, never Git.
 - Use the narrowest DigitalOcean token permissions available for the failover task.
 - Do not give the failover identity access to PostgreSQL, OpenBao Transit signing, gateway AppKeys, or Fabric identities.
-- Use a dedicated etcd client identity where practical.
+- The current etcd checkpoint uses HTTP only on the private east-west network. If etcd TLS/authentication is added later, give the failover controller a dedicated least-privilege etcd client identity.
 - Keep the Reserved IPv4 assigned to one app Droplet instead of parking it unassigned.
 - Do not bind public `443/8883` to `0.0.0.0` merely because it is easier; use the anchor address for the self-managed ingress design.
 - Treat a manual Reserved-IP move during an incident as a controlled operator action and record who moved it, when, from which Droplet, and why.
 
-## 3A.21 Final pass condition
+## 10.21 Final pass condition
 
 This layer passes when:
 
@@ -739,4 +732,4 @@ one stable Reserved IP
         +-> fresh real uplink succeeds after takeover
 ```
 
-Continue with [04-host-hardening-dns-pki-and-secrets.md](04-host-hardening-dns-pki-and-secrets.md) for the full identity inventory, and use the actual deployment sequence in [18-cloud-ha-grafana-deployment-day-runbook.md](18-cloud-ha-grafana-deployment-day-runbook.md).
+Next standby phase: [11-raspberry-pi-4g-backhaul.md](11-raspberry-pi-4g-backhaul.md). Use [19-cloud-ha-grafana-deployment-day-runbook.md](19-cloud-ha-grafana-deployment-day-runbook.md) only as a sequence reference until its later phases are refined.

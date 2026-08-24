@@ -1,5 +1,7 @@
 # 3. Create the Minimum DigitalOcean HA Foundation
 
+> **Evidence boundary:** the three active Droplets and their host-observed `10.104.0.0/20` east-west path are evidenced in the live build log. The current operator is not authorized to modify or verify the DigitalOcean Cloud Firewall. This repository also does not currently contain execution evidence that the Reserved IPv4 or public DNS has been commissioned. Provider-side items below are therefore target/handoff guidance until the account owner confirms them.
+
 This guide creates the **three-Droplet minimum HA test environment** defined in [02a-digitalocean-machine-layout-and-specs.md](02a-digitalocean-machine-layout-and-specs.md).
 
 Run provider-console/API actions from the administration workstation. Run Linux commands only after SSHing to the named Droplet. Do not paste secrets into this Markdown or a shared terminal transcript.
@@ -23,32 +25,31 @@ ha-03 planned name:
 
 **Stop here. Do not create resources** while the region, VPC CIDR, administrator source, or domain ownership is uncertain. Changing these after quorum services are built creates avoidable rework.
 
-## 3.1 Resources to create
+## 3.1 Foundation state and remaining provider-owned resources
+
+The host-side foundation already evidenced by this build is:
 
 ```text
-1 VPC
-3 Droplets
-1 DigitalOcean Reserved IPv4
-cloud firewalls
-DNS records
+3 active Ubuntu 24.04 LTS Droplets
+ulc-01 / ha-01
+ulc-02 / ha-02
+replacement ulc-03 / ha-03
+host-observed east-west network on eth1
 ```
+
+The intended full provider-side target also includes:
+
+```text
+1 DigitalOcean Reserved IPv4
+provider cloud-firewall policy
+public DNS records
+```
+
+Those provider-side items are **not claimed as completed here**. The DigitalOcean Cloud Firewall is controlled by the account owner/boss, and the current operator must not change it. Reserved-IP and public-DNS commissioning belongs to the later public-ingress phase unless the provider owner supplies evidence that it already exists.
 
 No managed Network Load Balancer, Managed Valkey, Managed PostgreSQL, dedicated role Droplets, or block volumes are required initially.
 
-Create them in this order:
-
-```text
-1. VPC
-2. ha-01 / ha-02 / ha-03 in that VPC and same datacenter/region
-3. record actual VPC IPs, ha-01/ha-02 Droplet IDs, and ha-01/ha-02 anchor IPs
-4. cloud firewall rules
-5. create one Reserved IPv4 and assign it immediately to ha-01
-6. later, after public HAProxy listeners are healthy on both app hosts, prove manual Reserved-IP reassignment
-7. enable the etcd-locked automatic failover agent
-8. point public DNS at the Reserved IPv4
-```
-
-**Why:** the cluster manuals need real private IPs, while the self-managed public-ingress manual needs the Droplet IDs and anchor addresses. The Reserved IP may be created early, but do not enable automatic reassignment until etcd and both HAProxy candidates are healthy.
+**Why:** separating host evidence from provider-control-plane assumptions prevents the manual from reporting a firewall, Reserved IP, DNS record, or provider VPC object that the current operator has not actually verified.
 
 ## 3.2 Droplets
 
@@ -96,32 +97,32 @@ lorawan-test
 
 Record the exact Droplet size slugs from the control panel/API at creation time instead of copying a historical slug blindly.
 
-## 3.3 Example private IP plan
+## 3.3 Operationally validated east-west IP plan
 
-The project may keep the existing VPC example `10.60.0.0/20`.
-
-Example assignments:
+The current active hosts were validated from Linux itself on `eth1`:
 
 ```text
-ha-01  10.60.1.11
-ha-02  10.60.1.12
-ha-03  10.60.1.13
+ulc-01 / ha-01  10.104.0.2/20
+ulc-02 / ha-02  10.104.0.4/20
+ulc-03 / ha-03  10.104.0.8/20
 ```
 
-Do not hard-code these example IPs until the provider-assigned VPC addresses are recorded.
+Cross-node ICMP succeeded and TCP `2380` was proven between hosts before etcd bootstrap. These are therefore the operational HA/east-west addresses used by the current build. The old `10.60.x.x` values were design examples only and are removed so they cannot be copied into live service configuration.
 
-Immediately record the real values in the operator worksheet from [02-capacity-cost-and-ip-plan.md](02-capacity-cost-and-ip-plan.md). From each host, verify the intended VPC interface/address is present with:
+The provider control-plane object itself has **not** been independently inspected by the current operator. Do not turn the host-observed result into a claim about DigitalOcean console state. Record any future provider confirmation separately.
+
+Verify the host view with:
 
 ```bash
 ip -br address
 ip route
 ```
 
-**Stop here** if two hosts show duplicate addresses, the expected VPC route is missing, or a service document is still using the example `10.60.1.x` addresses.
+**Stop here** if a rebuilt host does not have its documented `10.104.0.x/20` address, the route disappears, or cross-node reachability no longer matches the execution log.
 
 ## 3.4 One Reserved IPv4 for self-managed public ingress
 
-Create one DigitalOcean Reserved IPv4 and assign it to `ha-01` initially. Do **not** create a managed Network Load Balancer.
+**STANDBY / provider-owned step:** the target design uses one DigitalOcean Reserved IPv4 assigned to `ha-01` initially, with no managed Network Load Balancer. The current repository does not contain execution evidence that this Reserved IPv4 has been commissioned, so do not mark it complete until the provider owner/current authorized operator supplies that evidence.
 
 The public shape is:
 
@@ -142,13 +143,15 @@ The address is active/passive and belongs to one Droplet at a time. Automatic mo
 
 Do not point DNS at a normal Droplet public IPv4. Both public DNS names point to the Reserved IPv4.
 
-Follow [03a-self-managed-public-ingress.md](03a-self-managed-public-ingress.md) for the exact anchor-IP, `doctl`, health-check, systemd, manual-move, and automatic-failover procedure.
+The Reserved-IP failover design is parked in [10-self-managed-public-ingress.md](10-self-managed-public-ingress.md). It is **standby** until the application/MQTT paths and provider-side prerequisites are ready; do not execute it during the foundation or etcd phase.
 
-## 3.5 Firewall model
+## 3.5 Target firewall model - provider-owner handoff
+
+The DigitalOcean Cloud Firewall state is currently **unknown to this operator and externally managed**. The rules below describe the intended least-privilege policy for the provider-account owner; they are not instructions for the current operator to modify the cloud firewall.
 
 ### Public / Reserved-IP-facing
 
-Allow only what is required:
+When the provider-owned firewall phase becomes active, allow only what is required:
 
 ```text
 TCP 22   SSH from approved administration sources
@@ -156,7 +159,7 @@ TCP 443  public HTTPS to ha-01/ha-02; HAProxy listens only on each host's anchor
 TCP 8883 public MQTT TLS to ha-01/ha-02; HAProxy listens only on each host's anchor IP
 ```
 
-The firewall permits the public service ports on the two app Droplets, but HAProxy must bind those ports to the DigitalOcean **anchor IP**, not `0.0.0.0` and not the normal public Droplet IP. This keeps the Reserved IPv4 as the intended public service address.
+If the provider owner enables these rules later, HAProxy must still bind the public service ports to the DigitalOcean **anchor IP**, not `0.0.0.0` and not the normal public Droplet IP. The firewall policy and the application bind policy are separate controls; neither should be assumed from the other.
 
 Do not expose directly:
 
@@ -202,14 +205,17 @@ Allow only between the hosts/services that need them:
 <FABRIC_GATEWAY_PORT>/tcp outbound from Fabric adapter-1/2 to the external Fabric Gateway only
 ```
 
-Keep the exact allowed source addresses/subnets in the firewall record.
+Keep the exact allowed source addresses/subnets in the provider-owner firewall record when that information becomes available.
 
-Apply firewall rules in two passes:
+Provider-owner handoff sequence:
 
-1. **before service installation:** SSH from the approved admin CIDR plus VPC east-west traffic needed for bootstrap;
-2. **after each service is installed:** narrow its source rule to the exact consumers listed above and verify the port is not reachable from an unapproved source.
+1. confirm the actual DigitalOcean VPC/firewall objects and current rules in the provider control plane;
+2. preserve the currently working SSH path before any restriction is applied;
+3. add only the rules required by services that are actually deployed;
+4. verify each permitted path and an unapproved-source rejection;
+5. record the result in `00-build-execution-log.md` rather than assuming it succeeded.
 
-After every firewall edit, keep the existing SSH session open and test a second SSH session before closing the first. This prevents a typo from becoming an avoidable lockout.
+The current operator does not perform these provider-side edits.
 
 ## 3.6 Service placement reminder
 
@@ -312,14 +318,14 @@ The MQTT server certificate must be valid for `mqtt.<DOMAIN>` and the broker mus
 Internal etcd certificates use private host identities according to [04-host-hardening-dns-pki-and-secrets.md](04-host-hardening-dns-pki-and-secrets.md). For the local HAProxy service aliases used by containerized ChirpStack, include these logical names in the corresponding backend server certificates:
 
 ```text
-pgbouncer.internal.<DOMAIN>    -> SAN on the PgBouncer certificates on ha-01, ha-02, and ha-03
-postgres-ha.internal.<DOMAIN>  -> SAN on every PostgreSQL member certificate
+pgbouncer.internal.lorawan.com    -> SAN on the PgBouncer certificates on ha-01, ha-02, and ha-03
+postgres-ha.internal           -> SAN on every PostgreSQL member certificate
 valkey-ha.internal.<DOMAIN>    -> SAN on every Valkey server certificate
 mqtt-ha.internal.<DOMAIN>      -> SAN on both Mosquitto server certificates
 openbao-kms.internal.<DOMAIN>  -> SAN on all three OpenBao server certificates
 ```
 
-Inside ChirpStack-1 and ChirpStack-2, map `pgbouncer.internal.<DOMAIN>`, `valkey-ha.internal.<DOMAIN>`, and `mqtt-ha.internal.<DOMAIN>` to that app host's private VPC IP. On `ha-03`, map `pgbouncer.internal.<DOMAIN>` and `mqtt-ha.internal.<DOMAIN>` to the `ha-03` private VPC IP so Node-RED uses the local HAProxy MQTT route and Node-RED/Grafana use local PgBouncer. Each PgBouncer maps/uses `postgres-ha.internal.<DOMAIN>` for its local HAProxy backend. Fabric adapter-1 and adapter-2 use `openbao-kms.internal.<DOMAIN>:18200`, mapped to that adapter host's local HAProxy frontend, which reaches the three OpenBao nodes over private TLS. This keeps stable names while PgBouncer, HAProxy, Patroni, Sentinel, MQTT routing, or the OpenBao active node changes.
+Inside ChirpStack-1 and ChirpStack-2, map `pgbouncer.internal.lorawan.com`, `valkey-ha.internal.<DOMAIN>`, and `mqtt-ha.internal.<DOMAIN>` to that app host's private VPC IP. On `ha-03`, map `pgbouncer.internal.lorawan.com` and `mqtt-ha.internal.<DOMAIN>` to the `ha-03` private VPC IP so Node-RED uses the local HAProxy MQTT route and Node-RED/Grafana use local PgBouncer. Each PgBouncer maps/uses `postgres-ha.internal` for its local HAProxy backend. Fabric adapter-1 and adapter-2 use `openbao-kms.internal.<DOMAIN>:18200`, mapped to that adapter host's local HAProxy frontend, which reaches the three OpenBao nodes over private TLS. This keeps stable names while PgBouncer, HAProxy, Patroni, Sentinel, MQTT routing, or the OpenBao active node changes.
 
 ## 3.10 Why not two Droplets?
 
@@ -343,4 +349,4 @@ result: quorum survives
 
 That is the reason three machines are the absolute minimum for this HA test. It is not an arbitrary architecture preference.
 
-Continue with [04-host-hardening-dns-pki-and-secrets.md](04-host-hardening-dns-pki-and-secrets.md), then [06-etcd-cluster.md](06-etcd-cluster.md).
+Continue with [04-host-hardening-dns-pki-and-secrets.md](04-host-hardening-dns-pki-and-secrets.md), then [05-etcd-cluster.md](05-etcd-cluster.md).

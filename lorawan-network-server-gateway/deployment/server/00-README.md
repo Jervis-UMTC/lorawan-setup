@@ -8,7 +8,10 @@ Start with:
 
 1. [cloud-production/00-README.md](cloud-production/00-README.md) for the architecture map and boundaries;
 2. [cloud-production/02-capacity-cost-and-ip-plan.md](cloud-production/02-capacity-cost-and-ip-plan.md) for the non-secret IP/version worksheet;
-3. [cloud-production/18-cloud-ha-grafana-deployment-day-runbook.md](cloud-production/18-cloud-ha-grafana-deployment-day-runbook.md) for the actual deployment order.
+3. [cloud-production/00-build-execution-log.md](cloud-production/00-build-execution-log.md) for the real executed commands, failures, fixes, and accepted checkpoint;
+4. continue only with the next numbered manual when it is no longer marked `STANDBY / DRAFT`.
+
+[cloud-production/19-cloud-ha-grafana-deployment-day-runbook.md](cloud-production/19-cloud-ha-grafana-deployment-day-runbook.md) is the complete target sequence reference, not proof that its later phases are already validated.
 
 This is the current **scale-model-of-future-deployment** track. Do not deploy `ha-cluster/` then `data-layer/` first for this target; doing so would recreate lab-only service placement such as a standalone telemetry database and confuse the cloud topology.
 
@@ -27,7 +30,7 @@ deployment/server/
 ├── ha-cluster/              # 3-node etcd, 3-node Spilo/Patroni PostgreSQL HA, HAProxy, PgBouncer, Valkey cache, ChirpStack Cluster (01-14)
 ├── data-layer/              # TimescaleDB hypertables, Node-RED telemetry flows, Grafana dashboards & alerting (01-03)
 ├── fabric-attestation/      # Fabric handoff, OpenBao Transit, outbox/adapter, commit/reconciliation (01-03)
-├── cloud-production/        # Current 3-Droplet HA POC / future-deployment scale model (00-19) + simulation references
+├── cloud-production/        # Current 3-Droplet HA POC / future-deployment scale model (00-20) + simulation references
 └── integrations/            # Technology reference manuals (timescaledb, node-red, grafana, hyperledger-fabric, gateway-integrity, technology-transfer)
 ```
 

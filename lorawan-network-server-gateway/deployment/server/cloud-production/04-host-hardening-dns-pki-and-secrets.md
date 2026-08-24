@@ -2,6 +2,8 @@
 
 For the **step-by-step execution record on newly provisioned hosts**, use [04a-host-security-hardening-execution-runbook.md](04a-host-security-hardening-execution-runbook.md). That runbook records what was actually executed, why, the verification result, deviations from the supplied Ubuntu hardening document, and the explicitly excluded yellow-highlighted web-server section.
 
+> **Current status:** the host-security baseline is validated. DNS/PKI/secrets guidance for services that have not been deployed yet remains **STANDBY / DRAFT** and must be refined when each service becomes active. Do not read a future PKI example in this file as evidence that the corresponding service already uses it.
+
 ## 4.1 Baseline principles
 
 - Use a supported LTS operating-system image and keep the exact cloud-image identifier for rebuild and rollback. This POC pins **Ubuntu Server 24.04 LTS x64 (Noble)** using the DigitalOcean `ubuntu-24-04-x64` image on `ha-01/02/03`. Do not record only "Ubuntu LTS"; the exact release matters for package repositories and repeatable rebuilds.
@@ -9,7 +11,7 @@ For the **step-by-step execution record on newly provisioned hosts**, use [04a-h
 - Keep database, etcd, MQTT, and Patroni control ports on private interfaces.
 - Use a dedicated service account for each daemon where practical.
 - Store secrets outside Git and outside shell history.
-- Use mutual TLS for etcd and gateway-facing MQTT. When the gateway-evidence ingest service is deployed, use mutual TLS there too with a separate-purpose per-gateway upload identity when practical. Use TLS with hostname verification for PostgreSQL, internal service connections where configured, and public HTTP.
+- Treat transport security per service as a phase-specific control. The **current validated etcd checkpoint uses HTTP only on the private `10.104.0.0/20` east-west network**; do not claim etcd mTLS is deployed. If etcd transport TLS is added later, use a dedicated cluster CA and member/client identities. Gateway-facing MQTT and other future public/private services must be refined and validated when their phases become active.
 - Apply updates through tested rolling procedures, not unattended major upgrades.
 
 ## 4.2 Initial host inspection
@@ -213,6 +215,8 @@ Record the Docker Engine, Compose plugin, containerd, package versions, and pack
 
 ### Bound container logs before creating the stack
 
+> **Current evidence gap:** the live execution log proves Docker Engine `29.7.2`, `overlayfs`, systemd cgroups, cgroup v2, and working `docker compose` use, but it does **not** contain captured output proving the current default Docker logging driver or that `/etc/docker/daemon.json` was changed to `local`. Treat the procedure below as required hardening to verify before the next container phase; do not retroactively mark it PASS.
+
 Docker's default `json-file` driver does not rotate logs unless configured. On these 50-GiB POC disks, unbounded container logs are an avoidable failure mode.
 
 For a new host, use Docker's rotating `local` logging driver as the default:
@@ -244,7 +248,7 @@ This default applies to newly created containers. If containers existed before t
 
 ### Docker and firewall boundary
 
-Do not assume a host UFW rule alone protects ports published by Docker. Docker manages its own packet-filter rules. This cloud POC therefore keeps the **DigitalOcean Cloud Firewall**, explicit private/loopback/anchor IP binds, and `ss -lntup` listener verification as mandatory controls. If additional host packet filtering for Docker traffic is required, implement it through a reviewed Docker-compatible rule path rather than an ad-hoc ruleset.
+Do not assume a host UFW rule alone protects ports published by Docker. Docker manages its own packet-filter rules. The target architecture requires a provider-side DigitalOcean Cloud Firewall, explicit private/loopback/anchor IP binds, and `ss -lntup` listener verification. **Current provider-firewall state is not verified by this operator and must not be claimed as active.** Until the provider owner confirms it, rely only on controls that are actually evidenced—service bind addresses, SSH hardening, Fail2ban, and listener inspection—and keep provider-firewall completion as an explicit outstanding control.
 
 Spilo maintainers encourage users to build reviewed images from source because public image releases are not regular. Build in CI, scan, sign, publish to an approved registry, and pin the digest.
 
@@ -288,18 +292,18 @@ The gateway MQTT certificate Common Name equals the 16-hex Gateway ID when the b
 
 ### 4.7A Certificate/SAN matrix for this POC
 
-Issue or obtain these **before the consuming service is started**:
+This matrix is a **future service-PKI target**, not a record of certificates already deployed. Issue or obtain an entry only when its consuming service becomes active. The current etcd cluster is the explicit exception: it is already validated with HTTP on the private east-west network, so its TLS row applies only if we later schedule an etcd transport-hardening change.
 
 | Service | Where | Name/SAN that clients verify | Why |
 |---|---|---|---|
 | ChirpStack HTTPS | HAProxy `ha-01/02` anchor listeners | `chirpstack.<DOMAIN>` | Browser/API TLS through the Reserved IPv4 after ownership moves between app hosts |
 | Mosquitto-1 | `ha-01` | `mqtt.<DOMAIN>`, `mqtt-ha.internal.<DOMAIN>`, node private name/IP | Same broker cert works through public and internal HAProxy TCP pass-through |
 | Mosquitto-2 | `ha-02` | `mqtt.<DOMAIN>`, `mqtt-ha.internal.<DOMAIN>`, node private name/IP | Backup broker presents the same service names |
-| PgBouncer | `ha-01/02/03` | `pgbouncer.internal.<DOMAIN>`, node private name/IP | Local database clients use one stable logical name |
-| PostgreSQL | `ha-01/02/03` | `postgres-ha.internal.<DOMAIN>`, node private name/IP | PgBouncer/HAProxy can verify any promoted primary |
+| PgBouncer | `ha-01/02/03` | `pgbouncer.internal.lorawan.com`, node private name/IP | Local database clients use one stable logical name |
+| PostgreSQL | `ha-01/02/03` | `postgres-ha.internal`, node private name/IP | PgBouncer/HAProxy can verify any promoted primary |
 | Valkey | `ha-01/02/03` | `valkey-ha.internal.<DOMAIN>`, node private name/IP | HAProxy/ChirpStack verify any promoted primary |
 | OpenBao | `ha-01/02/03` | `openbao-kms.internal.<DOMAIN>`, node private name/IP | Either active or standby can serve the stable KMS path |
-| etcd | `ha-01/02/03` | each member's private DNS/IP | Peer/client mTLS must identify the actual member |
+| etcd - future TLS hardening only | `ha-01/02/03` | each member's private DNS/IP | If transport TLS is added later, peer/client mTLS must identify the actual member; current validated etcd is HTTP on `10.104.0.0/20` |
 
 Client identities:
 
@@ -408,4 +412,4 @@ Complete only when:
 - logs contain no live secret during a sanitized test;
 - when gateway evidence is deployed, one unauthorized/unknown gateway client is rejected by the evidence API, one authorized gateway identity maps only to its own Gateway EUI, and the verifier cannot use OpenBao/Fabric signing credentials.
 
-Next: [05-raspberry-pi-4g-backhaul.md](05-raspberry-pi-4g-backhaul.md)
+Next validated build step: [05-etcd-cluster.md](05-etcd-cluster.md).

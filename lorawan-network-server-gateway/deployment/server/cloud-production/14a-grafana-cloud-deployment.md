@@ -1,8 +1,10 @@
-# 13A. Tiny Grafana POC on ha-03
+# 14A. Tiny Grafana POC on ha-03
+
+> **Status: STANDBY / DRAFT.** Grafana is not yet deployed or live-validated in the current cloud build. Re-check the exact image/version, database path, authentication, dashboards, and resource use when this phase becomes active.
 
 Grafana is only a **small visualization aid** for the HA POC. It is not part of the LoRaWAN control path and it gets no dedicated Droplet.
 
-## 13A.1 Data path
+## 14A.1 Data path
 
 ```text
 Gateway / device
@@ -22,7 +24,7 @@ Grafana
 
 The database is the same three-member Patroni PostgreSQL cluster used by ChirpStack. `lorawan_telemetry` has TimescaleDB enabled and stores the telemetry hypertables; there is no separate TimescaleDB server in this POC.
 
-## 13A.2 Resource target
+## 14A.2 Resource target
 
 Keep the workload small, but do not impose a hard limit below Grafana's published installation minimum:
 
@@ -38,7 +40,7 @@ Grafana documents 512 MB memory and 1 CPU core as its minimum recommended instal
 
 If Grafana reaches the 512-MiB ceiling or materially harms the `ha-03` failure test, record the measurement and resize based on evidence. Do not remove other required architecture features merely to preserve dashboards.
 
-## 13A.3 Preconditions
+## 14A.3 Preconditions
 
 Before Grafana:
 
@@ -48,7 +50,7 @@ Before Grafana:
 - `telemetry_reader` exists with read-only permissions;
 - `ha-03` local PgBouncer/HAProxy database path works.
 
-## 13A.4 Minimal container
+## 14A.4 Minimal container
 
 Run on `ha-03`. Create a dedicated directory instead of adding Grafana to an unrelated Compose project:
 
@@ -77,12 +79,12 @@ services:
       - /srv/grafana/data:/var/lib/grafana
       - /etc/lorawan-pki/pgbouncer/ca.crt:/run/pgbouncer/ca.crt:ro
     extra_hosts:
-      - "pgbouncer.internal.<DOMAIN>:<HA03_PRIVATE_IP>"
+      - "pgbouncer.internal.lorawan.com:<HA03_PRIVATE_IP>"
 ```
 
 Do not add a Prometheus stack just to satisfy this POC. Command-line HA checks plus a telemetry dashboard are enough unless infrastructure metrics are part of a specific test.
 
-## 13A.5 Start and open it
+## 14A.5 Start and open it
 
 ```bash
 docker compose config --quiet
@@ -106,12 +108,12 @@ ssh -L 3000:127.0.0.1:3000 <USER>@<HA03_MANAGEMENT_IP>
 
 Open `http://127.0.0.1:3000` locally.
 
-## 13A.6 PostgreSQL data source
+## 14A.6 PostgreSQL data source
 
 Use the local HA database path on `ha-03`:
 
 ```text
-Host: pgbouncer.internal.<DOMAIN>:6432
+Host: pgbouncer.internal.lorawan.com:6432
 Database: lorawan_telemetry
 User: telemetry_reader
 TLS/SSL: enabled
@@ -125,7 +127,7 @@ Grafana must not use `telemetry_admin`, `telemetry_writer`, `fabric_adapter`, or
 
 Why: Grafana only reads a few rows for demonstration.
 
-## 13A.7 First dashboard
+## 14A.7 First dashboard
 
 Keep it tiny:
 
@@ -160,7 +162,7 @@ LIMIT 20;
 
 For the primary EMU-01 dashboard, select values by approved `metric_name`, for example `barometer_pressure_pa`, `barometer_temperature_c`, `environment_temperature_c`, `environment_humidity_percent`, the two distinct light metrics, soil, UV, rain, and battery. Do not assume a dedicated SQL column exists for every sensor. SEC-02's temporary RAK12011 verification payload is not the permanent dashboard baseline.
 
-## 13A.8 Failure behavior
+## 14A.8 Failure behavior
 
 Stop Grafana:
 
@@ -183,7 +185,7 @@ Restart Grafana and verify the new row appears.
 
 If all of `ha-03` fails, Grafana and Node-RED pause. That is an accepted POC limitation. The PostgreSQL database and existing outbox must still survive on the other Patroni members.
 
-## 13A.9 Pass condition
+## 14A.9 Pass condition
 
 - no extra monitoring Droplet exists;
 - Grafana stays loopback-only;
@@ -192,4 +194,4 @@ If all of `ha-03` fails, Grafana and Node-RED pause. That is an accepted POC lim
 - stopping Grafana does not affect the LoRaWAN control plane;
 - its memory use does not cause the 2-GiB host to OOM during the POC.
 
-Return to [18-cloud-ha-grafana-deployment-day-runbook.md](18-cloud-ha-grafana-deployment-day-runbook.md).
+Next standby phase: [15-failover-chaos-and-acceptance-testing.md](15-failover-chaos-and-acceptance-testing.md). Keep [19-cloud-ha-grafana-deployment-day-runbook.md](19-cloud-ha-grafana-deployment-day-runbook.md) as a sequence reference, not as a second source of completed-state evidence.

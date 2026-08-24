@@ -188,7 +188,7 @@ ha-01 -> Fabric adapter-1
 ha-02 -> Fabric adapter-2
 ```
 
-The two adapter workers are **required by the full-feature target architecture** and their capacity is included in node sizing. Runtime deployment is still blocked by the reviewed implementation/image readiness gate in [19-openbao-and-fabric-adapter.md](19-openbao-and-fabric-adapter.md). If that implementation is missing, other infrastructure layers may be tested, but the overall full-feature POC remains **BLOCKED**, not passed.
+The two adapter workers are **required by the full-feature target architecture** and their capacity is included in node sizing. Runtime deployment is still blocked by the reviewed implementation/image readiness gate in [20-openbao-and-fabric-adapter.md](20-openbao-and-fabric-adapter.md). If that implementation is missing, other infrastructure layers may be tested, but the overall full-feature POC remains **BLOCKED**, not passed.
 
 Both read the **same** `telemetry.fabric_outbox` table from `lorawan_telemetry` through the PostgreSQL HA path.
 
@@ -243,7 +243,7 @@ The two public HAProxy listeners bind to each Droplet's **anchor IP**, not its V
 
 The Reserved IP is active/passive and can belong to only one Droplet at a time. There is no automatic failback: after recovery, the returning host becomes a standby candidate until an operator deliberately moves the address later.
 
-See [03a-self-managed-public-ingress.md](03a-self-managed-public-ingress.md).
+See [10-self-managed-public-ingress.md](10-self-managed-public-ingress.md).
 
 ## 1.14 POC scope
 
@@ -301,4 +301,4 @@ external Fabric outage      # full reconcile/drain test only when adapter exists
 
 Restore full redundancy before starting the next failure.
 
-See [18-cloud-ha-grafana-deployment-day-runbook.md](18-cloud-ha-grafana-deployment-day-runbook.md).
+See [19-cloud-ha-grafana-deployment-day-runbook.md](19-cloud-ha-grafana-deployment-day-runbook.md).

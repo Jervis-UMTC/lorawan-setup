@@ -45,7 +45,7 @@ Start here:
 
 [deployment/00-README.md](deployment/00-README.md)
 
-Use this path for the complete HA/integration architecture or production/cloud work. For the current real-cloud HA + USB 4G/LTE gateway + Grafana rollout, go directly to [deployment/server/cloud-production/18-cloud-ha-grafana-deployment-day-runbook.md](deployment/server/cloud-production/18-cloud-ha-grafana-deployment-day-runbook.md) after reading the deployment README.
+Use this path for the complete HA/integration architecture or production/cloud work. For the current real-cloud build, start with [deployment/server/cloud-production/00-README.md](deployment/server/cloud-production/00-README.md), then read [00-build-execution-log.md](deployment/server/cloud-production/00-build-execution-log.md) to see what is actually validated. Continue only with the next active numbered phase. [19-cloud-ha-grafana-deployment-day-runbook.md](deployment/server/cloud-production/19-cloud-ha-grafana-deployment-day-runbook.md) is the full target sequence reference while later technologies remain on standby.
 
 ```text
 deployment/

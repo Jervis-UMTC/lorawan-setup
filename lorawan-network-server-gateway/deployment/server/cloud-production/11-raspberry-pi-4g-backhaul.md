@@ -1,6 +1,8 @@
-# 5. Gateway OS Delivery Buffer and Integrity Journal over a USB 4G/LTE Dongle
+# 11. Gateway OS Delivery Buffer and Integrity Journal over a USB 4G/LTE Dongle
 
-## 5.1 Goal
+> **Status: STANDBY / DRAFT.** This gateway/backhaul phase is not part of the current completed cloud-server checkpoint. Re-check the actual Gateway OS build, modem mode, carrier/APN, MQTT endpoint, certificates, queue/journal behavior, and routing when this phase becomes active.
+
+## 11.1 Goal
 
 Keep two independent outbound paths over the same 4G backhaul:
 
@@ -19,7 +21,7 @@ Concentratord
 
 MQTT uses a unique gateway certificate. The evidence uploader uses its own per-gateway machine identity when the v2 path is deployed. MQTT Forwarder never connects directly to the cloud and the journal never owns the SPI radio.
 
-## 5.2 Confirm the gateway and 4G inputs
+## 11.2 Confirm the gateway and 4G inputs
 
 Before changing the backhaul, confirm the Gateway EUI and legal RF plan are stable, the modem and SIM support the selected carrier/APN, and DNS resolves every enabled machine endpoint.
 
@@ -46,7 +48,7 @@ Keep the tested Gateway OS image reference, RAK5146 variant, APN reference, endp
 
 Do not copy SIM PINs, APN passwords, or private keys into the manual or test notes.
 
-## 5.3 Install and configure Gateway OS
+## 11.3 Install and configure Gateway OS
 
 Follow:
 
@@ -58,7 +60,7 @@ Follow:
 
 Keep UDP Forwarder disabled.
 
-## 5.4 Connect the USB 4G/LTE dongle without losing management access
+## 11.4 Connect the USB 4G/LTE dongle without losing management access
 
 Keep Ethernet or the currently working management connection attached while commissioning LTE. Do not make LTE the only route until the modem has passed registration, DNS, MQTT, and reconnect tests.
 
@@ -100,7 +102,7 @@ Older PPP modem
 
 Do not install every modem package blindly. Identify the dongle mode first, then use the package/LuCI procedure supported by the pinned Gateway OS release.
 
-## 5.4A Configure the carrier/APN
+## 11.4A Configure the carrier/APN
 
 Record the carrier and APN reference outside Git. Configure only the values required by the SIM plan:
 
@@ -115,7 +117,7 @@ Do not assume public IPv4. Most mobile connections may sit behind carrier NAT/CG
 
 **No inbound port forwarding to the gateway is required.** Do not expose LuCI, SSH, MQTT 1883, or any radio service through the mobile network.
 
-## 5.4B Verify LTE addressing, routing, DNS, and time
+## 11.4B Verify LTE addressing, routing, DNS, and time
 
 Once the LTE interface reports connected, run:
 
@@ -166,7 +168,7 @@ DNS works but MQTT TLS fails
 
 **Why:** this keeps LTE troubleshooting separate from LoRaWAN and MQTT. Do not change the radio region or ChirpStack device configuration to fix a mobile-network routing problem.
 
-## 5.4C Make LTE the intended cloud path
+## 11.4C Make LTE the intended cloud path
 
 When Ethernet, Wi-Fi, and LTE coexist, choose route metrics deliberately. During commissioning, keep the management route stable and make sure the cloud-bound route behaves as intended.
 
@@ -179,7 +181,7 @@ nslookup mqtt.<DOMAIN>
 
 Then watch the local Mosquitto bridge logs while sending a real uplink. The success condition is not just "the Internet works"; the gateway must establish the MQTT mTLS session over the intended mobile path and ChirpStack must update gateway last-seen.
 
-## 5.5 Configure the cloud bridge
+## 11.5 Configure the cloud bridge
 
 MQTT Forwarder remains:
 
@@ -200,7 +202,7 @@ event/state: out QoS 1
 command: in QoS 0, clean session
 ```
 
-## 5.6 Network exposure
+## 11.6 Network exposure
 
 The gateway initiates outbound TLS. Do not forward internet ports to LuCI, SSH, local MQTT, journal storage, or radio services. Local 1883 must remain on loopback.
 
@@ -213,7 +215,7 @@ TCP 443  -> evidence HTTPS/mTLS, only when the reviewed evidence service exists
 
 The evidence API does not expose the journal filesystem and MQTT 8883 does not carry journal segment uploads.
 
-## 5.7 4G outage test
+## 11.7 4G outage test
 
 Measure:
 
@@ -233,7 +235,7 @@ Measure:
 - evidence uploader recovery and data usage;
 - server journal-to-remote-MQTT reconciliation after connectivity returns.
 
-## 5.8 Final acceptance
+## 11.8 Final acceptance
 
 - Local delivery queue and journal evidence budget are separately finite and persistent.
 - Real uplinks survive the designed 4G outage and reboot.
@@ -243,3 +245,5 @@ Measure:
 - Duplicate application records are prevented.
 - Stale downlinks are not replayed.
 - RF and UDP controls remain unchanged.
+
+Next standby phase: [12-gateway-and-device-migration.md](12-gateway-and-device-migration.md).

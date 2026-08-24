@@ -4,11 +4,13 @@ Use this path for the complete gateway/server architecture. It is separate from 
 
 ## Current cloud HA starting point
 
-For the current work, start here:
+For the current work, start with the cloud-production status map and live execution log:
 
-**[server/cloud-production/18-cloud-ha-grafana-deployment-day-runbook.md](server/cloud-production/18-cloud-ha-grafana-deployment-day-runbook.md)**
+1. **[server/cloud-production/00-README.md](server/cloud-production/00-README.md)** — numbered phase/status map.
+2. **[server/cloud-production/00-build-execution-log.md](server/cloud-production/00-build-execution-log.md)** — what has actually been executed and validated.
+3. Continue only with the next numbered phase that is no longer marked `STANDBY / DRAFT`.
 
-That runbook builds the **three-Droplet HA proof of concept as a small scale model of the intended future deployment**: same important technologies and failure relationships, deliberately tiny capacity and sensor traffic.
+The [full target sequence runbook](server/cloud-production/19-cloud-ha-grafana-deployment-day-runbook.md) remains useful as an architecture/build-order reference, but its post-etcd sections are **standby**, not commands to execute blindly.
 
 Do **not** begin by deploying `server/ha-cluster/` or `server/data-layer/` for this cloud POC. Those directories remain useful lab/reference procedures, but the current cloud design co-locates TimescaleDB inside the Patroni cluster, uses cloud-specific MQTT/HAProxy ports, and has its own OpenBao/Fabric readiness gates.
 
@@ -33,7 +35,7 @@ deployment/
     ├── ha-cluster/          # 3-node etcd, 3-node Spilo/Patroni PostgreSQL HA, HAProxy, PgBouncer, Valkey cache, ChirpStack Cluster (01-14)
     ├── data-layer/          # TimescaleDB hypertables, Node-RED telemetry flows, Grafana dashboards & alerting (01-03)
     ├── fabric-attestation/  # Fabric handoff, OpenBao Transit, outbox/adapter, commit/reconciliation (01-03)
-    ├── cloud-production/    # Current 3-Droplet HA POC / future-deployment scale model (00-19) + simulation references
+    ├── cloud-production/    # Current 3-Droplet HA POC / future-deployment scale model (00-20) + simulation references
     └── integrations/        # Technology reference manuals (timescaledb, node-red, grafana, hyperledger-fabric, gateway-integrity, technology-transfer)
 ```
 
