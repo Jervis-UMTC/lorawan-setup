@@ -709,6 +709,87 @@ Typical expected permissions:
 600 ~/.ssh/authorized_keys
 ```
 
+### 4.2B Add a separate SSH administrator for a second device
+
+Use this when a second device must have its **own user account and its own SSH key**. Do not copy the existing `jervis` private key to the second device. The example account below is `opsadmin`; replace that name everywhere if a different human-readable username is preferred.
+
+Because global SSH password authentication is already disabled, create the account from an existing working `jervis` session and install the second device's public key before attempting the first login.
+
+**If the second device cannot be brought to the commissioning location:** the preferred method is still to generate its key directly on that device. If that is impractical and access must be prepared now, generate a **new dedicated keypair** on the currently trusted workstation, protect it with a strong passphrase, authorize only its public key on the servers, and later transfer that dedicated keypair to the home device using offline/removable media such as a USB drive. Do not reuse or copy the existing `jervis` private key, and do not temporarily re-enable SSH password authentication.
+
+This fallback is slightly weaker than generating the private key directly on the home device because the dedicated private key temporarily exists on another workstation. Use it only as a deliberate operational tradeoff. After the home device proves the new key works, remove the temporary copy from the commissioning workstation and transfer media. Do not assume deletion from SSD/flash media provides forensic secure erasure; if that level of key-origin assurance is required, wait and generate the key directly on the home device instead.
+
+The `opsadmin` account can be created and its dedicated public key authorized now, before the home device receives the private key. That lets the later home login work without weakening the global SSH policy.
+
+On the second device, generate a dedicated Ed25519 key. Windows PowerShell example:
+
+```powershell
+ssh-keygen -t ed25519 -f "$env:USERPROFILE\.ssh\id_ed25519_lorawan_ops" -C "opsadmin-lorawan"
+Get-Content "$env:USERPROFILE\.ssh\id_ed25519_lorawan_ops.pub"
+```
+
+Linux/macOS equivalent:
+
+```bash
+ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519_lorawan_ops -C 'opsadmin-lorawan'
+cat ~/.ssh/id_ed25519_lorawan_ops.pub
+```
+
+Copy **only the single `ssh-ed25519 ...` public-key line**. Never copy the private key into the server or documentation.
+
+On `ulc-01`, from the already-proven `jervis` session, create the account and grant sudo only if this is intended to be a second administrator:
+
+```bash
+sudo adduser opsadmin
+sudo usermod -aG sudo opsadmin
+id opsadmin
+sudo -l -U opsadmin
+```
+
+`adduser` asks for a local password. This password protects `sudo`/console recovery; it is not usable for SSH because `PasswordAuthentication no` remains in force. The current pwquality policy requires future password changes to be at least 16 characters.
+
+Create the SSH directory and key file with strict ownership/modes:
+
+```bash
+sudo install -d -m 700 -o opsadmin -g opsadmin /home/opsadmin/.ssh
+sudo install -m 600 -o opsadmin -g opsadmin /dev/null /home/opsadmin/.ssh/authorized_keys
+```
+
+Then append the second device's public key. Replace the placeholder with the exact `.pub` line copied from that device:
+
+```bash
+printf '%s\n' 'ssh-ed25519 AAAA_REPLACE_WITH_SECOND_DEVICE_PUBLIC_KEY opsadmin-lorawan' | sudo tee -a /home/opsadmin/.ssh/authorized_keys >/dev/null
+sudo chown opsadmin:opsadmin /home/opsadmin/.ssh/authorized_keys
+sudo chmod 700 /home/opsadmin/.ssh
+sudo chmod 600 /home/opsadmin/.ssh/authorized_keys
+sudo sshd -t
+```
+
+Keep the existing `jervis` session open. From the second device, prove key-only login to `ulc-01`:
+
+```powershell
+ssh -i "$env:USERPROFILE\.ssh\id_ed25519_lorawan_ops" -o IdentitiesOnly=yes -o PasswordAuthentication=no opsadmin@143.198.205.54
+```
+
+Linux/macOS equivalent:
+
+```bash
+ssh -i ~/.ssh/id_ed25519_lorawan_ops -o IdentitiesOnly=yes -o PasswordAuthentication=no opsadmin@143.198.205.54
+```
+
+Inside the new session verify:
+
+```bash
+whoami
+sudo whoami
+```
+
+Expected: `whoami -> opsadmin`, then after the local sudo password `sudo whoami -> root`.
+
+Only after this succeeds on `ulc-01`, repeat the same account + **same second-device public key** on `ulc-02` (`165.22.253.127`) and replacement `ulc-03` (`159.223.50.57`). Do not weaken `PasswordAuthentication no`, `PermitRootLogin no`, or the existing `jervis` access to make this work.
+
+**Why:** a separate user plus a separate device key gives an independently revocable access path. If that second device is lost, remove its account/key without rotating the existing `jervis` key. The private key always remains on the device that generated it.
+
 ## 4.3 Harden the SSH server - corrected from supplied guide
 
 [~] Apply to **one healthy host at a time**, starting with `ulc-01`. Keep the current proven `jervis` SSH session open until a new post-change key session succeeds.
