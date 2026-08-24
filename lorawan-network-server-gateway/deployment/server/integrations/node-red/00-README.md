@@ -11,7 +11,7 @@ single-host lab
 
 three-Droplet cloud HA POC
   MQTT host: mqtt-ha.internal.<DOMAIN>:18883 over TLS
-  DB host:   pgbouncer.internal.<DOMAIN>:6432 -> HAProxy -> Patroni primary
+  DB host:   pgbouncer.internal.lorawan.com:6432 -> HAProxy -> Patroni primary
   DB name:   lorawan_telemetry with TimescaleDB enabled
 ```
 

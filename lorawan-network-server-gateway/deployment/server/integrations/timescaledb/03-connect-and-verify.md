@@ -7,7 +7,7 @@ You can complete this verification with zero sensor rows. The goal is to prove t
 The command blocks below were originally written for the single-host `telemetry-db` container. In the three-Droplet cloud HA POC, **do not deploy that container**. Run the same SQL against `lorawan_telemetry` through the local PgBouncer path instead:
 
 ~~~bash
-psql 'host=pgbouncer.internal.<DOMAIN> port=6432 dbname=lorawan_telemetry user=telemetry_admin sslmode=verify-full'
+psql 'host=pgbouncer.internal.lorawan.com port=6432 dbname=lorawan_telemetry user=telemetry_admin sslmode=verify-full'
 ~~~
 
 Use the approved CA/environment settings without placing a password on the command line. Every SQL query shown below remains applicable; replace `docker compose exec telemetry-db psql ... -c "SQL"` with `psql <CLOUD_DSN> -c "SQL"`.

@@ -57,7 +57,7 @@ services:
       - /etc/lorawan-pki/pgbouncer/ca.crt:/run/pgbouncer/ca.crt:ro
     extra_hosts:
       - "mqtt-ha.internal.<DOMAIN>:<HA03_PRIVATE_IP>"
-      - "pgbouncer.internal.<DOMAIN>:<HA03_PRIVATE_IP>"
+      - "pgbouncer.internal.lorawan.com:<HA03_PRIVATE_IP>"
 ~~~
 
 **Why these host mappings:** Node-RED talks to the local `ha-03` HAProxy/PgBouncer routes, which then follow Mosquitto and PostgreSQL failover. It must not contain a fixed `ha-01` or `ha-02` dependency.

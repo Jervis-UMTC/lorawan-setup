@@ -78,7 +78,7 @@ SSL: private lab policy
 ### Three-Droplet cloud HA POC
 
 ~~~text
-Host: pgbouncer.internal.<DOMAIN>
+Host: pgbouncer.internal.lorawan.com
 Port: 6432
 Database: lorawan_telemetry
 User: telemetry_writer
@@ -86,7 +86,7 @@ SSL: enabled with hostname/CA verification
 CA: internal PgBouncer/PostgreSQL trust bundle required by the cloud design
 ~~~
 
-Map `pgbouncer.internal.<DOMAIN>` to `ha-03`'s private IP for the Node-RED container. PgBouncer then uses local HAProxy `:15432` to follow the current Patroni primary.
+Map `pgbouncer.internal.lorawan.com` to `ha-03`'s private IP for the Node-RED container. PgBouncer then uses local HAProxy `:15432` to follow the current Patroni primary.
 
 **Stop here. Do not build the write flow** until a read-only connection test and a rollback insert as `telemetry_writer` succeed through this exact endpoint.
 

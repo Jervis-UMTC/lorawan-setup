@@ -44,7 +44,7 @@ docker compose exec node-red printenv LORAWAN_REGION_ID
 From `ha-03`, query through the normal database path instead of a nonexistent `telemetry-db` container:
 
 ~~~bash
-psql 'host=pgbouncer.internal.<DOMAIN> port=6432 dbname=lorawan_telemetry user=telemetry_reader sslmode=verify-full' \
+psql 'host=pgbouncer.internal.lorawan.com port=6432 dbname=lorawan_telemetry user=telemetry_reader sslmode=verify-full' \
   -c "SELECT indexname, indexdef FROM pg_indexes WHERE schemaname = 'telemetry' AND indexname IN ('uplinks_event_key_time_uq', 'measurements_event_metric_unit_time_uq') ORDER BY indexname;"
 
 cd /etc/lorawan-cloud/node-red
@@ -307,7 +307,7 @@ Query source: msg.query
 Parameter source: msg.params
 Database configuration:
   lab   -> telemetry-db:5432 / lorawan_telemetry / telemetry_writer
-  cloud -> pgbouncer.internal.<DOMAIN>:6432 / lorawan_telemetry / telemetry_writer / verified TLS
+  cloud -> pgbouncer.internal.lorawan.com:6432 / lorawan_telemetry / telemetry_writer / verified TLS
 Output: default result object
 ~~~
 
@@ -332,7 +332,7 @@ ORDER BY time DESC, metric_name
 LIMIT 30;
 ~~~
 
-In the lab run these through `docker compose exec telemetry-db psql ...`. In the cloud POC run them with `psql` through `pgbouncer.internal.<DOMAIN>:6432` as `telemetry_reader` or another approved read role.
+In the lab run these through `docker compose exec telemetry-db psql ...`. In the cloud POC run them with `psql` through `pgbouncer.internal.lorawan.com:6432` as `telemetry_reader` or another approved read role.
 
 A valid EMU-01 payload-v2 event should create one canonical uplink row plus one normalized row for each reviewed metric mapping. Sensor groups whose validity bit is clear remain represented as `quality='invalid'` rows with null normalized values, while the complete decoded object remains in `payload_json`. These database rows prove the Node-RED-to-database path only; they do not replace evidence of RF reception, gateway-journal continuity, remote gateway-MQTT delivery, OTAA/session processing, or independent decoder correctness.
 

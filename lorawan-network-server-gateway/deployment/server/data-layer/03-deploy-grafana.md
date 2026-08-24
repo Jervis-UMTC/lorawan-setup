@@ -3,7 +3,7 @@
 Grafana reads only the telemetry database. It does not connect to the concentrator, Fabric peer, Fabric private key, or ChirpStack administrator database.
 
 > [!IMPORTANT]
-> This file is the one-VM Compose procedure. For the real cloud HA deployment, use [13A. Deploy Grafana for the Cloud HA Environment](../cloud-production/13a-grafana-cloud-deployment.md). The cloud guide preserves the same read-only data boundary without assuming `telemetry-db` is on the same host as ChirpStack.
+> This file is the one-VM Compose procedure. For the real cloud HA deployment, use [13A. Deploy Grafana for the Cloud HA Environment](../cloud-production/14a-grafana-cloud-deployment.md). The cloud guide preserves the same read-only data boundary without assuming `telemetry-db` is on the same host as ChirpStack.
 
 ## Step 1: Add private Grafana variables
 

@@ -6,7 +6,7 @@ Test the pipeline from left to right. First identify the deployment profile:
 single-host lab               -> /opt/lorawan-lab, mosquitto, telemetry-db
 three-Droplet cloud HA POC    -> ha-03 /etc/lorawan-cloud/node-red,
                                   mqtt-ha.internal.<DOMAIN>:18883,
-                                  pgbouncer.internal.<DOMAIN>:6432
+                                  pgbouncer.internal.lorawan.com:6432
 ```
 
 Use the Node-RED editor through the documented SSH tunnel. Capture the exact flow revision, Node-RED image, palette versions, region environment value, test event key, and timestamps before changing anything:
@@ -73,7 +73,7 @@ Cloud HA POC:
 ~~~bash
 cd /etc/lorawan-cloud/node-red
 sudo docker compose --env-file node-red.env exec node-red getent hosts mqtt-ha.internal.<DOMAIN>
-sudo docker compose --env-file node-red.env exec node-red getent hosts pgbouncer.internal.<DOMAIN>
+sudo docker compose --env-file node-red.env exec node-red getent hosts pgbouncer.internal.lorawan.com
 ~~~
 
 In the cloud profile both logical names should resolve to `ha-03`'s private IP, where local HAProxy/PgBouncer provide the failover routes. If they resolve directly to `ha-01`/`ha-02`, the Node-RED container has regained a single app-host dependency.
@@ -175,7 +175,7 @@ docker compose exec telemetry-db psql -U telemetry_admin -d lorawan_telemetry \
 Cloud HA POC:
 
 ~~~bash
-psql 'host=pgbouncer.internal.<DOMAIN> port=6432 dbname=lorawan_telemetry user=telemetry_reader sslmode=verify-full' \
+psql 'host=pgbouncer.internal.lorawan.com port=6432 dbname=lorawan_telemetry user=telemetry_reader sslmode=verify-full' \
   -c "SELECT count(*), max(time) FROM telemetry.uplinks;"
 ~~~
 

@@ -2,7 +2,7 @@
 
 Use this procedure only for the **local/single-host lab profile**, where telemetry runs as a separate `telemetry-db` service.
 
-For the three-server cloud HA POC, **do not deploy this extra container**. Instead install the same pinned TimescaleDB extension build on all three Patroni/PostgreSQL members and enable it in `lorawan_telemetry`; follow [../../cloud-production/07-spilo-patroni-postgresql-cluster.md](../../cloud-production/07-spilo-patroni-postgresql-cluster.md).
+For the three-server cloud HA POC, **do not deploy this extra container**. Instead install the same pinned TimescaleDB extension build on all three Patroni/PostgreSQL members and enable it in `lorawan_telemetry`; follow [../../cloud-production/06-spilo-patroni-postgresql-cluster.md](../../cloud-production/06-spilo-patroni-postgresql-cluster.md).
 
 ## 1.1 Verify the existing Compose project
 

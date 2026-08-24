@@ -2,7 +2,7 @@
 
 Telemetry is operational data. Treat it as recoverable business data even in a lab. A file created by `pg_dump` is not a usable backup until its permissions, size, checksum, catalog, off-host copy, and restore procedure have been verified.
 
-> **Cloud HA POC:** this file's commands target the single-host `telemetry-db` container. Do **not** deploy or operate that container in the three-Droplet cloud POC. Use [../../cloud-production/12-backup-restore-and-disaster-recovery.md](../../cloud-production/12-backup-restore-and-disaster-recovery.md), which backs up the Timescale-enabled `lorawan_telemetry` database through the Patroni/PgBouncer HA path and includes the POC etcd/OpenBao rollback boundary.
+> **Cloud HA POC:** this file's commands target the single-host `telemetry-db` container. Do **not** deploy or operate that container in the three-Droplet cloud POC. Use [../../cloud-production/13-backup-restore-and-disaster-recovery.md](../../cloud-production/13-backup-restore-and-disaster-recovery.md), which backs up the Timescale-enabled `lorawan_telemetry` database through the Patroni/PgBouncer HA path and includes the POC etcd/OpenBao rollback boundary.
 
 ## 4.1 Create a protected backup
 

@@ -30,11 +30,7 @@ cd /opt/lorawan-lab
 docker compose exec telemetry-db psql -U telemetry_admin -d lorawan_telemetry
 ~~~
 
-**Cloud HA POC:** connect through its stable PgBouncer/HAProxy path to `lorawan_telemetry`, for example:
-
-~~~bash
-psql 'host=pgbouncer.internal.<DOMAIN> port=6432 dbname=lorawan_telemetry user=telemetry_admin sslmode=require'
-~~~
+**Cloud HA POC:** follow the active cloud-production phase rather than assuming HAProxy/PgBouncer already exists. During Phase 6, use only the verified Patroni-primary administrative path from `../../cloud-production/06-spilo-patroni-postgresql-cluster.md`. After Phase 7 validates HAProxy/PgBouncer, use the stable routed path instead. `telemetry_admin` is intentionally a passwordless `NOLOGIN` ownership role, so cloud DDL is executed as PostgreSQL `postgres` with `SET ROLE telemetry_admin` when object ownership must belong to `telemetry_admin`.
 
 Run the following SQL at the `lorawan_telemetry` prompt. Keep a transcript that excludes passwords. **Stop here. Do not continue** if the prompt shows another database, the active service is uncertain, or the backup has not been validated.
 
@@ -52,33 +48,38 @@ FROM pg_extension
 WHERE extname = 'timescaledb';
 ~~~
 
-## 2.3 Create least-privilege roles
+## 2.3 Confirm least-privilege roles
 
-Create one writer role for Node-RED and one reader role for Grafana without placing passwords in the SQL transcript:
-
-~~~sql
-DO $$
-BEGIN
-    IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'telemetry_writer') THEN
-        CREATE ROLE telemetry_writer LOGIN;
-    END IF;
-    IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'telemetry_reader') THEN
-        CREATE ROLE telemetry_reader LOGIN;
-    END IF;
-END
-$$;
-
-\password telemetry_writer
-\password telemetry_reader
-~~~
-
-The `\password` prompts avoid writing cleartext passwords into SQL history. Use independent values from the approved secret store. If a role already exists, confirm its current owners and consumers before rotating its password in a controlled maintenance window.
-
-## 2.4 Create the telemetry schema
+For the cloud HA POC, Phase 6 creates and validates the roles before this schema step. Do **not** recreate or rotate them here. Confirm the expected boundary instead:
 
 ~~~sql
-CREATE SCHEMA IF NOT EXISTS telemetry;
+SELECT rolname, rolcanlogin
+FROM pg_roles
+WHERE rolname IN ('telemetry_admin', 'telemetry_writer', 'telemetry_reader', 'fabric_adapter')
+ORDER BY rolname;
 ~~~
+
+Expected cloud state: `telemetry_admin` is `NOLOGIN`; `telemetry_writer`, `telemetry_reader`, and `fabric_adapter` are login roles whose credentials already passed SCRAM + verify-full TLS authentication. For the local lab profile, create missing writer/reader identities using the lab's approved secret workflow; never reuse cloud credentials in the lab.
+
+## 2.4 Confirm or create the telemetry schema under the ownership role
+
+For cloud HA, the schema should already exist and be owned by `telemetry_admin`:
+
+~~~sql
+SELECT nspname, pg_get_userbyid(nspowner) AS owner
+FROM pg_namespace
+WHERE nspname = 'telemetry';
+~~~
+
+If it is missing on a fresh profile, create it under the locked ownership role:
+
+~~~sql
+SET ROLE telemetry_admin;
+CREATE SCHEMA IF NOT EXISTS telemetry AUTHORIZATION telemetry_admin;
+RESET ROLE;
+~~~
+
+Why: schema and table ownership should stay on a passwordless `NOLOGIN` role. Runtime writer/reader identities receive grants, not ownership.
 
 ## 2.5 Create the generic uplinks table
 
@@ -344,7 +345,7 @@ CREATE OR REPLACE VIEW telemetry.latest_measurements AS
 SELECT DISTINCT ON (dev_eui, metric_name, unit)
     dev_eui,
     device_id,
-    device_name,
+
     domain,
     site_id,
     zone_id,
@@ -360,7 +361,7 @@ FROM telemetry.measurements
 ORDER BY dev_eui, metric_name, unit, time DESC;
 ~~~
 
-Grafana can query latest_measurements for any metric without requiring a new dashboard table for every sensor model.
+Grafana can query `latest_measurements` for any metric without requiring a new dashboard table for every sensor model. `device_name` is intentionally not selected here because `telemetry.measurements` does not store that column; use `device_id` / `dev_eui`, or join `telemetry.device_registry` when a display name is needed.
 
 ## 2.12 Configure retention
 
@@ -427,7 +428,7 @@ CREATE TABLE IF NOT EXISTS telemetry.schema_version (
 
 ~~~sql
 INSERT INTO telemetry.schema_version (version, description)
-VALUES (3, 'Generic multi-sensor schema with atomic event-metric deduplication, registry, views, and retention')
+VALUES (3, 'Generic multi-sensor schema with atomic event-metric deduplication, registry, and views; retention is gated separately')
 ON CONFLICT (version) DO NOTHING;
 ~~~
 

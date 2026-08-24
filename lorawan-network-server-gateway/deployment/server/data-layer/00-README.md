@@ -18,7 +18,7 @@ The ChirpStack PostgreSQL database remains separate. Node-RED writes telemetry, 
 These three services belong to the **full deployment** data layer. The dissertation testing profile uses TimescaleDB + Node-RED only and omits Grafana. Full-deployment container limits are defined by its own environment sizing.
 
 > [!IMPORTANT]
-> The numbered files in this folder use the one-VM `/opt/lorawan-lab` Compose topology. For the real multi-node cloud deployment, keep the same telemetry schema and role boundaries but use [Cloud Grafana Deployment](../cloud-production/13a-grafana-cloud-deployment.md) and the [Cloud HA + Grafana deployment-day runbook](../cloud-production/18-cloud-ha-grafana-deployment-day-runbook.md) for placement, networking, and execution order.
+> The numbered files in this folder use the one-VM `/opt/lorawan-lab` Compose topology. For the real multi-node cloud deployment, keep the same telemetry schema and role boundaries but use [Cloud Grafana Deployment](../cloud-production/14a-grafana-cloud-deployment.md) and the [Cloud HA + Grafana deployment-day runbook](../cloud-production/19-cloud-ha-grafana-deployment-day-runbook.md) for placement, networking, and execution order.
 
 ## Read in this order
 
