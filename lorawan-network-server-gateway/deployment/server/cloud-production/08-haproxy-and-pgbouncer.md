@@ -334,7 +334,107 @@ During a staging primary failure:
 - ChirpStack must retry and recover without manual DSN changes;
 - the test transaction sequence must match the selected RPO mode.
 
-## 8.14 Final checks
+## 8.14 Phase 7 validation progress record
+
+Current POC validation progress:
+
+Completed:
+
+- PgBouncer TLS listener validation on `ulc-01`.
+- PgBouncer package, TLS, SCRAM, configuration, and runtime validation completed on `ulc-02`.
+- SCRAM authentication validation for:
+  - `chirpstack`.
+  - `fabric_adapter`.
+  - `telemetry_reader`.
+  - `telemetry_writer`.
+- Verified PgBouncer routes successful sessions through the PostgreSQL HAProxy primary endpoint.
+- Verified returned backend state is the writable PostgreSQL leader (`pg_is_in_recovery() = false`).
+- Verified backend TLS encryption from PgBouncer to PostgreSQL using TLS 1.3.
+- Verified PgBouncer idle timeout behavior after the 75-second regression test without connection failure.
+- Verified HAProxy 360-second PostgreSQL timeout ordering remains above PgBouncer `server_idle_timeout = 300s`.
+
+Troubleshooting note:
+
+- PgBouncer admin console access is separate from application database users.
+- A failed `SHOW POOLS` login does not indicate PostgreSQL failure. It only means the PgBouncer admin identity is not configured or the supplied admin credential is invalid.
+- When generating or checking PgBouncer administrative access, perform PostgreSQL role operations against the current Patroni leader only. Running `CREATE ROLE` on a replica will fail with `cannot execute CREATE ROLE in a read-only transaction`.
+
+Next validation:
+
+1. Configure or verify the PgBouncer admin/stats identities.
+2. Run `SHOW POOLS`, `SHOW SERVERS`, and `SHOW STATS`.
+3. Perform session reuse and failover connection validation before enabling PgBouncer at boot.
+
+Latest ULC-02 commissioning evidence:
+
+- PgBouncer service enabled for boot startup.
+- PgBouncer active state verified after enabling.
+- Private listener confirmed on `10.104.0.4:6432`.
+- Client TLS certificate validation succeeded using the PgBouncer certificate identity.
+- TLS negotiation verified with TLS 1.3 and `TLS_AES_256_GCM_SHA384`.
+- Application database connectivity validated through PgBouncer for:
+  - `chirpstack`.
+  - `fabric_adapter`.
+  - `telemetry_reader`.
+  - `telemetry_writer`.
+- PgBouncer backend TLS connections successfully established to PostgreSQL through local HAProxy.
+- The observed `server conn crashed? (age=60s)` messages occurred during the idle timeout regression period and were followed by successful reconnections; the 75-second idle regression test completed successfully.
+
+## 8.15 PgBouncer administration console validation
+
+The PgBouncer admin console is not enabled by default. `admin_users` and `stats_users` must be explicitly configured before running `SHOW POOLS`, `SHOW SERVERS`, or `SHOW STATS`.
+
+Application database users and PgBouncer administration users are separate identities.
+
+Before enabling administrative access:
+
+1. Decide the dedicated PgBouncer admin identity.
+2. Configure `admin_users` and/or `stats_users` in `pgbouncer.ini`.
+3. Reload PgBouncer.
+4. Validate only the intended administrative commands.
+
+Do not use PostgreSQL application users as a substitute for PgBouncer admin access.
+
+## 8.16 Multi-node PgBouncer commissioning record
+
+The production-style POC deployment uses one PgBouncer instance on each PostgreSQL HAProxy node.
+
+Commissioning status:
+
+| Node | Private IP | PgBouncer | TLS | SCRAM auth | Backend test |
+|---|---|---|---|---|---|
+| ulc-01 | 10.104.0.2 | commissioned | verified | verified | passed |
+| ulc-02 | 10.104.0.4 | commissioned | verified | verified | passed |
+| ulc-03 | 10.104.0.8 | foundation complete | pending | pending | pending |
+
+For each node:
+
+1. Install the pinned PgBouncer package.
+2. Keep the service stopped until TLS, authentication, and configuration are installed.
+3. Install the node certificate, private key, and CA bundle under `/etc/lorawan-pki/pgbouncer`.
+4. Generate `/etc/pgbouncer/userlist.txt` from PostgreSQL SCRAM verifiers.
+
+   Use a direct `docker compose exec spilo psql` extraction when generating the file. Avoid deeply nested shell quoting around SQL because it can silently produce an empty userlist. Validate that exactly four SCRAM entries exist before installation:
+   - `chirpstack`
+   - `fabric_adapter`
+   - `telemetry_reader`
+   - `telemetry_writer`
+
+5. Install the local PgBouncer configuration using the node private IP for `listen_addr`.
+6. Validate TLS before opening the listener.
+7. Test application database login through `6432`.
+8. Enable the service only after successful validation.
+
+The ULC-03 foundation stage completed with:
+
+- PgBouncer package installed: `1.22.0-1build4`.
+- Service stopped and disabled before commissioning.
+- No `:6432` listener exposed.
+- Package/runtime identity verified.
+
+The remaining ULC-03 commissioning follows the same validation sequence used by ULC-01 and ULC-02.
+
+## 8.17 Final checks
 
 - The private PostgreSQL HAProxy frontend and PgBouncer validate on all three hosts.
 - Public ChirpStack/MQTT HAProxy routing remains only on `ha-01/02`, with public listeners bound to each host's anchor IP and reached through the single Reserved IPv4.
@@ -342,5 +442,486 @@ During a staging primary failure:
 - Both `chirpstack` and `lorawan_telemetry` exist in PgBouncer.
 - PgBouncer uses the intentionally small POC limits and shows no sustained client wait under the few-sensor workload.
 - Patroni changes recover without editing ChirpStack, Node-RED, or Grafana database endpoints; when Fabric adapters are deployed, their endpoint remains unchanged too.
+
+## 8.17 Phase 7 ULC-03 TLS deployment record
+
+ULC-03 PgBouncer TLS material installation was validated before PgBouncer configuration.
+
+Validation completed:
+
+- Source certificate bundle located from the approved issuance directory.
+- `/etc/lorawan-pki/pgbouncer` created with ownership `root:postgres`.
+- CA certificate installed.
+- PgBouncer server certificate installed.
+- PgBouncer private key installed.
+- TLS files protected with mode `640`.
+- PostgreSQL service account access verified.
+- Certificate chain verification passed.
+- Certificate hostname verification passed for `pgbouncer.internal.lorawan.com`.
+- Certificate public key and private key public key hashes matched.
+
+## 8.18 Phase 7 ULC-03 PgBouncer SCRAM and configuration workflow
+
+ULC-03 follows the same protected authentication workflow validated on ULC-01 and ULC-02.
+
+Operational commands must be recorded with the deployment procedure because PgBouncer authentication depends on PostgreSQL SCRAM verifier extraction, not plaintext passwords.
+
+SCRAM extraction workflow:
+
+```bash
+sudo docker compose \\
+  -f /etc/lorawan-cloud/spilo/compose.yml \\
+  exec -T spilo \\
+  psql \\
+    -X \\
+    -U postgres \\
+    -d postgres \\
+    -A \\
+    -t \\
+    -v ON_ERROR_STOP=1 \\
+    -c "
+SELECT
+  '\"' || rolname || '\" \"' || rolpassword || '\"'
+FROM pg_authid
+WHERE rolname IN (
+'chirpstack',
+'fabric_adapter',
+'telemetry_reader',
+'telemetry_writer'
+)
+AND rolcanlogin
+AND rolpassword LIKE 'SCRAM-SHA-256\\$%'
+ORDER BY rolname;
+" |
+sudo tee /run/pgbouncer-userlist.final >/dev/null
+```
+
+Install the generated verifier file:
+
+```bash
+sudo install \\
+-m 640 \\
+-o root \\
+-g postgres \\
+/run/pgbouncer-userlist.final \\
+/etc/pgbouncer/userlist.txt
+```
+
+Install and verify the node-specific PgBouncer configuration:
+
+```bash
+sudo install \
+-m 640 \
+-o root \
+-g postgres \
+/tmp/pgbouncer-ulc03.ini \
+/etc/pgbouncer/pgbouncer.ini
+
+sudo grep -E \
+'^(listen_addr|listen_port|pool_mode|max_client_conn|default_pool_size|max_db_connections|server_idle_timeout|server_tls_sslmode|server_tls_ca_file|client_tls_sslmode|client_tls_cert_file|client_tls_key_file|auth_type|auth_file)[[:space:]]*=' \
+/etc/pgbouncer/pgbouncer.ini
+```
+
+Validation requirements:
+
+- Exactly four SCRAM entries must exist.
+- Entries must be `chirpstack`, `fabric_adapter`, `telemetry_reader`, and `telemetry_writer`.
+- `/etc/pgbouncer/userlist.txt` must remain unreadable by `opsadmin`.
+- PostgreSQL service account must be able to read the file.
+
+The same installation boundary is used for ULC-01, ULC-02, and ULC-03 before enabling PgBouncer services.
+
+## 8.19 Phase 7 ULC-03 pre-start validation record
+
+ULC-03 PgBouncer configuration reached the pre-start validation boundary.
+
+Validated:
+
+- PgBouncer configuration installed with node-local listener:
+  - `listen_addr = 10.104.0.8`
+  - `listen_port = 6432`
+- TLS material:
+  - CA certificate readable by PostgreSQL service account.
+  - Server certificate readable by PostgreSQL service account.
+  - Private key readable by PostgreSQL service account.
+  - Certificate chain verification passed.
+- SCRAM authentication file:
+  - `/etc/pgbouncer/userlist.txt` installed.
+  - Four SCRAM verifier entries present.
+  - File ownership and permissions validated.
+- HAProxy PostgreSQL endpoints available:
+  - `10.104.0.8:15432`
+  - `10.104.0.8:15433`
+- Local resolver mapping validated:
+  - `postgres-ha.internal -> 10.104.0.8`
+
+Next ULC-03 steps:
+
+1. Start PgBouncer.
+2. Confirm listener on `10.104.0.8:6432`.
+3. Validate client TLS handshake using the PgBouncer certificate identity.
+4. Test application database connections through PgBouncer.
+5. Enable PgBouncer service after successful runtime validation.
+
+## 8.20 Phase 7 Complete PgBouncer HA Commissioning Record
+
+### Objective
+
+Deploy PgBouncer on all PostgreSQL HA nodes as the stable client connection layer while keeping Patroni responsible for PostgreSQL leader election and HAProxy responsible for primary routing.
+
+Final architecture:
+
+```text
+Application clients
+        |
+        v
+PgBouncer :6432
+        |
+        v
+HAProxy :15432
+        |
+        v
+Patroni PostgreSQL primary
+        |
+        v
+Current leader
+```
+
+PgBouncer does not replace Patroni or HAProxy. It provides connection pooling and TLS termination for database clients while HAProxy continues selecting the writable PostgreSQL leader.
+
+---
+
+# Phase 7 Execution Record
+
+## Step 1 - PgBouncer package installation
+
+Performed on:
+
+- ULC-01
+- ULC-02
+- ULC-03
+
+Validation:
+
+```bash
+pgbouncer --version
+systemctl is-active pgbouncer
+systemctl is-enabled pgbouncer
+ss -H -lnt | grep ':6432'
+```
+
+Initial safety requirement:
+
+```text
+PgBouncer installed
+PgBouncer stopped
+PgBouncer disabled
+No :6432 listener exposed
+```
+
+The service remained disabled until TLS, authentication, and configuration validation completed.
+
+---
+
+## Step 2 - TLS deployment
+
+TLS materials were installed separately on each node:
+
+```text
+/etc/lorawan-pki/pgbouncer/
+├── ca.crt
+├── server.crt
+└── server.key
+```
+
+Permissions:
+
+```text
+Directory:
+750 root:postgres
+
+Files:
+640 root:postgres
+```
+
+Validation performed:
+
+```bash
+openssl verify \
+-CAfile /etc/lorawan-pki/pgbouncer/ca.crt \
+-verify_hostname pgbouncer.internal.lorawan.com \
+/etc/lorawan-pki/pgbouncer/server.crt
+```
+
+Required result:
+
+```text
+server.crt: OK
+```
+
+Certificate and private key matching was verified by comparing public key hashes.
+
+---
+
+## Step 3 - SCRAM authentication installation
+
+PgBouncer uses PostgreSQL SCRAM verifiers.
+
+Plaintext database passwords are not stored by PgBouncer.
+
+The userlist contains:
+
+```text
+chirpstack
+fabric_adapter
+telemetry_reader
+telemetry_writer
+```
+
+Generated file:
+
+```text
+/etc/pgbouncer/userlist.txt
+```
+
+Permissions:
+
+```text
+640 root:postgres
+```
+
+Validation:
+
+```bash
+sudo wc -l /etc/pgbouncer/userlist.txt
+```
+
+Expected:
+
+```text
+4
+```
+
+Required access model:
+
+```text
+postgres user     -> read allowed
+opsadmin user     -> read denied
+```
+
+---
+
+## Step 4 - PgBouncer configuration
+
+Each node uses its own private IP.
+
+Configuration pattern:
+
+```ini
+listen_addr = <NODE_PRIVATE_IP>
+listen_port = 6432
+
+pool_mode = session
+
+max_client_conn = 50
+default_pool_size = 3
+max_db_connections = 8
+
+server_tls_sslmode = verify-full
+server_tls_ca_file = /etc/lorawan-pki/pgbouncer/ca.crt
+
+client_tls_sslmode = require
+client_tls_cert_file = /etc/lorawan-pki/pgbouncer/server.crt
+client_tls_key_file = /etc/lorawan-pki/pgbouncer/server.key
+
+auth_type = scram-sha-256
+auth_file = /etc/pgbouncer/userlist.txt
+```
+
+Databases exposed:
+
+```ini
+chirpstack
+lorawan_telemetry
+```
+
+---
+
+## Step 5 - Runtime TLS validation
+
+Every node passed:
+
+```bash
+openssl s_client \
+-starttls postgres \
+-connect <NODE_IP>:6432 \
+-CAfile /etc/lorawan-pki/pgbouncer/ca.crt \
+-verify_hostname pgbouncer.internal.lorawan.com
+```
+
+Verified:
+
+```text
+TLSv1.3
+TLS_AES_256_GCM_SHA384
+Certificate verification OK
+```
+
+---
+
+## Step 6 - Application database validation
+
+Validated users:
+
+```text
+chirpstack
+fabric_adapter
+telemetry_reader
+telemetry_writer
+```
+
+Validation query:
+
+```sql
+SELECT
+ current_user,
+ inet_server_addr(),
+ pg_is_in_recovery();
+```
+
+Expected:
+
+```text
+pg_is_in_recovery = false
+```
+
+Successful routing path:
+
+```text
+PgBouncer
+   |
+   v
+HAProxy :15432
+   |
+   v
+Patroni leader PostgreSQL
+```
+
+---
+
+# Phase 7 Failover Validation
+
+## Controlled Patroni switchover
+
+Initial state:
+
+```text
+ulc-02
+10.104.0.4
+Leader
+```
+
+Switchover command:
+
+```text
+Primary: ulc-02
+Candidate: ulc-01
+Time: now
+```
+
+Result:
+
+```text
+ulc-01
+10.104.0.2
+Leader
+
+ulc-02
+10.104.0.4
+Replica
+
+ulc-03
+10.104.0.8
+Replica
+```
+
+Validation:
+
+```bash
+curl -s http://10.104.0.2:8008/
+curl -s http://10.104.0.4:8008/
+curl -s http://10.104.0.8:8008/
+```
+
+Confirmed:
+
+```text
+Exactly one primary exists.
+Replication lag = 0.
+```
+
+---
+
+# PgBouncer Failover Routing Test
+
+After Patroni promotion:
+
+Client connection through PgBouncer returned:
+
+```text
+current_user = chirpstack
+inet_server_addr = 10.104.0.2
+pg_is_in_recovery = false
+```
+
+Meaning:
+
+```text
+Application
+   |
+   v
+PgBouncer
+   |
+   v
+HAProxy
+   |
+   v
+New Patroni leader
+   |
+   v
+ulc-01 PostgreSQL
+```
+
+No application connection string changes were required.
+
+No PgBouncer restart was required.
+
+No PostgreSQL restart was required.
+
+---
+
+# Final Phase 7 State
+
+| Node | IP | PgBouncer | TLS | SCRAM | HA Routing |
+|---|---|---|---|---|---|
+| ULC-01 | 10.104.0.2 | Active + Enabled | PASS | PASS | PASS |
+| ULC-02 | 10.104.0.4 | Active + Enabled | PASS | PASS | PASS |
+| ULC-03 | 10.104.0.8 | Active + Enabled | PASS | PASS | PASS |
+
+Final verified capabilities:
+
+- PgBouncer deployed on all PostgreSQL HA nodes.
+- TLS encryption enabled between clients and PgBouncer.
+- TLS encryption enabled between PgBouncer and PostgreSQL.
+- SCRAM authentication enabled.
+- HAProxy PostgreSQL routing preserved.
+- Patroni leader changes handled successfully.
+- Database clients continued operating after failover.
+
+Phase 7 status:
+
+```text
+COMPLETE
+```
 
 Next: [09-mqtt-and-valkey.md](09-mqtt-and-valkey.md)
