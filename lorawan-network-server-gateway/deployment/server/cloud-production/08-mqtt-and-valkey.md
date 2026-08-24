@@ -1,4 +1,6 @@
-# 9. MQTT and Valkey HA on the Three-Node POC
+# 8. MQTT and Valkey HA on the Three-Node POC
+
+> **Status: STANDBY / DRAFT.** This phase has not yet been deployed or live-validated in the current cloud build. Keep it as planning guidance only. Re-check the exact Mosquitto/Valkey/Sentinel versions, TLS/ACL settings, ports, failover behavior, and dependencies when this phase becomes active.
 
 This manual deploys the two shared runtime dependencies used by ChirpStack:
 
@@ -9,7 +11,7 @@ fast shared state   -> Valkey primary + 2 replicas, managed by 3 Sentinels
 
 The physical gateway's local Mosquitto queue remains separate on the Raspberry Pi. Do not confuse that edge buffer with the two cloud brokers.
 
-## 9.1 Port plan and why the broker backend uses 8884
+## 8.1 Port plan and why the broker backend uses 8884
 
 Use this exact separation:
 
@@ -32,7 +34,7 @@ mqtt-ha.internal.<DOMAIN>:18883
 
 The cloud brokers do not need a plaintext `1883` listener. The only plaintext `1883` in this architecture is the Raspberry Pi gateway-local loopback broker at `127.0.0.1:1883`.
 
-## 9.2 Preconditions
+## 8.2 Preconditions
 
 Before installing either service, record:
 
@@ -83,7 +85,7 @@ Node-RED workload certificate
 
 **Stop here. Do not continue** if certificate SANs, private IPs, region prefix, or image versions are still placeholders.
 
-## 9.3 Prepare Mosquitto on ha-01 and ha-02
+## 8.3 Prepare Mosquitto on ha-01 and ha-02
 
 Run this section on **ha-01 and ha-02 only**.
 
@@ -124,7 +126,7 @@ acl_file /mosquitto/config/acl
 
 Do not add a cloud listener on `1883`.
 
-## 9.4 Create the MQTT ACL
+## 8.4 Create the MQTT ACL
 
 For each gateway, add only its own topics. Example shape:
 
@@ -157,7 +159,7 @@ If the pinned ChirpStack configuration uses separate gateway-backend and applica
 
 Copy the **same reviewed ACL policy** to Mosquitto-1 and Mosquitto-2. Keep certificate/private-key files node-specific.
 
-## 9.5 Run each Mosquitto backend
+## 8.5 Run each Mosquitto backend
 
 A containerized host-network example is below. Use the exact paths/user documented by the pinned image:
 
@@ -186,7 +188,7 @@ sudo ss -lntp | grep ':8884'
 
 Pass only when the listener is on the intended private address and no cloud `:1883` listener exists.
 
-## 9.6 Prove Mosquitto TLS and ACL before HAProxy
+## 8.6 Prove Mosquitto TLS and ACL before HAProxy
 
 From an approved VPC host, use a staging client certificate:
 
@@ -204,7 +206,7 @@ Then attempt one topic that the identity is **not** allowed to publish/read. The
 
 A successful TLS handshake alone is not enough; ACL direction must also be proven.
 
-## 9.7 Add the HAProxy MQTT frontends
+## 8.7 Add the HAProxy MQTT frontends
 
 Use the **same preferred/backup ordering on every HAProxy host** so clients do not split across two unrelated brokers.
 
@@ -263,7 +265,7 @@ ha-02: 8883 + 18883
 ha-03: 18883 only
 ```
 
-## 9.8 Internal MQTT naming
+## 8.8 Internal MQTT naming
 
 Map this name to the **local HAProxy host** for each local application:
 
@@ -287,7 +289,7 @@ HAProxy forwards the TLS bytes unchanged to the active Mosquitto backend. The br
 
 **Why ha-03 also gets this frontend:** Node-RED needs ChirpStack application MQTT events. HAProxy already exists on `ha-03` for the database path, so adding the private MQTT listener avoids pinning Node-RED to `ha-01` or `ha-02` and costs no extra Droplet.
 
-## 9.9 MQTT failover rehearsal
+## 8.9 MQTT failover rehearsal
 
 Before moving on to ChirpStack HA:
 
@@ -307,7 +309,7 @@ Later, repeat the same failure using the physical gateway and its local QoS 1 qu
 
 Do not call this broker-state replication. Mosquitto-1 and Mosquitto-2 do not share sessions or queues.
 
-## 9.10 Prepare Valkey storage and certificates
+## 8.10 Prepare Valkey storage and certificates
 
 Run on **all three hosts**:
 
@@ -320,7 +322,7 @@ sudo install -d -m 750 /srv/valkey/sentinel
 
 Use one protected long random application/replication secret for this tiny POC and a separate Sentinel-administration secret. Keep them outside Git and shell history.
 
-## 9.11 Configure the initial Valkey primary and replicas
+## 8.11 Configure the initial Valkey primary and replicas
 
 Use `ha-01` as the **bootstrap primary only**. Sentinel may later promote either replica.
 
@@ -359,7 +361,7 @@ Do not configure `replicaof` on the bootstrap primary `ha-01`.
 
 If the pinned Valkey version uses ACLs instead of the password-only baseline, use a named least-privilege application/replication user and configure Sentinel authentication consistently. Do not mix incompatible ACL/password schemes accidentally.
 
-## 9.12 Configure Sentinel on all three hosts
+## 8.12 Configure Sentinel on all three hosts
 
 Create a writable `sentinel.conf` per host. Sentinel rewrites this file as topology changes, so do not mount it read-only.
 
@@ -390,7 +392,7 @@ The `2` in `sentinel monitor` is the failure-detection quorum. Actual failover a
 
 Keep the Sentinel configuration/state path persistent and writable.
 
-## 9.13 Run Valkey and Sentinel
+## 8.13 Run Valkey and Sentinel
 
 Use the pinned Valkey image or package. If containerized, use stable host networking so Sentinel advertises the real VPC addresses instead of NAT-remapped container addresses.
 
@@ -422,7 +424,7 @@ Place the host's writable `sentinel.conf` under `/srv/valkey/sentinel/` with own
 
 Validate the pinned image's binary/config paths before start.
 
-## 9.14 Verify Valkey replication and Sentinel quorum
+## 8.14 Verify Valkey replication and Sentinel quorum
 
 From an approved host with `valkey-cli`, use TLS and protected password input.
 
@@ -455,7 +457,7 @@ valkey-cli --tls \
 
 Pass only when all three Sentinels agree on the same primary and `CKQUORUM` reports enough Sentinels for quorum and failover authorization.
 
-## 9.15 Add HAProxy Valkey primary routing on ha-01 and ha-02
+## 8.15 Add HAProxy Valkey primary routing on ha-01 and ha-02
 
 ChirpStack needs a stable writable-primary endpoint:
 
@@ -490,7 +492,7 @@ The important check is the `INFO replication` response containing `role:master`;
 
 Validate the exact `check-ssl` / `check-sni` syntax against the pinned HAProxy version before reload.
 
-## 9.16 Verify the HAProxy Valkey endpoint
+## 8.16 Verify the HAProxy Valkey endpoint
 
 On each app host:
 
@@ -516,7 +518,7 @@ Now perform the controlled failover test:
 9. verify it rejoins as a replica;
 10. verify all three Sentinels agree again before continuing.
 
-## 9.17 Final acceptance
+## 8.17 Final acceptance
 
 MQTT passes when:
 
@@ -536,7 +538,7 @@ Valkey passes when:
 - a primary loss is automatically promoted and the old node returns as a replica;
 - no manual ChirpStack endpoint edit is required.
 
-## 9.18 Phase 8 Execution Record - MQTT Foundation Deployment
+## 8.18 Phase 8 Execution Record - MQTT Foundation Deployment
 
 Recorded deployment evidence:
 
@@ -594,7 +596,7 @@ Next validation steps:
 5. Add HAProxy MQTT routing.
 6. Continue with Valkey deployment.
 
-## 9.19 Phase 8 MQTT TLS Foundation Precheck Record
+## 8.19 Phase 8 MQTT TLS Foundation Precheck Record
 
 Executed on:
 
@@ -704,7 +706,7 @@ Final order:
 
 Gateway certificate provisioning must not begin before the cloud MQTT stack passes acceptance testing.
 
-## 9.20 Phase 8B - MQTT HAProxy TLS Access Layer Execution Record
+## 8.20 Phase 8B - MQTT HAProxy TLS Access Layer Execution Record
 
 Objective:
 
@@ -734,7 +736,7 @@ Important design decision:
 - HAProxy only forwards encrypted TCP traffic.
 - Gateway certificates remain deferred until final onboarding.
 
-### 9.20.1 HAProxy baseline check
+### 8.20.1 HAProxy baseline check
 
 Executed on ulc-01:
 
@@ -754,7 +756,7 @@ PostgreSQL replicas:
 15433
 ```
 
-### 9.20.2 Initial HAProxy MQTT configuration attempt
+### 8.20.2 Initial HAProxy MQTT configuration attempt
 
 The first configuration attempted:
 
@@ -785,7 +787,7 @@ Correction:
 - HAProxy owns the external MQTT port.
 - Mosquitto moves to an internal TLS port.
 
-### 9.20.3 Move Mosquitto internal TLS listener
+### 8.20.3 Move Mosquitto internal TLS listener
 
 Mosquitto configuration changed:
 
@@ -827,7 +829,7 @@ Expected:
 [::]:8884
 ```
 
-### 9.20.4 Final HAProxy MQTT configuration
+### 8.20.4 Final HAProxy MQTT configuration
 
 Backup first:
 
@@ -877,7 +879,7 @@ ulc-01 :8884
 ulc-02 :8884
 ```
 
-### 9.20.5 MQTT HA TLS validation
+### 8.20.5 MQTT HA TLS validation
 
 Client validation performed from ulc-03:
 
@@ -905,7 +907,7 @@ PASS:
 - broker certificate validation
 - MQTT TLS endpoint
 
-### 9.20.6 MQTT failover validation
+### 8.20.6 MQTT failover validation
 
 Failure test:
 
@@ -954,7 +956,7 @@ Failover detection           PASS
 Service recovery             PASS
 ```
 
-## 9.21 Phase 8C - Valkey HA Deployment Execution Record
+## 8.21 Phase 8C - Valkey HA Deployment Execution Record
 
 Objective:
 
@@ -990,7 +992,7 @@ Final intended architecture:
     ulc-03
 ```
 
-## 9.21.1 Valkey foundation precheck
+### 8.21.1 Valkey foundation precheck
 
 Validated nodes:
 
@@ -1041,7 +1043,7 @@ Result:
 Phase 8C.1 Foundation Precheck: PASS
 ```
 
-## 9.21.2 Valkey package installation
+### 8.21.2 Valkey package installation
 
 Deployment automation:
 
@@ -1067,32 +1069,9 @@ Version installed:
 Valkey 7.2.13
 ```
 
-## 9.21.3 Installation status checkpoint
+### 8.21.3 Installation status checkpoint
 
-### ulc-01
-
-Status:
-
-```text
-PASS
-```
-
-Verified:
-
-```text
-valkey-server installed
-service active
-service enabled
-```
-
-Listener:
-
-```text
-127.0.0.1:6379
-[::1]:6379
-```
-
-### ulc-02
+#### ulc-01
 
 Status:
 
@@ -1115,7 +1094,30 @@ Listener:
 [::1]:6379
 ```
 
-### ulc-03
+#### ulc-02
+
+Status:
+
+```text
+PASS
+```
+
+Verified:
+
+```text
+valkey-server installed
+service active
+service enabled
+```
+
+Listener:
+
+```text
+127.0.0.1:6379
+[::1]:6379
+```
+
+#### ulc-03
 
 Status:
 
@@ -1140,7 +1142,7 @@ Valkey replication not configured
 Sentinel not deployed
 ```
 
-## 9.21.4 Next execution step
+### 8.21.4 Next execution step
 
 Before continuing:
 
@@ -1170,4 +1172,4 @@ All executed commands, configuration decisions, validation output, failures, and
 
 The operator performs the final Git commit and push after review.
 
-Next: [10-chirpstack-cloud-cluster.md](10-chirpstack-cloud-cluster.md).
+Next: [09-chirpstack-cloud-cluster.md](09-chirpstack-cloud-cluster.md).

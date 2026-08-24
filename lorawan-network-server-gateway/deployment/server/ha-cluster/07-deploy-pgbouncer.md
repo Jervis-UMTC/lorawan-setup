@@ -8,7 +8,7 @@ Make ChirpStack use a stable pooled endpoint:
 ChirpStack -> pgbouncer:6432 -> haproxy:5432 -> current Patroni primary
 ```
 
-This follows the same ordering as [the cloud HAProxy / PgBouncer design](../cloud-production/08-haproxy-and-pgbouncer.md).
+This follows the same ordering as [the cloud HAProxy / PgBouncer design](../cloud-production/07-haproxy-and-pgbouncer.md).
 
 ## Step 1 - Create PgBouncer configuration
 

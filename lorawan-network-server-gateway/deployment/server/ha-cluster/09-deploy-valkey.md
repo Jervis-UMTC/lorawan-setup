@@ -24,7 +24,7 @@ save 60 10000
 
 The service is not published to the VM host, so only containers on the application network can reach it. `maxmemory 160mb` leaves room inside the 256 MiB container limit for Valkey process overhead and persistence work. `noeviction` is deliberate: if the lab exceeds this small cache budget, fail visibly instead of silently evicting session data.
 
-For a production cloud deployment, follow the TLS/authentication and managed-service requirements in [cloud/09-mqtt-and-valkey.md](../cloud-production/09-mqtt-and-valkey.md).
+For a production cloud deployment, follow the TLS/authentication and managed-service requirements in [cloud/08-mqtt-and-valkey.md](../cloud-production/08-mqtt-and-valkey.md).
 
 ## Step 2 - Add Valkey to Compose
 

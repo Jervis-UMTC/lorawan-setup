@@ -12,7 +12,7 @@ spilo-2  PostgreSQL + Patroni  ----+--> etcd-1 / etcd-2 / etcd-3
 spilo-3  PostgreSQL + Patroni  ----+
 ```
 
-This is the Docker adaptation of [the cloud Spilo / Patroni manual](../cloud-production/07-spilo-patroni-postgresql-cluster.md).
+This is the Docker adaptation of [the cloud Spilo / Patroni manual](../cloud-production/06-spilo-patroni-postgresql-cluster.md).
 
 ## Before you start
 

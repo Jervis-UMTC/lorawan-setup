@@ -4,7 +4,7 @@
 
 Run three etcd members in Docker so Patroni can use a real majority quorum for leader election and cluster state.
 
-This adapts [the production etcd manual](../cloud-production/06-etcd-cluster.md) to one lab VM. Container failure is useful for learning quorum behavior, but it is not a separate physical failure domain.
+This adapts [the production etcd manual](../cloud-production/05-etcd-cluster.md) to one lab VM. Container failure is useful for learning quorum behavior, but it is not a separate physical failure domain.
 
 ## Before you start
 

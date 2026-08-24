@@ -95,7 +95,7 @@ docker run --rm \
 sha256sum ~/backups/lorawan-lab/chirpstack-db/chirpstack.dump
 ```
 
-For production physical backup/WAL recovery, follow [the cloud backup manual](../cloud-production/12-backup-restore-and-disaster-recovery.md).
+For production physical backup/WAL recovery, follow [the cloud backup manual](../cloud-production/13-backup-restore-and-disaster-recovery.md).
 
 ## Step 3 - Restore the ChirpStack logical dump in isolation
 
