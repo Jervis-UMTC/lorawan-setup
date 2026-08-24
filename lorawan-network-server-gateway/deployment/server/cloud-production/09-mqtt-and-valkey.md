@@ -536,4 +536,638 @@ Valkey passes when:
 - a primary loss is automatically promoted and the old node returns as a replica;
 - no manual ChirpStack endpoint edit is required.
 
+## 9.18 Phase 8 Execution Record - MQTT Foundation Deployment
+
+Recorded deployment evidence:
+
+```text
+Date:
+2026-08-24
+
+MQTT baseline discovery:
+
+ulc-01
+10.104.0.2
+
+ulc-02
+10.104.0.4
+
+ulc-03
+10.104.0.8
+
+Before installation:
+- no MQTT packages installed
+- no Valkey packages installed
+- no MQTT listeners
+- no Valkey listeners
+- no MQTT/Valkey containers
+- no MQTT/Valkey services
+
+Mosquitto deployment:
+
+Installed:
+- mosquitto
+- mosquitto-clients
+
+Verified:
+- Mosquitto version: 2.0.18
+- MQTT protocol support: MQTT v5.0/v3.1.1/v3.1
+
+Service state:
+
+ulc-01:
+mosquitto.service active (running)
+
+ulc-02:
+mosquitto.service active (running)
+
+Result:
+MQTT broker foundation installed successfully on the first two application nodes.
+```
+
+Next validation steps:
+
+1. Configure Mosquitto TLS listeners.
+2. Deploy MQTT CA and broker certificates.
+3. Configure MQTT authentication and ACLs.
+4. Validate broker-to-client TLS.
+5. Add HAProxy MQTT routing.
+6. Continue with Valkey deployment.
+
+## 9.19 Phase 8 MQTT TLS Foundation Precheck Record
+
+Executed on:
+
+```text
+ulc-01
+10.104.0.2
+
+ulc-02
+10.104.0.4
+```
+
+Discovery results:
+
+```text
+Mosquitto:
+- installed
+- active
+- enabled
+
+MQTT PKI:
+- /etc/lorawan-pki/mqtt does not exist yet
+
+Existing PKI:
+- PostgreSQL TLS present
+- PgBouncer TLS present
+- MQTT TLS material not issued yet
+```
+
+Current listeners before TLS configuration:
+
+```text
+ulc-01:
+127.0.0.1:1883
+[::1]:1883
+
+ulc-02:
+127.0.0.1:1883
+[::1]:1883
+```
+
+Interpretation:
+
+- Mosquitto is running in the default local-only state.
+- No cloud MQTT listener is exposed.
+- No TLS listener exists yet.
+- No plaintext remote MQTT exposure exists.
+
+Next execution step:
+
+1. Issue MQTT broker certificates from the project CA.
+2. Install `/etc/lorawan-pki/mqtt` on broker nodes.
+3. Replace local-only Mosquitto configuration with TLS listener configuration.
+4. Validate mutual TLS before HAProxy integration.
+
+Operational note:
+
+Gateway client certificate provisioning is intentionally deferred until the final onboarding stage. Cloud MQTT broker TLS identities must be completed, HAProxy routing must be validated, Valkey and ChirpStack integration must be operational, and production cloud-side testing must pass before issuing gateway certificates.
+
+Certificate separation:
+
+- Broker certificates remain only on cloud MQTT nodes.
+- Gateway certificates are separate client identities.
+- Broker private keys are never transferred to gateways.
+
+Automation preference:
+
+Deployment steps should use chained command blocks where safe. Validation, backup, permission checks, and installation actions should be grouped into reproducible runbooks instead of many isolated commands.
+
+## Deployment ordering decision - Gateway certificate provisioning
+
+Gateway MQTT client certificate provisioning is intentionally moved to the final deployment stage.
+
+Reason:
+
+- Cloud MQTT infrastructure must be completed and validated first.
+- Mosquitto TLS, HAProxy routing, ACL policies, ChirpStack integration, and monitoring must exist before issuing gateway identities.
+- Gateway certificates are production client credentials and should only be generated when the receiving MQTT service is ready.
+- This prevents issuing gateway credentials against an unfinished broker architecture.
+
+Final order:
+
+```text
+1. Cloud foundation
+   - etcd
+   - Spilo/Patroni PostgreSQL HA
+   - HAProxy
+   - PgBouncer
+
+2. Cloud application services
+   - Mosquitto TLS
+   - Valkey
+   - ChirpStack
+   - integrations
+
+3. Cloud validation
+   - TLS verification
+   - failover testing
+   - ACL testing
+   - backup/recovery testing
+
+4. Final gateway onboarding
+   - issue gateway client certificate
+   - install gateway CA/client certificate/key
+   - configure MQTT Forwarder
+   - validate end-to-end uplink
+```
+
+Gateway certificate provisioning must not begin before the cloud MQTT stack passes acceptance testing.
+
+## 9.20 Phase 8B - MQTT HAProxy TLS Access Layer Execution Record
+
+Objective:
+
+Create a single MQTT TLS endpoint for gateways while keeping TLS termination on Mosquitto brokers.
+
+Final design:
+
+```text
+Gateway clients
+      |
+      | MQTT TLS :8883
+      |
+HAProxy TCP passthrough
+ulc-01 :8883
+      |
+      +----------------+
+      |                |
+      v                v
+ulc-01 Mosquitto    ulc-02 Mosquitto
+TLS :8884           TLS :8884
+```
+
+Important design decision:
+
+- HAProxy does not terminate MQTT TLS.
+- Mosquitto retains broker certificates and private keys.
+- HAProxy only forwards encrypted TCP traffic.
+- Gateway certificates remain deferred until final onboarding.
+
+### 9.20.1 HAProxy baseline check
+
+Executed on ulc-01:
+
+```bash
+systemctl is-active haproxy
+systemctl is-enabled haproxy
+ss -H -lntp | grep haproxy
+```
+
+Existing services preserved:
+
+```text
+PostgreSQL primary:
+15432
+
+PostgreSQL replicas:
+15433
+```
+
+### 9.20.2 Initial HAProxy MQTT configuration attempt
+
+The first configuration attempted:
+
+```haproxy
+frontend mqtt_tls
+    bind 10.104.0.2:8883
+
+backend mqtt_brokers
+    server mqtt-ulc01 10.104.0.2:8883 check
+    server mqtt-ulc02 10.104.0.4:8883 check
+```
+
+Validation passed:
+
+```bash
+haproxy -c -f /etc/haproxy/haproxy.cfg
+```
+
+Runtime failed because Mosquitto already owned port 8883:
+
+```text
+cannot bind socket
+Address already in use
+```
+
+Correction:
+
+- HAProxy owns the external MQTT port.
+- Mosquitto moves to an internal TLS port.
+
+### 9.20.3 Move Mosquitto internal TLS listener
+
+Mosquitto configuration changed:
+
+Before:
+
+```conf
+listener 8883
+```
+
+After:
+
+```conf
+listener 8884
+
+cafile /etc/lorawan-pki/mqtt/ca.crt
+certfile /etc/lorawan-pki/mqtt/server.crt
+keyfile /etc/lorawan-pki/mqtt/server.key
+
+tls_version tlsv1.3
+require_certificate false
+```
+
+Restart:
+
+```bash
+systemctl restart mosquitto
+```
+
+Validation:
+
+```bash
+ss -H -lntp | grep mosquitto
+```
+
+Expected:
+
+```text
+0.0.0.0:8884
+[::]:8884
+```
+
+### 9.20.4 Final HAProxy MQTT configuration
+
+Backup first:
+
+```bash
+cp /etc/haproxy/haproxy.cfg \
+/etc/haproxy/haproxy.cfg.phase8b-before-$(date -u +%Y%m%d-%H%M%S)
+```
+
+Configuration added:
+
+```haproxy
+frontend mqtt_tls
+    bind 10.104.0.2:8883
+    mode tcp
+    option tcplog
+    default_backend mqtt_brokers
+
+backend mqtt_brokers
+    mode tcp
+    balance roundrobin
+    option tcp-check
+
+    server mqtt-ulc01 10.104.0.2:8884 check
+    server mqtt-ulc02 10.104.0.4:8884 check
+```
+
+Validate:
+
+```bash
+haproxy -c -f /etc/haproxy/haproxy.cfg
+```
+
+Restart:
+
+```bash
+systemctl restart haproxy
+```
+
+Final listeners:
+
+```text
+HAProxy:
+10.104.0.2:8883
+
+Mosquitto:
+ulc-01 :8884
+ulc-02 :8884
+```
+
+### 9.20.5 MQTT HA TLS validation
+
+Client validation performed from ulc-03:
+
+```bash
+openssl s_client \
+-connect 10.104.0.2:8883 \
+-CAfile /etc/lorawan-pki/mqtt/ca.crt \
+-verify_hostname mqtt.internal.lorawan.com \
+-brief \
+</dev/null
+```
+
+Result:
+
+```text
+Protocol version: TLSv1.3
+Cipher: TLS_AES_256_GCM_SHA384
+Verification: OK
+Verified peername: mqtt.internal.lorawan.com
+```
+
+PASS:
+
+- HAProxy TLS passthrough
+- broker certificate validation
+- MQTT TLS endpoint
+
+### 9.20.6 MQTT failover validation
+
+Failure test:
+
+Stop ulc-01 broker:
+
+```bash
+systemctl stop mosquitto
+```
+
+HAProxy detected failure:
+
+```text
+Server mqtt_brokers/mqtt-ulc01 is DOWN
+reason: Layer4 connection problem
+```
+
+Client test through HAProxy remained successful:
+
+```text
+Verification: OK
+Verified peername: mqtt.internal.lorawan.com
+```
+
+Recovery:
+
+```bash
+systemctl start mosquitto
+```
+
+HAProxy recovered the backend:
+
+```text
+Server mqtt_brokers/mqtt-ulc01 is UP
+reason: Layer4 check passed
+2 active and 0 backup servers online
+```
+
+Phase 8B result:
+
+```text
+MQTT HAProxy endpoint        PASS
+TLS passthrough              PASS
+ulc-01 Mosquitto backend     PASS
+ulc-02 Mosquitto backend     PASS
+Failover detection           PASS
+Service recovery             PASS
+```
+
+## 9.21 Phase 8C - Valkey HA Deployment Execution Record
+
+Objective:
+
+Deploy the ChirpStack shared state backend using Valkey with future Sentinel-based high availability.
+
+Execution boundary:
+
+- Valkey deployment started after MQTT HA completion.
+- Gateway provisioning remains deferred until cloud services are complete.
+- No ChirpStack integration changes are performed until Valkey HA passes validation.
+- No Git commit or push is performed during deployment sessions. Operator performs final review and commit.
+
+Final intended architecture:
+
+```text
+                 ChirpStack
+                     |
+                     |
+              HAProxy Valkey endpoint
+                     |
+                     |
+              Current Valkey primary
+                     |
+        +------------+------------+
+        |                         |
+        v                         v
+
+    Valkey replica            Valkey replica
+
+    Sentinel quorum:
+    ulc-01
+    ulc-02
+    ulc-03
+```
+
+## 9.21.1 Valkey foundation precheck
+
+Validated nodes:
+
+```text
+ulc-01
+10.104.0.2
+
+ulc-02
+10.104.0.4
+
+ulc-03
+10.104.0.8
+```
+
+Validation performed:
+
+```text
+Redis/Valkey packages:
+none installed
+
+Redis/Valkey services:
+none configured
+
+Listeners:
+6379 unavailable
+26379 unavailable
+```
+
+Resource validation:
+
+```text
+ulc-01:
+RAM 1.9Gi
+Available 1.3Gi
+
+ulc-02:
+RAM 1.9Gi
+Available 1.4Gi
+
+ulc-03:
+RAM 1.9Gi
+Available 1.4Gi
+```
+
+Result:
+
+```text
+Phase 8C.1 Foundation Precheck: PASS
+```
+
+## 9.21.2 Valkey package installation
+
+Deployment automation:
+
+```bash
+ssh \
+-i /root/.ssh/cloud-deployment-phase8 \
+-o IdentitiesOnly=yes \
+opsadmin@NODE
+```
+
+The deployment key is required for multi-node automation. Do not rely on default SSH keys.
+
+Installed package:
+
+```text
+valkey-server
+valkey-tools
+```
+
+Version installed:
+
+```text
+Valkey 7.2.13
+```
+
+## 9.21.3 Installation status checkpoint
+
+### ulc-01
+
+Status:
+
+```text
+PASS
+```
+
+Verified:
+
+```text
+valkey-server installed
+service active
+service enabled
+```
+
+Listener:
+
+```text
+127.0.0.1:6379
+[::1]:6379
+```
+
+### ulc-02
+
+Status:
+
+```text
+PASS
+```
+
+Verified:
+
+```text
+valkey-server installed
+service active
+service enabled
+```
+
+Listener:
+
+```text
+127.0.0.1:6379
+[::1]:6379
+```
+
+### ulc-03
+
+Status:
+
+```text
+PENDING
+```
+
+Reason:
+
+Non-interactive sudo automation was not available during the first installation attempt:
+
+```text
+sudo: a terminal is required to read the password
+sudo: a password is required
+```
+
+Impact:
+
+```text
+Valkey not installed on ulc-03
+Valkey replication not configured
+Sentinel not deployed
+```
+
+## 9.21.4 Next execution step
+
+Before continuing:
+
+1. Restore non-interactive sudo automation on ulc-03.
+2. Install Valkey on ulc-03.
+3. Verify all three Valkey services are active.
+4. Configure TLS/authentication.
+5. Configure replication.
+6. Deploy Sentinel quorum.
+7. Add HAProxy writable-primary routing.
+8. Perform Valkey failover testing.
+
+Acceptance criteria:
+
+```text
+Three Valkey nodes installed
+One primary
+Two replicas
+Three Sentinel members
+Automatic promotion tested
+HAProxy follows writable primary
+```
+
+## Deployment documentation rule
+
+All executed commands, configuration decisions, validation output, failures, and corrections must be recorded in this MDS before repository commit.
+
+The operator performs the final Git commit and push after review.
+
 Next: [10-chirpstack-cloud-cluster.md](10-chirpstack-cloud-cluster.md).
