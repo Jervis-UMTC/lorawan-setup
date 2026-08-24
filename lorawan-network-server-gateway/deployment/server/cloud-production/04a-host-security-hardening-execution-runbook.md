@@ -108,7 +108,7 @@ Observed listeners: only systemd-resolved loopback DNS and SSH TCP/22; SSH curre
 Observed services: 0 failed systemd units
 Observed time: UTC; system clock synchronized; NTP active
 Status: PASS
-Reason / notes: Baseline matches the intended Ubuntu/CPU/RAM/disk profile. The 10.104.0.2/20 address on eth1 is the candidate DigitalOcean VPC/east-west address. SSH broad-listening is expected before hardening and will be restricted later.
+Reason / notes: Baseline matches the intended Ubuntu/CPU/RAM/disk profile. At this early inspection point, `10.104.0.2/20` on `eth1` was only a candidate east-west address; it was later operationally validated by cross-node ICMP and TCP `2380` testing before etcd bootstrap. SSH broad-listening was expected before hardening.
 
 Host: ulc-02
 Date: 2026-08-20
@@ -121,7 +121,7 @@ Observed listeners: only systemd-resolved loopback DNS and SSH TCP/22; SSH curre
 Observed services: 0 failed systemd units
 Observed time: UTC; system clock synchronized; NTP active
 Status: PASS
-Reason / notes: Matches ulc-01 baseline. The 10.104.0.4/20 address on eth1 is the candidate DigitalOcean VPC/east-west address.
+Reason / notes: Matches ulc-01 baseline. At this early inspection point, `10.104.0.4/20` on `eth1` was only a candidate east-west address; it was later operationally validated during the three-host network checks recorded in `00-build-execution-log.md`.
 
 Host: ulc-03
 Date: 2026-08-20
@@ -134,7 +134,7 @@ Observed listeners: only systemd-resolved loopback DNS and SSH TCP/22; SSH curre
 Observed services: 0 failed systemd units
 Observed time: UTC; system clock synchronized; NTP active
 Status: PASS
-Reason / notes: Replacement `ulc-03` matches the active host baseline after patch/reboot and SSH hardening. The current `10.104.0.8/20` address on eth1 is the candidate DigitalOcean VPC/east-west address; the retired Droplet's `10.104.0.3/20` must not be used.
+Reason / notes: Replacement `ulc-03` matches the active host baseline after patch/reboot and SSH hardening. At this inspection point `10.104.0.8/20` on `eth1` was a candidate east-west address; it was later operationally validated with the other active nodes. The retired Droplet's `10.104.0.3/20` must not be used.
 
 Three-host conclusion: PASS. All nodes run the same Ubuntu release and kernel, have the same CPU/RAM class, no swap, no failed systemd units, synchronized NTP, and no unexpected application listeners. The actual hostnames ulc-01/02/03 are already consistent; keep them stable and map them to logical HA roles in the documentation rather than renaming them after quorum services are created.
 ```
@@ -291,11 +291,11 @@ listeners: only systemd-resolved loopback DNS + SSH TCP/22 on 0.0.0.0 and [::]
 IPv6: ::1 plus link-local fe80::/64 only; no global IPv6 address and no default IPv6 route
 ```
 
-Replacement `ulc-03` now passes the same baseline as `ulc-01` and `ulc-02`: no empty-password accounts were found, the `pam_pwquality` hook is active, and the project `minlen = 16` drop-in exists with `root:root` ownership and mode `0644`. Post-reboot convergence is also confirmed: kernel `6.8.0-138-generic`; public IPv4 `159.223.50.57/20`; eth0 secondary `10.15.0.6/16`; candidate VPC/east-west IPv4 `10.104.0.8/20` on eth1; default route via `159.223.48.1` on eth0. The three-host baseline convergence checkpoint is now PASS.
+Replacement `ulc-03` now passes the same baseline as `ulc-01` and `ulc-02`: no empty-password accounts were found, the `pam_pwquality` hook is active, and the project `minlen = 16` drop-in exists with `root:root` ownership and mode `0644`. Post-reboot convergence is also confirmed: kernel `6.8.0-138-generic`; public IPv4 `159.223.50.57/20`; eth0 secondary `10.15.0.6/16`; later operationally validated HA/east-west IPv4 `10.104.0.8/20` on eth1; default route via `159.223.48.1` on eth0. The three-host baseline convergence checkpoint is now PASS.
 
-After `ulc-03` catches up, the next common hardening phase for **all three hosts** is SSH-log verification, Fail2ban, AppArmor/time/logging checks, and final host-security acceptance. Cloud-firewall enforcement remains blocked until DigitalOcean control-plane/recovery access is available; do not compensate for that by risking a remote UFW lockout.
+**Historical stop point:** after replacement `ulc-03` reached the baseline above, the remaining common hardening work was SSH-log verification, Fail2ban, AppArmor/time/logging checks, and host-security acceptance. Those later steps were completed/accepted before the etcd phase; the current state is recorded in `00-build-execution-log.md`. Cloud-firewall enforcement remained outside the operator's authority and UFW remained intentionally deferred.
 
-The three-host baseline convergence and replacement `ulc-03` addressing capture are now complete. Do not initialize etcd, Patroni/PostgreSQL, OpenBao, or other quorum/cluster services until the remaining common host-hardening phase (SSH-log verification, Fail2ban, AppArmor/time/logging, and final acceptance) is complete.
+At this point in the execution history, quorum services were still blocked until the remaining host checks were complete. That stop condition was later satisfied before the documented etcd bootstrap. Do not read this historical gate as saying the current etcd deployment was started prematurely.
 
 The security incident therefore does **not** permanently taint the hostname `ulc-03`; trust is attached to the actual fresh host installation, not the name.
 
@@ -399,7 +399,7 @@ Ask the DigitalOcean account holder to isolate or rebuild the Droplet from the p
 
 ## 2.2 Automatic security updates - adapted from supplied guide
 
-[~] Continue this phase on `ulc-01` and `ulc-02` while `ulc-03` is blocked. Do not touch `ulc-03` through SSH/package management until provider-console recovery is possible.
+**Historical incident-state note:** this instruction applied while the original `ulc-03` was inaccessible. That Droplet was retired and replaced. The replacement later passed the baseline and unattended-upgrade checks; current completion is recorded in `00-build-execution-log.md`. Keep the commands below as the reusable inspection procedure, not as a claim that the replacement is still blocked.
 
 First inspect whether Ubuntu already installed/enabled unattended upgrades before changing anything:
 
@@ -470,7 +470,7 @@ systemctl list-timers 'apt-daily*' --all
 
 ## 3.1 Use a named operator account instead of routine root login
 
-[~] Continue on `ulc-01` first, then repeat on `ulc-02` only after the new account passes SSH + sudo testing. `ulc-03` remains blocked pending provider-console recovery.
+**Historical incident-state note:** this was the safe sequencing rule while the original `ulc-03` was inaccessible. The replacement `ulc-03` later completed named-admin, sudo, and key-only SSH validation. The procedure below remains the rebuild method; the old blocked state is not current.
 
 Use the project operator name `jervis` unless the operator intentionally chooses another name before running these commands.
 
@@ -946,13 +946,13 @@ ulc-02 -> PASS
 ulc-03 replacement -> PASS
 ```
 
-All three active hosts now enforce the reviewed key-only SSH policy. Continue by converging the replacement `ulc-03` on the remaining non-SSH hardening checks before starting quorum services.
+All three active hosts now enforce the reviewed key-only SSH policy. At this point in the historical sequence, replacement `ulc-03` still needed the remaining non-SSH checks before quorum services. Those checks were later completed/accepted before the etcd phase; see `00-build-execution-log.md` for the current checkpoint.
 
 ## 4.4 SSH port decision
 
 [-] Changing SSH away from TCP/22 is **not counted as a primary security control** for this deployment.
 
-**Why:** changing the port mainly reduces log noise from commodity scanners; it does not replace key authentication or source-IP firewall restrictions. The current LoRaWAN cloud design expects SSH to be restricted to the administrator source by the cloud firewall.
+**Why:** changing the port mainly reduces log noise from commodity scanners; it does not replace key authentication or source-IP firewall restrictions. The **target** LoRaWAN cloud design calls for SSH source restriction at the provider firewall, but that provider-side control is not verified or managed by the current operator and must not be described as active until the account owner supplies evidence.
 
 If organizational policy explicitly requires a custom port, document the port and update the cloud firewall first, then test it from a second terminal before removing TCP/22 access.
 
@@ -960,9 +960,9 @@ If organizational policy explicitly requires a custom port, document the port an
 
 # Phase 5 - Firewall and network exposure
 
-## 5.1 Cloud firewall first
+## 5.1 Provider cloud-firewall boundary
 
-[~] Restrict SSH at the cloud firewall to the approved administrator source IP/range wherever possible.
+[!] **BLOCKED / EXTERNALLY MANAGED.** The current operator is not authorized to modify or verify the DigitalOcean Cloud Firewall. Keep this section as a provider-owner handoff target, not an execution step for the current operator.
 
 Observed administrator public IPv4 on 2026-08-20 from the Windows workstation:
 
@@ -976,11 +976,11 @@ Use the exact source CIDR for the current commissioning session:
 203.177.194.77/32
 ```
 
-Status: **BLOCKED pending DigitalOcean control-plane access.** The current operator does not have access to the DigitalOcean panel/recovery console, so the cloud firewall cannot be safely created or verified from this session. Do not pretend this step is complete and do not ask the operator to guess provider-side VPC/firewall state.
+Status: **BLOCKED / externally controlled.** The operator cannot inspect or change the DigitalOcean Cloud Firewall from this project session, so its current rule state is unknown. Do not pretend the provider firewall is configured and do not ask the operator to guess.
 
-When provider access is available, attach the cloud firewall to the currently reachable `ulc-01` and `ulc-02` hosts first. Keep an existing SSH session open while applying the rule, then prove a fresh Ed25519 SSH connection from the same workstation before closing the old session. Do not attach or modify firewall policy on `ulc-03` while that host is still blocked pending provider-console recovery.
+If the account owner later performs this work, they should preserve the working SSH path, apply the reviewed source restriction, and provide enough evidence to record the resulting rule state. The old warning that replacement `ulc-03` was inaccessible no longer applies; all three replacement/current hosts later passed SSH hardening.
 
-Because there is currently no independent provider recovery path available to the operator, also defer any host-firewall change that could restrict SSH by source IP. Continue with inspection-only firewall checks and other non-lockout hardening until provider/recovery access is restored.
+Because there is still no independent provider recovery path available to the operator, any host-firewall change that could restrict SSH by source IP also remains a separate controlled task. Continue to document the actual UFW/nftables state rather than marking a restrictive host firewall as complete.
 
 The initial inbound cloud-firewall rule, once provider access is available, is intentionally only:
 
@@ -988,7 +988,7 @@ The initial inbound cloud-firewall rule, once provider access is available, is i
 TCP 22 from 203.177.194.77/32
 ```
 
-Do not pre-open `443`, `8883`, database, quorum, Grafana, Node-RED, OpenBao, or other service ports before those services are actually installed and their listener/bind policy is verified. The VPC east-west rule is added only after the DigitalOcean control plane confirms the actual VPC CIDR; `10.104.0.0/20` is still a host-observed candidate and must not be promoted to source of truth without provider confirmation.
+Do not pre-open `443`, `8883`, database, Grafana, Node-RED, OpenBao, or other future service ports before those services are actually installed and their listener/bind policy is verified. The `10.104.0.0/20` path is now **operationally validated from the hosts** by cross-node ICMP and TCP `2380` tests and is the current east-west service network. That does not prove the DigitalOcean control-plane VPC/firewall object or rule state; provider-side confirmation remains separate.
 
 **Why:** unwanted traffic is dropped before it reaches the VM. A `/32` limits SSH to the exact current administrator public IPv4, but it can cause lockout if the ISP address changes, so every firewall edit is followed immediately by a second-session SSH test.
 
@@ -1010,7 +1010,7 @@ ulc-02
   listeners: only systemd-resolved loopback DNS plus SSH TCP/22 on 0.0.0.0 and [::]
 ```
 
-No unexpected application listener is currently exposed on either healthy host. SSH is the only non-loopback listening service observed, and SSH already enforces Ed25519 key authentication with password/root login disabled.
+At the 2026-08-20 inspection point, no unexpected application listener was exposed on the two inspected hosts; SSH was the only non-loopback listener. This is historical pre-etcd evidence, not a claim about today's listener list. After Fail2ban activation, nftables also contains Fail2ban-managed rules, so the current ruleset must not be described as empty.
 
 Status: **INSPECTION PASS; enforcement deferred.** Because the operator currently has neither DigitalOcean control-panel access nor an independent provider-console recovery path, do not enable a restrictive UFW policy yet. A mistaken source CIDR or ISP address change could otherwise create a full remote lockout with no independent recovery mechanism.
 
@@ -1180,7 +1180,7 @@ Status: PASS
 
 The four `transmission-*` profiles being loaded in complain mode do **not** mean a Transmission process is currently bypassing enforcement; `aa-status` explicitly reports zero running processes in complain mode. Likewise, the long list of profiles reported as unconfined mode is not by itself evidence that those applications are running. Do not change those profiles merely to make the counts look smaller.
 
-Continue the same read-only check on `ulc-02` and `ulc-03` before marking the three-host AppArmor phase complete.
+Detailed `aa-status` output was captured for `ulc-01`. Completion on `ulc-02` and `ulc-03` was later operator-confirmed, but their full profile counts were not preserved in the pasted evidence. Treat the three-host AppArmor checkpoint as accepted with that evidence limitation; do not copy `ulc-01`'s exact counts onto the other hosts.
 
 Do not install, disable, or alter AppArmor profiles yet. If a later LoRaWAN service receives a denial, investigate the denial and use a reviewed profile/exception instead of disabling AppArmor globally.
 
@@ -1188,7 +1188,7 @@ Do not install, disable, or alter AppArmor profiles yet. If a later LoRaWAN serv
 
 ## 7.2 Time synchronization
 
-[~] `ulc-01` PASS on 2026-08-20: `Timezone=Etc/UTC`, `NTP=yes`, and `NTPSynchronized=yes`. Repeat the same read-only verification on `ulc-02` and `ulc-03`.
+[x] `ulc-01` has detailed pasted evidence for `Timezone=Etc/UTC`, `NTP=yes`, and `NTPSynchronized=yes`. Later three-host completion was operator-confirmed; where the individual `ulc-02`/`ulc-03` terminal output is not preserved, do not invent it.
 
 Confirm synchronization remains healthy on all three hosts:
 
@@ -1220,7 +1220,7 @@ journalctl --list-boots --no-pager | tail -n 5
 journalctl --disk-usage
 ```
 
-`ulc-03` already showed records from both sides of its controlled reboot, which is strong evidence that previous-boot data is available. Still run the explicit check on all three so the baseline is consistent.
+`ulc-03` showed records from both sides of its controlled reboot, while `ulc-01` has the clearest pasted `--list-boots` evidence. Later persistent-logging completion was operator-confirmed for the accepted baseline. If exact per-host boot-history output is needed for the final DOCX, recapture it rather than reconstructing it from memory.
 
 If the deployment requires stronger host audit evidence, install/configure `auditd` only after checking the 2-GiB POC resource budget and define a small targeted ruleset rather than a noisy generic rules dump.
 
@@ -1281,9 +1281,9 @@ ss -lntup
 
 ---
 
-# Phase 9 - Final hardening acceptance before Docker/application deployment
+# Phase 9 - Final hardening acceptance checklist
 
-Do not start the LoRaWAN application stack until all applicable checks pass.
+This is a reusable checklist, **not an all-green current-status table**. The live build proceeded to Docker/etcd with two explicitly documented infrastructure exceptions: the DigitalOcean Cloud Firewall is externally controlled/unverified by this operator, and UFW remains inactive to avoid an unrecoverable remote lockout. Current evidence is authoritative in `00-build-execution-log.md`; do not convert unchecked provider/firewall items below into PASS without new evidence.
 
 [ ] OS/version and machine resources match the approved build.
 
@@ -1363,6 +1363,19 @@ Action: Created hardening execution record before changing the server.
 Source guide: supplied Ubuntu Server Security Hardening DOCX reviewed.
 Yellow-highlight exclusion: Section 12 (web server / Nginx / subdomain / Certbot / Nginx hardening) excluded.
 Additional project hardening: added safe SSH-change procedure, cloud-firewall boundary, Docker/UFW warning, AppArmor, logging, time, IPv6 decision gate, OpenBao swap boundary, and acceptance evidence.
-Current step: Phase 1.1 baseline inspection.
-Result: WAITING FOR SERVER COMMAND OUTPUT.
+Historical state at document creation: Phase 1.1 baseline inspection; waiting for server output.
 ```
+
+## 2026-08-21 - Hardening-document closure checkpoint
+
+```text
+Host baseline / patching / SSH / pwquality / unattended upgrades: accepted
+Fail2ban: deployed on all three; detailed ulc-01 evidence plus operator-confirmed ulc-02/03 completion
+AppArmor / time / persistent logging: accepted with evidence-scope caveats documented above
+DigitalOcean Cloud Firewall: externally controlled; current operator not authorized; rule state unknown
+UFW: inactive by deliberate remote-lockout decision
+East-west 10.104.0.0/20: later operationally validated from the hosts
+Later infrastructure state: Docker runtime and three-member etcd quorum were subsequently deployed and validated; see 00-build-execution-log.md
+```
+
+This closes the stale `WAITING FOR SERVER COMMAND OUTPUT` marker without inventing provider-side or per-host evidence that was never captured.
