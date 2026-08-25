@@ -272,9 +272,9 @@ ha-01 Mosquitto-1 preferred, private TLS backend :8884
 ha-02 Mosquitto-2 backup, private TLS backend :8884
 ```
 
-Both use the same gateway trust/ACL policy. HAProxy owns public `:8883`; Mosquitto uses private backend `:8884`, avoiding a same-host port collision. All three HAProxy hosts expose the private MQTT route `:18883`; only `ha-01/02` expose public `:8883`.
+The live Phase 8B implementation differs from this original deployment-day target. Mosquitto uses TLS backend `:8884` on ulc-01/02 and the currently validated HAProxy MQTT frontend is `10.104.0.2:8883`, with certificate identity `mqtt.internal.lorawan.com`. The planned all-host private `:18883` route was not commissioned. Before executing the later Node-RED/Grafana portion of this runbook, refine the MQTT route from the then-current Phase 9/Node-RED integration decision rather than using the obsolete `mqtt-ha.internal.<DOMAIN>:18883` placeholder.
 
-Stop Mosquitto-1 and prove the gateway reconnects to Mosquitto-2 and drains its local QoS 1 buffer. Also prove Node-RED can reconnect through `mqtt-ha.internal.<DOMAIN>:18883`. Restore Mosquitto-1.
+Broker-backend failover behind the commissioned ulc-01 HAProxy endpoint has already passed. Gateway QoS-buffer and Node-RED reconnection tests remain later end-to-end tests.
 
 Do not claim broker-state replication.
 
@@ -401,9 +401,11 @@ Before opening the Node-RED editor, prove its **two real dependencies from ha-03
 
 ```text
 MQTT
-Node-RED -> mqtt-ha.internal.<DOMAIN>:18883
-         -> local ha-03 HAProxy
-         -> Mosquitto-1 preferred / Mosquitto-2 backup
+Node-RED -> <COMMISSIONED_MQTT_ROUTE_AT_NODE_RED_PHASE>
+         -> certificate identity must match mqtt.internal.lorawan.com unless new broker certificates are issued
+         -> Mosquitto-1 / Mosquitto-2 TLS backends
+
+The former `mqtt-ha.internal.<DOMAIN>:18883` / local ha-03 HAProxy path is a superseded target and must not be assumed live.
 
 DATABASE
 Node-RED -> pgbouncer.internal.lorawan.com:6432

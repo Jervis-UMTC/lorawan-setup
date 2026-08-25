@@ -10,12 +10,15 @@ single-host lab
   DB host:   telemetry-db:5432
 
 three-Droplet cloud HA POC
-  MQTT host: mqtt-ha.internal.<DOMAIN>:18883 over TLS
+  MQTT host: <COMMISSIONED_NODE_RED_MQTT_ROUTE> over TLS
+  TLS name:  mqtt.internal.lorawan.com unless a later phase issues a different broker service identity
   DB host:   pgbouncer.internal.lorawan.com:6432 -> HAProxy -> Patroni primary
   DB name:   lorawan_telemetry with TimescaleDB enabled
 ```
 
 The cloud POC does **not** create a separate TimescaleDB server; it keeps `lorawan_telemetry` as a Timescale-enabled logical database inside the Patroni cluster.
+
+> **Current cloud note:** the original Node-RED manuals assumed `mqtt-ha.internal.<DOMAIN>:18883`, but Phase 8B did not commission that route. The validated broker certificate identity is `mqtt.internal.lorawan.com`, with Mosquitto TLS backends on ulc-01/02 `:8884`. Do not execute the cloud Node-RED MQTT steps until its integration phase defines and validates the final redundant route.
 
 Unless a section explicitly says **cloud HA POC**, the older Docker examples assume the single-host lab at `/opt/lorawan-lab`. Perform Node-RED editor actions in a browser connected through the documented SSH tunnel. Commands that begin with `docker compose exec` run a process inside the named container; do not run them on the Raspberry Pi gateway.
 

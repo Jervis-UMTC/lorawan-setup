@@ -248,7 +248,8 @@ Finally query the **application endpoint**:
 
 ```bash
 valkey-cli --tls --cacert <VALKEY_CA> \
-  -h valkey-ha.internal.<DOMAIN> -p 16379 \
+  --sni valkey.internal.lorawan.com \
+  -h <LOCAL_HAPROXY_PRIVATE_IP> -p 16379 \
   -a '<LOAD_FROM_PROTECTED_SOURCE>' ROLE
 ```
 

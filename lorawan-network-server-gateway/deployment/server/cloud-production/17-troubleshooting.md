@@ -381,11 +381,12 @@ Then query the app endpoint:
 
 ```bash
 valkey-cli --tls --cacert <VALKEY_CA> \
-  -h valkey-ha.internal.<DOMAIN> -p 16379 \
+  --sni valkey.internal.lorawan.com \
+  -h <LOCAL_HAPROXY_PRIVATE_IP> -p 16379 \
   -a '<LOAD_PROTECTED_SECRET>' ROLE
 ```
 
-Expected: the HAProxy endpoint reports primary/master. If direct Sentinel state is correct but HAProxy points at a replica, inspect the HAProxy `AUTH` + `INFO replication` health check; a simple PING is insufficient because replicas also answer PING.
+Expected: the HAProxy endpoint reports primary/master. If direct Sentinel state is correct but HAProxy points at a replica, inspect the commissioned HAProxy TLS health sequence: dedicated `haproxy-health` authentication, exact CRLF `INFO replication`, and `min-recv 64 string role:master`. A simple PING is insufficient because replicas also answer PING.
 
 Restore 3 data nodes + 3 Sentinels and a passing `CKQUORUM` before another failure test.
 

@@ -317,7 +317,7 @@ Use a rolling procedure:
 6. verify TLS, authentication, replica link, announced address, and Sentinel discovery after restart;
 7. update the second replica and return to three healthy data nodes;
 8. trigger a controlled Sentinel failover away from the old primary or stop the old primary under the approved test procedure;
-9. verify HAProxy `valkey-ha.internal.<DOMAIN>:16379` now routes only to the promoted writable primary;
+9. verify both commissioned HAProxy Valkey endpoints (`10.104.0.2:16379` and `10.104.0.4:16379`) route only to the promoted writable primary while clients verify `valkey.internal.lorawan.com`;
 10. update the former primary and let Sentinel configure it as a replica;
 11. confirm all three Sentinels agree, `CKQUORUM` passes, and ChirpStack processes a fresh uplink;
 12. restore full 3-node redundancy before closing the window.
