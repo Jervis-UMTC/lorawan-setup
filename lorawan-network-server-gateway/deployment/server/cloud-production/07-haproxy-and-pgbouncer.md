@@ -1,10 +1,10 @@
 # 7. PgBouncer and HAProxy Core Service Routing
 
-> **Status: ACTIVE - THREE-NODE HAPROXY DATABASE ROUTING PASS; PGBOUNCER THREE-NODE TLS ISSUANCE PASS; ULC-03 PACKAGE + LOCAL TLS INSTALL CANARY PASS; DEPENDENCY-SERVICE HYGIENE PASS; NAME-RESOLUTION + SCRAM PREFLIGHT NEXT.** Phase 6 database-layer commissioning and controlled Patroni switchover validation are complete. HAProxy `2.8.16-0ubuntu0.24.04.3` is installed and live-validated on all three nodes with private-only `:15432/:15433` routing and verify-full PostgreSQL TLS. PgBouncer `1.22.0-1build4` is installed only on `ulc-03`, remains stopped and disabled, has no `:6432` listener, and has its verified local TLS identity installed under `/etc/lorawan-pki/pgbouncer`. The unused package-created `postgresql.service` and `ssl-cert.service` units are now inactive and disabled; no host PostgreSQL cluster exists, no service was masked or package removed, the existing snakeoil key was left untouched, PgBouncer TLS permissions remain correct, HAProxy stayed live, and Patroni/Spilo stayed unchanged. Next prove the host resolves the logical PostgreSQL name to local HAProxy and inventory the four application-role SCRAM verifiers without printing them before creating the protected auth file or PgBouncer configuration.
+> **Status: COMPLETE / VALIDATED.** HAProxy `2.8.16-0ubuntu0.24.04.3` and PgBouncer `1.22.0-1build4` are commissioned on all three nodes. The stable database client path is client TLS -> local PgBouncer `:6432` -> local HAProxy primary route `:15432` -> current Patroni leader over verified PostgreSQL TLS. PgBouncer client TLS, backend verify-full TLS, four-role SCRAM authentication, service enablement, and Patroni leader-change routing have all passed. The detailed canary, failure, correction, and commissioning history below is retained for reproducibility; where an earlier checkpoint says a later step is pending, the final Phase 7 record in section 7.21 is authoritative.
 
 ## 7.1 Purpose
 
-The tiny HA POC runs PgBouncer and the private PostgreSQL HAProxy frontend on **all three hosts**. `ha-01` and `ha-02` also carry the public ChirpStack/MQTT routing roles behind the movable Reserved IPv4. `ha-03` additionally carries the private MQTT `:18883` route used by Node-RED; it is never a Reserved-IP public-ingress candidate.
+The tiny HA POC runs PgBouncer and the private PostgreSQL HAProxy frontend on **all three hosts**. `ha-01` and `ha-02` are the intended public-ingress candidates in the later Reserved-IPv4 phase. The original target design also reserved a private MQTT route on `ha-03` for Node-RED, but that `:18883` route was **not** commissioned in the completed Phase 8B implementation; treat it as future design until a later integration phase explicitly deploys and validates it.
 
 ```text
 local database client
@@ -624,7 +624,7 @@ Commissioning status:
 |---|---|---|---|---|---|
 | ulc-01 | 10.104.0.2 | commissioned | verified | verified | passed |
 | ulc-02 | 10.104.0.4 | commissioned | verified | verified | passed |
-| ulc-03 | 10.104.0.8 | foundation complete | pending | pending | pending |
+| ulc-03 | 10.104.0.8 | commissioned | verified | verified | passed |
 
 For each node:
 
@@ -644,14 +644,7 @@ For each node:
 7. Test application database login through `6432`.
 8. Enable the service only after successful validation.
 
-The ULC-03 foundation stage completed with:
-
-- PgBouncer package installed: `1.22.0-1build4`.
-- Service stopped and disabled before commissioning.
-- No `:6432` listener exposed.
-- Package/runtime identity verified.
-
-The remaining ULC-03 commissioning follows the same validation sequence used by ULC-01 and ULC-02.
+The ULC-03 foundation stage originally completed with the package installed but intentionally stopped while its TLS/SCRAM configuration was prepared. That historical checkpoint is superseded by section 7.21: ULC-03 was subsequently commissioned with the same validated TLS, SCRAM, backend-routing, and enablement sequence used by ULC-01 and ULC-02.
 
 ## 7.18 Phase 7 ULC-03 TLS deployment record
 
@@ -765,13 +758,7 @@ Validated:
 - Local resolver mapping validated:
   - `postgres-ha.internal -> 10.104.0.8`
 
-Next ULC-03 steps:
-
-1. Start PgBouncer.
-2. Confirm listener on `10.104.0.8:6432`.
-3. Validate client TLS handshake using the PgBouncer certificate identity.
-4. Test application database connections through PgBouncer.
-5. Enable PgBouncer service after successful runtime validation.
+Historical checkpoint: these were the next ULC-03 steps at the time this pre-start record was captured. They were subsequently completed successfully. Section 7.21 contains the authoritative final three-node state.
 
 ## 7.21 Phase 7 Complete PgBouncer HA Commissioning Record
 
