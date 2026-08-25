@@ -12,7 +12,7 @@ This POC is **not capacity sizing for production**. A few sensor uplinks are eno
 
 ## Deployment sequence and document status
 
-The numbering is fixed to the **actual completed sequence through etcd**. **etcd is the first clustered technology because it is the first one we actually deployed and validated.** Files `06+` are provisional standby slots for the intended architecture, not proof that their exact future execution order has already happened or is immutable. Refine—and if necessary renumber—those standby phases only when the live build reaches them.
+The numbering follows the **actual cloud build sequence**. Phases 5-8 are now backed by live evidence: etcd, PostgreSQL/Patroni/TimescaleDB, HAProxy/PgBouncer, Mosquitto, and Valkey/Sentinel have reached their recorded acceptance boundaries. Phase 9 is the active ChirpStack phase. Files `10+` remain standby/reference slots until the live build reaches them; refine those manuals from current evidence before execution rather than treating old examples as commissioned state.
 
 Status meaning:
 
@@ -29,9 +29,9 @@ Status meaning:
 | 4 | [04-host-hardening-dns-pki-and-secrets.md](04-host-hardening-dns-pki-and-secrets.md) + [04a-host-security-hardening-execution-runbook.md](04a-host-security-hardening-execution-runbook.md) | VALIDATED host-security checkpoint |
 | 5 | [05-etcd-cluster.md](05-etcd-cluster.md) | **CORE DEPLOYMENT VALIDATED** - bootstrap/quorum/status proven; member-loss/recovery rehearsal not yet recorded |
 | 6 | [06-spilo-patroni-postgresql-cluster.md](06-spilo-patroni-postgresql-cluster.md) | **DATABASE-LAYER POC VALIDATED - PostgreSQL HA + telemetry schema + HBA/auth + logical backup boundary + controlled ulc-01 -> ulc-02 switchover + promoted-primary DB/Timescale/application-auth gates PASS** |
-| 7 | [07-haproxy-and-pgbouncer.md](07-haproxy-and-pgbouncer.md) | **ACTIVE - 3-node HAProxy routing PASS; PgBouncer 3-node TLS issuance PASS; ulc-03 package/TLS + dependency-service hygiene PASS; PgBouncer stopped/disabled; logical-name + SCRAM-verifier preflight next** |
-| 8 | [08-mqtt-and-valkey.md](08-mqtt-and-valkey.md) | STANDBY / DRAFT |
-| 9 | [09-chirpstack-cloud-cluster.md](09-chirpstack-cloud-cluster.md) | STANDBY / DRAFT |
+| 7 | [07-haproxy-and-pgbouncer.md](07-haproxy-and-pgbouncer.md) | **COMPLETE / VALIDATED - HAProxy database routing + three-node PgBouncer TLS/SCRAM commissioning + Patroni failover routing PASS** |
+| 8 | [08-mqtt-and-valkey.md](08-mqtt-and-valkey.md) | **CORE SERVICE LAYER COMPLETE / VALIDATED - MQTT TLS broker failover PASS; Valkey/Sentinel HA + dual writable-primary HAProxy routing PASS; ChirpStack MQTT workload identity/ACL commissioning remains a Phase 9 dependency** |
+| 9 | [09-chirpstack-cloud-cluster.md](09-chirpstack-cloud-cluster.md) | **ACTIVE - PRE-DEPLOYMENT PREFLIGHT / DEPENDENCY CLOSURE** |
 | 10 | [10-self-managed-public-ingress.md](10-self-managed-public-ingress.md) | STANDBY / DRAFT |
 | 11 | [11-raspberry-pi-4g-backhaul.md](11-raspberry-pi-4g-backhaul.md) | STANDBY / DRAFT |
 | 12 | [12-gateway-and-device-migration.md](12-gateway-and-device-migration.md) | STANDBY / DRAFT |
@@ -44,7 +44,7 @@ Status meaning:
 | 19 | [19-cloud-ha-grafana-deployment-day-runbook.md](19-cloud-ha-grafana-deployment-day-runbook.md) | sequence reference; later phases still STANDBY |
 | 20 | [20-openbao-and-fabric-adapter.md](20-openbao-and-fabric-adapter.md) | STANDBY / DRAFT |
 
-**Current stop point:** Phase 6 has an established three-member PostgreSQL 18.6 / Patroni HA cluster with TimescaleDB 2.29.2 promotion readiness, permanent `chirpstack` and `lorawan_telemetry` databases, telemetry schema/ACLs, runtime SCRAM credentials, and the hardened 20-rule HBA policy active and persisted on all three members. The final three-node HBA parity/TLS/non-TLS-negative gate is PASS, and the corrected post-hardening application-role authentication gate is also PASS for `chirpstack`, `telemetry_writer`, `telemetry_reader`, and `fabric_adapter` over verify-full TLS to the current primary. The POC logical backup boundary is COMPLETE: both custom-format database archives were validated on `ulc-01`, copied to an independent operator workstation, and their SHA-256 values matched byte-for-byte. The controlled Patroni switchover from `ulc-01` to `ulc-02` is PASS, and promoted-primary validation on `ulc-02` is also PASS: `ulc-02` is writable primary on timeline `2`, verify-full TLS works, both application databases and owners remain correct, TimescaleDB `2.29.2` plus both telemetry hypertables and all six commissioned objects are intact, and `ulc-01`/`ulc-03` stream from it over TLS with zero reported lag at the checkpoint. The post-promotion application-role login gate is also PASS for all four runtime identities over verify-full TLS to promoted primary `ulc-02`; Phase 6 database-layer commissioning and planned-switchover validation are therefore closed. Phase 7 is active: three-node HAProxy routing and three-node PgBouncer TLS issuance are PASS; `ulc-03` now has the pinned PgBouncer package plus its verified local TLS identity, remains stopped/disabled with no `:6432` listener, and its unused `postgresql.service` / `ssl-cert.service` boot units have been disabled without removing dependencies. The next canary gate is read-only logical-name resolution plus SCRAM-verifier inventory before any PgBouncer auth/config activation. The DigitalOcean Cloud Firewall remains externally controlled, and this repository still has no execution evidence that the Reserved IPv4 or public DNS has been commissioned.
+**Current stop point:** the database and shared-state layers are commissioned far enough to begin ChirpStack deployment preflight. Phase 6 PostgreSQL/Patroni/TimescaleDB HA is complete, including hardened TLS/SCRAM HBA policy, validated logical backups, and controlled promotion testing. Phase 7 is complete: HAProxy database-primary routing and PgBouncer are commissioned on all three nodes with client TLS, SCRAM authentication, verified backend TLS, and unchanged client endpoints across Patroni leader changes. Phase 8 core shared services are also commissioned. Mosquitto `2.0.18` runs on `ulc-01` and `ulc-02` with TLS backends on `:8884`; the validated HAProxy MQTT TLS passthrough endpoint is currently `10.104.0.2:8883` with certificate identity `mqtt.internal.lorawan.com`, and broker-backend failover has passed. Valkey `7.2.13` runs TLS-only on all three nodes with three TLS Sentinels, quorum `2`, authenticated replication, and dual HAProxy writable-primary endpoints `10.104.0.2:16379` and `10.104.0.4:16379`. The last controlled Valkey failure promoted `ulc-02` (`10.104.0.4`) and both HAProxy endpoints followed automatically; `ulc-01` and `ulc-03` are healthy replicas after recovery. Do not manually fail back. Phase 9 is now ACTIVE, but first ChirpStack start remains blocked until the exact ChirpStack image/config schema is pinned and the remaining MQTT workload-authentication/ACL plus two-app-node MQTT routing boundary is resolved. Public Reserved IPv4/DNS ingress remains a later phase and is not required for the first private ChirpStack canary. The DigitalOcean Cloud Firewall remains externally controlled.
 
 ## POC resources
 
@@ -72,7 +72,7 @@ Do not create managed PostgreSQL, managed Valkey, block volumes, dedicated monit
 
 ## Target service placement
 
-The following is the **full intended placement**, not the current live-service inventory. At the present checkpoint, etcd and the three-member PostgreSQL/Patroni infrastructure cluster are live-validated on all three hosts; the application databases, TimescaleDB-backed telemetry schema, runtime database roles, and hardened PostgreSQL HBA policy are also commissioned. The logical backup boundary is complete; the controlled switchover test remains in Phase 6. HAProxy/PgBouncer, MQTT/Valkey, ChirpStack application services, public ingress, Grafana, OpenBao, and Fabric adapters remain standby.
+The following is the **full intended placement**, not a guarantee that every listed service is already commissioned. At the present checkpoint, etcd, PostgreSQL/Patroni, HAProxy database routing, PgBouncer, Mosquitto on `ulc-01/02`, and Valkey/Sentinel on all three nodes are live-validated. The application databases, TimescaleDB telemetry schema, runtime database roles, hardened PostgreSQL HBA policy, and logical backup boundary are also commissioned. ChirpStack itself is the next active deployment phase. Public ingress, Node-RED/Grafana deployment, OpenBao, Fabric adapters, and final gateway migration remain later work.
 
 ```text
 ha-01
@@ -207,7 +207,7 @@ SEC-02 temporary legitimate verification / security fixture
 
 ## HA relationships the completed POC is intended to prove
 
-Only the etcd relationship below is live-validated at the current checkpoint. The other relationships remain target behavior until their technology phases are deployed and tested.
+The etcd, PostgreSQL/Patroni, and Valkey/Sentinel relationships below are now live-validated. MQTT broker-backend failover has also been proven behind the commissioned `ulc-01` HAProxy TLS endpoint, but two-HAProxy-node MQTT application routing and ChirpStack workload authentication/ACLs are not yet closed. ChirpStack and OpenBao relationships remain target behavior until their phases are deployed and tested.
 
 ```text
 PostgreSQL
@@ -383,10 +383,10 @@ This is a topic index, **not** a second execution order. Use the sequence/status
 | [04-host-hardening-dns-pki-and-secrets.md](04-host-hardening-dns-pki-and-secrets.md) | host security plus future service-security guidance |
 | [04a-host-security-hardening-execution-runbook.md](04a-host-security-hardening-execution-runbook.md) | live hardening steps and verification evidence |
 | [05-etcd-cluster.md](05-etcd-cluster.md) | validated etcd quorum deployment |
-| [06-spilo-patroni-postgresql-cluster.md](06-spilo-patroni-postgresql-cluster.md) | active PostgreSQL HA phase; all 3 HBA live+persistent + fresh cross-host auth proven; final HBA gate next |
-| [07-haproxy-and-pgbouncer.md](07-haproxy-and-pgbouncer.md) | standby database-routing plan |
-| [08-mqtt-and-valkey.md](08-mqtt-and-valkey.md) | standby MQTT + Valkey/Sentinel plan |
-| [09-chirpstack-cloud-cluster.md](09-chirpstack-cloud-cluster.md) | standby ChirpStack plan |
+| [06-spilo-patroni-postgresql-cluster.md](06-spilo-patroni-postgresql-cluster.md) | validated PostgreSQL/Patroni/TimescaleDB HA deployment and promotion record |
+| [07-haproxy-and-pgbouncer.md](07-haproxy-and-pgbouncer.md) | validated HAProxy + PgBouncer database client path |
+| [08-mqtt-and-valkey.md](08-mqtt-and-valkey.md) | validated MQTT broker/TLS failover record + completed Valkey/Sentinel HA record; also preserves earlier design/failure history |
+| [09-chirpstack-cloud-cluster.md](09-chirpstack-cloud-cluster.md) | **active next phase: ChirpStack preflight, dependency closure, and two-node private deployment** |
 | [10-self-managed-public-ingress.md](10-self-managed-public-ingress.md) | standby HAProxy + Reserved-IP public failover plan |
 | [11-raspberry-pi-4g-backhaul.md](11-raspberry-pi-4g-backhaul.md) | standby physical-gateway 4G/LTE path |
 | [12-gateway-and-device-migration.md](12-gateway-and-device-migration.md) | standby migration/cutover plan |

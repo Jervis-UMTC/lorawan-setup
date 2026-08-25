@@ -10,32 +10,33 @@ Start here:
 
 [test/00-README.md](test/00-README.md)
 
-Designed for collecting Chapter IV experimental test results (Tables 12–17) on a resource-constrained test host:
+The current testing track is split into **preparation** and **counted execution**. The preparation path builds and freezes the physical gateway, minimum server stack, two RAK4631 sensor roles, and test tools. Counted Chapter IV experiments start only after the dedicated sensor preflight records `SENSOR_PREFLIGHT_STATUS=GO`.
 
 ```text
 test/
-├── gateway/         # Barebones physical gateway setup for testing (01-06)
-│   ├── 01-hardware-assembly.md
-│   ├── 02-install-chirpstack-gateway-os.md
-│   ├── 03-configure-concentratord.md
-│   ├── 04-configure-local-mqtt-buffer.md
-│   ├── 05-configure-mqtt-forwarder.md
-│   └── 06-verify-gateway-os.md
-└── server/
-    └── suite/       # minimum server build + Chapter III/IV test manuals
-        ├── 01-build-minimum-testbed.md
-        ├── 02-common-test-preparation.md
-        ├── 02a-prepare-test-tools.md
-        ├── 02b-configure-rak4631-emulators.md  # EMU-01 legitimate sensor + SEC-02 security node
-        ├── 03-normal-operation.md        -> Section 3.2.4 / 4.2 (PDR, Latency, TSR, Throughput, CPU/RAM)
-        ├── 04-authentication-access-control.md -> Section 3.2.6.1 / 4.3.1 (Table 12: 90 trials)
-        ├── 05-replay-spoofing.md         -> Section 3.2.6.2 / 4.3.2 (Table 13: 40 attempts)
-        ├── 06-data-integrity.md          -> Section 3.2.6.3 / 4.3.3 (Table 14: 40 attempts)
-        ├── 07-traceability.md            -> Section 3.2.6.4 / 4.3.4 (Table 15: 20 trials / 60 rec)
-        ├── 08-dos-flooding.md            -> Section 3.2.6.5 / 4.3.5 (Table 16: 18 runs)
-        ├── 09-resilience-recovery.md     -> Section 3.2.6.6 / 4.3.6 (Table 17: 3 x 2-hr runs)
-        └── 10-results-and-completion.md -> Compile final Chapter IV result tables
+├── 00-README.md
+├── preparation/
+│   ├── 00-README.md
+│   ├── gateway/      # Raspberry Pi 4B + RAK5146; hardware -> AS923 -> secure MQTT transport
+│   ├── server/       # Ubuntu Server VM + minimum seven-service test stack
+│   ├── sensor/       # EMU-01 legitimate physical sensor + SEC-02 security fixture
+│   │   ├── assembly/ # physical Agriculture Kit bring-up and code reference
+│   │   └── preflight/# final uncounted sensor -> ChirpStack -> DB/Fabric GO/NO-GO
+│   └── tools/        # separate test laptop, generators, captures, resource logging
+└── execution/
+    ├── 00-README.md
+    ├── 01-common-run-preparation.md
+    ├── 02-normal-operation.md
+    ├── 03-authentication-access-control.md
+    ├── 04-replay-spoofing.md
+    ├── 05-data-integrity.md
+    ├── 06-traceability.md
+    ├── 07-dos-flooding.md
+    ├── 08-resilience-recovery.md
+    └── 09-results-and-completion.md
 ```
+
+The frozen dissertation test-lab radio identity is **plain AS923** with MQTT region prefix **`as923`**. Do not change only one radio layer to AS923-3. Any future regional migration must be validated end to end across sensor firmware, RAK5146/Concentratord, MQTT topic prefix, ChirpStack region, and device profiles.
 
 ---
 
@@ -45,7 +46,20 @@ Start here:
 
 [deployment/00-README.md](deployment/00-README.md)
 
-Use this path for the complete HA/integration architecture or production/cloud work. For the current real-cloud build, start with [deployment/server/cloud-production/00-README.md](deployment/server/cloud-production/00-README.md), then read [00-build-execution-log.md](deployment/server/cloud-production/00-build-execution-log.md) to see what is actually validated. Continue only with the next active numbered phase. [19-cloud-ha-grafana-deployment-day-runbook.md](deployment/server/cloud-production/19-cloud-ha-grafana-deployment-day-runbook.md) is the full target sequence reference while later technologies remain on standby.
+Use this path for the complete HA/integration architecture or production/cloud work. For the current real-cloud build, start with [deployment/server/cloud-production/00-README.md](deployment/server/cloud-production/00-README.md), then read [00-build-execution-log.md](deployment/server/cloud-production/00-build-execution-log.md) to see what is actually validated.
+
+Current cloud continuation boundary:
+
+```text
+Phase 5  etcd                         VALIDATED
+Phase 6  PostgreSQL/Patroni/TimescaleDB VALIDATED
+Phase 7  HAProxy + PgBouncer          VALIDATED
+Phase 8  Mosquitto + Valkey/Sentinel  VALIDATED
+Phase 9  ChirpStack                   ACTIVE NEXT PHASE
+Phase 10+                              STANDBY / refine before execution
+```
+
+[19-cloud-ha-grafana-deployment-day-runbook.md](deployment/server/cloud-production/19-cloud-ha-grafana-deployment-day-runbook.md) remains the full target-sequence reference; it is not evidence that later technologies are already commissioned.
 
 ```text
 deployment/
@@ -54,10 +68,10 @@ deployment/
 │   ├── operations/  # registration, backup/recovery, outage tests, migration, troubleshooting, RF, security
 │   └── references/  # vendor/hardware references
 └── server/
-    ├── ha-cluster/  # etcd, Patroni/PostgreSQL, HAProxy, PgBouncer, Mosquitto, Valkey, ChirpStack
+    ├── ha-cluster/  # reusable HA deployment manuals
     ├── data-layer/  # TimescaleDB, Node-RED, Grafana
     ├── fabric-attestation/ # Fabric handoff, OpenBao Transit, outbox/adapter, reconciliation
-    ├── cloud-production/   # production architecture + full-stack cloud simulation
+    ├── cloud-production/   # current three-Droplet HA build and live evidence log
     └── integrations/       # reusable technology and gateway-evidence contracts
 ```
 
@@ -78,7 +92,7 @@ Contains presentation slide decks and weekly technical updates.
 ```text
 Gateway EUI (16-hexadecimal ID)
 Device EUI & OTAA root keys
-Regional channel plan ( Philippines AS923 / AS923-1 )
+Exact validated regional channel plan and MQTT region prefix
 MQTT server FQDN, CA.crt, and client certificates
 4G/LTE dongle model, carrier/APN reference, and tested gateway interface/route
 Grafana image/digest, dashboard backup/provisioning reference, and telemetry_reader role reference

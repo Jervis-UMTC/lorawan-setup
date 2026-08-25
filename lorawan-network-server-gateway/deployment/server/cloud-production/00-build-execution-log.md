@@ -1034,3 +1034,27 @@ Decision after collateral inspection: the enabled `postgresql.service` and `ssl-
 `ulc-03` PgBouncer dependency-service hygiene - 2026-08-23: **PASS.** `systemctl disable --now postgresql.service ssl-cert.service` removed both package-created boot symlinks. Final states were `postgresql.service active=inactive enabled=disabled` and `ssl-cert.service active=inactive enabled=disabled`. No package was uninstalled and no unit was masked. `pg_lsclusters` remained empty and no running `postgresql@*.service` instance existed. The existing snakeoil key `/etc/ssl/private/ssl-cert-snakeoil.key` was preserved and inventoried as `0640 root:ssl-cert`; it is not used by the commissioned PgBouncer TLS path. PgBouncer remained `inactive/disabled` with no `:6432` listener. Its TLS directory remained `0750 root:postgres`, the three TLS files remained `0640 root:postgres`, and the service identity still passed the private-key read test. HAProxy stayed active with exact `10.104.0.8:15432` and `10.104.0.8:15433` listeners. `ulc-02 /leader`, `ulc-01 /replica`, and `ulc-03 /replica` all remained HTTP `200`. Spilo identity remained exactly `7e1c213d1694f37aa08bf2a996a64947b207df5ca9c4366ff0debfab8f2bb123|2026-08-22T14:32:18.26248358Z|0`. Child gate exit code was `0` and the SSH shell remained alive.
 
 Decision: **ulc-03 package/dependency hygiene boundary PASS.** Recheck the two disabled package units after future package upgrades. PgBouncer is still intentionally stopped. Next run a read-only logical-name/SCRAM-verifier preflight before creating `userlist.txt` or activating any PgBouncer configuration.
+
+## 2026-08-24 to 2026-08-25 - Phase 7 and Phase 8 completion checkpoint
+
+The detailed step-by-step evidence remains in [07-haproxy-and-pgbouncer.md](07-haproxy-and-pgbouncer.md) and [08-mqtt-and-valkey.md](08-mqtt-and-valkey.md). This checkpoint records only the final boundaries needed to resume work safely.
+
+**Phase 7 database client path: COMPLETE / PASS.** PgBouncer `1.22.0-1build4` is commissioned on ulc-01, ulc-02, and ulc-03, active and enabled, with client TLS using `pgbouncer.internal.lorawan.com`, SCRAM authentication for the four commissioned application roles, backend verify-full TLS, and local HAProxy primary routing. A controlled Patroni leader change was followed without changing the application endpoint, restarting PostgreSQL, or restarting PgBouncer.
+
+**Phase 8B MQTT core infrastructure: PASS with workload-authentication work deferred.** Mosquitto `2.0.18` is active on ulc-01 and ulc-02. The commissioned broker TLS backends listen on `:8884`; the validated HAProxy TLS-passthrough frontend is `10.104.0.2:8883`; the broker certificate identity verified by clients is `mqtt.internal.lorawan.com`. Stopping the ulc-01 broker caused HAProxy to mark that backend DOWN and TLS service continued through ulc-02; restarting ulc-01 returned both backends online. This proves broker/TLS/failover foundation only. The final ChirpStack MQTT workload identity/ACL policy and a redundant two-application-node MQTT routing boundary are not yet commissioned and are explicit Phase 9 preconditions.
+
+**Phase 8C Valkey HA: COMPLETE / PASS.** Valkey `7.2.13` is TLS-only on all three nodes, using certificate identity `valkey.internal.lorawan.com`, authenticated replication, and failover-safe `masterauth` on every node. Three TLS Sentinel members run on `:26379` with quorum `2`. HAProxy exposes writable-primary endpoints `10.104.0.2:16379` and `10.104.0.4:16379`. Health checks use the separate least-privilege `haproxy-health` identity, CA/SNI verification, exact CRLF `AUTH` and `INFO replication`, and `min-recv 64 string role:master`; the main Valkey password is not stored in `haproxy.cfg`.
+
+The final controlled Valkey test started with ulc-03 as primary, stopped only its Valkey service, and left Sentinel running. Sentinel elected ulc-02 (`10.104.0.4`) after seven polling attempts; all three Sentinels agreed. Both HAProxy `:16379` endpoints were briefly unavailable for one polling attempt, then automatically routed only to the new master. Ten consecutive post-failover requests through each endpoint were master-only with zero errors. Pre-failover data survived, a post-failover write/read across both HAProxy endpoints passed, ulc-03 restarted and rejoined ulc-02 as a replica with `master_link_status:up`, final `connected_slaves=2`, and `CKQUORUM` remained healthy. No HAProxy configuration change/reload occurred during the failover and no manual failback was performed.
+
+Current Valkey topology at this checkpoint:
+
+```text
+ulc-02 10.104.0.4 = PRIMARY
+ulc-01 10.104.0.2 = REPLICA
+ulc-03 10.104.0.8 = REPLICA
+Sentinel members = 3
+quorum = 2
+```
+
+**Next active phase: Phase 9 ChirpStack pre-deployment preflight.** Do not start ChirpStack yet. First pin/inspect the exact image and configuration schema, re-prove local PgBouncer and Valkey client paths, inventory live Mosquitto authentication/ACL directives without printing secrets, commission a least-privilege ChirpStack MQTT identity, and close the second application-node MQTT routing gap. Public HTTPS/Reserved-IP work remains Phase 10.
