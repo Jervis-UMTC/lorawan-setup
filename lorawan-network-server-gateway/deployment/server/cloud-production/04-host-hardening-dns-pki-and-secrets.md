@@ -292,16 +292,16 @@ The gateway MQTT certificate Common Name equals the 16-hex Gateway ID when the b
 
 ### 4.7A Certificate/SAN matrix for this POC
 
-This matrix is a **future service-PKI target**, not a record of certificates already deployed. Issue or obtain an entry only when its consuming service becomes active. The current etcd cluster is the explicit exception: it is already validated with HTTP on the private east-west network, so its TLS row applies only if we later schedule an etcd transport-hardening change.
+This matrix began as a future service-PKI target, but several rows are now commissioned. Use the names below as the current logical-name baseline for services already deployed; later execution records remain authoritative for exact certificate fingerprints, node SANs, and file paths. The current etcd cluster remains the explicit exception: it is validated with HTTP on the private east-west network, so its TLS row applies only if a later transport-hardening change is scheduled.
 
 | Service | Where | Name/SAN that clients verify | Why |
 |---|---|---|---|
 | ChirpStack HTTPS | HAProxy `ha-01/02` anchor listeners | `chirpstack.<DOMAIN>` | Browser/API TLS through the Reserved IPv4 after ownership moves between app hosts |
-| Mosquitto-1 | `ha-01` | `mqtt.<DOMAIN>`, `mqtt-ha.internal.<DOMAIN>`, node private name/IP | Same broker cert works through public and internal HAProxy TCP pass-through |
-| Mosquitto-2 | `ha-02` | `mqtt.<DOMAIN>`, `mqtt-ha.internal.<DOMAIN>`, node private name/IP | Backup broker presents the same service names |
+| Mosquitto-1 | `ha-01` | `mqtt.internal.lorawan.com` plus issued node SANs | Commissioned broker identity verified through HAProxy TLS passthrough |
+| Mosquitto-2 | `ha-02` | `mqtt.internal.lorawan.com` plus issued node SANs | Backup broker presents the same commissioned service identity |
 | PgBouncer | `ha-01/02/03` | `pgbouncer.internal.lorawan.com`, node private name/IP | Local database clients use one stable logical name |
 | PostgreSQL | `ha-01/02/03` | `postgres-ha.internal`, node private name/IP | PgBouncer/HAProxy can verify any promoted primary |
-| Valkey | `ha-01/02/03` | `valkey-ha.internal.<DOMAIN>`, node private name/IP | HAProxy/ChirpStack verify any promoted primary |
+| Valkey | `ha-01/02/03` | `valkey.internal.lorawan.com`, node private name/IP | HAProxy/ChirpStack verify any Sentinel-promoted primary |
 | OpenBao | `ha-01/02/03` | `openbao-kms.internal.<DOMAIN>`, node private name/IP | Either active or standby can serve the stable KMS path |
 | etcd - future TLS hardening only | `ha-01/02/03` | each member's private DNS/IP | If transport TLS is added later, peer/client mTLS must identify the actual member; current validated etcd is HTTP on `10.104.0.0/20` |
 

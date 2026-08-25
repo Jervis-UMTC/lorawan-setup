@@ -313,19 +313,17 @@ chirpstack.<DOMAIN>
 mqtt.<DOMAIN>
 ```
 
-The MQTT server certificate must be valid for `mqtt.<DOMAIN>` and the broker must validate the gateway client certificate.
-
-Internal etcd certificates use private host identities according to [04-host-hardening-dns-pki-and-secrets.md](04-host-hardening-dns-pki-and-secrets.md). For the local HAProxy service aliases used by containerized ChirpStack, include these logical names in the corresponding backend server certificates:
+Certificate names must match what clients actually verify. Later execution refined several placeholders from this early infrastructure design. The commissioned identities currently relevant to ChirpStack are:
 
 ```text
-pgbouncer.internal.lorawan.com    -> SAN on the PgBouncer certificates on ha-01, ha-02, and ha-03
-postgres-ha.internal           -> SAN on every PostgreSQL member certificate
-valkey-ha.internal.<DOMAIN>    -> SAN on every Valkey server certificate
-mqtt-ha.internal.<DOMAIN>      -> SAN on both Mosquitto server certificates
-openbao-kms.internal.<DOMAIN>  -> SAN on all three OpenBao server certificates
+pgbouncer.internal.lorawan.com -> PgBouncer certificates on all three nodes
+postgres-ha.internal           -> PostgreSQL member certificates used behind PgBouncer/HAProxy
+valkey.internal.lorawan.com    -> every commissioned Valkey server certificate
+mqtt.internal.lorawan.com      -> commissioned Mosquitto broker certificates
+openbao-kms.internal.<DOMAIN>  -> future OpenBao service identity
 ```
 
-Inside ChirpStack-1 and ChirpStack-2, map `pgbouncer.internal.lorawan.com`, `valkey-ha.internal.<DOMAIN>`, and `mqtt-ha.internal.<DOMAIN>` to that app host's private VPC IP. On `ha-03`, map `pgbouncer.internal.lorawan.com` and `mqtt-ha.internal.<DOMAIN>` to the `ha-03` private VPC IP so Node-RED uses the local HAProxy MQTT route and Node-RED/Grafana use local PgBouncer. Each PgBouncer maps/uses `postgres-ha.internal` for its local HAProxy backend. Fabric adapter-1 and adapter-2 use `openbao-kms.internal.<DOMAIN>:18200`, mapped to that adapter host's local HAProxy frontend, which reaches the three OpenBao nodes over private TLS. This keeps stable names while PgBouncer, HAProxy, Patroni, Sentinel, MQTT routing, or the OpenBao active node changes.
+For containerized ChirpStack, map `pgbouncer.internal.lorawan.com` and `valkey.internal.lorawan.com` to that application host's private VPC IP so the local PgBouncer/HAProxy paths are used. The old `mqtt-ha.internal.<DOMAIN>:18883` local-per-host design was not commissioned in Phase 8B; the validated MQTT certificate identity is `mqtt.internal.lorawan.com` and the current validated HAProxy frontend is `10.104.0.2:8883`. Phase 9 must close the redundant two-application-node MQTT route and workload authentication/ACL boundary before first ChirpStack start. Each PgBouncer maps/uses `postgres-ha.internal` for its local HAProxy backend. Future Fabric adapters use `openbao-kms.internal.<DOMAIN>:18200` only after that service is commissioned.
 
 ## 3.10 Why not two Droplets?
 
