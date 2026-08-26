@@ -1,6 +1,141 @@
 # 11. Gateway OS Delivery Buffer and Integrity Journal over a USB 4G/LTE Dongle
 
-> **Status: STANDBY / DRAFT.** This gateway/backhaul phase is not part of the current completed cloud-server checkpoint. Re-check the actual Gateway OS build, modem mode, carrier/APN, MQTT endpoint, certificates, queue/journal behavior, and routing when this phase becomes active.
+> **Status: REQUIRED PRE-TEST SETUP / ACTIVE.** The physical gateway is available again. Preserve the known hardware baseline (Raspberry Pi 4B + RAK5146 + Waveshare SIM7600G-H) and resume from the read-only reuse/modem inventory before changing live gateway state. Phase 13A cloud backup work is paused while Phase 11 is active; Phase 12 still requires both Phase 11 normal-path commissioning and Phase 13A PASS. The Phase 10 provider-owned Reserved-IP/firewall/DNS work remains pending externally. **Do not perform LTE-outage, gateway-reboot, broker-loss, or queue-drain failure experiments here; Phase 15 owns those tests after the full setup gate passes.**
+
+## 11.0 Fast reuse gate - inspect before changing the gateway
+
+Do not reflash Gateway OS or rewrite a working radio configuration merely because Phase 11 is now active. First capture the current gateway state in one read-only pass. Reuse any component that already satisfies the commissioned requirements and continue only from the first missing item.
+
+The reuse gate must identify: Gateway OS release, UTC time, free persistent storage, active RAK5146/SX1303 Concentratord configuration, authoritative Gateway EUI, plain `as923` topic prefix, UDP Forwarder disabled state, MQTT Forwarder endpoint/backend, any existing loopback Mosquitto listener/configuration, and USB/LTE interfaces. A previous working result is useful context but does not replace this current inspection.
+
+**Current LTE hardware baseline:** the gateway uses a **Waveshare SIM7600G-H 4G DONGLE**. Waveshare documents this model for Linux hosts and lists NDIS/RNDIS/PPP dial-up support. Therefore do **not** assume the dongle is QMI or MBIM and do not send a USB-mode-changing AT command during discovery. First identify the composition currently presented to Gateway OS from `lsusb`, kernel logs, `/dev/ttyUSB*`, `/dev/cdc-wdm*`, and any new network interface. Preserve the working USB composition unless the current Gateway OS cannot use it.
+
+**Why:** this shortens the phase while reducing risk. Reflashing or rewriting a functioning gateway would create unnecessary RF identity, networking, and credential changes. Read-only discovery lets the operator skip already-complete setup and mutate only the missing layer.
+
+### 11.0A Fast read-only gateway inventory
+
+Run this directly on the Gateway OS shell. It intentionally avoids full wireless/network secret dumps and never reads a private-key body:
+
+```sh
+echo '=== PHASE 11.0A GATEWAY REUSE INVENTORY ==='
+
+echo '--- OS / time / storage ---'
+cat /etc/os-release
+uname -a
+date -u
+df -h /
+
+echo '--- core service state ---'
+monit status 2>/dev/null || true
+ps w | grep -E '[c]hirpstack-concentratord|[c]hirpstack-mqtt-forwarder|[m]osquitto'
+
+echo '--- Concentratord effective config ---'
+uci show chirpstack-concentratord 2>/dev/null || true
+
+echo '--- recent Concentratord identity/startup ---'
+logread -e chirpstack-concentratord 2>/dev/null | tail -n 120
+
+echo '--- MQTT Forwarder effective config ---'
+uci show chirpstack-mqtt-forwarder 2>/dev/null || true
+
+echo '--- UDP Forwarder effective config ---'
+uci show chirpstack-udp-forwarder 2>/dev/null || true
+
+echo '--- local Mosquitto process/listener ---'
+ps w | grep '[m]osquitto' || true
+ss -lntp 2>/dev/null | grep ':1883' || netstat -lntp 2>/dev/null | grep ':1883' || true
+
+echo '--- Mosquitto persistence/listener policy ---'
+grep -E '^(persistence|persistence_location|persistence_file|autosave_interval|max_queued_messages|max_queued_bytes|listener|protocol|allow_anonymous|include_dir)' /etc/mosquitto/mosquitto.conf 2>/dev/null || true
+
+echo '--- Mosquitto cloud bridge metadata only ---'
+grep -E '^(connection |address |remote_clientid|cleansession|bridge_cafile|bridge_certfile|bridge_keyfile|bridge_insecure|topic )' /etc/mosquitto/conf.d/bridge.conf 2>/dev/null || true
+
+echo '--- network / USB / LTE discovery ---'
+ip link
+ip -4 addr
+ip route
+lsusb 2>/dev/null || true
+dmesg | tail -n 120
+
+echo '=== PHASE 11.0A COMPLETE ==='
+```
+
+Record the active 16-hexadecimal Gateway EUI from the successful SX1302/SX1303 Concentratord startup, not an inactive SX1301 placeholder. The current POC region topic prefix must remain exactly `as923`. A correct already-buffered delivery path has MQTT Forwarder targeting `tcp://127.0.0.1:1883` with QoS 1, UDP Forwarder disabled, local Mosquitto bound only to loopback `1883`, persistence enabled with finite queue limits, and cloud bridge metadata referencing the intended MQTT endpoint. If any of those are already correct, do not recreate them.
+
+The inventory may show an LTE device/interface but does not prove carrier registration or cloud reachability; those are verified later after the modem mode is identified. If Mosquitto or the bridge files are absent, record `ABSENT` and continue with the local-buffer section rather than installing packages blindly.
+
+### Phase 11.0A/0B live inventory result - 2026-08-26
+
+**PASS for gateway reuse / PARTIAL for LTE driver binding.** The gateway is running ChirpStack Gateway OS `4.12.0` (`r29197-ab4c7d6af7`) on Raspberry Pi 4B with about `3.8 GiB` free on the persistent overlay. The active Concentratord is `chirpstack-concentratord-sx1302` `4.7.1` using `model='rak_5146'`, region `AS923`, channel plan `as923`, with active Gateway EUI **`0016c001f139a1cb`**. The SX1302 startup shows the expected AS923 923.2-924.6 MHz multi-SF channel set. The inactive SX1301 placeholder EUI must not be used. UDP Forwarder is disabled.
+
+MQTT Forwarder `4.6.0` already uses the correct local-buffer topology: `tcp://127.0.0.1:1883`, topic prefix `as923`, and the active Gateway EUI. However, its current UCI value is **QoS `0`**, while the commissioned persistent-buffer design requires QoS `1`; treat that as a later bounded configuration correction after the LTE driver path is understood. Do not bypass local Mosquitto.
+
+Local Mosquitto is already running and listening only on `127.0.0.1:1883`. Persistence is enabled at `/etc/mosquitto/data/mosquitto.db`, autosave is `60` seconds, the finite queue limits are `100000` messages and `104857600` bytes, and the local listener is loopback-only. The two existing mTLS bridges use the gateway-specific certificate paths and split uplink/state (`out 1`, persistent session) from downlink command traffic (`in 0`, clean session). Their current remote target is `lora-test-server:8883`; treat that as the existing test endpoint, not as proof that the future public `mqtt.<DOMAIN>` path is commissioned.
+
+The Waveshare SIM7600G-H is physically detected by the kernel as SimTech USB **`1e0e:9001`**. It appeared first at `1-1.1`, disconnected, then re-enumerated at `1-1.3`. At the inventory checkpoint there were **no** `/dev/ttyUSB*` nodes, no `/dev/cdc-wdm*` node, and no modem-created network interface. The installed packages include generic USB serial/FTDI and PPP support but do not yet prove a matching SIM7600 serial or USB-network driver is present. Do not infer QMI, MBIM, RNDIS, or PPP from the product ID alone; inspect the live USB interface descriptors and bound-driver state first.
+
+The existing OpenWrt logical interface named `wwan` is **not LTE**: it is the current Wi-Fi station `phy0-sta0`, address `192.168.8.11/24`, with the default route through `192.168.8.1`. Keep this management path intact. When the SIM7600 data interface is commissioned, give it a distinct logical name rather than overwriting the working Wi-Fi `wwan` configuration.
+
+### Phase 11.0C USB descriptor result - 2026-08-26
+
+The live `1e0e:9001` device exposes one configuration with six USB interfaces numbered `0` through `5`. Every interface is vendor-specific (`class ff`) and every interface is currently **UNBOUND**. The kernel has generic `usbserial` plus `ftdi_sio` and `cdc_acm` loaded, but the SIMCom `option` serial driver is not loaded; there are still no `/dev/ttyUSB*`, `/dev/cdc-wdm*`, or modem network devices. This rules out treating the current composition as an already-bound RNDIS/CDC-Ethernet/MBIM interface.
+
+Linux's `option` driver includes the SIMCom/ALINK `1e0e:9001` product family and reserves the higher data/ADB interfaces rather than binding every function as a serial port. For this gateway, commission the **serial option driver first** and verify the resulting ttyUSB layout before choosing the LTE data-plane package. Do not issue `new_id`, `AT+CUSBPIDSWITCH`, or another USB-mode change unless the packaged driver fails to recognize the device after installation and a separate diagnostic proves that a manual binding is required.
+
+The first package mutation is therefore split into two gates: refresh the pinned Gateway OS package indexes and verify the matching `kmod-usb-serial-option` package is available for the running `6.6.141` kernel; only then install that one package and re-check binding. QMI/MBIM/RNDIS packages remain deferred until the post-serial-binding interface state identifies the actual data-plane requirement.
+
+### Phase 11.0D package-index result - 2026-08-26
+
+The gateway preserved its Wi-Fi management baseline (`phy0-sta0` at `192.168.8.11/24`, default route via `192.168.8.1`) and confirmed kernel `6.6.141`. `opkg update` completed successfully against the Gateway OS / OpenWrt `24.10.7` feeds with valid signatures. The normal package indexes expose the user-space `uqmi` and `umbim` tools, but `opkg list` returned **zero** `kmod-usb-serial-option` candidates. No driver was installed and no network or modem USB-mode change occurred.
+
+Do **not** interpret this as unsupported SIM7600 hardware. OpenWrt 24.10 stores kernel-module packages in the target-specific `kmods/<kernel-ABI>/` repository, and a normal release image/feed can omit that kmods source from `distfeeds.conf`; the `kmod-usb-serial-option` module still exists for Linux `6.6.141`. Before editing any feed file, derive the exact installed kernel package/ABI token, current target/subtarget, and existing feed definitions from the live gateway. Add only a kernel-module source whose exact ABI dependency matches the installed kernel; never use `--force-depends`, a foreign target, or a guessed kernel ABI.
+
+### Phase 11.0E exact-kmods result - 2026-08-26
+
+The gateway is ChirpStack Gateway OS `4.12.0` on target `bcm27xx/bcm2709`, architecture `arm_cortex-a7_neon-vfpv4`, running kernel `6.6.141`. Its installed kernel package is **`6.6.141~ce9a7c4f21afbe9986efeaec95ee2cce-r1`**. The only official OpenWrt `24.10.7` bcm2709 kmods directory for `6.6.141` is `6.6.141-1-910ca1d362cc3ff4f2a1d9a4e9759bc8`; its `kmod-usb-serial-option` and `kmod-usb-serial-wwan` packages depend on kernel **`6.6.141~910ca1d362cc3ff4f2a1d9a4e9759bc8-r1`**. These ABI hashes do not match.
+
+Therefore **do not add that OpenWrt kmods directory as an install source and do not force-install its modules**. Same upstream kernel version does not make separately configured OpenWrt kernel modules ABI-compatible. This matches the known ChirpStack Gateway OS limitation that common USB-4G `kmod-*` packages may be unavailable for its custom kernel image.
+
+Before committing to a rebuilt Gateway OS image, perform one final read-only capability probe: inspect the running kernel configuration, existing module files, and the already-loaded generic `usbserial` driver. If the required SIM7600 serial/network functions are not built into this custom kernel and there is no safe existing generic-driver path, the correct durable fix is to build/pin a ChirpStack Gateway OS image from the same source revision with the required USB modem kernel modules included, rather than mixing stock OpenWrt kmods with the custom kernel.
+
+### Phase 11.0F current-kernel capability result - 2026-08-26
+
+The read-only kernel probe confirmed the installed Gateway OS image does **not** already contain a usable SIM7600 modem stack. The running kernel remains `6.6.141~ce9a7c4f21afbe9986efeaec95ee2cce-r1`. No readable kernel config is exposed through `/proc/config.gz` or `/boot/config-6.6.141`, so built-in configuration cannot be inferred from config text; runtime/module evidence is authoritative instead.
+
+The only relevant module file present is `/lib/modules/6.6.141/usbserial.ko`. Installed packages are `kmod-usb-acm`, generic `kmod-usb-serial`, and `kmod-usb-serial-ftdi`. The USB-serial subsystem exposes only `ftdi_sio` and the generic driver. There is no packaged/current-kernel `option.ko`, `usb_wwan.ko`, `qmi_wwan.ko`, `cdc-wdm.ko`, `cdc_ether.ko`, `cdc_ncm.ko`, `cdc_mbim.ko`, or `rndis_host.ko`, and no SIM7600 module alias database entry is available. All six `1e0e:9001` interfaces remain unbound. Wi-Fi management remains `192.168.8.11/24` with default route via `192.168.8.1`.
+
+Although the generic USB-serial driver exposes a writable `new_id` control, do **not** treat `echo 1e0e 9001 > .../generic/new_id` as the permanent deployment fix. That broad VID/PID match can claim multiple vendor-specific functions, including interfaces that the SIMCom-aware `option` driver deliberately excludes, and it does not provide the intended `usb_wwan`/SIMCom driver behavior. A generic bind may be used only as a separately reviewed temporary diagnostic if later required; it is not the Phase 11 commissioned LTE path.
+
+**Current decision:** the as-installed Gateway OS 4.12.0 image cannot commission the SIM7600G-H cleanly with its present kernel modules, and the stock OpenWrt kmods cannot be mixed in because of the proven ABI hash mismatch. The next supported path is to build or obtain a Gateway OS image/package set containing the required modem drivers compiled against the exact Gateway OS kernel ABI, while preserving the existing RAK5146/AS923/gateway-EUI configuration and keeping the current image/config backup available for rollback.
+
+Upstream ChirpStack Gateway OS supports this directly through its Docker-based source build. The reproducible project procedure is now documented in [Gateway 2A - Build a SIM7600-Capable ChirpStack Gateway OS Image](../../gateway/setup/02a-build-sim7600-capable-gateway-os.md). It pins Gateway OS `v4.12.0`, preserves the existing Base/Raspberry Pi target, builds the SIMCom serial drivers into the same kernel/image, includes the QMI candidate data path without activating it until runtime proof, and requires a spare-card rollback boundary. Do not install foreign stock OpenWrt kmods after boot.
+
+### Phase 11.0G rollback-backup result - 2026-08-26
+
+**PASS on the live gateway; off-gateway copy still required before any build/reflash.** The pre-custom-image backup ran without service restarts, network changes, modem changes, or loss of the Wi-Fi management path. The normal Gateway OS configuration archive is `/tmp/gateway-os-backup-20260826-082144.tar.gz`, size about `15.5 KiB`, SHA-256 `572bfa3f45a69c5ed2ca99263988e8acf2e91ddb514f538520f62d5fb12488a1`. It contains the critical Concentratord, MQTT Forwarder, UDP Forwarder, network, and wireless UCI files.
+
+The normal `sysupgrade` archive contains `/etc/mosquitto/mosquitto.conf` but does **not** contain the Mosquitto certificate tree or persistent data tree. Therefore the explicit protected recovery bundle is required: `/tmp/gateway-critical-private-20260826-082144.tar.gz`, size about `6.0 KiB`, SHA-256 `f74fc55480bd4edf11a745118e15eae7afac43fff9daabcd64bb20aed4757db1`. It was created from the complete `/etc/mosquitto` tree plus the critical UCI files and passed archive-integrity verification. Treat this second archive as secret material because it may contain the gateway MQTT private key and Wi-Fi credentials; never commit it to Git or paste its contents into documentation/chat.
+
+The shell reported `hostname: not found`; this is a minimal-image utility omission and did not affect the backup gate. Gateway identity remains independently established by the Gateway OS/UBus/Concentratord evidence. **Do not delete the `/tmp` copies or start the custom-image build until both archives have been copied to protected storage outside the gateway and their SHA-256 values match there.**
+
+The first Windows OpenSSH transfer attempt failed after authentication with `ash: /usr/libexec/sftp-server: not found`. This was a protocol compatibility issue, not a backup-integrity failure: modern OpenSSH `scp` uses SFTP by default, while this minimal Gateway OS image does not provide the SFTP server helper. The retry with `scp -O` forced the legacy SCP protocol and completed successfully.
+
+### Phase 11.0G-2 off-gateway preservation result - 2026-08-26
+
+**PASS.** Both rollback artifacts were copied to protected workstation storage at `C:\Users\smartagriintern\lorawan-recovery\gateway-01\20260826-082144` without changing gateway state. The copied sysupgrade archive is `15908` bytes and its SHA-256 exactly matches `572bfa3f45a69c5ed2ca99263988e8acf2e91ddb514f538520f62d5fb12488a1`. The copied protected critical bundle is `6188` bytes and its SHA-256 exactly matches `f74fc55480bd4edf11a745118e15eae7afac43fff9daabcd64bb20aed4757db1`.
+
+The off-gateway rollback boundary is therefore closed: `OFF_GATEWAY_ROLLBACK_COPY=PASS`, `CUSTOM_IMAGE_BUILD_ALLOWED=YES`, `PHASE11_0G2_RESULT=PASS`, and the Windows PowerShell session survived. Keep the original gateway SD card untouched during the first custom-image test and retain the gateway `/tmp` copies until the spare-card image has booted and the restore path has been verified.
+
+### Phase 11.0H build-host preflight result - 2026-08-26
+
+**PARTIAL PASS.** The selected Windows workstation has enough resources for the custom image build: Windows 10 Pro, `15.6 GiB` RAM, `8` logical CPU threads, and `126.8 GiB` free on `C:`. Windows Git `2.55.0.windows.3` is available and the off-gateway recovery artifacts remain present.
+
+WSL2 itself is available, but only Docker Desktop's internal `docker-desktop` distribution is registered. A normal Linux WSL2 user distribution is therefore still required for the Gateway OS source/build workspace. Docker Desktop's client is installed (`29.6.2`), but the Linux Docker engine is stopped or unreachable. Do not clone or build yet. Close the build-host dependency in two verified steps: establish the normal Linux WSL2 distribution first, then start/verify Docker Desktop's Linux engine and its accessibility from that distribution.
+
+### Phase 11.0H-1 WSL distro availability result - 2026-08-26
+
+**PASS for availability.** The authoritative `wsl.exe --list --online` output explicitly offers `Ubuntu-24.04` (`Ubuntu 24.04 LTS`). The script-generated `UBUNTU_2404_AVAILABLE=NO` marker is a false negative from the PowerShell capture/matching path; it does not reflect the WSL catalog and must not block installation. Use the exact `Ubuntu-24.04` identifier. The next state change is only to install that distro as WSL2 and verify registration; Docker startup/integration remains a separate subsequent gate.
 
 ## 11.1 Goal
 
@@ -68,6 +203,8 @@ Keep Ethernet or the currently working management connection attached while comm
 
 Before plugging in the dongle, confirm the Raspberry Pi power supply is stable. LTE modems can draw short current bursts, especially during network registration or weak-signal transmit. If the modem repeatedly resets, disappears from USB, or the gateway becomes unstable, investigate power before changing network configuration. A powered USB hub is preferable to guessing at modem settings when power is the actual problem.
 
+The current dongle is the **Waveshare SIM7600G-H 4G DONGLE**. Its documented Linux USB networking options include NDIS/RNDIS/PPP, but the module can expose different USB compositions depending on prior configuration. Treat the **currently enumerated interfaces** as authoritative; do not switch USB PID/mode just because an online example uses a different composition.
+
 After inserting the dongle, inspect what Gateway OS/OpenWrt actually detected:
 
 ```sh
@@ -80,7 +217,9 @@ uci show network
 ubus call network.interface dump
 ```
 
-Look for the modem USB device and the network/control interfaces it created. Common modem presentations include:
+Look for the SIMCom/Waveshare USB device and the network/control interfaces it created. For this exact dongle, prefer an already-working USB Ethernet/RNDIS-style interface when Gateway OS supports it because it keeps the data path simple; PPP is a fallback only when the live composition and installed release require it. Do not install QMI/MBIM packages unless the device actually exposes the corresponding `cdc-wdm`/WWAN mode.
+
+Common modem presentations include:
 
 ```text
 ECM/RNDIS/HiLink-style modem
@@ -215,35 +354,34 @@ TCP 443  -> evidence HTTPS/mTLS, only when the reviewed evidence service exists
 
 The evidence API does not expose the journal filesystem and MQTT 8883 does not carry journal segment uploads.
 
-## 11.7 4G outage test
+## 11.7 Normal-path commissioning verification
 
-Measure:
+Before leaving setup, prove the gateway works **without intentionally breaking its WAN or rebooting it**:
 
-- bridge disconnect detection and retry;
-- local queue growth;
-- SD-card free space;
-- gateway stale/offline transition;
-- queue persistence across gateway reboot;
-- queue drain after 4G recovery;
-- duplicate deliveries and unique application records;
-- stale-downlink prevention;
-- reconnect data usage;
-- journal sequence and segment growth during the same outage;
-- journal-storage percent and OS reserve;
-- latest accepted cloud checkpoint age;
-- unuploaded closed-segment count/bytes;
-- evidence uploader recovery and data usage;
-- server journal-to-remote-MQTT reconciliation after connectivity returns.
+```text
+Gateway EUI stable
+RAK5146 / AS923 channel plan correct
+Concentratord healthy
+UDP Forwarder disabled
+MQTT Forwarder -> tcp://127.0.0.1:1883, QoS 1
+local Mosquitto listener loopback-only
+persistent queue path exists, is writable, finite, and has an OS free-space reserve
+LTE modem registered with intended APN
+LTE interface/address/default route/DNS/UTC time healthy
+mqtt.<DOMAIN>:8883 reachable through the intended LTE path
+unique gateway mTLS certificate accepted
+broker ACL permits only that gateway's approved topics
+ChirpStack gateway last-seen updates
+one real OTAA and uplink succeed
+one safe Class A downlink succeeds only when the device has a reviewed command contract
+```
 
-## 11.8 Final acceptance
+For the integrity-journal feature, normal setup additionally requires a **reviewed, pinned implementation** and a healthy current chain/checkpoint path. Record implementation version/hash, current sequence, record/segment hash, storage budget, and server checkpoint. If the selected full-feature scope requires this feature but the reviewed implementation/server roles do not exist, carry that as a Phase 14B `BLOCKED` item; do not invent a script to make setup look complete.
 
-- Local delivery queue and journal evidence budget are separately finite and persistent.
-- Real uplinks survive the designed 4G outage and reboot.
-- Queue drains and missing journal segments upload/reconcile after recovery.
-- The checkpoint boundary does not falsely advance while the gateway is offline.
-- Remote MQTT mTLS/ACLs and, when enabled, evidence-upload mTLS/identity mapping pass.
-- Duplicate application records are prevented.
-- Stale downlinks are not replayed.
-- RF and UDP controls remain unchanged.
+## 11.8 Failure tests explicitly deferred to Phase 15
 
-Next standby phase: [12-gateway-and-device-migration.md](12-gateway-and-device-migration.md).
+Phase 15 owns LTE disconnect/reconnect, persistent queue growth/drain, gateway reboot with queued messages, stale-downlink prevention, duplicate handling after reconnect, journal offline growth/reconciliation, checkpoint non-advancement while offline, and failure-period data-usage observations.
+
+Phase 11 passes on a verified healthy path plus a correctly configured persistent buffer and, when implemented, a healthy integrity chain. RF and UDP controls remain unchanged.
+
+Next required checkpoint: **Phase 13A** in [13-backup-restore-and-disaster-recovery.md](13-backup-restore-and-disaster-recovery.md), then [12-gateway-and-device-migration.md](12-gateway-and-device-migration.md).
