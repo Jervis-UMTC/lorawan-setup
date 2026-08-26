@@ -38,6 +38,7 @@ Replace every value written inside angle brackets before running a command. For 
 
 1. [Assemble the Raspberry Pi and RAK5146](01-hardware-assembly.md)
 2. [Install ChirpStack Gateway OS Base](02-install-chirpstack-gateway-os.md)
+2A. [Build a SIM7600-capable Gateway OS image when the official Base kernel lacks the modem drivers](02a-build-sim7600-capable-gateway-os.md)
 3. [Configure Concentratord](03-configure-concentratord.md)
 4. [Configure the persistent local MQTT buffer](04-configure-local-mqtt-buffer.md)
 4A. [Configure the software-only gateway integrity journal](04a-configure-gateway-integrity-journal.md)
