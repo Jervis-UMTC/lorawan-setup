@@ -55,7 +55,7 @@ Also prove `timescaledb_information.hypertables` contains `telemetry.uplinks` an
 
 Confirm the Node-RED container has the exact regional identifier:
 
-The value must match the active ChirpStack region ID and the Gateway OS Concentratord/MQTT Forwarder regional configuration, for example `as923_3`. **Stop here. Do not deploy the flow** if the value is blank, inferred from a display label, or inconsistent with the radio configuration.
+The value must match the active ChirpStack region ID and the Gateway OS Concentratord/MQTT Forwarder regional configuration. In the current cloud POC the commissioned identity is **plain `as923`**, not `as923_2`, `as923_3`, or `as923_4`. **Stop here. Do not deploy the flow** if the value is blank, inferred from a display label, or inconsistent with the radio configuration.
 
 ## 3.2 Flow layout
 

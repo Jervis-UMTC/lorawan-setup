@@ -10,9 +10,9 @@ Use the existing `/opt/lorawan-lab` Compose procedure below exactly as written.
 
 ### Three-Droplet cloud HA POC
 
-Run Node-RED on `ha-03` as a **small standalone application container**. Do not add `mosquitto` or `telemetry-db` services to `ha-03`; those names belong to the single-host lab.
+Run Node-RED on `ulc-03` as a **small standalone application container**. Do not add `mosquitto` or `telemetry-db` services to `ulc-03`; those names belong to the single-host lab. The cloud-specific private MQTT route is commissioned first by `cloud-production/12a-node-red-timescale-telemetry.md`.
 
-On `ha-03`:
+On `ulc-03`:
 
 ~~~bash
 sudo install -d -m 750 /etc/lorawan-cloud/node-red
@@ -56,11 +56,11 @@ services:
       - /etc/lorawan-pki/node-red-mqtt/client.key:/run/mqtt/client.key:ro
       - /etc/lorawan-pki/pgbouncer/ca.crt:/run/pgbouncer/ca.crt:ro
     extra_hosts:
-      - "mqtt-ha.internal.<DOMAIN>:<HA03_PRIVATE_IP>"
-      - "pgbouncer.internal.lorawan.com:<HA03_PRIVATE_IP>"
+      - "mqtt.internal.lorawan.com:<ULC03_PRIVATE_IP>"
+      - "pgbouncer.internal.lorawan.com:<ULC03_PRIVATE_IP>"
 ~~~
 
-**Why these host mappings:** Node-RED talks to the local `ha-03` HAProxy/PgBouncer routes, which then follow Mosquitto and PostgreSQL failover. It must not contain a fixed `ha-01` or `ha-02` dependency.
+**Why these host mappings:** Node-RED talks to `ulc-03`'s commissioned private HAProxy MQTT frontend `:18884` and local PgBouncer `:6432`. Those routes follow Mosquitto and PostgreSQL without pinning Node-RED to `ulc-01` or `ulc-02`. The MQTT TLS hostname remains `mqtt.internal.lorawan.com`.
 
 Validate before start:
 
@@ -75,7 +75,7 @@ Expected listener: `127.0.0.1:1880` only.
 
 From this point onward, the authentication steps in Sections 1.4-1.9 apply to both profiles. In the cloud profile, run them from `/etc/lorawan-cloud/node-red` and include `--env-file node-red.env` where the Compose command needs environment interpolation.
 
-**Stop here** if the editor binds publicly, either client-certificate file is missing, or the two logical service names do not resolve to `ha-03` from inside the container.
+**Stop here** if the editor binds publicly, either client-certificate file is missing, the private `ulc-03:18884` Node-RED MQTT frontend is not commissioned, or either logical service name does not resolve to `ulc-03` from inside the container.
 
 ## 1.1 Go to the Compose directory
 

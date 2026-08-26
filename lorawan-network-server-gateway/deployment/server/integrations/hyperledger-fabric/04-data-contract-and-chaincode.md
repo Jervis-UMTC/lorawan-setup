@@ -163,6 +163,8 @@ A successful OpenBao verification proves that the canonical evidence bytes match
 
 Every adapter implementation must carry this exact test fixture and refuse to process outbox rows if its canonicalizer or digest differs.
 
+**Important:** this is a frozen cryptographic test vector, not the deployment region configuration. Its literal `"region":"as923_3"` is intentionally retained because changing any byte would change the expected digest below. The current cloud deployment uses plain `as923`; production evidence must copy the actual stored region value from the accepted source event rather than this fixture value.
+
 Input object:
 
 ~~~json

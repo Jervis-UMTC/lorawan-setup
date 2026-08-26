@@ -72,13 +72,13 @@ single-host lab
   Identity: node_red_downlink
 
 three-Droplet cloud HA POC
-  Broker: mqtt-ha.internal.<DOMAIN>
-  Port: 18883
-  TLS: required
+  Broker: mqtt.internal.lorawan.com
+  Port: 18884
+  TLS: mTLS with hostname/CA verification
   Identity: separate Node-RED downlink client certificate
 ~~~
 
-The cloud logical name maps to `ha-03`'s local HAProxy and follows Mosquitto failover. The broker ACL must restrict this identity to the approved application/device command topics. Do not reuse the read-only Node-RED ingestion identity and do not grant wildcard command access.
+The cloud logical name maps to `ulc-03` (`10.104.0.8`) and uses the Phase 12A private `:18884` HAProxy route to the Mosquitto `:8884` mTLS backends. The Phase 12A ingestion identity is deliberately read-only, so approved downlinks require a **separate** client certificate and a separately reviewed narrow command ACL on both brokers. Do not broaden or reuse the ingestion identity.
 
 ChirpStack's MQTT downlink command topic is:
 

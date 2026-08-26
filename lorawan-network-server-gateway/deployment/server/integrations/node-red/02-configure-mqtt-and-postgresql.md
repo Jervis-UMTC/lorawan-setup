@@ -31,11 +31,11 @@ QoS: 0
 
 ### Three-Droplet cloud HA POC
 
-Run Node-RED on `ha-03` and map `mqtt-ha.internal.<DOMAIN>` to `ha-03`'s private IP. The local HAProxy `:18883` listener then follows Mosquitto-1 preferred / Mosquitto-2 backup.
+Run Node-RED on `ulc-03` and map `mqtt.internal.lorawan.com` to `ulc-03`'s private IP. The dedicated private HAProxy `:18884` frontend commissioned by Phase 12A follows Mosquitto-1 preferred / Mosquitto-2 backup through the existing mTLS `:8884` broker listeners. Do not use the ChirpStack-specific `:18883 -> :8885` password-auth route for Node-RED.
 
 ~~~text
-Broker: mqtt-ha.internal.<DOMAIN>
-Port: 18883
+Broker: mqtt.internal.lorawan.com
+Port: 18884
 TLS: enabled
 CA: MQTT CA
 Client certificate/key: Node-RED workload identity
@@ -44,7 +44,7 @@ QoS: 0
 Output: parsed JSON, or string followed by a JSON node
 ~~~
 
-The Node-RED MQTT certificate Common Name must match the read-only broker ACL identity created in the cloud MQTT manual. It receives application uplinks but no gateway-command or application-command write permission.
+The Node-RED MQTT certificate Common Name must match the read-only broker ACL identity commissioned in Phase 12A. Keep CA and hostname verification enabled for `mqtt.internal.lorawan.com`. This ingestion identity receives only application uplinks and has no gateway-command or application-command write permission.
 
 The topic is case-sensitive. Do not subscribe to gateway `event` topics when building the application telemetry flow.
 
@@ -86,7 +86,7 @@ SSL: enabled with hostname/CA verification
 CA: internal PgBouncer/PostgreSQL trust bundle required by the cloud design
 ~~~
 
-Map `pgbouncer.internal.lorawan.com` to `ha-03`'s private IP for the Node-RED container. PgBouncer then uses local HAProxy `:15432` to follow the current Patroni primary.
+Map `pgbouncer.internal.lorawan.com` to `ulc-03`'s private IP (`10.104.0.8` in the current POC) for the Node-RED container. PgBouncer then uses local HAProxy `:15432` to follow the current Patroni primary.
 
 **Stop here. Do not build the write flow** until a read-only connection test and a rollback insert as `telemetry_writer` succeed through this exact endpoint.
 

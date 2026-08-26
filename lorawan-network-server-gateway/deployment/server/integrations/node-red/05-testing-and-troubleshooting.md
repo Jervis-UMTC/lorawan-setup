@@ -4,8 +4,8 @@ Test the pipeline from left to right. First identify the deployment profile:
 
 ```text
 single-host lab               -> /opt/lorawan-lab, mosquitto, telemetry-db
-three-Droplet cloud HA POC    -> ha-03 /etc/lorawan-cloud/node-red,
-                                  mqtt-ha.internal.<DOMAIN>:18883,
+three-Droplet cloud HA POC    -> ulc-03 /etc/lorawan-cloud/node-red,
+                                  mqtt.internal.lorawan.com:18884,
                                   pgbouncer.internal.lorawan.com:6432
 ```
 
@@ -25,7 +25,7 @@ docker compose ps node-red
 docker compose logs --since=10m --tail=100 node-red
 ~~~
 
-Cloud HA POC on `ha-03`:
+Cloud HA POC on `ulc-03`:
 
 ~~~bash
 cd /etc/lorawan-cloud/node-red
@@ -46,11 +46,11 @@ Single-host lab:
 docker compose exec mosquitto mosquitto_sub -h localhost -t 'application/+/device/+/event/up' -v
 ~~~
 
-Cloud HA POC from `ha-03`, using the **Node-RED read-only MQTT client identity**:
+Cloud HA POC from `ulc-03`, using the **Node-RED read-only MQTT client identity**:
 
 ~~~bash
 mosquitto_sub \
-  -h mqtt-ha.internal.<DOMAIN> -p 18883 \
+  -h mqtt.internal.lorawan.com -p 18884 \
   --cafile /etc/lorawan-pki/mqtt/ca.crt \
   --cert /etc/lorawan-pki/node-red-mqtt/client.crt \
   --key /etc/lorawan-pki/node-red-mqtt/client.key \
@@ -72,11 +72,11 @@ Cloud HA POC:
 
 ~~~bash
 cd /etc/lorawan-cloud/node-red
-sudo docker compose --env-file node-red.env exec node-red getent hosts mqtt-ha.internal.<DOMAIN>
+sudo docker compose --env-file node-red.env exec node-red getent hosts mqtt.internal.lorawan.com
 sudo docker compose --env-file node-red.env exec node-red getent hosts pgbouncer.internal.lorawan.com
 ~~~
 
-In the cloud profile both logical names should resolve to `ha-03`'s private IP, where local HAProxy/PgBouncer provide the failover routes. If they resolve directly to `ha-01`/`ha-02`, the Node-RED container has regained a single app-host dependency.
+In the cloud profile both logical names should resolve to `ulc-03` (`10.104.0.8`), where the private Node-RED MQTT HAProxy route and local PgBouncer provide stable dependencies. If MQTT resolves directly to `ulc-01`/`ulc-02`, the Node-RED container has regained a single app-host dependency.
 
 ## 5.4 MQTT node is disconnected
 
@@ -88,10 +88,10 @@ lab
   private Compose authentication/ACL
 
 cloud
-  broker = mqtt-ha.internal.<DOMAIN>:18883
-  TLS enabled
+  broker = mqtt.internal.lorawan.com:18884
+  mTLS + hostname/CA verification enabled
   MQTT CA + Node-RED client certificate/key readable
-  logical name resolves to ha-03 local HAProxy
+  logical name resolves to ulc-03 private HAProxy
   HAProxy sees at least one healthy Mosquitto :8884 backend
 ```
 

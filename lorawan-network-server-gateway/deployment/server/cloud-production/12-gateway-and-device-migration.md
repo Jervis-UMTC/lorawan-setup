@@ -1,8 +1,8 @@
 # 12. Gateway and Device Migration
 
-> **Status: STANDBY / DRAFT.** Do not migrate a gateway or device until the preceding cloud services and public gateway path are validated. Rebuild this cutover procedure from the actual source/target versions and backups when migration becomes active.
+> **Status: REQUIRED PRE-TEST SETUP / DRAFT.** Do not cut over a gateway or device until Phase 10 and Phase 11 normal paths are commissioned and the **Phase 13A backup/isolated-restore safety checkpoint** has passed. This is a cutover/provisioning phase, not a chaos phase.
 
-This guide covers migration from an older all-in-one or server-hosted ChirpStack deployment to the current cloud architecture. The `source` host is the machine that currently runs ChirpStack and its Compose project; it is **not** the Raspberry Pi Gateway OS appliance described elsewhere in this repository. Set `<SOURCE_COMPOSE_DIR>` to the directory containing that source host's active Compose file. Confirm it with `docker compose ls`, the running container labels, or the service administrator before using the commands below.
+This guide supports two real deployment cases: migration from an older authoritative server-hosted ChirpStack installation, or fresh provisioning directly into the new cloud when there is no authoritative legacy database to import. Do not pretend a fresh deployment is a database migration. When a legacy source exists, the `source` host is the machine that currently runs ChirpStack and its Compose project; it is not the Raspberry Pi Gateway OS appliance.
 
 ## 12.1 Goal
 
@@ -20,7 +20,11 @@ Use when source and target versions are compatible and preserving sessions/frame
 
 Use when the source database is incompatible, small enough to rebuild, or security policy requires new root keys/sessions. This creates more field work and must account for battery devices and physical access.
 
-Do not partially copy tables by hand. Use supported database migration or explicit reprovisioning.
+### Fresh cloud provisioning
+
+Use when the new cloud is the first authoritative ChirpStack environment. Create the tenant, application, device profile, gateway, and device using the commissioned ChirpStack UI/API; generate/store root keys through the approved secret workflow; register the real Gateway EUI; then perform a normal OTAA join. There is no source database dump/restore in this branch, but Phase 13A still protects the already-commissioned cloud state before onboarding.
+
+Do not partially copy tables by hand. Use supported database migration, explicit reprovisioning, or the fresh-provisioning branch.
 
 ## 12.3 Source inventory
 
@@ -62,9 +66,11 @@ The cloud environment must pass:
 - public TLS and load-balancer health;
 - the minimal command-line observability/evidence checks required by this POC.
 
-Use a reserved staging gateway/device or synthetic application event. Do not connect the production gateway yet.
+Use a reserved staging gateway/device or synthetic application event. Do not connect the authoritative production-like gateway yet.
 
-**Stop here. Do not migrate production state** while any dependency above is being tested for the first time. First-time HA debugging and a live migration should not happen in the same window.
+**Mandatory Phase 13A boundary:** before the cutover/provisioning window, create the protected database/configuration backup set, copy it off the target Droplets, and complete the isolated `lorawan_telemetry` restore rehearsal in [13-backup-restore-and-disaster-recovery.md](13-backup-restore-and-disaster-recovery.md).
+
+**Stop here. Do not migrate or provision authoritative device state** while any dependency above is being commissioned for the first time. First-time HA debugging and live cutover must not happen in the same window.
 
 ## 12.6 Version compatibility
 
@@ -183,9 +189,9 @@ Observe:
 - one real uplink and one safe Class A downlink;
 - when enabled, a fresh target-side checkpoint and unique journal -> remote MQTT -> ChirpStack -> trusted-decoder verification result.
 
-### Step 8: Start the second cloud ChirpStack node
+### Step 8: Verify the already-commissioned two-node ChirpStack/public path
 
-Verify it independently first. Then prove both `ha-01` and `ha-02` HAProxy anchor listeners are healthy and complete the manual Reserved-IP reassignment test from [10-self-managed-public-ingress.md](10-self-managed-public-ingress.md). Do not enable automatic public failover until both candidates pass.
+Phase 9 already commissions both ChirpStack instances and Phase 10 commissions both anchor listeners plus manual Reserved-IP mobility. During cutover, re-check both nodes are healthy and verify the current Reserved-IP owner serves the public endpoints. **Do not repeat host-loss or automatic takeover testing here.**
 
 ### Step 9: Validate integrations and downlinks
 
@@ -269,6 +275,6 @@ After the agreed observation period and a successful cloud backup/restore drill:
 - Gateway uses a unique TLS identity over 4G.
 - Counts, sessions, real uplinks, and safe downlinks are validated.
 - When gateway integrity is enabled, the migration preserves an explicit checkpoint boundary/epoch and one fresh target-side lineage verifies before v2 evidence resumes.
-- Rollback was demonstrated in staging and remains possible during the observation window.
+- The rollback procedure and protected source/cloud recovery points remain available during the observation window; failure-injection recovery testing is deferred to Phase 15.
 
-Next: [13-backup-restore-and-disaster-recovery.md](13-backup-restore-and-disaster-recovery.md)
+Next required setup phase: [12a-node-red-timescale-telemetry.md](12a-node-red-timescale-telemetry.md).

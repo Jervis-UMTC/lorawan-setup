@@ -18,7 +18,7 @@ three-Droplet cloud HA POC
 
 The cloud POC does **not** create a separate TimescaleDB server; it keeps `lorawan_telemetry` as a Timescale-enabled logical database inside the Patroni cluster.
 
-> **Current cloud note:** the original Node-RED manuals assumed `mqtt-ha.internal.<DOMAIN>:18883`, but Phase 8B did not commission that route. The validated broker certificate identity is `mqtt.internal.lorawan.com`, with Mosquitto TLS backends on ulc-01/02 `:8884`. Do not execute the cloud Node-RED MQTT steps until its integration phase defines and validates the final redundant route.
+> **Current cloud route:** Phase 12A defines Node-RED on `ulc-03` using `mqtt.internal.lorawan.com:18884` mapped to `10.104.0.8`. That private HAProxy frontend routes to the two existing Mosquitto mTLS `:8884` backends. The ingestion client certificate has read-only `application/+/device/+/event/up` permission. Do not use the obsolete `mqtt-ha.internal.<DOMAIN>:18883` design or the ChirpStack-specific `:18883 -> :8885` route.
 
 Unless a section explicitly says **cloud HA POC**, the older Docker examples assume the single-host lab at `/opt/lorawan-lab`. Perform Node-RED editor actions in a browser connected through the documented SSH tunnel. Commands that begin with `docker compose exec` run a process inside the named container; do not run them on the Raspberry Pi gateway.
 
