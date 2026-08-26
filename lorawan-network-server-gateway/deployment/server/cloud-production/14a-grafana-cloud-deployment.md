@@ -1,6 +1,6 @@
-# 14A. Tiny Grafana POC on ha-03
+# 14A. Tiny Grafana POC on ulc-03
 
-> **Status: STANDBY / DRAFT.** Grafana is not yet deployed or live-validated in the current cloud build. Re-check the exact image/version, database path, authentication, dashboards, and resource use when this phase becomes active.
+> **Status: REQUIRED PRE-TEST SETUP / DRAFT.** Deploy Grafana on `ulc-03` only after Phase 12A proves real Node-RED telemetry storage and duplicate safety. Grafana is part of the fully commissioned pre-test baseline, but it is not part of the LoRaWAN control path.
 
 Grafana is only a **small visualization aid** for the HA POC. It is not part of the LoRaWAN control path and it gets no dedicated Droplet.
 
@@ -162,36 +162,31 @@ LIMIT 20;
 
 For the primary EMU-01 dashboard, select values by approved `metric_name`, for example `barometer_pressure_pa`, `barometer_temperature_c`, `environment_temperature_c`, `environment_humidity_percent`, the two distinct light metrics, soil, UV, rain, and battery. Do not assume a dedicated SQL column exists for every sensor. SEC-02's temporary RAK12011 verification payload is not the permanent dashboard baseline.
 
-## 14A.8 Failure behavior
+## 14A.8 Healthy-state commissioning verification
 
-Stop Grafana:
-
-```bash
-docker compose stop grafana
-```
-
-Send another sensor uplink.
-
-Pass when:
+Do **not** stop Grafana during setup. Instead verify the normal read-only path:
 
 ```text
-ChirpStack continues
-Node-RED continues
-PostgreSQL stores the row
-existing Fabric outbox remains available; deployed adapters can still process it when the adapter implementation exists
+Grafana container = running
+listener = 127.0.0.1:3000 only
+data source connects as telemetry_reader through ulc-03 PgBouncer/HAProxy
+one real Node-RED-stored sensor row is visible
+latest-reading age is visible
+at least one short historical trend panel is visible
+no write-capable database credential is configured
+healthy-state memory use is recorded
 ```
 
-Restart Grafana and verify the new row appears.
-
-If all of `ha-03` fails, Grafana and Node-RED pause. That is an accepted POC limitation. The PostgreSQL database and existing outbox must still survive on the other Patroni members.
+The intended failure behavior remains: if `ulc-03` or Grafana is unavailable, visualization may pause while the LoRaWAN core and persisted PostgreSQL telemetry survive. **Phase 15 tests that claim; Phase 14A does not inject it.**
 
 ## 14A.9 Pass condition
 
 - no extra monitoring Droplet exists;
-- Grafana stays loopback-only;
-- it uses `telemetry_reader`;
-- it reads `lorawan_telemetry` through PgBouncer/HAProxy;
-- stopping Grafana does not affect the LoRaWAN control plane;
-- its memory use does not cause the 2-GiB host to OOM during the POC.
+- Grafana stays loopback-only on `ulc-03`;
+- it uses only `telemetry_reader`;
+- its TLS-verified data source reads `lorawan_telemetry` through PgBouncer/HAProxy;
+- real Node-RED-stored sensor values and a short history render correctly;
+- the dashboard exposes freshness/latest-reading age needed by the later acceptance tests;
+- healthy-state resource use is recorded without OOM evidence.
 
-Next standby phase: [15-failover-chaos-and-acceptance-testing.md](15-failover-chaos-and-acceptance-testing.md). Keep [19-cloud-ha-grafana-deployment-day-runbook.md](19-cloud-ha-grafana-deployment-day-runbook.md) as a sequence reference, not as a second source of completed-state evidence.
+Next required pre-test setup: [20-openbao-and-fabric-adapter.md](20-openbao-and-fabric-adapter.md), despite its higher file number. Do not begin Phase 15 yet.

@@ -12,7 +12,7 @@ This POC is **not capacity sizing for production**. A few sensor uplinks are eno
 
 ## Deployment sequence and document status
 
-The numbering follows the **actual cloud build sequence**. Phases 5-8 are now backed by live evidence: etcd, PostgreSQL/Patroni/TimescaleDB, HAProxy/PgBouncer, Mosquitto, and Valkey/Sentinel have reached their recorded acceptance boundaries. Phase 9 is the active ChirpStack phase. Files `10+` remain standby/reference slots until the live build reaches them; refine those manuals from current evidence before execution rather than treating old examples as commissioned state.
+The numbering identifies the component manuals, but after Phase 9 the **dependency order is authoritative**. Phase 9 ChirpStack is COMPLETE / PASS. Phase 10 is the active setup boundary. Every remaining runtime feature required by the POC must be deployed and proven on its normal path before Phase 15 begins. Intentional host, process, broker, database, KMS, Fabric, or LTE failures are reserved for Phase 15; setup manuals must not consume those acceptance tests early.
 
 Status meaning:
 
@@ -31,20 +31,26 @@ Status meaning:
 | 6 | [06-spilo-patroni-postgresql-cluster.md](06-spilo-patroni-postgresql-cluster.md) | **DATABASE-LAYER POC VALIDATED - PostgreSQL HA + telemetry schema + HBA/auth + logical backup boundary + controlled ulc-01 -> ulc-02 switchover + promoted-primary DB/Timescale/application-auth gates PASS** |
 | 7 | [07-haproxy-and-pgbouncer.md](07-haproxy-and-pgbouncer.md) | **COMPLETE / VALIDATED - HAProxy database routing + three-node PgBouncer TLS/SCRAM commissioning + Patroni failover routing PASS** |
 | 8 | [08-mqtt-and-valkey.md](08-mqtt-and-valkey.md) | **CORE SERVICE LAYER COMPLETE / VALIDATED - MQTT TLS broker failover PASS; Valkey/Sentinel HA + dual writable-primary HAProxy routing PASS; ChirpStack MQTT workload identity/ACL commissioning remains a Phase 9 dependency** |
-| 9 | [09-chirpstack-cloud-cluster.md](09-chirpstack-cloud-cluster.md) | **ACTIVE - PRE-DEPLOYMENT PREFLIGHT / DEPENDENCY CLOSURE** |
-| 10 | [10-self-managed-public-ingress.md](10-self-managed-public-ingress.md) | STANDBY / DRAFT |
-| 11 | [11-raspberry-pi-4g-backhaul.md](11-raspberry-pi-4g-backhaul.md) | STANDBY / DRAFT |
-| 12 | [12-gateway-and-device-migration.md](12-gateway-and-device-migration.md) | STANDBY / DRAFT |
-| 13 | [13-backup-restore-and-disaster-recovery.md](13-backup-restore-and-disaster-recovery.md) | STANDBY / DRAFT |
-| 14 | [14-observability-alerting-and-logging.md](14-observability-alerting-and-logging.md) + [14a-grafana-cloud-deployment.md](14a-grafana-cloud-deployment.md) | STANDBY / DRAFT |
-| 15 | [15-failover-chaos-and-acceptance-testing.md](15-failover-chaos-and-acceptance-testing.md) | STANDBY / DRAFT |
+| 9 | [09-chirpstack-cloud-cluster.md](09-chirpstack-cloud-cluster.md) | **COMPLETE / PASS - two private ChirpStack nodes, dependency paths, coexistence, reciprocal single-instance survival, and clean rejoin proven** |
+| 10 | [10-self-managed-public-ingress.md](10-self-managed-public-ingress.md) | **ACTIVE PREFLIGHT - host-side readiness proven; provider/DNS/public-PKI inputs still required before public mutation** |
+| 11 | [11-raspberry-pi-4g-backhaul.md](11-raspberry-pi-4g-backhaul.md) | **REQUIRED PRE-TEST SETUP** - physical gateway, LTE, persistent MQTT delivery; no outage injection here |
+| 12 | [12-gateway-and-device-migration.md](12-gateway-and-device-migration.md) | **REQUIRED PRE-TEST SETUP** - authoritative cloud gateway/device cutover or fresh provisioning |
+| 12A | [12a-node-red-timescale-telemetry.md](12a-node-red-timescale-telemetry.md) | **REQUIRED PRE-TEST SETUP** - Node-RED validation/normalization before TimescaleDB + atomic outbox enqueue |
+| 13 | [13-backup-restore-and-disaster-recovery.md](13-backup-restore-and-disaster-recovery.md) | **REQUIRED TWICE** - 13A pre-cutover safety checkpoint and 13B final full-stack pre-test snapshot |
+| 14A | [14a-grafana-cloud-deployment.md](14a-grafana-cloud-deployment.md) | **REQUIRED PRE-TEST SETUP** - Grafana only after Node-RED stores real telemetry |
+| 20 | [20-openbao-and-fabric-adapter.md](20-openbao-and-fabric-adapter.md) | **REQUIRED PRE-TEST SETUP despite numbering** - OpenBao + reviewed dual Fabric adapters + one normal commit |
+| 14 | [14-observability-alerting-and-logging.md](14-observability-alerting-and-logging.md) | **REQUIRED PRE-TEST SETUP** - healthy-baseline evidence harness after final backup |
+| 14B | [14b-pre-test-commissioning-gate.md](14b-pre-test-commissioning-gate.md) | **HARD GO/NO-GO** - all setup must pass before Phase 15 |
+| 15 | [15-failover-chaos-and-acceptance-testing.md](15-failover-chaos-and-acceptance-testing.md) | **FIRST FAILURE-INJECTION PHASE** |
 | 16 | [16-operations-upgrades-and-scaling.md](16-operations-upgrades-and-scaling.md) | STANDBY / DRAFT |
 | 17 | [17-troubleshooting.md](17-troubleshooting.md) | LIVING DRAFT; keep proven troubleshooting as we go |
 | 18 | [18-runbook-and-handoff-checklists.md](18-runbook-and-handoff-checklists.md) | STANDBY / DRAFT |
 | 19 | [19-cloud-ha-grafana-deployment-day-runbook.md](19-cloud-ha-grafana-deployment-day-runbook.md) | sequence reference; later phases still STANDBY |
-| 20 | [20-openbao-and-fabric-adapter.md](20-openbao-and-fabric-adapter.md) | STANDBY / DRAFT |
 
-**Current stop point:** the database and shared-state layers are commissioned far enough to begin ChirpStack deployment preflight. Phase 6 PostgreSQL/Patroni/TimescaleDB HA is complete, including hardened TLS/SCRAM HBA policy, validated logical backups, and controlled promotion testing. Phase 7 is complete: HAProxy database-primary routing and PgBouncer are commissioned on all three nodes with client TLS, SCRAM authentication, verified backend TLS, and unchanged client endpoints across Patroni leader changes. Phase 8 core shared services are also commissioned. Mosquitto `2.0.18` runs on `ulc-01` and `ulc-02` with TLS backends on `:8884`; the validated HAProxy MQTT TLS passthrough endpoint is currently `10.104.0.2:8883` with certificate identity `mqtt.internal.lorawan.com`, and broker-backend failover has passed. Valkey `7.2.13` runs TLS-only on all three nodes with three TLS Sentinels, quorum `2`, authenticated replication, and dual HAProxy writable-primary endpoints `10.104.0.2:16379` and `10.104.0.4:16379`. The last controlled Valkey failure promoted `ulc-02` (`10.104.0.4`) and both HAProxy endpoints followed automatically; `ulc-01` and `ulc-03` are healthy replicas after recovery. Do not manually fail back. Phase 9 is now ACTIVE, but first ChirpStack start remains blocked until the exact ChirpStack image/config schema is pinned and the remaining MQTT workload-authentication/ACL plus two-app-node MQTT routing boundary is resolved. Public Reserved IPv4/DNS ingress remains a later phase and is not required for the first private ChirpStack canary. The DigitalOcean Cloud Firewall remains externally controlled.
+
+**Authoritative pre-test order:** `Phase 10 -> Phase 11 -> Phase 13A -> Phase 12 -> Phase 12A Node-RED/TimescaleDB -> Phase 14A Grafana -> Phase 20 OpenBao/Fabric -> Phase 13B -> Phase 14 -> Phase 14B -> Phase 15`. The numbering is retained for existing filenames; dependency order wins. **Hardware-unavailable exception:** Phase 13A's cloud backup/restore checkpoint may be executed while Phase 11 is temporarily blocked by lack of physical gateway access because 13A does not mutate the gateway. This does not reorder the cutover dependency: Phase 12 remains blocked until both Phase 11 normal-path commissioning and Phase 13A have passed. The runtime application path is `ChirpStack -> Node-RED -> TimescaleDB -> Grafana`, while Fabric work is asynchronous through `telemetry.fabric_outbox`.
+
+**Current stop point:** Phase 9 is COMPLETE / PASS and Phase 10 is active at its provider/DNS/public-PKI preflight. Do not begin Phase 15 merely because the LoRaWAN core is healthy. The full-feature target requires every pre-test component, including Grafana, OpenBao, and the reviewed Fabric adapter runtime, to be commissioned first. If a required implementation such as the Fabric adapter or selected gateway-integrity runtime is absent, Phase 14B is `BLOCKED` and counted fault testing does not begin.
 
 ## POC resources
 
@@ -386,19 +392,21 @@ This is a topic index, **not** a second execution order. Use the sequence/status
 | [06-spilo-patroni-postgresql-cluster.md](06-spilo-patroni-postgresql-cluster.md) | validated PostgreSQL/Patroni/TimescaleDB HA deployment and promotion record |
 | [07-haproxy-and-pgbouncer.md](07-haproxy-and-pgbouncer.md) | validated HAProxy + PgBouncer database client path |
 | [08-mqtt-and-valkey.md](08-mqtt-and-valkey.md) | validated MQTT broker/TLS failover record + completed Valkey/Sentinel HA record; also preserves earlier design/failure history |
-| [09-chirpstack-cloud-cluster.md](09-chirpstack-cloud-cluster.md) | **active next phase: ChirpStack preflight, dependency closure, and two-node private deployment** |
-| [10-self-managed-public-ingress.md](10-self-managed-public-ingress.md) | standby HAProxy + Reserved-IP public failover plan |
-| [11-raspberry-pi-4g-backhaul.md](11-raspberry-pi-4g-backhaul.md) | standby physical-gateway 4G/LTE path |
-| [12-gateway-and-device-migration.md](12-gateway-and-device-migration.md) | standby migration/cutover plan |
-| [13-backup-restore-and-disaster-recovery.md](13-backup-restore-and-disaster-recovery.md) | standby full-stack backup/recovery plan; etcd portion follows validated baseline |
-| [14-observability-alerting-and-logging.md](14-observability-alerting-and-logging.md) | standby observability/evidence plan |
-| [14a-grafana-cloud-deployment.md](14a-grafana-cloud-deployment.md) | standby Grafana plan |
-| [15-failover-chaos-and-acceptance-testing.md](15-failover-chaos-and-acceptance-testing.md) | standby failover tests |
+| [09-chirpstack-cloud-cluster.md](09-chirpstack-cloud-cluster.md) | completed two-node private ChirpStack commissioning and recovery evidence |
+| [10-self-managed-public-ingress.md](10-self-managed-public-ingress.md) | active public-ingress setup; automatic host-loss takeover deferred to Phase 15 |
+| [11-raspberry-pi-4g-backhaul.md](11-raspberry-pi-4g-backhaul.md) | required physical-gateway/LTE/persistent-buffer normal-path setup |
+| [12-gateway-and-device-migration.md](12-gateway-and-device-migration.md) | required migration or fresh cloud cutover setup |
+| [12a-node-red-timescale-telemetry.md](12a-node-red-timescale-telemetry.md) | required Node-RED-before-database application ingestion setup |
+| [13-backup-restore-and-disaster-recovery.md](13-backup-restore-and-disaster-recovery.md) | Phase 13A pre-cutover and 13B final pre-test recovery boundaries |
+| [14-observability-alerting-and-logging.md](14-observability-alerting-and-logging.md) | final healthy-baseline evidence harness before testing |
+| [14a-grafana-cloud-deployment.md](14a-grafana-cloud-deployment.md) | required Grafana setup after real Node-RED telemetry exists |
+| [14b-pre-test-commissioning-gate.md](14b-pre-test-commissioning-gate.md) | hard go/no-go before Phase 15 |
+| [15-failover-chaos-and-acceptance-testing.md](15-failover-chaos-and-acceptance-testing.md) | first intentional failure-injection phase |
 | [16-operations-upgrades-and-scaling.md](16-operations-upgrades-and-scaling.md) | standby operations/upgrade plan |
 | [17-troubleshooting.md](17-troubleshooting.md) | living troubleshooting notes, refined as components are deployed |
 | [18-runbook-and-handoff-checklists.md](18-runbook-and-handoff-checklists.md) | standby commissioning/handoff plan |
 | [19-cloud-ha-grafana-deployment-day-runbook.md](19-cloud-ha-grafana-deployment-day-runbook.md) | full target sequence reference; later phases are not yet validated |
-| [20-openbao-and-fabric-adapter.md](20-openbao-and-fabric-adapter.md) | standby KMS + Fabric adapter plan |
+| [20-openbao-and-fabric-adapter.md](20-openbao-and-fabric-adapter.md) | required OpenBao/Fabric setup before full-feature testing despite file number |
 
 ## Dissertation-test boundary
 

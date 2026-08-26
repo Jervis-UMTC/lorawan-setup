@@ -1,6 +1,6 @@
 # 14. Minimal POC Observability and Evidence Capture
 
-> **Status: STANDBY / DRAFT.** The observability checklist contains planned checks for technologies that are not deployed yet. Refine each section only after its service exists so the commands and evidence fields match the live implementation.
+> **Status: REQUIRED PRE-TEST SETUP / DRAFT.** After Phase 13B, run this evidence harness once against the **fully healthy system without injecting any fault**. The purpose is to prove every command, permission, evidence path, and timestamp field works before Phase 15.
 
 The POC needs **repeatable evidence**, not a production monitoring platform.
 
@@ -8,9 +8,15 @@ Do not deploy Prometheus, Alertmanager, Loki, or another monitoring stack merely
 
 The important rule is:
 
-> Capture the same evidence before, during, and after each failure so the result can be compared instead of remembered.
+> First prove the evidence harness on a fully healthy baseline. Only after Phase 14B passes should the same capture set be used before, during, and after Phase 15 failures.
 
-## 14.1 What every failure run must answer
+### Phase 14 healthy-baseline dry run
+
+Create a normal evidence directory and populate the `before/` state for every deployed component. Do not create a fake `during/` failure state. Verify all commands run non-interactively with the intended least-privilege access, timestamps are UTC, and no secrets are copied into evidence.
+
+The dry run must include Node-RED, Grafana, OpenBao, both Fabric adapters, the latest normal Fabric commit, the current Reserved-IP owner, and the final Phase 13B backup-set identifier.
+
+## 14.1 What every Phase 15 failure run must answer
 
 For each run be able to answer:
 
@@ -270,16 +276,18 @@ The application endpoint must always report the writable primary/master.
 The cloud port ownership must be:
 
 ```text
-HAProxy public service:        :8883 on ha-01/ha-02
-HAProxy private app service:   :18883 on ha-01/ha-02/ha-03
-Mosquitto private TLS backend: :8884 on ha-01/ha-02
-Gateway-local buffer:          127.0.0.1:1883 on Raspberry Pi only
+HAProxy public gateway service:       :8883 on ulc-01/ulc-02 anchors
+HAProxy ChirpStack workload service:  :18883 on ulc-01/ulc-02 private VPC
+HAProxy Node-RED ingest service:      :18884 on ulc-03 private VPC
+Mosquitto gateway/Node-RED mTLS:      :8884 on ulc-01/ulc-02
+Mosquitto ChirpStack workload TLS:    :8885 on ulc-01/ulc-02
+Gateway-local buffer:                 127.0.0.1:1883 on Raspberry Pi only
 ```
 
 On cloud hosts:
 
 ```bash
-sudo ss -lntp | grep -E ':(8883|8884|18883)\b' || true
+sudo ss -lntp | grep -E ':(8883|8884|8885|18883|18884)\b' || true
 ```
 
 Record from HAProxy/Mosquitto logs:
@@ -312,6 +320,25 @@ downlink result when that test is selected
 
 A running process is not enough. The recovery timer ends only on the first **new post-fault** staging-device uplink accepted through the surviving path, using the definition in [15-failover-chaos-and-acceptance-testing.md](15-failover-chaos-and-acceptance-testing.md).
 
+## 14.10A Node-RED and Grafana snapshot
+
+On `ulc-03`, capture:
+
+```text
+Node-RED container state/restart count
+Node-RED listener = 127.0.0.1:1880 only
+Node-RED private MQTT route :18884 listener/backend health
+latest real telemetry event_key/test_sequence stored through Node-RED
+Node-RED exported flow hash/reference
+Grafana container state/restart count
+Grafana listener = 127.0.0.1:3000 only
+Grafana datasource identity = telemetry_reader
+latest dashboard-visible reading time/age
+Grafana dashboard export hash/reference
+```
+
+Use a read-only database query to correlate the latest telemetry row with the dashboard. Do not use the Grafana admin credential as evidence that the database path works.
+
 ## 14.11 OpenBao snapshot
 
 From an approved OpenBao admin environment:
@@ -335,10 +362,10 @@ Record:
 member count
 active node
 sealed/unsealed state
-3/3 before
-2/3 during one-member loss
-Transit sign/verify result
-3/3 after restore
+healthy Raft peer set = 3/3
+Transit sign/verify result through stable :18200
+current Transit key-version metadata without private key material
+Phase 15 will record 2/3 behavior during one-member loss
 ```
 
 Do not put root tokens, recovery shares, or unseal material in the evidence folder.
@@ -440,23 +467,27 @@ Screenshots may supplement the folder, but do not replace machine-readable comma
 
 ## 14.15 Pass condition
 
-Observability is ready only when a dry run can produce evidence answering all of these without undocumented memory:
+Observability setup is ready only when a **healthy-state dry run** produces, without undocumented memory:
 
 ```text
-fault and UTC timestamp known
-quorum state before/during/after known
-PostgreSQL and Valkey primary changes known
-Reserved IPv4 owner and any automatic reassignment known
-public-ingress agent/timer state known
-Timescale extension/hypertable state known
-MQTT backend change known
-first new post-fault uplink identified
-OpenBao state known
-Fabric execution explicitly PASS/FAIL/BLOCKED
-OOM/swap evidence captured
-full redundancy restored before next test
+UTC/run identifier and Phase 13B backup ID
+host CPU/memory/swap/OOM evidence
+etcd 3/3
+Patroni primary/replica/lag state
+PgBouncer pool/wait state
+Timescale extension/hypertable/latest telemetry state
+Valkey/Sentinel primary/quorum state
+MQTT backend + HAProxy listener state
+ChirpStack-1/2 health + gateway last-seen
+Reserved IPv4 current owner + failover timer state
+Node-RED state + current flow hash + latest stored event
+Grafana state + dashboard hash + latest visible reading age
+OpenBao 3/3 + Transit normal-path result
+Fabric adapter-1/2 + outbox counts + last confirmed tx
 ```
 
-Production monitoring, centralized logs, long retention, alert routing, and SLO dashboards are later deployment hardening. They are not prerequisites for proving this small architecture.
+The harness must also have commands/templates ready to populate the later `during/` and `after/` folders, but **no fault is injected in Phase 14**.
 
-Next: [14a-grafana-cloud-deployment.md](14a-grafana-cloud-deployment.md).
+Production monitoring, centralized logs, long retention, alert routing, and SLO dashboards are later hardening, not prerequisites for this small architecture.
+
+Next: [14b-pre-test-commissioning-gate.md](14b-pre-test-commissioning-gate.md). Phase 15 remains blocked until that gate passes.

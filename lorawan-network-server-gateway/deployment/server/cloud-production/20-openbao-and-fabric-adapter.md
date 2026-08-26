@@ -1,6 +1,6 @@
 # 20. OpenBao + Fabric Adapter for the Tiny HA POC
 
-> **Status: STANDBY / DRAFT.** OpenBao and the Fabric adapter are not yet deployed or live-validated in the current cloud build. Keep this as architecture guidance until the external Fabric handoff, exact OpenBao version, adapter implementation/image, policies, and failure behavior are available.
+> **Status: REQUIRED PRE-TEST SETUP / DRAFT despite file number 20.** For the full-feature POC, OpenBao and both reviewed Fabric adapter workers must be commissioned on their **normal path before Phase 15**. If the adapter implementation/image is still absent, Phase 14B is `BLOCKED`; do not begin counted chaos testing with an intentionally incomplete architecture.
 
 ## 20.1 Goal
 
@@ -129,10 +129,10 @@ Bootstrap step-by-step:
 11. enable/configure the Transit engine and create/verify the non-exportable `lorawan-evidence` key under the approved policy;
 12. only now enable the HAProxy `:18200` frontend from [07-haproxy-and-pgbouncer.md](07-haproxy-and-pgbouncer.md);
 13. call `/v1/sys/health?standbyok=true` and a harmless Transit sign/verify through the stable endpoint;
-14. stop one OpenBao member and prove the stable endpoint still works at 2/3;
-15. restore/unseal/rejoin it before proceeding to adapters.
+14. record the healthy 3/3 Raft peer/seal state and stable-endpoint sign/verify evidence;
+15. keep all three members running while proceeding to adapters.
 
-**Stop here** if any node was initialized as a separate cluster, if fewer than three intended members are visible before the failure test, or if HAProxy treats a sealed node as healthy.
+**Stop here** if any node was initialized as a separate cluster, if fewer than three intended members are visible, or if HAProxy treats a sealed node as healthy. **Do not stop an OpenBao member in setup; the 2/3 survival test belongs to Phase 15.**
 
 Use three Integrated Storage/Raft members:
 
@@ -151,16 +151,17 @@ Private ports:
 18200 HAProxy stable adapter-facing KMS endpoint
 ```
 
-The POC needs to demonstrate only:
+The pre-test setup must demonstrate:
 
 ```text
 3/3 healthy/unsealed
-Transit key exists
-adapter can sign/verify
-stop one OpenBao member
-2/3 still serves sign/verify
-restore 3/3
+Transit key exists and is non-exportable
+stable :18200 endpoint is healthy
+adapter identity can sign/verify through the stable endpoint
+fixed canonicalization/digest vectors pass
 ```
+
+The one-member-loss / 2-of-3 KMS survival experiment is reserved for Phase 15.
 
 The evidence signing key stays non-exportable. An adapter never falls back to a local signing key.
 
@@ -190,18 +191,9 @@ ha-02 -> adapter-2
 
 Both use different `worker_id` values and lease-based claims.
 
-Expected:
+Normal-path setup must prove the two workers use distinct `worker_id` values and cannot simultaneously own the same live lease. Keep both workers running. A timeout after Fabric submission must be reconciled before retrying so the POC does not demonstrate duplicate conflicting submissions.
 
-```text
-adapter-1 owns live lease
-adapter-2 skips it
-
-adapter-1 dies
-lease expires
-adapter-2 can reclaim
-```
-
-A timeout after Fabric submission must be reconciled before retrying so the POC does not demonstrate duplicate conflicting submissions.
+Adapter-1 loss, lease expiry/reclaim by adapter-2, and worker failover are Phase 15 tests.
 
 ## 20.8 External Fabric handoff
 
@@ -330,56 +322,63 @@ adapter configuration/image reference
 
 Production backup/retention is not what this POC is trying to certify.
 
-## 20.12 Iteration order
+## 20.12 Pre-test setup order
 
 ```text
-1. create lorawan_telemetry + fabric_outbox
-2. prove Node-RED telemetry/outbox atomic commit and retry safety
-3. deploy OpenBao 3/3
-4. prove Transit sign/verify through :18200
-5. remove one OpenBao member and prove 2/3
-6. restore OpenBao 3/3
-7. validate external Fabric handoff
-8. check the adapter implementation readiness gate
+1. confirm Phase 12A telemetry + fabric_outbox atomic commit and retry safety
+2. deploy OpenBao 3/3
+3. prove Transit sign/verify through :18200 with the non-exportable key
+4. run the fixed RFC 8785 canonicalization vector
+5. calculate SHA-256 over the exact canonical UTF-8 bytes and verify the expected digest
+6. validate the external Fabric handoff and TLS identity
+7. complete the adapter implementation readiness gate
 
 IF adapter image/source is still missing:
-  9. record adapter execution as BLOCKED
-  10. do not claim Fabric commit/failover success
+  8. set Phase 14B = BLOCKED
+  9. do not start Phase 15 counted tests
 
 IF adapter is available and reviewed:
-  9. start adapter-1 and prove one real commit
-  10. start adapter-2 and prove lease behavior
-  11. stop adapter-1 and prove adapter-2 takeover
-  12. block external Fabric and prove telemetry still commits
-  13. restore Fabric and prove outbox drains/reconciles
-  14. include the path in the full ha-01/02/03 failure rehearsal
+  8. deploy adapter-1 on ulc-01 and adapter-2 on ulc-02 with unique worker IDs
+  9. prove live-lease exclusivity while both remain healthy
+  10. select one staging outbox event
+  11. build the fixed evidence projection
+  12. RFC 8785 canonical JSON -> exact UTF-8 bytes -> SHA-256 digest
+  13. OpenBao Transit signs the exact canonical bytes and the adapter stores the versioned seal
+  14. submit the compact digest/signature attestation to external Fabric
+  15. wait for commit status and write the tx ID/result back to the outbox
+  16. run the adapter's read-only digest reconstruction/signature verification check
+  17. keep OpenBao, both adapters, and Fabric connectivity healthy for Phase 13B backup
 ```
+
+Do **not** remove an OpenBao member, stop an adapter, or block Fabric connectivity here. Those are Phase 15 experiments.
 
 ## 20.13 Pass condition
 
-### Architecture/infrastructure pass
+### Pre-test architecture/infrastructure pass
 
-This part can pass before the adapter implementation exists:
+Require:
 
 - outbox lives in `lorawan_telemetry` on the Patroni cluster;
-- TimescaleDB is enabled inside the Patroni cluster; no separate TimescaleDB server is needed;
-- Node-RED can atomically create telemetry + selected outbox work;
-- OpenBao is 3/3 normally and usable at 2/3;
+- TimescaleDB remains inside that Patroni cluster;
+- Node-RED atomically creates telemetry + selected outbox work;
+- OpenBao is 3/3 healthy/unsealed through the stable endpoint;
 - the Transit key is non-exportable;
-- the external Fabric handoff is complete and TLS identity is verifiable;
-- losing `ha-03` does not remove the PostgreSQL outbox.
+- RFC 8785 canonicalization and SHA-256 fixed vectors pass;
+- external Fabric handoff is complete and TLS identity is verifiable.
 
-### Full Fabric execution pass
+### Full pre-test Fabric execution pass
 
-Claim this **only when a reviewed adapter implementation/image exists** and all are proven:
+Claim this **only when a reviewed adapter implementation/image exists** and all are proven on the healthy path:
 
 - adapter-1/2 have different worker IDs and cannot own the same live lease;
+- the selected event is converted to the fixed canonical evidence projection;
+- the locally stored SHA-256 digest matches the exact canonical bytes;
+- OpenBao signs/verifies the same canonical bytes and the versioned signature/key ID are persisted;
 - a real selected event reaches valid external Fabric commit status;
-- uncertain submission is reconciled rather than blindly duplicated;
-- adapter-1 loss is recovered by adapter-2 after valid lease expiry/reclaim;
-- Fabric outage does not block telemetry commits and the outbox drains after recovery;
-- the integration runs inside the same three cheap POC Droplets.
+- the returned Fabric tx ID/status is recorded in the outbox;
+- read-only reconstruction can re-create the digest and verify the stored seal;
+- both adapter workers remain healthy for the final Phase 13B snapshot.
 
-If the adapter is unavailable, report this second block as **blocked by missing implementation**, not failed architecture and not passed execution. Because this deployment target now requires **all features with no feature omission**, the overall full-feature POC/commissioning status also remains **BLOCKED** until this Full Fabric execution pass succeeds. The other HA layers may still have their own valid PASS evidence, but they do not substitute for the missing adapter runtime.
+If the adapter is unavailable, the full-feature **pre-test commissioning gate is BLOCKED**. Do not substitute Node-RED, invent an adapter, or begin counted Phase 15 tests. Adapter loss, OpenBao member loss, Fabric outage/backlog, and reconcile/drain behavior are proven later in Phase 15.
 
-Return to [19-cloud-ha-grafana-deployment-day-runbook.md](19-cloud-ha-grafana-deployment-day-runbook.md).
+Next required checkpoint: **Phase 13B** in [13-backup-restore-and-disaster-recovery.md](13-backup-restore-and-disaster-recovery.md), then Phase 14 and Phase 14B.

@@ -1,6 +1,6 @@
 # 19. Absolute-Minimum 3-Server HA POC Runbook
 
-> **Status: STANDBY / SEQUENCE REFERENCE.** This file describes the intended full build shape. The current evidence covers the three active hosts, host hardening, Docker runtime, host-observed `10.104.0.0/20` east-west networking, and the core etcd bootstrap/quorum. It does **not** prove the DigitalOcean Cloud Firewall, Reserved IPv4, public DNS, or later application technologies are commissioned. Do not treat later command blocks as final; refine each linked technology manual as the build reaches it.
+> **Status: SEQUENCE REFERENCE, NOT EXECUTION AUTHORITY.** The live build has completed through Phase 9 ChirpStack HA and is now in Phase 10 public-ingress setup. Follow each component manual for exact current commands. The mandatory remaining pre-test order is Phase 10 -> 11 -> 13A -> 12 -> 12A -> 14A -> 20 -> 13B -> 14 -> 14B; **Phase 15 is the first intentional failure-injection phase**.
 
 Use this runbook to build a **small scale model of the future deployment**.
 
@@ -112,20 +112,20 @@ Fabric worker failover is required for the final full-feature PASS; until the re
 
 We do not care yet about production throughput, months of telemetry retention, or large user counts.
 
-## 19.4 Use one iteration loop
+## 19.4 Separate commissioning from fault testing
 
-For every layer:
+The current build uses one strict lifecycle:
 
 ```text
-DEPLOY
-  -> VERIFY
-  -> BREAK ONE THING
-  -> VERIFY RECOVERY
-  -> RESTORE FULL HEALTH
-  -> CONTINUE
+DEPLOY ALL REQUIRED COMPONENTS
+  -> VERIFY EACH NORMAL PATH
+  -> PHASE 13B FINAL BACKUP
+  -> PHASE 14 HEALTHY EVIDENCE DRY RUN
+  -> PHASE 14B PRE-TEST GATE = PASS
+  -> ONLY THEN PHASE 15 BREAKS ONE THING AT A TIME
 ```
 
-Never inject the next failure while the previous layer is still degraded.
+Do not perform host loss, broker loss, database/KMS member loss, LTE outage, adapter loss, or Fabric outage as part of setup. This prevents the baseline from changing while acceptance tests are already being counted.
 
 ## 19.5 Foundation
 
@@ -240,7 +240,7 @@ ha-03 Node-RED / Grafana
 
 Prove a planned Patroni switchover and verify all clients keep the same endpoint.
 
-`ha-01` and `ha-02` also carry the public MQTT/ChirpStack and private OpenBao routing roles. `ha-03` carries only the private DB route plus private MQTT `:18883` so Node-RED can follow Mosquitto failover without depending on one app host.
+`ha-01` and `ha-02` also carry the public MQTT/ChirpStack and private OpenBao routing roles. Logical `ha-03` / provider host `ulc-03` carries the private DB route and, in Phase 12A, the dedicated Node-RED MQTT `:18884 -> Mosquitto :8884` route so Node-RED follows broker failover without depending on one app host.
 
 ## 19.9 Valkey + Sentinel
 
@@ -272,7 +272,7 @@ ha-01 Mosquitto-1 preferred, private TLS backend :8884
 ha-02 Mosquitto-2 backup, private TLS backend :8884
 ```
 
-The live Phase 8B implementation differs from this original deployment-day target. Mosquitto uses TLS backend `:8884` on ulc-01/02 and the currently validated HAProxy MQTT frontend is `10.104.0.2:8883`, with certificate identity `mqtt.internal.lorawan.com`. The planned all-host private `:18883` route was not commissioned. Before executing the later Node-RED/Grafana portion of this runbook, refine the MQTT route from the then-current Phase 9/Node-RED integration decision rather than using the obsolete `mqtt-ha.internal.<DOMAIN>:18883` placeholder.
+The live Phase 8B/9 implementation differs from the original target. Gateway mTLS uses Mosquitto `:8884`; ChirpStack uses its dedicated ulc-01/02 `:18883 -> :8885` route. Phase 12A adds the separate Node-RED private route `mqtt.internal.lorawan.com:18884 -> ulc-03 HAProxy -> Mosquitto :8884`. Do not reuse the obsolete `mqtt-ha.internal.<DOMAIN>:18883` placeholder.
 
 Broker-backend failover behind the commissioned ulc-01 HAProxy endpoint has already passed. Gateway QoS-buffer and Node-RED reconnection tests remain later end-to-end tests.
 
@@ -328,7 +328,7 @@ Do these in order:
 8. point both public DNS names to the Reserved IPv4;
 9. do **not** enable automatic failback.
 
-Keep MQTT TLS pass-through so Mosquitto validates the gateway certificate.
+Keep MQTT TLS pass-through so Mosquitto validates the gateway certificate. Before public `mqtt.<DOMAIN>:8883` activation, the broker certificates must be valid for **both** `mqtt.internal.lorawan.com` and the real public `mqtt.<DOMAIN>` name; roll them one broker at a time and preserve internal clients.
 
 ## 19.13 Physical gateway
 
@@ -395,27 +395,26 @@ Do not let Node-RED call Fabric directly.
 
 ## 19.15 Node-RED then Grafana
 
-Run both only on `ha-03`.
+Run both only on `ulc-03`.
 
-Before opening the Node-RED editor, prove its **two real dependencies from ha-03**:
+Follow [12a-node-red-timescale-telemetry.md](12a-node-red-timescale-telemetry.md). Before opening the Node-RED editor, prove its **two real local routes from ulc-03**:
 
 ```text
 MQTT
-Node-RED -> <COMMISSIONED_MQTT_ROUTE_AT_NODE_RED_PHASE>
-         -> certificate identity must match mqtt.internal.lorawan.com unless new broker certificates are issued
-         -> Mosquitto-1 / Mosquitto-2 TLS backends
-
-The former `mqtt-ha.internal.<DOMAIN>:18883` / local ha-03 HAProxy path is a superseded target and must not be assumed live.
+Node-RED -> mqtt.internal.lorawan.com:18884
+         -> ulc-03 HAProxy 10.104.0.8:18884
+         -> Mosquitto-1 / Mosquitto-2 :8884 mTLS backends
+         -> read-only application-uplink ACL
 
 DATABASE
 Node-RED -> pgbouncer.internal.lorawan.com:6432
-         -> local PgBouncer
+         -> ulc-03 local PgBouncer
          -> local HAProxy :15432
          -> current Patroni primary
          -> lorawan_telemetry [TimescaleDB]
 ```
 
-1. Map both logical names to `ha-03`'s private IP for the Node-RED container.
+1. Map both logical names to `ulc-03` (`10.104.0.8`) for the Node-RED container.
 2. Test MQTT TLS with the Node-RED client certificate and a read-only subscription to `application/+/device/+/event/up`.
 3. Test PostgreSQL TLS as `telemetry_writer` through PgBouncer.
 4. Run the Timescale rollback insert/duplicate tests from [../integrations/timescaledb/03-connect-and-verify.md](../integrations/timescaledb/03-connect-and-verify.md).
@@ -433,7 +432,7 @@ ChirpStack -> Node-RED -> TimescaleDB hypertables -> Grafana
 
 **Stop here. Do not enable Fabric selection** if Node-RED cannot prove retry-safe storage first.
 
-If `ha-03` disappears, Node-RED/Grafana may pause. That is acceptable for this control-plane POC because PostgreSQL/outbox data still exist on the other Patroni members.
+If `ulc-03` later disappears, Node-RED/Grafana may pause. That expected failure behavior is tested in Phase 15; do not stop `ulc-03` during setup.
 
 ## 19.16 OpenBao
 
@@ -447,17 +446,17 @@ OpenBao-2 ha-02
 OpenBao-3 ha-03
 ```
 
-Prove:
+Prove during setup:
 
 ```text
-3/3 healthy
-Transit key works
-stop one member
-2/3 still works
-restore 3/3
+3/3 healthy/unsealed
+stable :18200 endpoint healthy
+non-exportable Transit key works
+fixed canonicalization/SHA-256 vector works
+normal sign/verify works
 ```
 
-Keep the signing key non-exportable.
+Keep all three members running. One-member-loss / 2-of-3 survival belongs to Phase 15.
 
 ## 19.17 Fabric adapters
 
@@ -467,32 +466,34 @@ The repository's detailed adapter reference currently states that a completed re
 
 ```text
 IF reviewed adapter image/source is absent
-  -> STOP adapter deployment here
-  -> record the Fabric execution path as BLOCKED
+  -> STOP pre-test commissioning here
+  -> Phase 14B = BLOCKED
   -> do not invent an image or substitute Node-RED as the adapter
+  -> do not begin counted Phase 15 tests
 
 IF reviewed adapter image/source exists
-  -> deploy adapter-1 on ha-01
-  -> deploy adapter-2 on ha-02
+  -> deploy adapter-1 on ulc-01
+  -> deploy adapter-2 on ulc-02
 ```
 
 Both use the same PostgreSQL HA `lorawan_telemetry.fabric_outbox`, with different worker IDs and lease-safe claiming.
 
-When executable, prove:
+Normal-path setup must prove:
 
 ```text
 one selected outbox job
--> adapter claims
--> OpenBao signs/verifies
+-> fixed evidence projection
+-> RFC 8785 canonical JSON
+-> SHA-256 digest over exact UTF-8 bytes
+-> OpenBao versioned signature
 -> external Fabric commit
 -> tx ID/status returned to outbox
+-> read-only digest/signature reconstruction verifies
 ```
 
-Then stop adapter-1 and prove adapter-2 can continue eligible work after valid lease expiry/reclaim.
+Keep both adapters and Fabric connectivity healthy. Adapter loss and external Fabric outage belong to Phase 15.
 
-Block only the external Fabric endpoint and prove telemetry commits continue while the outbox waits.
-
-If the adapter is still missing, other HA tests may continue as partial infrastructure evidence, but every result sheet and the overall commissioning result must mark the **full-feature POC BLOCKED**, not passed. The adapter is not removed from the architecture or from the RAM budget.
+Before `19.18`, complete **Phase 13B**, then Phase 14 healthy evidence capture, then require `PRE_TEST_COMMISSIONING_GATE=PASS` from Phase 14B.
 
 ## 19.18 Three host-failure tests
 

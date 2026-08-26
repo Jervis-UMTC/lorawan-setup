@@ -1,12 +1,26 @@
 # 13. Minimal POC Backup and Recovery
 
-> **Status: STANDBY / DRAFT.** The final backup set cannot be fixed until the dependent services are actually deployed. Keep the etcd guidance aligned with the validated cluster, but re-check PostgreSQL, OpenBao, application, and configuration backup commands as each technology becomes active.
+> **Status: REQUIRED PRE-TEST CHECKPOINTS / DRAFT.** Use this manual twice before Phase 15: **Phase 13A** creates the pre-cutover safety boundary before authoritative gateway/device onboarding; **Phase 13B** creates the final full-stack snapshot after Node-RED, Grafana, OpenBao, and Fabric are commissioned. Recovery procedures are documented here, but intentional destructive recovery tests belong to Phase 15.
 
 This HA POC is **not** trying to prove a production disaster-recovery platform. It still needs a real rollback boundary before we deliberately kill leaders, members, and hosts.
 
 The rule is simple:
 
-> Do not inject a destructive failure until the state needed to rebuild the POC exists somewhere outside the three target Droplets and at least the PostgreSQL dump has been read/restore-tested.
+> Do not inject a destructive failure until the fully commissioned state needed to rebuild the POC exists outside the three target Droplets and the required isolated restore checks have passed.
+
+## 13.0 Two mandatory backup checkpoints
+
+### Phase 13A - before gateway/device cutover
+
+Normally complete after Phase 11 and before Phase 12. If the physical gateway is temporarily unavailable, the **cloud-only 13A checkpoint may be executed and closed first** because it does not mutate gateway state: protect the commissioned cloud databases/configuration, copy the backups off the target Droplets, validate catalogs/checksums, and complete an isolated `lorawan_telemetry` restore with Timescale objects intact. When a legacy authoritative source exists, protect that source independently as part of the migration plan. Phase 12 still requires both Phase 11 normal-path commissioning and Phase 13A PASS; finishing 13A early does not waive the gateway prerequisite.
+
+**13A PASS permits Phase 12 cutover/provisioning. It does not permit Phase 15 fault injection.**
+
+### Phase 13B - after every pre-test service is commissioned
+
+Re-run the backup collection after Phase 12A, Phase 14A, and Phase 20. Include Node-RED flow/config, Grafana dashboard/data-source exports, OpenBao recovery/Raft snapshot material, Fabric adapter image/config references, public-ingress scripts/units, and the final database state.
+
+**13B PASS is one prerequisite of Phase 14B.** The backup identifier used by Phase 15 must refer to this fully commissioned snapshot, not an earlier partial build.
 
 ## 13.1 What to protect
 
@@ -93,7 +107,7 @@ sha256sum "$BACKUP_DIR/chirpstack.dump" "$BACKUP_DIR/lorawan_telemetry.dump" \
 
 **Stop here** if either `pg_restore --list` fails or either dump is zero bytes.
 
-Why both dumps matter: `lorawan_telemetry` contains the Timescale hypertables **and** `telemetry.fabric_outbox`.
+Why both dumps matter: `lorawan_telemetry` contains the Timescale hypertables and the current application schema. `telemetry.fabric_outbox` is included **only after it has actually been commissioned** by the later Node-RED/Fabric setup. At the current pre-Phase-12A 13A checkpoint, preserve the live source state exactly; do not create an outbox merely to make the backup match the future target architecture.
 
 ## 13.4 Copy PostgreSQL backups off the three Droplets
 
@@ -203,7 +217,7 @@ Procedure:
 5. restore with `--exit-on-error`;
 6. query `pg_extension` and confirm `timescaledb` is present;
 7. query `timescaledb_information.hypertables` and confirm `telemetry.uplinks` and `telemetry.measurements` are hypertables;
-8. confirm `telemetry.fabric_outbox` exists as an ordinary table;
+8. compare `telemetry.fabric_outbox` with the recorded source state: if the source backup contains it, confirm it restores as an ordinary table; if the source records it as not-yet-commissioned, confirm it remains absent rather than creating it during restore;
 9. compare the small POC row counts with the source evidence;
 10. verify the `telemetry_reader`/writer ownership/grants needed by the restored schema;
 11. capture the sanitized restore result;
@@ -245,19 +259,36 @@ production RPO/RTO certification
 
 These are future deployment hardening, not reasons to remove Patroni, TimescaleDB, OpenBao, or the outbox from the POC.
 
-## 13.11 Destructive-test go/no-go
+## 13.11 Phase 13A pass condition
 
-Proceed only when all are true:
+Phase 13A passes before Phase 12 when:
 
-- `chirpstack.dump` and `lorawan_telemetry.dump` exist outside the target Droplets;
-- both dump catalogs are readable and checksums match the off-host copies;
-- at least one isolated `lorawan_telemetry` restore has succeeded with Timescale hypertables intact;
-- an etcd snapshot/member record exists before destructive etcd membership testing;
-- OpenBao recovery/unseal material is protected outside the runtime nodes;
-- an OpenBao Raft snapshot exists before destructive KMS recovery testing;
-- the configuration/image references required to rebuild the POC are recorded;
-- the Reserved IPv4, app Droplet IDs, anchor addresses, public-ingress script/unit hashes, and failover-token secret reference are recorded off-host;
-- both app-host anchor listeners have passed local health and one manual Reserved-IP move has been proven before automatic public-ingress failure testing;
-- the Fabric outbox recovery state machine is understood, even if adapter execution is currently blocked by a missing implementation.
+- current `chirpstack` and `lorawan_telemetry` logical dumps exist outside the target Droplets;
+- dump catalogs parse and checksums match the off-host copies;
+- an isolated `lorawan_telemetry` restore succeeds with Timescale hypertables/constraints intact;
+- the current etcd snapshot/member/config record exists off-host;
+- current non-secret HAProxy/PgBouncer/Mosquitto/Valkey/ChirpStack configuration references are captured;
+- when a legacy source exists, its final migration backup procedure and off-host destination are ready.
 
-Next: [14-observability-alerting-and-logging.md](14-observability-alerting-and-logging.md).
+After **13A PASS**, continue to [12-gateway-and-device-migration.md](12-gateway-and-device-migration.md) only when Phase 11 has also passed. If Phase 11 is still hardware-blocked, keep the 13A evidence as the current rollback checkpoint and resume Phase 11 when the gateway becomes available. Do not start fault injection.
+
+## 13.12 Phase 13B final full-stack snapshot
+
+After Node-RED, Grafana, OpenBao, and the Fabric adapters have passed their normal-path setup, repeat the backup collection and add:
+
+```text
+Node-RED flow export + image/palette/config references
+Grafana dashboard/data-source export without credentials
+OpenBao recovery material protected off-host
+OpenBao Raft snapshot + version/member record
+Fabric adapter immutable image/source reference + worker IDs/config reference
+Fabric external handoff metadata + last normal confirmed tx reference
+public-ingress Reserved IPv4/Droplet/anchor worksheet
+public-ingress script/systemd hashes and protected token reference
+final schema/migration/outbox state
+final service image/config hashes needed to recreate the tested baseline
+```
+
+Re-check the database dumps and isolated restore against the final schema. Phase 13B must not rely only on the earlier 13A archives because the application/outbox state has changed.
+
+**Phase 13B PASS does not itself authorize fault injection.** Next run the healthy evidence-harness dry run in [14-observability-alerting-and-logging.md](14-observability-alerting-and-logging.md), then the hard gate in [14b-pre-test-commissioning-gate.md](14b-pre-test-commissioning-gate.md).

@@ -1,6 +1,12 @@
 # 15. POC Failover and Acceptance Tests
 
-> **Status: STANDBY / DRAFT.** Do not run full-stack failure tests until every dependency named by a test is deployed and individually accepted. Refine each failure procedure from the live architecture immediately before testing.
+> **Status: FIRST FAILURE-INJECTION PHASE / DRAFT.** Phase 15 starts only after [14b-pre-test-commissioning-gate.md](14b-pre-test-commissioning-gate.md) records `PRE_TEST_COMMISSIONING_GATE=PASS`. All required services, Grafana, OpenBao, reviewed Fabric adapters, backups, and the healthy evidence harness must already exist before the first counted fault.
+
+## 15.0 Hard entry gate
+
+Before creating the first `HA-...` run ID, verify the exact Phase 14B PASS evidence and freeze reference are still current. If a required component is absent, degraded, upgraded, reconfigured, or no longer matches the frozen image/config hashes, **do not inject a fault**. Return to setup, repair/recommission it, take a new Phase 13B snapshot, rerun Phase 14, and issue a new Phase 14B decision.
+
+A missing Fabric adapter or required gateway-integrity implementation is therefore a **setup blocker**, not an acceptable surprise discovered midway through counted testing.
 
 This file proves the **small HA model**, not production capacity.
 
@@ -62,7 +68,12 @@ Reserved IPv4 owner recorded
 public-ingress failover timer healthy on ha-01/ha-02
 both HAProxy anchor listeners pass local health
 OpenBao 3/3 healthy/unsealed
-Fabric adapter state = healthy pair for a full-feature run; if the reviewed implementation is missing, mark the overall run BLOCKED before fault injection
+Node-RED healthy; latest real telemetry event stored and duplicate-safe
+Grafana healthy/read-only; latest reading visible
+OpenBao 3/3 healthy/unsealed
+Fabric adapter-1 + adapter-2 healthy with one normal confirmed tx already proven
+Phase 13B final backup-set ID recorded and off-host
+Phase 14 healthy evidence dry run reference recorded
 host memory / swap / OOM log
 ```
 
@@ -236,11 +247,11 @@ Restore 3/3.
 
 ## 15.11 One Fabric adapter loss
 
-First check the adapter implementation readiness gate in [20-openbao-and-fabric-adapter.md](20-openbao-and-fabric-adapter.md).
+Phase 14B should already have proved the adapter implementation readiness gate in [20-openbao-and-fabric-adapter.md](20-openbao-and-fabric-adapter.md).
 
-If the reviewed adapter implementation/image is absent, mark this test **BLOCKED** and do not substitute Node-RED or an invented container.
+If the reviewed adapter implementation/image is absent now, **abort the counted Phase 15 suite and return to setup**; do not mark only this one test blocked and continue.
 
-If it is deployed:
+With both workers deployed:
 
 1. create one eligible POC outbox job;
 2. record its lease owner/state;
@@ -252,9 +263,9 @@ Do not accept simultaneous ownership of one live lease.
 
 ## 15.12 External Fabric outage
 
-If the adapter implementation is absent, the full reconcile/drain part of this test is **BLOCKED**. You may still prove that Node-RED can commit telemetry + an outbox row without a live Fabric path.
+Both adapters must already be deployed from the Phase 14B PASS baseline. If they are absent or unhealthy before injection, abort the counted suite and return to setup.
 
-When adapters are deployed, block only the adapter path to the external Fabric Gateway.
+Block only the adapter path to the external Fabric Gateway; do not disturb Node-RED, PostgreSQL, or MQTT when injecting this specific fault.
 
 Send a fresh real **EMU-01 payload-v2** uplink and record its `test_sequence`/event key.
 
