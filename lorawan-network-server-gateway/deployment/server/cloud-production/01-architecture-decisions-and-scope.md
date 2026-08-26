@@ -124,7 +124,7 @@ After one host loss, etcd keeps `2/3` quorum and Patroni can keep or promote a w
 
 The POC deliberately uses small PostgreSQL memory settings and PgBouncer so the database does not preallocate production-sized caches or connection counts.
 
-`ha-03` also exposes the **private** HAProxy MQTT frontend `:18883` to Node-RED. This does not make `ha-03` a public MQTT backend; it gives Node-RED the same stable Mosquitto-1-preferred/Mosquitto-2-backup route used by the application nodes without pinning Node-RED to one app host.
+Phase 12A adds a **separate private** Node-RED MQTT frontend on logical `ha-03` / provider host `ulc-03`: `10.104.0.8:18884 -> Mosquitto :8884`. This is deliberately distinct from the ChirpStack-specific `:18883 -> :8885` routes on `ulc-01/02`. It gives Node-RED a stable Mosquitto-1-preferred/Mosquitto-2-backup mTLS path without pinning it to one app host or exposing `ulc-03` publicly.
 
 ## 1.7 Valkey
 

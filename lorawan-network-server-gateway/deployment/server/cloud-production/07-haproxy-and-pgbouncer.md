@@ -4,7 +4,7 @@
 
 ## 7.1 Purpose
 
-The tiny HA POC runs PgBouncer and the private PostgreSQL HAProxy frontend on **all three hosts**. `ha-01` and `ha-02` are the intended public-ingress candidates in the later Reserved-IPv4 phase. The original target design also reserved a private MQTT route on `ha-03` for Node-RED, but that `:18883` route was **not** commissioned in the completed Phase 8B implementation; treat it as future design until a later integration phase explicitly deploys and validates it.
+The tiny HA POC runs PgBouncer and the private PostgreSQL HAProxy frontend on **all three hosts**. `ha-01` and `ha-02` are the public-ingress candidates. The original target design reserved `ha-03:18883` for Node-RED, but live Phase 9 uses `:18883 -> :8885` only on `ulc-01/02` for ChirpStack. The refined Phase 12A design instead commissions a separate Node-RED mTLS frontend on `ulc-03:18884 -> Mosquitto :8884`; treat that later route as authoritative for Node-RED.
 
 ```text
 local database client
@@ -22,7 +22,7 @@ Clients include:
 
 `6432` is the stable local pool endpoint. `15432` is the local HAProxy PostgreSQL-primary endpoint and avoids colliding with PostgreSQL `5432` on the same Droplet. Map the logical service names to the current host's private VPC IP for each local client/container.
 
-This gives every database client the same failover shape without another database router. `ha-03` is not a public Reserved-IP candidate; its HAProxy instance is reused only for private database routing and, when that later phase is activated, the private Node-RED MQTT route described in [08-mqtt-and-valkey.md](08-mqtt-and-valkey.md).
+This gives every database client the same failover shape without another database router. `ha-03` is not a public Reserved-IP candidate; its HAProxy instance is reused for private database routing and, when Phase 12A is activated, the dedicated Node-RED `:18884` MQTT route described in [12a-node-red-timescale-telemetry.md](12a-node-red-timescale-telemetry.md).
 
 HAProxy on `ha-01` and `ha-02` also provides the stable private OpenBao KMS route used by the two Fabric adapter workers:
 
@@ -357,7 +357,7 @@ sudo systemctl status haproxy --no-pager -l
 sudo ss -lntp | grep -E ':(15432|15433|18200|18883)\b'
 ```
 
-The PostgreSQL HAProxy listeners bind only to each host's private interface. The OpenBao KMS listener exists only on `ha-01/02`, also private. The later [08-mqtt-and-valkey.md](08-mqtt-and-valkey.md) phase adds private MQTT `:18883` on all three hosts. None of these private listeners is exposed directly to the Internet.
+The PostgreSQL HAProxy listeners bind only to each host's private interface. The OpenBao KMS listener exists only on `ha-01/02`, also private. Live Phase 9 uses private ChirpStack MQTT `:18883` on `ulc-01/02`; Phase 12A later adds the separate private Node-RED MQTT frontend `:18884` on `ulc-03`. None of these private listeners is exposed directly to the Internet.
 
 Check each Patroni endpoint directly from the current host:
 
