@@ -1058,3 +1058,221 @@ quorum = 2
 ```
 
 **Next active phase: Phase 9 ChirpStack pre-deployment preflight.** Do not start ChirpStack yet. First pin/inspect the exact image and configuration schema, re-prove local PgBouncer and Valkey client paths, inventory live Mosquitto authentication/ACL directives without printing secrets, commission a least-privilege ChirpStack MQTT identity, and close the second application-node MQTT routing gap. Public HTTPS/Reserved-IP work remains Phase 10.
+
+### Phase 13A read-only cloud preflight - 2026-08-27
+
+The Phase 13A cloud-only baseline was re-established while the separate Gateway OS build continued. Patroni returned exactly one leader (`ulc-01`) and two replicas (`ulc-02`, `ulc-03`); all three etcd `/health` endpoints returned healthy; PgBouncer and PostgreSQL primary/replica HAProxy paths were reachable on all three nodes; both private ChirpStack application nodes returned HTTP `200`; PostgreSQL 18.6, both application databases, TimescaleDB 2.29.2, the two telemetry hypertables, schema version 3, and the expected pre-Phase-12A absence of `telemetry.fabric_outbox` were all confirmed; `pg_dump`/`pg_restore` 18.6 are available; and ulc-03 had about 37.6 GB free for backup work.
+
+The first harness incorrectly required `10.104.0.8:16379` and `10.104.0.8:18883`. This is a **preflight-assumption defect, not an infrastructure failure**. The authoritative service placement exposes writable-primary Valkey HAProxy only on the two application nodes (`10.104.0.2:16379`, `10.104.0.4:16379`) and ChirpStack workload MQTT HAProxy only on the two application nodes (`10.104.0.2:18883`, `10.104.0.4:18883`). ulc-03 runs Valkey/Sentinel and control/backup functions but is not a ChirpStack application node. Do not add either frontend to ulc-03 merely to satisfy the discarded harness. With those two invalid checks removed, `PHASE13A_READONLY_PREFLIGHT=PASS`. Next boundary: create fresh Phase 13A logical dumps of `chirpstack` and `lorawan_telemetry`, validate their catalogs and SHA-256, then preserve them off the target Droplets before the isolated restore rehearsal.
+
+### Phase 13A fresh-backup harness correction - 2026-08-27
+
+The first fresh Phase 13A dump wrapper created `/home/opsadmin/backups/phase13a-20260827T032756Z` and then stopped at its first source assertion before creating either database dump. The query returned `|t` for `host(inet_server_addr()), pg_is_in_recovery()`. This is a **harness defect, not a PostgreSQL placement failure**: `docker exec ... psql` used the local Unix-domain socket, for which `inet_server_addr()` is `NULL`, while `pg_is_in_recovery() = true` correctly proves the local ulc-03 member is a replica. No database mutation occurred and no dump was accepted. Correct the retry by checking host identity outside SQL and asserting replica state only; do not require a server IP from a Unix-socket session.
+### Phase 13A fresh logical database backup - 2026-08-27
+
+The corrected retry completed successfully on `ulc-03` using the existing empty timestamped directory `/home/opsadmin/backups/phase13a-20260827T032756Z`. The wrapper verified physical host identity outside SQL and confirmed the local PostgreSQL member is a replica with `pg_is_in_recovery() = true`; both required databases were present. Recorded source state was PostgreSQL `18.6`, ChirpStack object counts `1|0|0|0|0` for tenant/application/device_profile/device/gateway, telemetry counts `0|0|0` for uplinks/measurements/device_registry, TimescaleDB `2.29.2`, hypertables `measurements,uplinks`, and `fabric_outbox_count=0`.
+
+Fresh custom-format archives were then created: `chirpstack.dump` about 99 KiB and `lorawan_telemetry.dump` about 58 KiB, alongside the 257-byte `SOURCE-METADATA.txt` and 257-byte `SHA256SUMS`. Both archives passed `pg_restore --list`; `sha256sum -c SHA256SUMS` returned `OK` for both dumps and the metadata file; all four files are owned by `opsadmin` with mode `0600`. The TimescaleDB warning about circular foreign-key constraints on internal `continuous_agg` is the expected warning for a full custom-format TimescaleDB dump and archive parsing still passed. `PHASE13A_BACKUP_RETRY_EXIT=0`. Next boundary is an independent workstation copy of the complete directory followed by destination-side SHA-256 verification; do not delete the server copy yet.
+
+### Testing-first scope correction - 2026-08-27
+
+The operator explicitly prioritized counted-test functionality over long-term disaster-recovery work. Repository review confirmed that `test/` defines a separate minimum dissertation testbed and explicitly excludes production HA middleware and dashboards from the measured VM. Therefore Phase 13 off-Droplet copy/isolated-restore work is deferred while functional test preparation continues. The fresh local 2026-08-27 `chirpstack` and `lorawan_telemetry` custom-format dumps remain preserved as a local rollback aid; no claim of full Phase 13A PASS is made. The active readiness authority for counted testing is now `test/preparation/00-README.md`: physical RAK5146/AS923 gateway and intended backhaul, seven required test services, EMU-01/SEC-02, ChirpStack -> Node-RED -> TimescaleDB, OpenBao/Fabric evidence, and test evidence tooling.
+
+### HA-preserving test-scope correction - 2026-08-27
+
+The previous testing-first note was too aggressive because it could be read as replacing the already-built HA deployment with the separate minimum seven-service dissertation VM. Operator intent is now explicit: **retain all commissioned HA technologies and normal-path routing exactly as deployed**, while avoiding unnecessary repetition of rigorous DR/failover/restore exercises when the stack is already healthy. Patroni/Spilo, etcd, HAProxy, PgBouncer, Valkey/Sentinel, redundant Mosquitto/ChirpStack paths, and other commissioned HA services remain active. Normal test readiness should use lightweight role/health/listener/routing checks plus one real end-to-end uplink/application/evidence control. Destructive failover, off-host restore, isolated restore, and extended recovery drills are deferred to the dedicated failure-injection/recovery boundary unless new failure evidence requires them sooner. The fresh 2026-08-27 logical dumps remain preserved as the current local rollback aid.
+### Phase 20A OpenBao HA deployment preparation - 2026-08-27
+
+OpenBao-only infrastructure was prepared as a parallel-safe task while the physical Gateway OS build remained active. No OpenBao service was started and no cloud listener was changed by this documentation step. The cloud KMS service name is standardized as `openbao-kms.internal.lorawan.com`. Current OpenBao release/security review selected `2.6.2`; registry inspection pinned OCI index digest `sha256:11fd73a2102cda9c55d5d881a8c3210303146a7ec1e8ac76f526e175c6d24641` and Linux/amd64 manifest `sha256:e29524ba7c3f20d01f562c481e3eccbad6c91df45a2f2531433da4951e408cff`. The executable cloud runbook is `20a-openbao-three-node-ha-deployment.md`: one private-TLS/Raft voter per ulc-01/02/03, quorum 2, API `:8200`, Raft `:8201`, HAProxy stable endpoint `:18200` on ulc-01/02, dedicated OpenBao CA, exact-once initialization, 3-share/2-threshold Shamir bootstrap, non-exportable `ecdsa-p256` Transit key, least-privilege sign/verify policy, and normal-path sign/verify only. Failure injection is explicitly deferred to Phase 15.
+
+### Phase 20A OpenBao ulc-01 preflight - 2026-08-27
+
+`ulc-01` passed the read-only OpenBao deployment preflight: private address `10.104.0.2`, Docker Server `29.7.2`, Docker Compose `v5.5.0`, free TCP `8200/8201/18200`, HAProxy active, Docker active, about `40G` root-disk free, and about `1.3 GiB` available RAM. `OPENBAO_PREFLIGHT_EXIT=0`. No service/configuration mutation occurred. Next checkpoint: run the same read-only preflight on `ulc-02`; do not begin PKI or OpenBao startup until all three nodes pass.
+
+### Phase 20A OpenBao ulc-02 preflight - 2026-08-27
+
+`ulc-02` passed the read-only OpenBao preflight: correct `10.104.0.4` private address, Docker `29.7.2`, Compose `v5.5.0`, TCP `8200/8201/18200` free, HAProxy and Docker active, about 40 GiB disk available, and about 1.3 GiB memory available. `OPENBAO_PREFLIGHT_EXIT=0`; no mutation occurred.
+
+### Phase 20A OpenBao ulc-03 preflight - 2026-08-27
+
+`ulc-03` read-only OpenBao preflight **PASS**: private IP `10.104.0.8` present; Docker `29.7.2` and Compose `v5.5.0`; TCP `8200/8201` free; HAProxy and Docker active; root filesystem about 36 GiB available; about 1.3 GiB memory available; no swap. `OPENBAO_PREFLIGHT_EXIT=0` and login shell survived. With ulc-01 and ulc-02 already passed, the OpenBao three-node pre-mutation gate is now **3/3 PASS**. No OpenBao service or listener has been created yet. Next mutation boundary: dedicated OpenBao PKI issuance on ulc-03.
+
+### Phase 20A OpenBao PKI issuance - 2026-08-27
+
+**PASS.** `ulc-03` created the dedicated `CN=LoRaWAN OpenBao Internal CA`, verified CA certificate/private-key matching, and issued unique server identities for ulc-01/02/03 from `/root/lorawan-openbao-ca/issuance-20260827T050939Z`. CA certificate SHA-256: `18a8d9960b5a0bc0476e64628bdac0e00069aeae6b6ec7f0c95324fda119af6d`. All three node certificates passed CA chain, serverAuth, shared KMS hostname, node hostname/IP, and key-match checks. Unique certificates/private keys/serials were `3/3/3`; `OPENBAO_PKI_EXIT=0`. CA private key remains restricted to ulc-03.
+### Phase 20A OpenBao ulc-03 immutable image canary - 2026-08-27
+
+PASS. `ulc-03` pulled and verified `docker.io/openbao/openbao@sha256:11fd73a2102cda9c55d5d881a8c3210303146a7ec1e8ac76f526e175c6d24641`. RepoDigest matched, platform was `linux/amd64`, CLI reported OpenBao `v2.6.2` commit `dd9c19c37a878cf4a81b18efb8d6f0599c7da923`, and ports `8200/8201` remained free with no OpenBao service started. `OPENBAO_IMAGE_CANARY_EXIT=0`.
+
+### Phase 20A OpenBao three-node immutable image rollout - 2026-08-27
+
+PASS. The pinned OpenBao v2.6.2 OCI digest `sha256:11fd73a2102cda9c55d5d881a8c3210303146a7ec1e8ac76f526e175c6d24641` is present on ulc-01/02/03. ulc-01 and ulc-02 verified linux/amd64, OpenBao UID/GID 100/1000, existing HA services healthy, and no OpenBao runtime state/listeners after pull. ulc-03 had already passed the same image canary. `OPENBAO_IMAGE_3_OF_3=PASS`; `OPENBAO_SERVICE_STARTED=NO`.
+
+### Phase 20A OpenBao TLS/runtime staging - 2026-08-27
+
+`ulc-03`, `ulc-01`, and `ulc-02` each passed dedicated OpenBao TLS/runtime staging. The image runtime identity was `openbao` / UID `100` / GID `1000`; private server keys are mode `0400` owned by that numeric identity, public certificates are root-owned read-only, and `/srv/openbao/data` is mode `0700` owned by `100:1000`. Every node re-verified its CA/hostname/IP/key match, the container identity could read TLS and write Raft storage, and no OpenBao service/listener was started. The enclosing operator block returned `PHASE20A7_EXIT=0`.
+
+### Phase 20A OpenBao configuration/Compose validation - 2026-08-27
+
+- ulc-03: `OPENBAO_NODE_CONFIGURATION=PASS`
+- ulc-01: `OPENBAO_NODE_CONFIGURATION=PASS`
+- ulc-02: `OPENBAO_NODE_CONFIGURATION=PASS`
+- exact image configuration validation: PASS on all three
+- Compose model validation: PASS on all three
+- OpenBao service started: NO
+- operator exit: `PHASE20A89_EXIT=0`
+- login shell survived: YES
+- next boundary: start ulc-01 only and verify uninitialized/sealed state before initialization
+
+### Phase 20A OpenBao seed-start first attempt - 2026-08-27
+
+**INCOMPLETE / NO START.** Operator output proved only `ULC03_OPENBAO_STOPPED=PASS` and `ULC02_OPENBAO_STOPPED=PASS`, then returned `PHASE20A10_PREINIT_EXIT=0`. No ulc-01 start/TLS/status evidence appeared. Cause: non-interactive SSH consumed the remainder of an outer stdin-fed heredoc. Do not initialize OpenBao from this result. Corrected wrappers must protect SSH stdin and require ulc-01 `Initialized=false` / `Sealed=true` evidence.
+
+### Phase 20A OpenBao seed pre-initialization gate - 2026-08-27
+
+- ulc-01 OpenBao v2.6.2 started successfully.
+- TLS health endpoint returned HTTP 501 as expected for an uninitialized node.
+- initialized=false, sealed=true, storage_type=raft, ha_enabled=true.
+- Container running=true, restart_count=0.
+- ulc-02 and ulc-03 remained stopped.
+- OPENBAO_SEED_PREINIT_GATE=PASS.
+- OPENBAO_INITIALIZATION_EXECUTED=NO.
+### Phase 20A operator-shell safety correction - 2026-08-27
+
+During the first one-time-initialization operator attempt, the `ulc-03` SSH login session closed after the block was launched. Do not infer initialization success or failure from the terminal closure alone. Root cause risk identified: `set -euo pipefail` was enabled directly in the interactive login shell, so any later non-zero command could terminate that SSH session. Remaining Phase 20A strict-mode blocks must execute inside child scripts/subshells. Before any initialization retry, perform a read-only recovery check of `ulc-01` initialization state and both the final and temporary bootstrap files without printing their contents.
+
+### Phase 20A initialization recovery timeout correction - 2026-08-27
+
+The first read-only recovery probe stalled at `/v1/sys/init` because the diagnostic curl had no bounded timeout. No initialization mutation is inferred from that stall. Recovery guidance now requires bounded curl/CLI probes and treats timeout as unknown state; operator must not rerun `bao operator init` until bootstrap-file and API state are rechecked.
+
+### Phase 20A initialization recovery attempt 1 - 2026-08-27
+
+- Read-only recovery probe reached `ulc-01`; container state was `openbao_running=true`.
+- `/v1/sys/init` probe hung because the diagnostic curl had no hard timeout and was interrupted with `Ctrl+C`.
+- Nested SSH exit: `255`. Diagnostic cleanup passed.
+- `ulc-02` and `ulc-03` remained stopped.
+- Initialization state remains UNKNOWN; do not rerun `bao operator init` until a bounded recovery check proves state.
+
+### Phase 20A initialization recovery attempt 2 - 2026-08-27
+
+- bootstrap final file: absent
+- bootstrap temporary file: present, `0600 root:root`, zero bytes, SHA-256 of empty file
+- OpenBao container: running, restart count 0
+- bounded `bao status`: timeout
+- bounded `/v1/sys/init`: timeout
+- decision: `UNKNOWN_REQUIRES_REVIEW`; do not rerun `operator init`
+- ulc-02 / ulc-03 remained stopped
+- next: read-only ulc-01 process/log/Raft-state inspection before any mutation
+
+### Phase 20A initialization recovery attempt 3 - 2026-08-27
+
+Read-only inspection on `ulc-01` found no lingering init/exec process, but Raft state files had been created while the protected init output remained empty. TLS handshake verification passed; the HTTP health probe timed out. Current classification: **partial Raft bootstrap / core unresponsive**. No retry, restart, Raft deletion, unseal, or peer start is authorized yet.
+
+### Phase 20A initialization recovery attempt 4 - 2026-08-27
+
+The recovery-4 evidence proved the first initialization crossed the Raft/security-barrier boundary (`ulc-01` single voter/leader; `shares=3`, `threshold=2`) but returned no bootstrap JSON: the protected temp file stayed zero bytes. OpenBao was not OOM-killed, restart count was zero, resource usage was low, and no kernel/storage error was found. This is therefore a lost-bootstrap-secret event on a new empty OpenBao cluster. Do not retry init against the existing Raft state. Next checkpoint: preserve a root-only forensic archive, stop only OpenBao on ulc-01, reset only its fresh OpenBao Raft data and zero-byte temp file, remove retry_join from the seed config, use Compose command `server` only, restart ulc-01, and require a fresh `initialized=false / sealed=true` gate before reinitialization.
+
+### Phase 20A controlled seed recovery - 2026-08-27
+
+PASS. Archived the unusable partial bootstrap, reset only the fresh OpenBao seed state on ulc-01, removed seed retry_join, corrected Compose to `command: ["server"]`, and returned ulc-01 to `initialized=false`, `sealed=true`, health 501, restart count 0. ulc-02/03 remained stopped. No reinitialization was executed. `PHASE20A_SEED_RECOVERY_EXIT=0`; `LOGIN_SHELL_SURVIVED=YES`.
+
+### Phase 20A second protected initialization - 2026-08-27
+
+PASS: protected transient systemd initialization on ulc-01 completed successfully. Three unique Shamir shares, threshold two, and the initial root token were stored only in root-only `/root/lorawan-openbao-bootstrap/init.json` (SHA-256 `66045a7bd3cd715c198fe2ad1c536bfa535aa96bcab47ddd8abf8b7ea5ad9831`) and were not printed. OpenBao is initialized and sealed; ulc-02/03 remain stopped. Next gate: unseal ulc-01 only.
+
+### Phase 20A.11 OpenBao seed unseal - 2026-08-27
+
+PASS. ulc-01 was unsealed with two distinct Shamir shares read from the protected bootstrap file without printing or copying the shares. Status: initialized=true, sealed=false, HA enabled, health HTTP 200, listeners 8200/8201 present, restart count 0. ulc-02 and ulc-03 remained stopped. PHASE20A11_UNSEAL=PASS; PHASE20A11_UNSEAL_EXIT=0; LOGIN_SHELL_SURVIVED=YES.
+
+### Phase 20A.12 ulc-02 join attempt 1 - 2026-08-27
+
+`ulc-02` started and locally reported initialized/sealed Raft state, but `ulc-01` still listed only itself as a voter. The control step stopped before unseal. No Shamir share was submitted; `ulc-03` remained stopped. Next action: read-only retry_join/log/membership diagnostics.
+
+### Phase 20A.12 Shamir join-order correction - 2026-08-27
+
+The first ulc-02 control assertion expected Raft membership before unseal. OpenBao Shamir join semantics require threshold unseal shares before the encrypted retry_join challenge can complete. The observed `initialized=true`, `sealed=true`, HTTP 503 state is therefore the expected join-pending state. No share had yet been submitted and no cluster damage occurred. Continue by unsealing ulc-02 from ulc-01 protected bootstrap material, then verify exactly two Raft voters.
+
+### Phase 20A.12 ulc-02 unseal attempt 2 - 2026-08-27
+
+ulc-02 was still initialized/sealed join-pending. Share 1 advanced unseal progress to 1; share 2 returned sealed=true with progress reset to 0. The wrapper stopped before any further share submission. ulc-03 remained stopped. State requires log/membership diagnosis before retry.
+
+### Phase 20A.12 post-threshold diagnostic wrapper correction - 2026-08-27
+
+The first post-threshold read-only diagnostic was **INCOMPLETE**: `ssh -n ... bash -s <<HEREDOC` discarded the heredoc because `-n` redirects SSH stdin to `/dev/null`. Only local wrapper markers ran. No OpenBao or Raft state was changed and no additional Shamir share was submitted. Retry with copied remote scripts before deciding whether a second unseal cycle is required.
+
+### Phase 20A.12 ulc-02 join completed - 2026-08-27
+
+PASS: ulc-02 is initialized=true, sealed=false, restart_count=0, and listening on 10.104.0.4:8200/8201. Logs confirm successful Raft join and post-unseal completion. Authoritative leader configuration shows exactly two voters: ulc-01 leader and ulc-02 follower. No second unseal cycle is required. ulc-03 remains stopped.
+
+### Phase 20A.12C ulc-03 join completed - 2026-08-27
+
+PASS: ulc-03 joined the existing OpenBao Raft cluster using retry_join and two protected Shamir shares submitted from ulc-01. Final authoritative membership is exactly three voters with ulc-01 leader and ulc-02/ulc-03 followers. ulc-03 is initialized=true, sealed=false, healthy HTTP 200, restart_count=0, and bootstrap material was not copied to it. `PHASE20A12_ULC03=PASS`; `PHASE20A12_ULC03_EXIT=0`; `LOGIN_SHELL_SURVIVED=YES`.
+### Phase 20A.13A Transit bootstrap preflight - 2026-08-27
+
+PASS. Three OpenBao members healthy HTTP 200; authoritative Raft membership 3 voters. Clean admin baseline: transit mount absent, AppRole auth absent, lorawan-evidence key absent, fabric-evidence-signer policy absent, fabric-adapter role absent. No root token printed, no SecretID issued, and no administrative mutation executed. Next mutation is transit mount enable only.
+
+### Phase 20A.13B Transit mount enable - 2026-08-27
+
+- `transit/` precondition: absent.
+- Enabled once; verified mount type `transit`.
+- `lorawan-evidence`: absent.
+- signer policy: absent.
+- AppRole auth: absent.
+- `fabric-adapter` role: absent.
+- SecretID issued: no.
+- OpenBao health after mutation: 3/3 HTTP 200.
+- Result: `PHASE20A13B_TRANSIT=PASS`, exit `0`, login shell survived.
+### Phase 20A.13B accidental rerun refusal - 2026-08-27
+
+- `transit/` already existed as expected from the prior successful 20A.13B step.
+- The rerun failed at the precondition assertion before any mutation.
+- No Transit mount, key, policy, auth method, AppRole, or SecretID was changed.
+- Continue with Phase 20A.13C.
+
+### Phase 20A.13C evidence key creation - 2026-08-27
+
+PASS: `lorawan-evidence` created once as ECDSA P-256 with export disabled, plaintext backup disabled, deletion disabled, version 1. Cluster health remained 3/3. No policy, AppRole, role, SecretID, or rotation performed.
+
+### Phase 20A.13D signer policy creation - 2026-08-27
+
+PASS. Created `fabric-evidence-signer` with exactly two update-only paths for `lorawan-evidence` sign and verify. Verified zero extra paths/capabilities, key remained version 1 and protected, AppRole remained disabled, no SecretID was issued, and OpenBao health stayed 3/3.
+
+### Phase 20A.13E AppRole precondition refusal - 2026-08-27
+
+- Existing `approle/` mount detected before mutation; guard exited nonzero.
+- No AppRole enable request was executed by this run.
+- Evidence key precondition passed.
+- Next action is read-only verification of existing AppRole mount and absence of `fabric-adapter` role before any role creation.
+### Phase 20A.13E-R policy verifier schema mismatch - 2026-08-27
+
+- AppRole mount verified: `approle`, `local=false`, built-in OpenBao v2.6.2 plugin.
+- `fabric-adapter` role absent; no SecretID issued.
+- `lorawan-evidence` key unchanged.
+- Read-only policy verification stopped on `KeyError: rules`; no administrative mutation occurred.
+- Next action: inspect the actual ACL-policy API response shape read-only, then verify the existing policy without changing it.
+
+### Phase 20A.13E existing AppRole verification - 2026-08-27
+
+PASS. Corrected read-only verification proved the existing `approle/` mount is the built-in OpenBao v2.6.2 AppRole auth method with `local=false`; `fabric-adapter` remains absent; no SecretID was issued; the evidence key and signer policy remain unchanged. No auth mount mutation was performed. The origin of the already-present mount remains unproven and is not asserted.
+
+### Phase 20A.13F fabric-adapter AppRole creation - 2026-08-27
+
+PASS: created and verified `fabric-adapter` with policy `fabric-evidence-signer`, token TTL 1h, max TTL 4h, SecretID TTL 24h, unlimited SecretID uses (`0`), and `bind_secret_id=true`. RoleID exists but was not printed; no SecretID was issued. OpenBao 3/3 health remained HTTP 200.
+### Phase 20A.13G final Transit/AppRole acceptance - 2026-08-27
+
+PASS. Final read-only acceptance proved three Raft voters, healthy 3/3 OpenBao nodes, protected Transit key version 1, exact update-only signer policy, valid cluster-wide AppRole, exact `fabric-adapter` role settings, RoleID present but undisclosed, and zero SecretID accessors. `PHASE20A13G_EXIT=0`; Phase 20A.13 is complete.
+
+### Phase 20A.14A ulc-01 HAProxy preflight - 2026-08-27
+
+PASS. `ulc-01` HAProxy remained unchanged and valid at SHA-256 `4b36b3b0b17a8ac438d758dcec291e2f4878c66da090b60e8d07e9003e900808`; the complete existing listener baseline was recorded, `:18200` and OpenBao HAProxy names were free, the staged HAProxy CA matched the OpenBao CA, and TLS health checks to all three OpenBao APIs returned HTTP `200`. No HAProxy reload or file/service mutation occurred. Next: Phase 20A.14B rollback-safe `ulc-01` KMS frontend rollout.
+
+### Phase 20A.14B ulc-01 HAProxy KMS rollout - 2026-08-27
+
+PASS. Baseline config SHA-256 `4b36b3b0b17a8ac438d758dcec291e2f4878c66da090b60e8d07e9003e900808` was preserved in `/etc/haproxy/phase20a14b-20260827T080548Z/haproxy.cfg.before-openbao`. Validated candidate installed as SHA-256 `31d17ede04a05be0b812de3eb602e18656880a7dbd2fc718908d2b63eb7bcf47`. HAProxy reload passed, all prior listeners remained present, exactly one new private KMS listener exists at `10.104.0.2:18200`, TLS hostname verification and repeated stable-path HTTP 200 probes passed, direct OpenBao 3/3 health remained 200, rollback was not executed, and `ulc-02` was not modified. `PHASE20A14B_ULC01=PASS`; `PHASE20A14B_EXIT=0`; login shell survived.
+### Phase 20A.14C ulc-02 HAProxy preflight - 2026-08-27
+
+PASS. Read-only preflight recorded HAProxy config SHA-256 `30bdeef9cc99f574d75be9c33fd86359198cec001946eb2d542ebeeb1b891cf3`; preserved listener inventory including `127.0.1.1:15432`; confirmed TCP/18200 and OpenBao HAProxy names free; CA copy matched; `ulc-01:18200` returned 200; direct OpenBao 3/3 returned 200; no mutation occurred.
+
+### Phase 20A.14D ulc-02 HAProxy KMS rollout - 2026-08-27
+
+PASS. Baseline SHA-256 `30bdeef9cc99f574d75be9c33fd86359198cec001946eb2d542ebeeb1b891cf3`; rollback backup `/etc/haproxy/phase20a14d-20260827T082022Z/haproxy.cfg.before-openbao`; final SHA-256 `7b2f1520bb07d10438f65cc08936bc7a331fd685ae23b3974e514def1f0a3f46`. All eight pre-existing `ulc-02` HAProxy listeners, including `127.0.1.1:15432`, remained present; new private KMS listener `10.104.0.4:18200` passed TLS hostname verification and HTTP `200`; both stable KMS frontends passed repeated probes; all three direct OpenBao APIs remained HTTP `200`; rollback not executed. Phase 20A.14 is complete. Server OpenBao work is intentionally paused before Phase 20A.15 while Gateway Phase 11 resumes.
