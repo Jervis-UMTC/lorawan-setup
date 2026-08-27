@@ -7,7 +7,7 @@ A recoverable gateway needs **four different recovery sets** because none can re
 3. an encrypted MQTT/evidence-upload identity bundle, which restores the machine identities needed to reach the server; and
 4. the gateway-integrity continuity record: reviewed journal implementation/version/hash, journal-format version, last valid local sequence/record/segment hash, latest accepted server checkpoint/receipt, and any closed unuploaded segments required by the retention policy.
 
-Keep these outside the gateway and test them on spare media.
+Keep these outside the gateway. Test them on spare media when available. If only one SD card exists, do not treat the missing spare as an automatic blocker; instead require a reflash-ready rollback boundary before overwriting the card: retain the exact approved factory image and SHA-256, keep the verified configuration and protected identity bundles off-gateway, confirm an SD writer is available, and plan for downtime while the same card is reflashed if rollback is required.
 
 > [!IMPORTANT]
 > A journal restore is not ordinary file restoration. If the server already holds a checkpoint newer than the local backup, restoring the old journal and continuing from it would be a rollback conflict. Preserve the server anchor and use the reviewed recovery/epoch procedure; never reset the local sequence or delete the newer cloud checkpoint to make an old SD image look current.
@@ -92,6 +92,18 @@ Keep the official source, release, filename, calculated SHA-256, and protected s
 
 A configuration archive is not bootable. If the image file or hash cannot be matched to the tested release, obtain a fresh official image before relying on the recovery plan.
 
+### Current Phase 11 single-card evidence - 2026-08-27
+
+The retained Gateway OS `4.12.0` Base factory artifact currently used for rollback preparation is:
+
+```text
+C:\Users\smartagriintern\lorawan-recovery\gateway-01\factory-v4.12.0\chirpstack-gateway-os-4.12.0-base-bcm27xx-bcm2709-rpi-2-squashfs-factory.img.gz
+size: 27606919 bytes
+SHA-256: 395e79fe041c4118e10dd4cf796aa426a565d5e733144485d8d014a8d8dbf0a6
+```
+
+The two existing off-gateway gateway backup archives were re-hashed successfully, balenaEtcher was detected as the imaging application, a post-flash checklist was preserved beside the factory image, and the live gateway SD card was not touched. This is strong rollback preparation evidence, but the first write to the only production card still requires confirmation that the physical SD reader/writer path is usable and that the maintenance-window downtime is accepted.
+
 ## Step 5: Preserve the MQTT identity bundle
 
 Keep a separate encrypted recovery bundle containing:
@@ -117,9 +129,13 @@ renewal and revocation procedure
 
 Never store an unencrypted private key in Git or a general file share.
 
-## Step 6: Restore to spare media
+## Step 6: Restore to spare media or the single production card
 
-1. Flash the exact approved Gateway OS Base image to a spare SD card.
+**Preferred path:** use a spare SD card so the current working card remains untouched.
+
+**Single-card path:** when no spare card exists, perform this only during a planned maintenance window after the exact approved factory image, its SHA-256, the verified configuration archive, the protected identity bundle, and a working SD-card writer are all present off-gateway. A failed custom image then requires removing the same card, reflashing the approved factory image, restoring the protected backups, and re-verifying service before the gateway returns to production.
+
+1. Flash the exact approved Gateway OS Base image to the spare card, or to the single production card during the controlled rollback procedure.
 2. Boot on an isolated commissioning network.
 3. Change the default password.
 4. Restore the encrypted configuration archive.
@@ -134,7 +150,7 @@ Never store an unencrypted private key in Git or a general file share.
 13. Keep UDP Forwarder disabled.
 14. Run a fresh WAN-outage, reboot, queue drain, journal upload/reconciliation, OTAA, uplink, and safe downlink test.
 
-Do not overwrite the production SD card during the first restore rehearsal.
+Do not overwrite the production SD card during the first restore rehearsal when spare media is available. When only one card exists, there is no non-destructive rehearsal; compensate by completing the reflash-ready rollback gate before the first custom-image write and explicitly accept the additional downtime/recovery risk.
 
 ## Recovery acceptance
 
