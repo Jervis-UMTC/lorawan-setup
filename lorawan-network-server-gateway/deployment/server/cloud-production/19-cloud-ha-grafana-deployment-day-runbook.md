@@ -240,7 +240,7 @@ ha-03 Node-RED / Grafana
 
 Prove a planned Patroni switchover and verify all clients keep the same endpoint.
 
-`ha-01` and `ha-02` also carry the public MQTT/ChirpStack and private OpenBao routing roles. Logical `ha-03` / provider host `ulc-03` carries the private DB route and, in Phase 12A, the dedicated Node-RED MQTT `:18884 -> Mosquitto :8884` route so Node-RED follows broker failover without depending on one app host.
+`ha-01` and `ha-02` also carry the public MQTT/ChirpStack and private OpenBao routing roles. Logical `ha-03` / provider host `ulc-03` carries the private DB route and, in Phase 12A, the dedicated Node-RED MQTT `:18884 -> Mosquitto :8886` route so Node-RED follows broker failover without depending on one app host.
 
 ## 19.9 Valkey + Sentinel
 
@@ -272,7 +272,7 @@ ha-01 Mosquitto-1 preferred, private TLS backend :8884
 ha-02 Mosquitto-2 backup, private TLS backend :8884
 ```
 
-The live Phase 8B/9 implementation differs from the original target. Gateway mTLS uses Mosquitto `:8884`; ChirpStack uses its dedicated ulc-01/02 `:18883 -> :8885` route. Phase 12A adds the separate Node-RED private route `mqtt.internal.lorawan.com:18884 -> ulc-03 HAProxy -> Mosquitto :8884`. Do not reuse the obsolete `mqtt-ha.internal.<DOMAIN>:18883` placeholder.
+The live Phase 8B/9 implementation differs from the original target. Gateway mTLS uses Mosquitto `:8884`; ChirpStack uses its dedicated ulc-01/02 `:18883 -> :8885` route. Phase 12A adds the separate Node-RED private route `mqtt.internal.lorawan.com:18884 -> ulc-03 HAProxy -> Mosquitto :8886`. Do not reuse the obsolete `mqtt-ha.internal.<DOMAIN>:18883` placeholder.
 
 Broker-backend failover behind the commissioned ulc-01 HAProxy endpoint has already passed. Gateway QoS-buffer and Node-RED reconnection tests remain later end-to-end tests.
 

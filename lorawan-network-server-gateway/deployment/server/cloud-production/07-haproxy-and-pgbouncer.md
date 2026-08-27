@@ -4,7 +4,7 @@
 
 ## 7.1 Purpose
 
-The tiny HA POC runs PgBouncer and the private PostgreSQL HAProxy frontend on **all three hosts**. `ha-01` and `ha-02` are the public-ingress candidates. The original target design reserved `ha-03:18883` for Node-RED, but live Phase 9 uses `:18883 -> :8885` only on `ulc-01/02` for ChirpStack. The refined Phase 12A design instead commissions a separate Node-RED mTLS frontend on `ulc-03:18884 -> Mosquitto :8884`; treat that later route as authoritative for Node-RED.
+The tiny HA POC runs PgBouncer and the private PostgreSQL HAProxy frontend on **all three hosts**. `ha-01` and `ha-02` are the public-ingress candidates. The original target design reserved `ha-03:18883` for Node-RED, but live Phase 9 uses `:18883 -> :8885` only on `ulc-01/02` for ChirpStack. The refined Phase 12A design instead commissions a separate Node-RED mTLS frontend on `ulc-03:18884 -> Mosquitto :8886`; treat that later route as authoritative for Node-RED.
 
 ```text
 local database client

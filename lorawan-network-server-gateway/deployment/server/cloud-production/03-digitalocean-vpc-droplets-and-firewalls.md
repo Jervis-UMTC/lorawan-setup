@@ -192,7 +192,8 @@ Allow only between the hosts/services that need them:
 6379/tcp  Valkey data/replication traffic
 26379/tcp Sentinel communication
 8883/tcp  Reserved-IP public path -> anchor HAProxy MQTT frontend on ha-01/ha-02
-8884/tcp  HAProxy -> Mosquitto-1/2 private TLS backend
+8884/tcp  existing gateway-facing HAProxy -> Mosquitto-1/2 private TLS backend
+8886/tcp  ulc-03 Node-RED HAProxy -> Mosquitto-1/2 dedicated mTLS backend
 8080/tcp  HAProxy -> ChirpStack backends
 6432/tcp  local approved DB clients -> PgBouncer frontend
 15432/tcp PgBouncer -> local HAProxy PostgreSQL-primary frontend
@@ -323,7 +324,7 @@ mqtt.internal.lorawan.com      -> commissioned Mosquitto broker certificates
 openbao-kms.internal.lorawan.com  -> future OpenBao service identity
 ```
 
-For containerized ChirpStack, map `pgbouncer.internal.lorawan.com` and `valkey.internal.lorawan.com` to that application host's private VPC IP so the local PgBouncer/HAProxy paths are used. The old `mqtt-ha.internal.<DOMAIN>:18883` local-per-host target was never commissioned. Phase 9 instead closed ChirpStack MQTT redundancy with `mqtt.internal.lorawan.com:18883` mapped locally on `ulc-01/02` to HAProxy `:18883 -> Mosquitto :8885`. Phase 12A separately adds Node-RED on `ulc-03` using `mqtt.internal.lorawan.com:18884 -> HAProxy -> Mosquitto :8884` mTLS backends. Phase 10 public MQTT keeps TLS pass-through and therefore reissues broker certificates to retain `mqtt.internal.lorawan.com` while adding the real public `mqtt.<DOMAIN>` SAN. Each PgBouncer maps/uses `postgres-ha.internal` for its local HAProxy backend. Future Fabric adapters use `openbao-kms.internal.lorawan.com:18200` only after that service is commissioned.
+For containerized ChirpStack, map `pgbouncer.internal.lorawan.com` and `valkey.internal.lorawan.com` to that application host's private VPC IP so the local PgBouncer/HAProxy paths are used. The old `mqtt-ha.internal.<DOMAIN>:18883` local-per-host target was never commissioned. Phase 9 instead closed ChirpStack MQTT redundancy with `mqtt.internal.lorawan.com:18883` mapped locally on `ulc-01/02` to HAProxy `:18883 -> Mosquitto :8885`. Phase 12A separately adds Node-RED on `ulc-03` using `mqtt.internal.lorawan.com:18884 -> HAProxy -> Mosquitto :8886` dedicated mTLS backends. Phase 10 public MQTT keeps TLS pass-through and therefore reissues broker certificates to retain `mqtt.internal.lorawan.com` while adding the real public `mqtt.<DOMAIN>` SAN. Each PgBouncer maps/uses `postgres-ha.internal` for its local HAProxy backend. Future Fabric adapters use `openbao-kms.internal.lorawan.com:18200` only after that service is commissioned.
 
 ## 3.10 Why not two Droplets?
 

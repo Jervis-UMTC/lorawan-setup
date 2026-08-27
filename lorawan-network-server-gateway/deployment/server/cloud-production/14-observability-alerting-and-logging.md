@@ -279,7 +279,8 @@ The cloud port ownership must be:
 HAProxy public gateway service:       :8883 on ulc-01/ulc-02 anchors
 HAProxy ChirpStack workload service:  :18883 on ulc-01/ulc-02 private VPC
 HAProxy Node-RED ingest service:      :18884 on ulc-03 private VPC
-Mosquitto gateway/Node-RED mTLS:      :8884 on ulc-01/ulc-02
+Mosquitto gateway-facing TLS:         :8884 on ulc-01/ulc-02
+Mosquitto Node-RED mTLS:               :8886 on ulc-01/ulc-02
 Mosquitto ChirpStack workload TLS:    :8885 on ulc-01/ulc-02
 Gateway-local buffer:                 127.0.0.1:1883 on Raspberry Pi only
 ```

@@ -31,7 +31,7 @@ QoS: 0
 
 ### Three-Droplet cloud HA POC
 
-Run Node-RED on `ulc-03` and map `mqtt.internal.lorawan.com` to `ulc-03`'s private IP. The dedicated private HAProxy `:18884` frontend commissioned by Phase 12A follows Mosquitto-1 preferred / Mosquitto-2 backup through the existing mTLS `:8884` broker listeners. Do not use the ChirpStack-specific `:18883 -> :8885` password-auth route for Node-RED.
+Run Node-RED on `ulc-03` and map `mqtt.internal.lorawan.com` to `ulc-03`'s private IP. The dedicated private HAProxy `:18884` frontend commissioned by Phase 12A follows Mosquitto-1 preferred / Mosquitto-2 backup through the dedicated Node-RED mTLS `:8886` broker listeners. Do not use the ChirpStack-specific `:18883 -> :8885` password-auth route for Node-RED.
 
 ~~~text
 Broker: mqtt.internal.lorawan.com

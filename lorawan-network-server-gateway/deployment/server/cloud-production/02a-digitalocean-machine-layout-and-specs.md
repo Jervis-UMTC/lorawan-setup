@@ -181,7 +181,7 @@ ha-01 ChirpStack-1 -> local PgBouncer
 ha-02 ChirpStack-2 -> local PgBouncer
 ha-03 Node-RED     -> local PgBouncer
 ha-03 Grafana      -> local PgBouncer
-ha-03 Node-RED     -> local HAProxy :18884 -> active Mosquitto :8884
+ha-03 Node-RED     -> local HAProxy :18884 -> active Mosquitto :8886
 ha-01 adapter-1    -> local PgBouncer
 ha-02 adapter-2    -> local PgBouncer
 ```
