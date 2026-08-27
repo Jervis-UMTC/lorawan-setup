@@ -31,6 +31,25 @@ Follow the [TimescaleDB backup and restore procedure](../integrations/timescaled
 
 **Stop here. Do not continue until the telemetry database backup is readable.**
 
+### Cloud Spilo client-path correction
+
+On the cloud HA deployment, PostgreSQL client utilities are authoritative inside the commissioned `spilo` container. Do not assume the Ubuntu host has a versioned PostgreSQL client installed merely because `/usr/bin/pg_restore` is a `pg_wrapper` shim. When validating a host-owned custom-format dump on `ulc-03`, stream it to the PostgreSQL 18.6 client in `spilo`:
+
+```bash
+sudo docker exec spilo pg_restore --version
+sudo docker exec -i spilo pg_restore --list < "$TELEMETRY_DUMP" >/dev/null
+```
+
+A host `pg_wrapper` error requesting `postgresql-client-<version>` is a harness/tool-location failure if the checksum has already passed; it is not evidence that the dump is corrupt. Do not install a duplicate host client as an ad-hoc workaround unless the deployment design explicitly changes.
+
+
+
+### Current cloud test-scope backup exception - 2026-08-27
+
+For the current cloud commissioning sequence, the newer project-wide HA-preserving test-scope decision explicitly defers the **off-host copy and isolated-restore rehearsal** until the dedicated failure/recovery boundary. This does not waive rollback protection and does not claim Phase 13A disaster-recovery completion.
+
+Before the first `fabric_outbox` schema mutation, re-verify the preserved fresh local custom-format backup at `/home/opsadmin/backups/phase13a-20260827T032756Z` on `ulc-03`: `lorawan_telemetry.dump` must still parse with `pg_restore --list`, `sha256sum -c SHA256SUMS` must pass, and the live preflight must still show the same pre-outbox database baseline (`TimescaleDB 2.29.2`, the six commissioned telemetry objects, `measurements,uplinks` as the only telemetry hypertables, and `telemetry.fabric_outbox` absent). Use this exception only for the current non-destructive setup migration. Preserve the backup directory. Off-host verification and isolated restore remain required before later destructive recovery/failure work.
+
 ## Step 2: Create the outbox table
 
 Open the telemetry database as `telemetry_admin` and run:
@@ -752,3 +771,38 @@ docker compose exec fabric-adapter sh -c \
 Run that command only when the reviewed image contains a POSIX shell. Otherwise use the image's documented diagnostic command.
 
 Startup must fail closed when AppRole login, Transit sign/verify, or the RFC 8785 test vector fails. Logs must not print the Fabric private key, AppRole SecretID, OpenBao client token, database password, or complete raw payload. A running container is not proof of a valid KMS seal or Fabric commit; complete the next guide.
+
+### Recorded cloud Fabric outbox database preflight - 2026-08-27
+
+**PASS / READ ONLY.** The ulc-03-driven preflight dynamically found exactly one Patroni leader: `ulc-01` / `10.104.0.2`; `ulc-02` and `ulc-03` were replicas. All three Spilo containers were running with `RestartCount=0`, all three members reported PostgreSQL `18.6`, `lorawan_telemetry` remained owned by `telemetry_admin`, schema `telemetry` remained owned by `telemetry_admin`, and TimescaleDB remained `2.29.2`. Each member saw all six commissioned telemetry objects and exactly the two telemetry hypertables `measurements,uplinks`.
+
+`telemetry.fabric_outbox` was absent on all three members. `fabric_adapter` remained a LOGIN role with a SCRAM verifier, but its pre-outbox object-access boundary was still closed: no `USAGE` on schema `telemetry` and no `SELECT` on `uplinks`, `measurements`, or `device_registry`. The operator wrapper returned `FABRIC_OUTBOX_READONLY_PREFLIGHT=PASS`, `FABRIC_OUTBOX_PREFLIGHT_OPERATOR_EXIT=0`, and the ulc-03 login shell survived. The repeated container `LC_ALL=en_US.utf-8` / Perl locale warning remains the previously recorded non-blocking hygiene issue.
+
+Decision: the outbox migration starts from a clean first-install state, so do not run legacy-row repair logic. Before mutation, revalidate the preserved 2026-08-27 local logical backup under the current test-scope backup exception. Then create the ordinary PostgreSQL outbox table, exact constraints, worker indexes, one-way immutability trigger, and documented column-level ACLs in one controlled primary transaction; verify replication to both replicas before enabling Node-RED outbox enqueue. Do not deploy or issue runtime credentials for the still-unimplemented Fabric adapter image.
+
+### Recorded corrected cloud backup/catalog gate - 2026-08-27
+
+**PASS / READ ONLY.** The corrected cloud gate used PostgreSQL 18.6 `pg_restore` inside the running local `spilo` container rather than the host Ubuntu `pg_wrapper`. All preserved Phase 13A checksums passed; the `lorawan_telemetry.dump` catalog parsed successfully with 129 entries; the catalog had no `fabric_outbox`; and the live database still had no `telemetry.fabric_outbox`. No database mutation occurred. `FABRIC_OUTBOX_CORRECTED_PREFLIGHT=PASS`; `FABRIC_OUTBOX_CORRECTED_PREFLIGHT_EXIT=0`. The next cloud action is the first real migration on the dynamically discovered Patroni primary. Do not repeat the backup/catalog gate unless the preserved dump or its checksum files change.
+
+### PostgreSQL 18 constraint-catalog verification note
+
+Cloud production currently runs PostgreSQL 18.6. PostgreSQL 18 stores column `NOT NULL` specifications as `pg_constraint` rows with `contype='n'`. Therefore a first-install verifier must **not** assert that `SELECT count(*) FROM pg_constraint WHERE conrelid='telemetry.fabric_outbox'::regclass` equals six. For the current 25-column baseline, the expected catalog result is eleven `n` rows plus six non-`n` constraints, for seventeen total rows. Verify the intended application constraint set using `contype <> 'n'` (or the explicit `c/p/u` types) and require exactly:
+
+```text
+fabric_outbox_digest_ck
+fabric_outbox_event_key_key
+fabric_outbox_pkey
+fabric_outbox_processing_ck
+fabric_outbox_seal_ck
+fabric_outbox_status_ck
+```
+
+A post-commit wrapper failure caused only by the old six-total-row assertion is a harness failure. Do not rerun `CREATE TABLE` after `OUTBOX_DDL_ACL_TRANSACTION=PASS`; continue with read-only structure/replication validation and the rollback-only ACL/immutability probes.
+
+### Recorded cloud Fabric outbox schema commissioning - 2026-08-27
+
+**COMPLETE / PASS.** The outbox was created once on the active Patroni primary and replicated to all three PostgreSQL members. PostgreSQL 18 reports `17` total `pg_constraint` rows for this table because `11` column `NOT NULL` rules are stored as `contype='n'`; the six intended non-NOT-NULL constraints are exactly `fabric_outbox_digest_ck`, `fabric_outbox_event_key_key`, `fabric_outbox_pkey`, `fabric_outbox_processing_ck`, `fabric_outbox_seal_ck`, and `fabric_outbox_status_ck`. The table has exactly 25 columns, three documented worker indexes, one `fabric_outbox_immutability_trg`, and is not a Timescale hypertable. Table/function ownership remains `telemetry_admin`.
+
+ACL acceptance passed on all three members. `fabric_adapter` can read `telemetry.uplinks`, `telemetry.measurements`, and `telemetry.fabric_outbox`; it cannot insert/delete outbox rows and can update only the documented worker, seal, Fabric-result, error, and `updated_at` columns. `telemetry_writer` can enqueue/read and use the identity sequence but cannot update; `telemetry_reader` is read-only. Rollback-only functional probes proved writer enqueue, allowed adapter state update, denied adapter source-identity update, source-identity trigger enforcement, completed-evidence-seal immutability, and zero persisted commissioning rows.
+
+Cloud status: `FABRIC_OUTBOX_SCHEMA_COMMISSIONING=PASS`. Do not recreate the table. Keep Node-RED outbox enqueue disabled until Phase 12A. The Fabric adapter runtime remains blocked until a reviewed implementation/image exists.
