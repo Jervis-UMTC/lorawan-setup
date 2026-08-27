@@ -1011,7 +1011,7 @@ TOKEN_JSON="$(sudo docker exec \
   -e BAO_CACERT=/openbao/tls/ca.crt \
   -e BAO_TOKEN="$ROOT_TOKEN" \
   openbao bao token create \
-  -policy=fabric-evidence-signer -ttl=15m -orphan -format=json)"
+  -policy=fabric-evidence-signer -no-default-policy -ttl=15m -orphan -format=json)"
 
 COMMISSION_TOKEN="$(printf '%s' "$TOKEN_JSON" | python3 -c 'import json,sys; print(json.load(sys.stdin)["auth"]["client_token"])')"
 unset TOKEN_JSON ROOT_TOKEN
@@ -1055,29 +1055,29 @@ printf 'SIGN=PASS\nVERIFY=%s\nOPENBAO_STABLE_ENDPOINT=PASS\n' "$VALID"
 )
 ```
 
-Repeat only the TLS/health reachability check from `ulc-02`; a second cryptographic signing test is unnecessary unless the first stable-endpoint proof fails or the KMS routing/configuration changes. Do not rotate the Transit key and do not stop an OpenBao member during setup acceptance.
+The commissioning token must be created with `-no-default-policy`, and the acceptance wrapper must verify its returned policy list is exactly `fabric-evidence-signer` before using it. Repeat only the TLS/health reachability check from `ulc-02`; a second cryptographic signing test is unnecessary unless the first stable-endpoint proof fails or the KMS routing/configuration changes. Do not rotate the Transit key and do not stop an OpenBao member during setup acceptance.
 
 ## 20A.17 Prepared PASS boundary
 
 OpenBao infrastructure is ready for the later Fabric adapter only when all are true:
 
 ```text
-[ ] exact OpenBao 2.6.2 immutable image digest is present on all three nodes
-[ ] every node uses its own private TLS key/certificate
-[ ] API listeners bind only 10.104.0.2/.4/.8:8200
-[ ] Raft listeners bind only 10.104.0.2/.4/.8:8201
-[ ] exactly one OpenBao cluster was initialized
-[ ] exactly three Raft voters exist
-[ ] 3/3 are initialized + unsealed
-[ ] one active + two usable standbys
-[ ] Transit is enabled
-[ ] lorawan-evidence is ecdsa-p256 and non-exportable
-[ ] fabric-evidence-signer grants only sign/verify
-[ ] HAProxy :18200 exists only on ulc-01/02 private addresses
-[ ] HAProxy health excludes sealed/uninitialized members
-[ ] TLS verifies as openbao-kms.internal.lorawan.com through both :18200 paths
-[ ] fixed harmless sign/verify returns valid=true through :18200
-[ ] no Fabric adapter SecretID was issued prematurely
+[x] exact OpenBao 2.6.2 immutable image digest is present on all three nodes
+[x] every node uses its own private TLS key/certificate
+[x] API listeners bind only 10.104.0.2/.4/.8:8200
+[x] Raft listeners bind only 10.104.0.2/.4/.8:8201
+[x] exactly one OpenBao cluster was initialized
+[x] exactly three Raft voters exist
+[x] 3/3 are initialized + unsealed
+[x] one active + two usable standbys
+[x] Transit is enabled
+[x] lorawan-evidence is ecdsa-p256 and non-exportable
+[x] fabric-evidence-signer grants only sign/verify
+[x] HAProxy :18200 exists only on ulc-01/02 private addresses
+[x] HAProxy health excludes sealed/uninitialized members
+[x] TLS verifies as openbao-kms.internal.lorawan.com through both :18200 paths
+[x] fixed harmless sign/verify returns valid=true through :18200
+[x] no Fabric adapter SecretID was issued prematurely
 ```
 
 Record:
@@ -1216,3 +1216,23 @@ The final `ulc-02` HAProxy configuration SHA-256 is `7b2f1520bb07d10438f65cc0893
 
 **Continuation checkpoint / intentional pause.** Server OpenBao work is paused here while gateway work resumes. When returning to this server track, continue with **Phase 20A.15 local service-name mapping**, then **Phase 20A.16 normal-path acceptance**. Do not repeat Phase 20A.14 unless the HAProxy configuration or KMS routing changes.
 
+
+### Phase 20A.15 local KMS service-name mapping - 2026-08-27
+
+**PASS.** The complete operator wrapper ran from `ulc-03` and first re-proved SSH identity for both application nodes using the existing root-controlled deployment key. On `ulc-01`, `/etc/hosts` had no prior active mapping for `openbao-kms.internal.lorawan.com`; a rollback copy was created at `/root/phase20a15-ulc-01-20260827T131136Z/hosts.before`, then the stable name was mapped exactly to the local HAProxy address `10.104.0.2`. `getent ahostsv4` resolved only `10.104.0.2`, OpenSSL hostname verification through `:18200` passed, the normal resolver-path OpenBao health request returned HTTP `200`, and HAProxy configuration remained valid. On `ulc-02`, the same guarded sequence created rollback copy `/root/phase20a15-ulc-02-20260827T131138Z/hosts.before`, mapped the shared KMS name exactly to local HAProxy `10.104.0.4`, resolved only `10.104.0.4`, passed TLS hostname verification, returned HTTP `200` through the normal resolver path, and left HAProxy valid. Both per-node gates passed, the enclosing operator returned `PHASE20A15_OPERATOR_EXIT=0`, and the `ulc-03` login shell survived.
+
+Decision: **Phase 20A.15 is COMPLETE / PASS.** The two future adapter/application hosts now use one TLS verification name while each resolves it to its own HAProxy KMS frontend; no mapping points directly at an OpenBao Raft member. Next: Phase 20A.16 normal-path acceptance. Run TLS/health acceptance from both application nodes, then perform exactly one short-lived `fabric-evidence-signer` Transit sign/verify test through the stable `ulc-01` HAProxy endpoint. Do not rotate the Transit key and do not inject failure during this acceptance.
+
+
+
+### Recorded Phase 20A.16 normal-path acceptance - 2026-08-27
+
+**PASS.** The entire operator workflow ran from `ulc-03` and re-proved SSH identity to both application nodes. On `ulc-01`, `openbao-kms.internal.lorawan.com` resolved only to local HAProxy `10.104.0.2`; on `ulc-02` it resolved only to local HAProxy `10.104.0.4`. Both HAProxy configurations remained valid, both private `:18200` listeners were present, TLS hostname verification passed through the normal resolver path, and `/v1/sys/health?standbyok=true` returned HTTP `200` through both stable endpoints.
+
+Exactly one cryptographic acceptance test then ran on `ulc-01`. The protected bootstrap file remained `0600 root:root`; the root token was loaded without terminal output; Transit key `lorawan-evidence` was version `1` before the test. A 15-minute orphan commissioning token was created with `-no-default-policy`, and its returned policy list was exactly `fabric-evidence-signer`. A fixed harmless input signed successfully through `https://openbao-kms.internal.lorawan.com:18200`, verification returned `true`, and the Transit key remained version `1` afterward. The temporary token was explicitly revoked and final KMS health remained HTTP `200`. No OpenBao member was stopped and no failure injection or key rotation occurred. `PHASE20A16_NORMAL_PATH_ACCEPTANCE=PASS`; `PHASE20A16_OPERATOR_EXIT=0`; `ULC03_LOGIN_SHELL_SURVIVED=YES`.
+
+### Recorded Phase 20A.17 prepared PASS boundary - 2026-08-27
+
+**COMPLETE / PASS.** All prepared-boundary checklist items above are now backed by recorded execution evidence. The OpenBao infrastructure is ready to be consumed by the later Fabric adapter without further node-address, Raft, Transit-key, signer-policy, or HAProxy KMS reconfiguration. Keep all three members running. `OPENBAO_3_NODE_NORMAL_PATH=PASS`; `OPENBAO_PHASE15_FAILURE_TESTS=NOT_STARTED`; `FABRIC_ADAPTER_RUNTIME=BLOCKED_UNTIL_IMPLEMENTATION_AND_HANDOFF`.
+
+The adapter block is intentional: the repository still has no completed reviewed/pinned Fabric adapter image. Do not issue the `fabric-adapter` SecretID until that implementation/runtime identity is ready. Server-side outbox/database preparation may proceed independently.
