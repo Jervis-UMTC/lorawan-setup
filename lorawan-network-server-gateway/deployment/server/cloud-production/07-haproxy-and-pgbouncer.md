@@ -28,7 +28,7 @@ HAProxy on `ha-01` and `ha-02` also provides the stable private OpenBao KMS rout
 
 ```text
 Fabric adapter on this app host
-    -> openbao-kms.internal.<DOMAIN>:18200
+    -> openbao-kms.internal.lorawan.com:18200
     -> HAProxy on this app host
     -> one initialized, unsealed OpenBao-1/2/3 API backend on private TCP/8200
 ```
@@ -337,9 +337,9 @@ backend openbao_nodes
     # Client traffic remains raw TLS pass-through because the server lines do
     # not enable `ssl` for normal proxied traffic. `check-ssl` encrypts only
     # the HAProxy health check.
-    server openbao-1 <HA01_PRIVATE_IP>:8200 check check-ssl verify required ca-file /etc/lorawan-pki/openbao/ca.crt check-sni openbao-kms.internal.<DOMAIN>
-    server openbao-2 <HA02_PRIVATE_IP>:8200 check check-ssl verify required ca-file /etc/lorawan-pki/openbao/ca.crt check-sni openbao-kms.internal.<DOMAIN>
-    server openbao-3 <HA03_PRIVATE_IP>:8200 check check-ssl verify required ca-file /etc/lorawan-pki/openbao/ca.crt check-sni openbao-kms.internal.<DOMAIN>
+    server openbao-1 <HA01_PRIVATE_IP>:8200 check check-ssl verify required ca-file /etc/lorawan-pki/openbao/ca.crt check-sni openbao-kms.internal.lorawan.com
+    server openbao-2 <HA02_PRIVATE_IP>:8200 check check-ssl verify required ca-file /etc/lorawan-pki/openbao/ca.crt check-sni openbao-kms.internal.lorawan.com
+    server openbao-3 <HA03_PRIVATE_IP>:8200 check check-ssl verify required ca-file /etc/lorawan-pki/openbao/ca.crt check-sni openbao-kms.internal.lorawan.com
 ```
 
 Validate that the pinned HAProxy version supports the shown `check-ssl` and `check-sni` syntax before reload. If it differs, adapt only the syntax, not the behavior: the health check must use HTTPS, verify the OpenBao CA/name, call `/v1/sys/health?standbyok=true`, and accept only an initialized/unsealed usable backend.

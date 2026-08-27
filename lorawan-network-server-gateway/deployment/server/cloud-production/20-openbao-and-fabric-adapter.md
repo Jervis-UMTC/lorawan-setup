@@ -99,6 +99,12 @@ Fabric adapter
 
 Do not give the adapters a fixed PostgreSQL node IP.
 
+## 20.4A Prepared OpenBao-only parallel subphase
+
+The OpenBao infrastructure itself has no physical-gateway dependency. While Phase 11 is compiling, the three-node KMS may be commissioned independently by following [20A. OpenBao Three-Node HA Deployment Runbook](20a-openbao-three-node-ha-deployment.md). This does **not** advance the Fabric adapter or full Phase 20 pass: outbox integration, adapter deployment, and one real Fabric commit still wait for their own prerequisites.
+
+The prepared cloud pin is OpenBao `2.6.2` at OCI index digest `sha256:11fd73a2102cda9c55d5d881a8c3210303146a7ec1e8ac76f526e175c6d24641` (`linux/amd64` manifest `sha256:e29524ba7c3f20d01f562c481e3eccbad6c91df45a2f2531433da4951e408cff`). Normal-path setup ends after 3/3 Raft health, private TLS, Transit key/policy, HAProxy `:18200`, and one harmless sign/verify. Member-loss and quorum-loss remain Phase 15 tests.
+
 ## 20.5 OpenBao POC cluster
 
 Use [../fabric-attestation/01-deploy-openbao-kms.md](../fabric-attestation/01-deploy-openbao-kms.md) as the detailed OpenBao command/config reference, but apply this **cloud POC mapping** instead of copying its larger production example blindly:
@@ -110,8 +116,8 @@ OpenBao-2:                ha-02
 OpenBao-3:                ha-03
 API:                      private TLS :8200
 Raft/cluster:             private :8201
-adapter stable endpoint:  openbao-kms.internal.<DOMAIN>:18200 on ha-01/02 HAProxy
-server SAN:               openbao-kms.internal.<DOMAIN> + node private name/IP
+adapter stable endpoint:  openbao-kms.internal.lorawan.com:18200 on ha-01/02 HAProxy
+server SAN:               openbao-kms.internal.lorawan.com + node private name/IP
 ```
 
 Bootstrap step-by-step:
@@ -239,7 +245,7 @@ lab DB host telemetry-db:5432
   -> cloud pgbouncer.internal.lorawan.com:6432 / lorawan_telemetry
 
 lab OpenBao service openbao:8200
-  -> cloud https://openbao-kms.internal.<DOMAIN>:18200
+  -> cloud https://openbao-kms.internal.lorawan.com:18200
 
 one lab adapter
   -> adapter-1 on ha-01 + adapter-2 on ha-02
