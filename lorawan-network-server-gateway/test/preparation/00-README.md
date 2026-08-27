@@ -2,6 +2,16 @@
 
 Complete this directory before running any counted experiment. The goal is to make the gateway, server, physical Agriculture Kit sensor nodes, and test tools independently test-ready, then prove the complete end-to-end path once before the testbed is frozen.
 
+## HA-preserving testing priority
+
+The current project already has commissioned HA infrastructure. **Do not remove, bypass, or replace those technologies merely to simplify testing.** Patroni/Spilo, etcd, HAProxy, PgBouncer, Valkey/Sentinel, redundant Mosquitto/ChirpStack paths, and the other already-commissioned HA components stay in the active architecture when the tests use that deployment.
+
+The testing priority is to prove that the **normal functional path is healthy**, not to repeatedly re-prove every recovery mechanism before each test group. Use lightweight readiness checks for the existing HA layers: service healthy, expected leader/replica or primary/replica roles present, required HAProxy/PgBouncer/MQTT routes reachable, no crash loops/OOM conditions, and the real end-to-end uplink path working.
+
+Do not repeat destructive failover, off-host restore, isolated-restore, or long-duration recovery drills merely because the system is about to run a normal functional test. Those rigorous exercises remain valuable for the dedicated failure-injection/recovery phase or when new failure evidence appears. Existing HA technology remains enabled throughout.
+
+If a separate minimum seven-service dissertation VM is used, follow the server preparation manuals for that isolated testbed. If the already-built HA cloud deployment is the system under test, keep its HA stack intact and apply the same sensor/application/evidence GO/NO-GO checks through the HA paths rather than replacing it with the minimum VM architecture.
+
 ## Preparation folders
 
 | Folder | Purpose | Ready when |

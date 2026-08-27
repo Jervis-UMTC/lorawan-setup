@@ -4,6 +4,8 @@
 
 This HA POC is **not** trying to prove a production disaster-recovery platform. It still needs a real rollback boundary before we deliberately kill leaders, members, and hosts.
 
+> **HA-preserving scope boundary:** Phase 13 does not authorize removing or bypassing any commissioned HA component. Patroni/Spilo, etcd, HAProxy, PgBouncer, Valkey/Sentinel, MQTT redundancy, and the two-node ChirpStack design remain part of the active system. For normal functional commissioning, use the already-passed live HA health/routing evidence plus the fresh validated local logical dumps created on 2026-08-27. The more rigorous off-Droplet copy and isolated-restore rehearsal may be deferred until the dedicated destructive/failure-injection boundary unless a new failure signal, migration risk, or operator requirement makes them immediately necessary. Do not confuse "defer rigorous DR proof" with "remove HA".
+
 The rule is simple:
 
 > Do not inject a destructive failure until the fully commissioned state needed to rebuild the POC exists outside the three target Droplets and the required isolated restore checks have passed.
@@ -45,6 +47,14 @@ Fabric adapter config/image reference when an implementation exists
 ```
 
 Do not create paid object storage only because a future production design normally would. For this POC, the administration workstation or another protected system outside `ha-01/02/03` is sufficient as the off-host copy.
+
+
+
+### Current Phase 13A preflight result - 2026-08-27
+
+The cloud-only read-only preflight is **PASS**. The initial checker falsely treated missing ulc-03 `:16379` and `:18883` listeners as failures. Those frontends are intentionally application-node-only: Valkey writable-primary HAProxy is commissioned on ulc-01/02, and the ChirpStack workload MQTT HAProxy frontends are commissioned on ulc-01/02. Do not deploy either frontend on ulc-03. Patroni, etcd, all required database routes, both ChirpStack application nodes, PostgreSQL/TimescaleDB state, telemetry hypertables/schema state, backup tools, and local backup capacity passed. Continue with fresh Phase 13A dumps.
+
+The first fresh-dump wrapper then stopped safely before creating either dump because it required `host(inet_server_addr()) = 10.104.0.8` while `psql` was using the local Unix-domain socket inside the Spilo container. On a Unix-socket PostgreSQL session `inet_server_addr()` is `NULL`, so the observed `|t` means only `pg_is_in_recovery() = true`; it is not evidence of a wrong node. For local-container backup work, verify the host identity outside SQL and require only replica state from PostgreSQL, or explicitly connect by TCP if the server address itself is part of the assertion. Reuse the existing timestamped directory only if it contains no dump artifacts; otherwise create a new timestamped directory.
 
 ## 13.2 Create one protected backup directory
 
@@ -108,6 +118,11 @@ sha256sum "$BACKUP_DIR/chirpstack.dump" "$BACKUP_DIR/lorawan_telemetry.dump" \
 **Stop here** if either `pg_restore --list` fails or either dump is zero bytes.
 
 Why both dumps matter: `lorawan_telemetry` contains the Timescale hypertables and the current application schema. `telemetry.fabric_outbox` is included **only after it has actually been commissioned** by the later Node-RED/Fabric setup. At the current pre-Phase-12A 13A checkpoint, preserve the live source state exactly; do not create an outbox merely to make the backup match the future target architecture.
+
+
+### Current Phase 13A fresh logical backup result - 2026-08-27
+
+The corrected fresh-backup retry is **PASS** on `ulc-03`. Host identity was verified outside PostgreSQL and the local Spilo member returned `pg_is_in_recovery() = true`. Both `chirpstack` and `lorawan_telemetry` exist. Source metadata recorded PostgreSQL `18.6`, ChirpStack counts `tenant=1, application=0, device_profile=0, device=0, gateway=0`, telemetry counts `uplinks=0, measurements=0, device_registry=0`, TimescaleDB `2.29.2`, hypertables `measurements,uplinks`, and `fabric_outbox_count=0`. Fresh custom-format dumps were created under `/home/opsadmin/backups/phase13a-20260827T032756Z`: `chirpstack.dump` about 99 KiB and `lorawan_telemetry.dump` about 58 KiB. Both archives passed `pg_restore --list`; `SOURCE-METADATA.txt`, both dumps, and `SHA256SUMS` are mode `0600`; `sha256sum -c SHA256SUMS` passed for all three hashed files. The TimescaleDB `continuous_agg` circular-foreign-key warning is expected for this full custom-format dump and does not invalidate the archive; the isolated restore rehearsal remains the authoritative restore proof. The database-backup sub-gate is therefore complete locally, but Phase 13A remains open until this directory is copied off the target Droplets and destination hashes are verified.
 
 ## 13.4 Copy PostgreSQL backups off the three Droplets
 

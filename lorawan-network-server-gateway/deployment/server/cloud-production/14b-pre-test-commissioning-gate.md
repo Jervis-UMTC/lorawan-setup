@@ -2,6 +2,8 @@
 
 > **Status: REQUIRED FINAL GO/NO-GO BEFORE PHASE 15.** This is the boundary between **setup** and **testing**. Do not inject a host, process, broker, database, KMS, Fabric, or LTE failure until every required item below is commissioned and the final result is `PRE_TEST_COMMISSIONING_GATE=PASS`.
 
+> **Scope:** keep the full commissioned HA architecture intact. Before ordinary functional/counting work, it is sufficient to re-prove normal health of the existing HA components and the real end-to-end application path; do not repeatedly execute destructive failovers, restore rehearsals, or other rigorous recovery drills when there is no failure signal. This full gate remains the hard boundary before the dedicated cloud-production Phase 15 failure-injection program. The dissertation GO/NO-GO checks under `test/` may run against the existing HA deployment without removing Patroni/Spilo, etcd, HAProxy, PgBouncer, Valkey/Sentinel, redundant MQTT, ChirpStack HA, Grafana, or other commissioned services.
+
 ## 14B.1 Rule
 
 The cloud POC uses this lifecycle:
