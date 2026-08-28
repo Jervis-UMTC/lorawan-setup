@@ -8,11 +8,18 @@ Node-RED needs access to MQTT and the Timescale-enabled `lorawan_telemetry` data
 
 Use the existing `/opt/lorawan-lab` Compose procedure below exactly as written.
 
-### Three-Droplet cloud HA POC
+### Three-Droplet cloud HA POC - active/passive
 
-Run Node-RED on `ulc-03` as a **small standalone application container**. Do not add `mosquitto` or `telemetry-db` services to `ulc-03`; those names belong to the single-host lab. The cloud-specific private MQTT route is commissioned first by `cloud-production/12a-node-red-timescale-telemetry.md`.
+Stage the same pinned Node-RED application on two hosts:
 
-On `ulc-03`:
+```text
+ulc-03 / 10.104.0.8  = Node-RED A, ACTIVE initially
+ulc-02 / 10.104.0.4  = Node-RED B, STANDBY initially
+```
+
+Do not add standalone `mosquitto` or `telemetry-db` containers to either host. Each candidate uses that host's already-commissioned PgBouncer/HAProxy stack plus a local Node-RED MQTT HAProxy `:18884`. The passive Node-RED container stays stopped until the active instance has been fenced/stopped. See `06-active-passive-ha.md`.
+
+Perform the following file/directory preparation on **both** ulc-03 and ulc-02:
 
 ~~~bash
 sudo install -d -m 750 /etc/lorawan-cloud/node-red
@@ -28,12 +35,18 @@ sudo install -m 600 /dev/null /etc/lorawan-cloud/node-red/node-red.env
 sudoedit /etc/lorawan-cloud/node-red/node-red.env
 ~~~
 
-Set only protected references/values required by the container:
+Set only protected references/values required by the container. The repository template is `runtime/node-red.env.example`; the populated host file is never committed:
 
 ~~~dotenv
-NODE_RED_IMAGE=<PINNED_NODE_RED_IMAGE_OR_DIGEST>
+NODE_RED_IMAGE=nodered/node-red@sha256:10f40d0a83e7e5852b13d4d472b2006b05b1cca6d55e2f29a55a12c25a630cb6
+NODE_RED_SECRET_GID=<HOST_NODE_RED_SECRETS_GID>
+NODE_RED_LOCAL_IP=<THIS_NODE_PRIVATE_IP>
 NODE_RED_CREDENTIAL_SECRET=<REPLACE_WITH_64_HEX_CHAR_SECRET>
-LORAWAN_REGION_ID=<CONFIRMED_REGION_ID>
+NODE_RED_ADMIN_PASSWORD_HASH=<BCRYPT_HASH>
+NODE_RED_MQTT_CLIENT_ID=<HOST_SPECIFIC_CLIENT_ID>
+LORAWAN_REGION_ID=as923
+TELEMETRY_DB_USER=telemetry_writer
+TELEMETRY_DB_PASSWORD=<TELEMETRY_WRITER_PASSWORD>
 ~~~
 
 Create `compose.yml`:
@@ -45,10 +58,17 @@ services:
     restart: unless-stopped
     ports:
       - "127.0.0.1:1880:1880"
+    group_add:
+      - "${NODE_RED_SECRET_GID}"
     environment:
       TZ: Asia/Manila
       NODE_RED_CREDENTIAL_SECRET: ${NODE_RED_CREDENTIAL_SECRET}
+      NODE_RED_ADMIN_PASSWORD_HASH: ${NODE_RED_ADMIN_PASSWORD_HASH}
+      NODE_RED_MQTT_CLIENT_ID: ${NODE_RED_MQTT_CLIENT_ID}
       LORAWAN_REGION_ID: ${LORAWAN_REGION_ID}
+      TELEMETRY_DB_USER: ${TELEMETRY_DB_USER}
+      TELEMETRY_DB_PASSWORD: ${TELEMETRY_DB_PASSWORD}
+      NODE_EXTRA_CA_CERTS: /run/pgbouncer/ca.crt
     volumes:
       - /srv/node-red/data:/data
       - /etc/lorawan-pki/mqtt/ca.crt:/run/mqtt/ca.crt:ro
@@ -56,26 +76,44 @@ services:
       - /etc/lorawan-pki/node-red-mqtt/client.key:/run/mqtt/client.key:ro
       - /etc/lorawan-pki/pgbouncer/ca.crt:/run/pgbouncer/ca.crt:ro
     extra_hosts:
-      - "mqtt.internal.lorawan.com:<ULC03_PRIVATE_IP>"
-      - "pgbouncer.internal.lorawan.com:<ULC03_PRIVATE_IP>"
+      - "mqtt.internal.lorawan.com:${NODE_RED_LOCAL_IP}"
+      - "pgbouncer.internal.lorawan.com:${NODE_RED_LOCAL_IP}"
 ~~~
 
-**Why these host mappings:** Node-RED talks to `ulc-03`'s commissioned private HAProxy MQTT frontend `:18884` and local PgBouncer `:6432`. Those routes follow Mosquitto and PostgreSQL without pinning Node-RED to `ulc-01` or `ulc-02`. The MQTT TLS hostname remains `mqtt.internal.lorawan.com`.
+Use `NODE_RED_LOCAL_IP=10.104.0.8` on ulc-03 and `NODE_RED_LOCAL_IP=10.104.0.4` on ulc-02. Set `NODE_RED_SECRET_GID` to the numeric GID of that host's dedicated `node-red-secrets` group. The GID may differ by host; keep it in the protected host environment, not in the shared flow bundle.
 
-Validate before start:
+The `group_add` entry gives the container's `uid=1000(node-red)` process supplementary read access to files owned `root:node-red-secrets` without making those files readable through host GID `1000`. Keep the MQTT private key `0640 root:node-red-secrets` and the PKI directory `0750 root:node-red-secrets`.
+
+**Why these host mappings:** each Node-RED candidate uses its own local MQTT HAProxy `:18884` and PgBouncer `:6432`. This removes ulc-03 as a dependency of the standby. The logical TLS names stay unchanged while the local IP differs per host.
+
+The canonical shared cloud files are maintained under `deployment/server/integrations/node-red/runtime/` (`compose.yml`, `settings.js`, `package.json`, `package-lock.json`, and the environment template). Copy/review that bundle rather than independently recreating A and B by hand. `flows.json` remains a separately reviewed artifact until its runtime validation is complete.
+
+Validate the Compose artifacts on **both** hosts, but start only Node-RED A on ulc-03:
 
 ~~~bash
 sudo docker compose --env-file node-red.env config --quiet
+~~~
+
+On ulc-03 only:
+
+~~~bash
 sudo docker compose --env-file node-red.env up -d
 sudo docker compose --env-file node-red.env ps
 sudo ss -lntp | grep ':1880'
 ~~~
 
-Expected listener: `127.0.0.1:1880` only.
+On ulc-02, confirm the standby remains stopped:
+
+~~~bash
+sudo docker compose --env-file node-red.env ps
+sudo ss -lntp | grep ':1880' && echo 'STOP: standby is listening unexpectedly' || true
+~~~
+
+Expected normal state: ulc-03 has `127.0.0.1:1880`; ulc-02 has no Node-RED listener.
 
 From this point onward, the authentication steps in Sections 1.4-1.9 apply to both profiles. In the cloud profile, run them from `/etc/lorawan-cloud/node-red` and include `--env-file node-red.env` where the Compose command needs environment interpolation.
 
-**Stop here** if the editor binds publicly, either client-certificate file is missing, the private `ulc-03:18884` Node-RED MQTT frontend is not commissioned, or either logical service name does not resolve to `ulc-03` from inside the container.
+**Stop here** if either editor would bind publicly, a host-specific MQTT client certificate/key is missing, the candidate host's private `:18884` MQTT frontend is not commissioned, either logical service name does not resolve to that candidate's own private IP, or both Node-RED containers are running simultaneously.
 
 ## 1.1 Go to the Compose directory
 
@@ -108,7 +146,12 @@ If you selected the cloud HA POC profile above, **skip this lab-only section and
     environment:
       TZ: Asia/Manila
       NODE_RED_CREDENTIAL_SECRET: ${NODE_RED_CREDENTIAL_SECRET}
+      NODE_RED_ADMIN_PASSWORD_HASH: ${NODE_RED_ADMIN_PASSWORD_HASH}
+      NODE_RED_MQTT_CLIENT_ID: ${NODE_RED_MQTT_CLIENT_ID}
       LORAWAN_REGION_ID: ${LORAWAN_REGION_ID}
+      TELEMETRY_DB_USER: ${TELEMETRY_DB_USER}
+      TELEMETRY_DB_PASSWORD: ${TELEMETRY_DB_PASSWORD}
+      NODE_EXTRA_CA_CERTS: /run/pgbouncer/ca.crt
     volumes:
       - node-red-data:/data
     depends_on:

@@ -10,15 +10,16 @@ single-host lab
   DB host:   telemetry-db:5432
 
 three-Droplet cloud HA POC
-  MQTT host: <COMMISSIONED_NODE_RED_MQTT_ROUTE> over TLS
-  TLS name:  mqtt.internal.lorawan.com unless a later phase issues a different broker service identity
-  DB host:   pgbouncer.internal.lorawan.com:6432 -> HAProxy -> Patroni primary
+  Node-RED A: ulc-03 active initially
+  Node-RED B: ulc-02 stopped standby
+  MQTT host: mqtt.internal.lorawan.com:18884 -> node-local HAProxy -> Mosquitto :8886 pair
+  DB host:   pgbouncer.internal.lorawan.com:6432 -> node-local PgBouncer/HAProxy -> Patroni primary
   DB name:   lorawan_telemetry with TimescaleDB enabled
 ```
 
 The cloud POC does **not** create a separate TimescaleDB server; it keeps `lorawan_telemetry` as a Timescale-enabled logical database inside the Patroni cluster.
 
-> **Current cloud route:** Phase 12A defines Node-RED on `ulc-03` using `mqtt.internal.lorawan.com:18884` mapped to `10.104.0.8`. That private HAProxy frontend routes to the two existing dedicated Mosquitto mTLS `:8886` backends. The ingestion client certificate has read-only `application/+/device/+/event/up` permission. Do not use the obsolete `mqtt-ha.internal.<DOMAIN>:18883` design or the ChirpStack-specific `:18883 -> :8885` route.
+> **Current cloud HA target:** Phase 12A uses active/passive Node-RED. Node-RED A on `ulc-03` maps `mqtt.internal.lorawan.com` and `pgbouncer.internal.lorawan.com` to `10.104.0.8`; Node-RED B on `ulc-02` maps those same logical names to `10.104.0.4`. Each candidate therefore uses its own private HAProxy/PgBouncer path. The ulc-03 MQTT frontend is already commissioned; the ulc-02 standby frontend and standby identity are still commissioning work. Do not use the obsolete `mqtt-ha.internal.<DOMAIN>:18883` design or the ChirpStack-specific `:18883 -> :8885` route.
 
 Unless a section explicitly says **cloud HA POC**, the older Docker examples assume the single-host lab at `/opt/lorawan-lab`. Perform Node-RED editor actions in a browser connected through the documented SSH tunnel. Commands that begin with `docker compose exec` run a process inside the named container; do not run them on the Raspberry Pi gateway.
 
@@ -42,6 +43,7 @@ For `telemetry-attestation-v2`, Node-RED is deliberately **not the sole evidence
 3. [03-build-telemetry-flow.md](03-build-telemetry-flow.md) — Build the validation, deduplication, and TimescaleDB insert flow.
 4. [04-automation-and-downlinks.md](04-automation-and-downlinks.md) — Add alerts and gated downlink automation only after ingestion is reliable.
 5. [05-testing-and-troubleshooting.md](05-testing-and-troubleshooting.md) — Test with isolated synthetic input, then accept a real device uplink.
+6. [06-active-passive-ha.md](06-active-passive-ha.md) — Stage the ulc-02 standby and perform fenced promotion/failback without duplicate subscribers.
 
 ## Data path
 
@@ -87,6 +89,6 @@ The primary project mapping is the frozen **EMU-01 Agriculture Kit payload v2**:
 | Node-RED credential secret and editor password | Generated during Node-RED deployment | Protecting stored credentials and the editor |
 | Device codec fields and units | Verified real uplink or vendor payload specification | Validation and normalized measurements |
 
-Do not expose MQTT, PostgreSQL, or the Node-RED editor to the public internet. Keep internal services on the Compose network, bind the editor to loopback by default, use separate least-privilege identities, and back up Node-RED and TimescaleDB independently.
+Do not expose MQTT, PostgreSQL, or either Node-RED editor to the public internet. Bind each editor to loopback, use separate least-privilege MQTT identities per HA candidate, and preserve the **single-active** invariant. Back up the approved Node-RED deployment bundle and TimescaleDB independently; do not use an unsynchronized shared writable Node-RED data directory as an HA mechanism.
 
 Next: [01-deploy-node-red.md](01-deploy-node-red.md)

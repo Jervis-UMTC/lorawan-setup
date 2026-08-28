@@ -242,6 +242,7 @@ msg.query = [
     '  metric_name text, metric_value double precision, metric_text text, ',
     '  metric_bool boolean, unit text, quality text, source_field text',
     ')',
+    'WHERE uplink_state.count > 0',
     'ON CONFLICT (event_key, metric_name, unit, time) DO NOTHING;'
 ].join(' ');
 

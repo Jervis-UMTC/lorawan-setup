@@ -29,22 +29,24 @@ Topic: application/+/device/+/event/up
 QoS: 0
 ~~~
 
-### Three-Droplet cloud HA POC
+### Three-Droplet cloud HA POC - active/passive
 
-Run Node-RED on `ulc-03` and map `mqtt.internal.lorawan.com` to `ulc-03`'s private IP. The dedicated private HAProxy `:18884` frontend commissioned by Phase 12A follows Mosquitto-1 preferred / Mosquitto-2 backup through the dedicated Node-RED mTLS `:8886` broker listeners. Do not use the ChirpStack-specific `:18883 -> :8885` password-auth route for Node-RED.
+Both Node-RED candidates use the same logical MQTT name and port but map the name to their **own host**: `10.104.0.8` on ulc-03 and `10.104.0.4` on ulc-02. Each local HAProxy `:18884` frontend follows Mosquitto-1 preferred / Mosquitto-2 backup through the dedicated Node-RED mTLS `:8886` listeners. Do not use the ChirpStack-specific `:18883 -> :8885` password-auth route.
 
 ~~~text
 Broker: mqtt.internal.lorawan.com
 Port: 18884
 TLS: enabled
 CA: MQTT CA
-Client certificate/key: Node-RED workload identity
+Client certificate/key: host-specific Node-RED workload identity
 Topic: application/+/device/+/event/up
 QoS: 0
 Output: parsed JSON, or string followed by a JSON node
 ~~~
 
-The Node-RED MQTT certificate Common Name must match the read-only broker ACL identity commissioned in Phase 12A. Keep CA and hostname verification enabled for `mqtt.internal.lorawan.com`. This ingestion identity receives only application uplinks and has no gateway-command or application-command write permission.
+Each Node-RED MQTT certificate Common Name must match its read-only broker ACL identity commissioned in Phase 12A. Keep CA and hostname verification enabled for `mqtt.internal.lorawan.com`. Each identity receives only application uplinks and has no gateway-command or application-command write permission. Use distinct MQTT client IDs and distinct private keys on ulc-03 and ulc-02.
+
+The current QoS 0 subscription is acceptable for the commissioning path but does **not** provide outage replay. Active/passive failover reduces application downtime; it does not by itself make uplinks durable while no Node-RED subscriber is active. Do not claim zero-loss ingestion until a separate durable/at-least-once design is implemented and tested.
 
 The topic is case-sensitive. Do not subscribe to gateway `event` topics when building the application telemetry flow.
 
@@ -86,7 +88,7 @@ SSL: enabled with hostname/CA verification
 CA: internal PgBouncer/PostgreSQL trust bundle required by the cloud design
 ~~~
 
-Map `pgbouncer.internal.lorawan.com` to `ulc-03`'s private IP (`10.104.0.8` in the current POC) for the Node-RED container. PgBouncer then uses local HAProxy `:15432` to follow the current Patroni primary.
+Map `pgbouncer.internal.lorawan.com` to the Node-RED candidate's own private IP: `10.104.0.8` on ulc-03 and `10.104.0.4` on ulc-02. PgBouncer on that host then uses its local HAProxy `:15432` to follow the current Patroni primary. The passive instance is configured identically but remains stopped until promotion.
 
 **Stop here. Do not build the write flow** until a read-only connection test and a rollback insert as `telemetry_writer` succeed through this exact endpoint.
 

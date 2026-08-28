@@ -1,0 +1,238 @@
+[
+  {
+    "id": "8b0a1f4a9b174001",
+    "type": "tab",
+    "label": "LoRaWAN Telemetry Ingest",
+    "disabled": false,
+    "info": "ChirpStack application uplinks -> reviewed normalization -> parameterized TimescaleDB write. Shared by Node-RED A/B; exactly one candidate runs at a time."
+  },
+  {
+    "id": "8b0a1f4a9b174002",
+    "type": "tls-config",
+    "name": "MQTT mTLS",
+    "certType": "files",
+    "cert": "/run/mqtt/client.crt",
+    "key": "/run/mqtt/client.key",
+    "p12": "",
+    "p12name": "",
+    "ca": "/run/mqtt/ca.crt",
+    "certname": "",
+    "keyname": "",
+    "caname": "",
+    "servername": "mqtt.internal.lorawan.com",
+    "verifyservercert": true,
+    "alpnprotocol": "",
+    "certEnv": "",
+    "keyEnv": "",
+    "caEnv": ""
+  },
+  {
+    "id": "8b0a1f4a9b174003",
+    "type": "mqtt-broker",
+    "name": "Local MQTT HA ingress",
+    "broker": "mqtt.internal.lorawan.com",
+    "port": "18884",
+    "tls": "8b0a1f4a9b174002",
+    "clientid": "${NODE_RED_MQTT_CLIENT_ID}",
+    "autoConnect": true,
+    "usetls": true,
+    "verifyservercert": true,
+    "compatmode": false,
+    "protocolVersion": "4",
+    "keepalive": "60",
+    "cleansession": true,
+    "autoUnsubscribe": true,
+    "birthTopic": "",
+    "birthQos": "0",
+    "birthRetain": "false",
+    "birthPayload": "",
+    "birthMsg": {},
+    "closeTopic": "",
+    "closeQos": "0",
+    "closeRetain": "false",
+    "closePayload": "",
+    "closeMsg": {},
+    "willTopic": "",
+    "willQos": "0",
+    "willRetain": "false",
+    "willPayload": "",
+    "willMsg": {},
+    "userProps": "",
+    "sessionExpiry": 0
+  },
+  {
+    "id": "8b0a1f4a9b174004",
+    "type": "postgreSQLConfig",
+    "name": "Telemetry writer via local PgBouncer",
+    "host": "pgbouncer.internal.lorawan.com",
+    "hostFieldType": "str",
+    "port": "6432",
+    "portFieldType": "num",
+    "database": "lorawan_telemetry",
+    "databaseFieldType": "str",
+    "ssl": "true",
+    "sslFieldType": "bool",
+    "applicationName": "node-red-telemetry-ingest",
+    "applicationNameType": "str",
+    "max": "4",
+    "maxFieldType": "num",
+    "idle": "10000",
+    "idleFieldType": "num",
+    "connectionTimeout": "5000",
+    "connectionTimeoutFieldType": "num",
+    "userFieldType": "env",
+    "userEnv": "TELEMETRY_DB_USER",
+    "passwordFieldType": "env",
+    "passwordEnv": "TELEMETRY_DB_PASSWORD"
+  },
+  {
+    "id": "8b0a1f4a9b174005",
+    "type": "mqtt in",
+    "z": "8b0a1f4a9b174001",
+    "name": "ChirpStack application uplinks",
+    "topic": "application/+/device/+/event/up",
+    "qos": "0",
+    "datatype": "json",
+    "broker": "8b0a1f4a9b174003",
+    "nl": false,
+    "rap": true,
+    "rh": 0,
+    "inputs": 0,
+    "x": 190,
+    "y": 180,
+    "wires": [
+      [
+        "8b0a1f4a9b174006"
+      ]
+    ]
+  },
+  {
+    "id": "8b0a1f4a9b174006",
+    "type": "function",
+    "z": "8b0a1f4a9b174001",
+    "name": "Validate + normalize + parameterize",
+    "func": "const p = msg.payload || {};\nconst deviceInfo = p.deviceInfo || {};\nconst decoded = p.object || {};\nconst rxInfo = Array.isArray(p.rxInfo) && p.rxInfo.length > 0 ? p.rxInfo[0] : {};\n\nfunction numberOrNull(value) {\n    if (value === undefined || value === null || value === '') {\n        return null;\n    }\n    const parsed = Number(value);\n    return Number.isFinite(parsed) ? parsed : null;\n}\n\nconst topicParts = String(msg.topic || '').split('/');\nconst topicDevEui = topicParts.length >= 4 ? topicParts[3] : '';\nconst devEui = String(deviceInfo.devEui || topicDevEui || '').toLowerCase();\n\nif (!/^[0-9a-f]{16}$/.test(devEui)) {\n    node.warn('Dropping uplink with missing or invalid DevEUI');\n    return null;\n}\n\nconst eventTime = String(p.time || '');\nif (!eventTime || Number.isNaN(Date.parse(eventTime))) {\n    node.warn(`Dropping uplink with invalid event time for ${devEui}`);\n    return null;\n}\n\nconst regionId = String(env.get('LORAWAN_REGION_ID') || '').trim();\nif (!regionId) {\n    node.error('LORAWAN_REGION_ID is not configured');\n    return null;\n}\n\nconst payloadVersion = numberOrNull(decoded.payload_version);\nconst testSequence = numberOrNull(decoded.test_sequence);\nconst validity = numberOrNull(decoded.sensor_validity_bitmap);\n\nif (payloadVersion !== 2) {\n    node.warn(`Dropping ${devEui} event with unsupported payload_version=${decoded.payload_version}`);\n    return null;\n}\nif (!Number.isInteger(testSequence) || testSequence < 0) {\n    node.warn(`Dropping ${devEui} payload-v2 event with invalid test_sequence`);\n    return null;\n}\nif (!Number.isInteger(validity) || validity < 0 || validity > 0xffff) {\n    node.warn(`Dropping ${devEui} payload-v2 event with invalid sensor_validity_bitmap`);\n    return null;\n}\n\nconst receivedAt = new Date().toISOString();\nconst fPort = numberOrNull(p.fPort);\nconst fCnt = numberOrNull(p.fCnt);\nconst gatewayId = rxInfo.gatewayId ? String(rxInfo.gatewayId).toLowerCase() : null;\nconst deduplicationId = String(p.deduplicationId || '').trim();\nconst eventKey = deduplicationId || [\n    devEui,\n    fCnt === null ? '' : String(fCnt),\n    fPort === null ? '' : String(fPort),\n    eventTime\n].join('|');\n\n// Provenance for the reviewed Node-RED field mapping. Increment this mapping\n// version whenever source fields, units, validity semantics, or normalization\n// behavior changes. Payload byte decoding remains owned by the ChirpStack codec.\nconst deviceModel = 'RAK WisBlock Agriculture Kit / EMU-01';\nconst decoderVersion = 'agriculture-kit-payload-v2-node-red-v1';\n\nfunction bitIsValid(bit) {\n    return (validity & (1 << bit)) !== 0;\n}\n\nfunction numericMetric(metricName, sourceField, unit, validityBit) {\n    const value = numberOrNull(decoded[sourceField]);\n    const measured = bitIsValid(validityBit) && value !== null;\n    return {\n        metric_name: metricName,\n        metric_value: measured ? value : null,\n        metric_text: null,\n        metric_bool: null,\n        unit,\n        quality: measured ? 'measured' : 'invalid',\n        source_field: sourceField\n    };\n}\n\nfunction booleanMetric(metricName, sourceField, unit, validityBit) {\n    const present = typeof decoded[sourceField] === 'boolean';\n    const measured = bitIsValid(validityBit) && present;\n    return {\n        metric_name: metricName,\n        metric_value: null,\n        metric_text: null,\n        metric_bool: measured ? decoded[sourceField] : null,\n        unit,\n        quality: measured ? 'measured' : 'invalid',\n        source_field: sourceField\n    };\n}\n\nconst batteryRaw = numberOrNull(decoded.battery_v);\nconst batteryMeasured = batteryRaw !== null && batteryRaw > 0;\n\nconst metrics = [\n    numericMetric('soil_moisture_percent', 'soil_moisture_percent', '%', 0),\n    numericMetric('soil_temperature_c', 'soil_temperature_c', 'Cel', 0),\n    numericMetric('uv_index', 'uv_index', '1', 1),\n    numericMetric('barometer_pressure_pa', 'barometer_pressure_pa', 'Pa', 2),\n    numericMetric('barometer_temperature_c', 'barometer_temperature_c', 'Cel', 2),\n    numericMetric('light_veml7700_lux', 'light_veml7700_lux', 'lx', 3),\n    numericMetric('light_opt3001_lux', 'light_opt3001_lux', 'lx', 4),\n    numericMetric('environment_temperature_c', 'environment_temperature_c', 'Cel', 5),\n    numericMetric('environment_humidity_percent', 'environment_humidity_percent', '%', 5),\n    numericMetric('environment_pressure_pa', 'environment_pressure_pa', 'Pa', 5),\n    numericMetric('environment_gas_resistance_ohm', 'environment_gas_resistance_ohm', 'ohm', 5),\n    booleanMetric('rain_wet', 'rain_wet', 'boolean', 6),\n    {\n        metric_name: 'battery_v',\n        metric_value: batteryMeasured ? batteryRaw : null,\n        metric_text: null,\n        metric_bool: null,\n        unit: 'V',\n        quality: batteryMeasured ? 'measured' : 'invalid',\n        source_field: 'battery_v'\n    }\n];\n\n// Compatibility columns remain useful for simple dashboards, but only expose\n// environment temperature/humidity when the ENV validity bit says the reading\n// is valid. The complete decoded object, including validity and test_sequence,\n// is always preserved in payload_json.\nconst environmentValid = bitIsValid(5);\nconst temperature = environmentValid ? numberOrNull(decoded.environment_temperature_c) : null;\nconst humidity = environmentValid ? numberOrNull(decoded.environment_humidity_percent) : null;\nconst battery = batteryRaw;\n\nmsg.query = [\n    'WITH inserted_uplink AS (',\n    '  INSERT INTO telemetry.uplinks (',\n    '    event_key, time, received_at, application_id, application_name, ',\n    '    device_id, device_name, device_model, decoder_version, dev_eui, ',\n    '    gateway_id, region, f_port, f_cnt, confirmed, temperature_c, ',\n    '    humidity_percent, battery_v, rssi_dbm, snr_db, payload_json, ',\n    '    raw_data, mqtt_topic',\n    '  ) VALUES (',\n    '    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, ',\n    '    $13, $14, $15, $16, $17, $18, $19, $20, $21::jsonb, $22, $23',\n    '  ) ON CONFLICT (event_key, time) DO NOTHING',\n    '  RETURNING event_key, time',\n    '), event_identity AS (',\n    '  SELECT $1::text AS event_key, $2::timestamptz AS time',\n    ')',\n    'INSERT INTO telemetry.measurements (',\n    '  time, event_key, device_id, dev_eui, metric_name, metric_value, metric_text, ',\n    '  metric_bool, unit, quality, source_field, payload_json',\n    ')',\n    'SELECT ',\n    '  e.time, e.event_key, $6, $10, m.metric_name, m.metric_value, m.metric_text, ',\n    '  m.metric_bool, m.unit, m.quality, m.source_field, $21::jsonb',\n    'FROM event_identity AS e',\n    'CROSS JOIN (SELECT count(*) FROM inserted_uplink) AS uplink_state',\n    'CROSS JOIN LATERAL jsonb_to_recordset($24::jsonb) AS m(',\n    '  metric_name text, metric_value double precision, metric_text text, ',\n    '  metric_bool boolean, unit text, quality text, source_field text',\n    ')',\n    'WHERE uplink_state.count > 0',\n    'ON CONFLICT (event_key, metric_name, unit, time) DO NOTHING;'\n].join(' ');\n\nmsg.params = [\n    eventKey,                              // $1\n    eventTime,                             // $2\n    receivedAt,                            // $3\n    deviceInfo.applicationId || null,      // $4\n    deviceInfo.applicationName || null,    // $5\n    deviceInfo.deviceId || null,           // $6\n    deviceInfo.deviceName || null,         // $7\n    deviceModel,                           // $8\n    decoderVersion,                        // $9\n    devEui,                                // $10\n    gatewayId,                             // $11\n    regionId,                              // $12\n    fPort,                                 // $13\n    fCnt,                                  // $14\n    p.confirmed === true,                  // $15\n    temperature,                           // $16\n    humidity,                              // $17\n    battery,                               // $18\n    numberOrNull(rxInfo.rssi),             // $19\n    numberOrNull(rxInfo.snr),              // $20\n    JSON.stringify(decoded),               // $21\n    p.data || null,                        // $22\n    msg.topic || null,                     // $23\n    JSON.stringify(metrics)                // $24\n];\n\nmsg.telemetrySummary = {\n    eventKey,\n    devEui,\n    eventTime,\n    testSequence,\n    validity,\n    deviceModel,\n    decoderVersion,\n    metricCount: metrics.length\n};\n\nreturn msg;",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 480,
+    "y": 180,
+    "wires": [
+      [
+        "8b0a1f4a9b174007"
+      ]
+    ]
+  },
+  {
+    "id": "8b0a1f4a9b174007",
+    "type": "postgresql",
+    "z": "8b0a1f4a9b174001",
+    "name": "Atomic telemetry write",
+    "query": "",
+    "postgreSQLConfig": "8b0a1f4a9b174004",
+    "split": false,
+    "rowsPerMsg": "1",
+    "outputs": 1,
+    "x": 760,
+    "y": 180,
+    "wires": [
+      [
+        "8b0a1f4a9b174008"
+      ]
+    ]
+  },
+  {
+    "id": "8b0a1f4a9b174008",
+    "type": "function",
+    "z": "8b0a1f4a9b174001",
+    "name": "Sanitize insert result",
+    "func": "msg.payload = {\n    telemetry: msg.telemetrySummary || null,\n    database: msg.pgsql || null\n};\ndelete msg.query;\ndelete msg.params;\nreturn msg;\n",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 1010,
+    "y": 180,
+    "wires": [
+      [
+        "8b0a1f4a9b174009"
+      ]
+    ]
+  },
+  {
+    "id": "8b0a1f4a9b174009",
+    "type": "debug",
+    "z": "8b0a1f4a9b174001",
+    "name": "Insert result (disabled by default)",
+    "active": false,
+    "tosidebar": true,
+    "console": false,
+    "tostatus": false,
+    "complete": "payload",
+    "targetType": "msg",
+    "statusVal": "",
+    "statusType": "auto",
+    "x": 1270,
+    "y": 180,
+    "wires": []
+  },
+  {
+    "id": "8b0a1f4a9b17400a",
+    "type": "catch",
+    "z": "8b0a1f4a9b174001",
+    "name": "PostgreSQL errors",
+    "scope": [
+      "8b0a1f4a9b174007"
+    ],
+    "uncaught": false,
+    "x": 750,
+    "y": 260,
+    "wires": [
+      [
+        "8b0a1f4a9b17400b"
+      ]
+    ]
+  },
+  {
+    "id": "8b0a1f4a9b17400b",
+    "type": "function",
+    "z": "8b0a1f4a9b174001",
+    "name": "Sanitize database error",
+    "func": "const err = msg.error || {};\nmsg.payload = {\n    telemetry: msg.telemetrySummary || null,\n    error: String(err.message || err || 'Unknown PostgreSQL error')\n};\ndelete msg.query;\ndelete msg.params;\nreturn msg;\n",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 1010,
+    "y": 260,
+    "wires": [
+      [
+        "8b0a1f4a9b17400c"
+      ]
+    ]
+  },
+  {
+    "id": "8b0a1f4a9b17400c",
+    "type": "debug",
+    "z": "8b0a1f4a9b174001",
+    "name": "Database error",
+    "active": true,
+    "tosidebar": true,
+    "console": false,
+    "tostatus": true,
+    "complete": "payload",
+    "targetType": "msg",
+    "statusVal": "payload.error",
+    "statusType": "msg",
+    "x": 1240,
+    "y": 260,
+    "wires": []
+  }
+]

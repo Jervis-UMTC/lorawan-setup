@@ -4,9 +4,10 @@ Test the pipeline from left to right. First identify the deployment profile:
 
 ```text
 single-host lab               -> /opt/lorawan-lab, mosquitto, telemetry-db
-three-Droplet cloud HA POC    -> ulc-03 /etc/lorawan-cloud/node-red,
-                                  mqtt.internal.lorawan.com:18884,
-                                  pgbouncer.internal.lorawan.com:6432
+three-Droplet cloud HA POC    -> ulc-03 ACTIVE + ulc-02 STANDBY,
+                                  /etc/lorawan-cloud/node-red on both,
+                                  node-local mqtt.internal.lorawan.com:18884,
+                                  node-local pgbouncer.internal.lorawan.com:6432
 ```
 
 Use the Node-RED editor through the documented SSH tunnel. Capture the exact flow revision, Node-RED image, palette versions, region environment value, test event key, and timestamps before changing anything:
@@ -25,7 +26,7 @@ docker compose ps node-red
 docker compose logs --since=10m --tail=100 node-red
 ~~~
 
-Cloud HA POC on `ulc-03`:
+Cloud HA POC - run these on the **currently active** Node-RED host:
 
 ~~~bash
 cd /etc/lorawan-cloud/node-red
@@ -34,9 +35,9 @@ sudo docker compose --env-file node-red.env logs --since=10m --tail=100 node-red
 sudo ss -lntp | grep ':1880'
 ~~~
 
-For the cloud profile, the editor must remain bound to loopback rather than the public VPC/Internet interface.
+For the cloud profile, the editor must remain bound to loopback rather than the public VPC/Internet interface. On the standby host, `docker compose ps` must show Node-RED stopped and `:1880` must not be listening.
 
-Healthy output shows the container running without a restart loop and logs without settings, credential-secret, palette, or flow-load errors. An exited container or repeated startup error means Node-RED itself must be fixed before MQTT or PostgreSQL is changed.
+Healthy active output shows the container running without a restart loop and logs without settings, credential-secret, palette, or flow-load errors. **If both hosts show a running Node-RED ingestion container, treat that as split-brain and stop/fence one before troubleshooting anything else.**
 
 ## 5.2 Confirm MQTT publishes application uplinks
 
@@ -46,7 +47,7 @@ Single-host lab:
 docker compose exec mosquitto mosquitto_sub -h localhost -t 'application/+/device/+/event/up' -v
 ~~~
 
-Cloud HA POC from `ulc-03`, using the **Node-RED read-only MQTT client identity**:
+Cloud HA POC from the candidate host being validated, using that host's **Node-RED read-only MQTT client identity**:
 
 ~~~bash
 mosquitto_sub \
@@ -76,7 +77,7 @@ sudo docker compose --env-file node-red.env exec node-red getent hosts mqtt.inte
 sudo docker compose --env-file node-red.env exec node-red getent hosts pgbouncer.internal.lorawan.com
 ~~~
 
-In the cloud profile both logical names should resolve to `ulc-03` (`10.104.0.8`), where the private Node-RED MQTT HAProxy route and local PgBouncer provide stable dependencies. If MQTT resolves directly to `ulc-01`/`ulc-02`, the Node-RED container has regained a single app-host dependency.
+In the cloud profile both logical names must resolve to the **current candidate's own private IP**: `10.104.0.8` on ulc-03 or `10.104.0.4` on ulc-02. That host then provides the local MQTT HAProxy and PgBouncer paths. Do not point the standby at ulc-03; that would make ulc-03 failure take down both the active instance and the standby's dependencies.
 
 ## 5.4 MQTT node is disconnected
 
@@ -91,8 +92,8 @@ cloud
   broker = mqtt.internal.lorawan.com:18884
   mTLS + hostname/CA verification enabled
   MQTT CA + Node-RED client certificate/key readable
-  logical name resolves to ulc-03 private HAProxy
-  HAProxy sees at least one healthy Mosquitto :8884 backend
+  logical name resolves to the current Node-RED host's private HAProxy
+  HAProxy sees at least one healthy Mosquitto :8886 backend
 ```
 
 For both profiles verify the topic is exactly `application/+/device/+/event/up` and Node-RED has reloaded the intended broker configuration.

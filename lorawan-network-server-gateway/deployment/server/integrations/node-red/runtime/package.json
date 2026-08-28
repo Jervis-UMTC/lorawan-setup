@@ -1,0 +1,9 @@
+{
+  "name": "lorawan-node-red-runtime",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Pinned Node-RED cloud HA runtime dependencies for LoRaWAN telemetry ingestion",
+  "dependencies": {
+    "node-red-contrib-postgresql": "0.16.2"
+  }
+}
