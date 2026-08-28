@@ -345,7 +345,7 @@ Do not flash an image whose manifest does not contain the intended modem support
 
 ## 2A.10 First boot on spare or controlled single-card media
 
-A spare microSD card remains the preferred first-boot path. When only the single production card exists, do not write it until the reflash-ready rollback gate is closed. Current evidence already covers the Gateway OS `4.12.0` Base factory artifact plus local SHA-256, the verified configuration/private recovery bundles, and installed imaging software. Still require a confirmed physical SD reader/writer path, maintenance-window acceptance, and a successfully verified custom image/manifest before writing the card.
+A spare microSD card remains the preferred first-boot path. When only the single production card exists, do not write it until the reflash-ready rollback gate is closed. Current evidence already covers the Gateway OS `4.12.0` Base factory artifact plus local SHA-256, the verified configuration/private recovery bundles, and installed imaging software. The custom image/manifest is now verified and preserved. Still require only a confirmed physical SD reader/writer path and maintenance-window acceptance before writing the card.
 
 Flash the custom **factory** image using the procedure in [Gateway 2](02-install-chirpstack-gateway-os.md). On the single-card path, this is the planned maintenance-window cutover and rollback means reflashing that same card with the preserved official factory image before restoring the verified backups.
 
@@ -466,3 +466,242 @@ d17b44d29cbfc54ef40734532ee5ce900c9ff110b95c9f5107f54bbb0753cdfa
 The target directory also contains a generated `sha256sums` file. Stage 1 establishes that the intended factory image exists and that its manifest contains the complete required modem package set. Before any SD-card write, still verify the generated `sha256sums` against the produced artifacts, preserve the custom build evidence outside the WSL build tree, restore the temporary WSL DNS after preservation, confirm the physical SD reader/writer path, and explicitly accept the maintenance-window downtime.
 
 `GATEWAY_SD_CARD_TOUCHED=NO` remains authoritative.
+
+### Custom-image Stage 2 artifact-integrity PASS - 2026-08-28
+
+The read-only artifact-integrity gate completed successfully without rebuilding, changing DNS, or touching the gateway SD card. The previously recorded factory-image, manifest, and final OpenWrt `.config` hashes were reverified exactly.
+
+Generated `sha256sums` verification passed for every listed target artifact:
+
+```text
+chirpstack-gateway-os-4.12.0-base-bcm27xx-bcm2709-rpi-2-squashfs-factory.img.gz: OK
+chirpstack-gateway-os-4.12.0-base-bcm27xx-bcm2709-rpi-2-squashfs-sysupgrade.img.gz: OK
+chirpstack-gateway-os-4.12.0-base-bcm27xx-bcm2709-rpi-2.manifest: OK
+config.buildinfo: OK
+feeds.buildinfo: OK
+profiles.json: OK
+version.buildinfo: OK
+```
+
+Authoritative hashes remain:
+
+```text
+factory image SHA-256: 1540958a7247e78e0e0d6791e3550f5d608865e940fc7463a5ff68229199bc3f
+manifest SHA-256: 49ea8900d5edccd89bafb6868f7918b71eb28c15481b67e390d69b6e7d513561
+final openwrt/.config SHA-256: d17b44d29cbfc54ef40734532ee5ce900c9ff110b95c9f5107f54bbb0753cdfa
+sha256sums SHA-256: 73ff93c061d87b9e4231776dcb420382a8e539646b64847b8e10ed4498f67e90
+```
+
+Reliable UTC mtimes recorded from filesystem epoch timestamps:
+
+```text
+factory image: 2026-08-27T05:53:55Z
+manifest: 2026-08-27T05:53:56Z
+sha256sums: 2026-08-27T05:54:10Z
+integrity verification: 2026-08-28T00:46:41Z
+```
+
+The factory image and manifest are both explicitly listed in the generated `sha256sums`. Stage 2 closes the custom-build artifact-integrity gate. Remaining pre-flash work is: preserve the verified custom artifacts and evidence outside WSL, verify the copied hashes, restore the temporary WSL DNS only after preservation, confirm the physical SD reader/writer path, and accept the maintenance-window downtime.
+
+`BUILD_REEXECUTED=NO`, `DNS_CHANGED=NO`, and `GATEWAY_SD_CARD_TOUCHED=NO` remain authoritative for this gate.
+### Custom-image Stage 3 off-WSL preservation PASS - 2026-08-28
+
+The verified custom Gateway OS output set was copied from the WSL build tree to Windows recovery storage and revalidated there without rebuilding, changing DNS, or touching the production SD card.
+
+Preserved location:
+
+```text
+C:\Users\smartagriintern\lorawan-recovery\gateway-01\custom-v4.12.0-sim7600-20260827
+```
+
+The preserved set includes the factory image, sysupgrade image, manifest, `config.buildinfo`, `feeds.buildinfo`, `profiles.json`, generated `sha256sums`, `version.buildinfo`, a copy of the final OpenWrt `.config`, and a non-secret build-identity record.
+
+Windows-side revalidation passed exactly:
+
+```text
+factory image SHA-256: 1540958a7247e78e0e0d6791e3550f5d608865e940fc7463a5ff68229199bc3f
+manifest SHA-256: 49ea8900d5edccd89bafb6868f7918b71eb28c15481b67e390d69b6e7d513561
+final OpenWrt .config SHA-256: d17b44d29cbfc54ef40734532ee5ce900c9ff110b95c9f5107f54bbb0753cdfa
+generated sha256sums SHA-256: 73ff93c061d87b9e4231776dcb420382a8e539646b64847b8e10ed4498f67e90
+```
+
+Running `sha256sum -c sha256sums` against the Windows-side preserved target directory also returned `OK` for every generated artifact listed by OpenWrt. This closes the off-WSL custom-build preservation gate.
+
+The DNS restoration gate is now complete. Remaining pre-flash gates are only: confirm the physical SD reader/writer path and explicitly accept the maintenance-window downtime before writing the only production card.
+
+`BUILD_REEXECUTED=NO`, `DNS_CHANGED=NO`, and `GATEWAY_SD_CARD_TOUCHED=NO` remain authoritative for this preservation gate.
+### Custom-image Stage 4 WSL DNS restoration PASS - 2026-08-28
+
+The temporary public-DNS workaround is no longer active. `/etc/resolv.conf` was already restored to the normal WSL-generated symlink `/mnt/wsl/resolv.conf`, whose current resolver is `192.168.176.1`. Five consecutive `getent ahosts github.com` checks passed, so no DNS rollback was required.
+
+Verified boundary:
+
+```text
+WSL_GENERATED_RESOLVER_PRESENT=PASS
+WSL_DNS_ALREADY_RESTORED=YES
+WSL_RESOLV_LINK_RESTORED=ALREADY_PRESENT
+WSL_RESOLV_LINK_VERIFIED=PASS
+dns_lookup_1=PASS
+dns_lookup_2=PASS
+dns_lookup_3=PASS
+dns_lookup_4=PASS
+dns_lookup_5=PASS
+ORIGINAL_WSL_DNS_VALIDATION=PASS
+DNS_OVERRIDE_RESTORED=YES
+BUILD_REEXECUTED=NO
+GATEWAY_SD_CARD_TOUCHED=NO
+PHASE11_WSL_DNS_RESTORE=PASS
+PHASE11_WSL_DNS_RESTORE_EXIT=0
+LOGIN_SHELL_SURVIVED=YES
+```
+
+The custom build, artifact integrity, off-WSL preservation, and workstation DNS cleanup gates are now closed. The physical SD reader/removable disk path is now proven. The only remaining prerequisite before shutdown/card removal is explicit maintenance-window/cutover acceptance. Do not flash until that approval is given.
+
+### Phase 11 physical SD reader preflight shell-context failure - 2026-08-28
+
+The first physical SD reader preflight did **not** execute because the Windows PowerShell block was pasted into the Ubuntu/WSL Bash shell. Bash rejected PowerShell syntax (`& {`, `Write-Host`, `Get-CimInstance`, `Get-PnpDevice`) before any Windows disk or PnP inventory was performed. Treat this as a shell-context/verifier failure only, not as an SD-reader hardware failure.
+
+Authoritative safety boundary from the failed attempt:
+
+```text
+PHYSICAL_SD_READER_PREFLIGHT=NOT_EXECUTED
+DISK_WRITE_EXECUTED=NO
+DISK_INITIALIZE_EXECUTED=NO
+DISK_FORMAT_EXECUTED=NO
+IMAGE_WRITE_EXECUTED=NO
+GATEWAY_SD_CARD_REMOVED=NO
+PRODUCTION_SD_CARD_TOUCHED=NO
+```
+
+Retry by invoking Windows PowerShell explicitly from WSL or by running the block in a native Windows PowerShell prompt. Do not remove the production microSD until the empty-reader hardware baseline has passed.
+### Streamlined Phase 11 cutover convention - 2026-08-28
+
+From this checkpoint onward, avoid repeating already-passed build, checksum, preservation, DNS, imaging-software, and rollback checks unless a later failure gives a concrete reason. The remaining workflow is intentionally simple:
+
+1. confirm Windows sees the SD reader / intended removable disk;
+2. accept the maintenance-window downtime;
+3. flash the verified custom factory image;
+4. boot the gateway and verify Gateway OS, LoRa radio, Wi-Fi management, packet forwarding, and SIM7600 driver presence;
+5. continue LTE commissioning only if those checks work.
+
+A working result is sufficient evidence. Do not add extra test layers merely to restate already-proven state.
+
+The PowerShell reader-preflight attempt that was blocked by Windows script execution policy is a launcher issue only, not a hardware failure. `PRODUCTION_SD_CARD_TOUCHED=NO` remains authoritative.
+
+### Physical SD reader / removable disk detection PASS - 2026-08-28
+
+Windows detected the connected SD reader/media path clearly enough for cutover:
+
+```text
+Disk 1
+Model: Mass Storage Device USB Device
+InterfaceType: USB
+MediaType: Removable Media
+Size: 31946987520 bytes
+```
+
+Treat this as sufficient physical reader/disk evidence for the streamlined Phase 11 cutover. Do not repeat reader diagnostics unless the device later disappears or imaging software cannot see the card.
+
+The production SD card has not yet been removed or written. The only remaining gate before shutdown/card removal is explicit maintenance-window/cutover acceptance. After approval, proceed directly to controlled shutdown, remove the card, re-identify the removable disk by model/size, flash the verified custom factory image, boot, and verify the gateway works.
+
+`PRODUCTION_SD_CARD_TOUCHED=NO` remains authoritative at this checkpoint.
+### Phase 11 maintenance-window / cutover approval - 2026-08-28
+
+The operator explicitly approved proceeding with the Phase 11 single-card cutover. Planned gateway downtime and the documented rollback path are accepted.
+
+Current cutover sequence is intentionally streamlined:
+
+1. gracefully power off the live gateway at `192.168.8.11`;
+2. remove the production microSD only after shutdown completes;
+3. insert it into the already-proven Windows removable-media path and confirm the same ~31.9 GB device;
+4. flash the verified custom Gateway OS factory image;
+5. reinstall the card, boot, and verify LoRa, Wi-Fi management, existing MQTT path, and SIM7600 driver presence.
+
+Do not repeat already-passed build, checksum, preservation, DNS, or reader checks unless a later step actually fails.
+
+`MAINTENANCE_WINDOW_ACCEPTED=YES`
+`CUTOVER_APPROVED=YES`
+`PRODUCTION_SD_CARD_TOUCHED=NO` at this approval boundary.
+### Production microSD identified for cutover - 2026-08-28
+
+Windows re-identified the inserted production microSD immediately before flashing:
+
+```text
+Disk 1
+Model: Mass Storage Device USB Device
+Interface: USB
+Media: Removable Media
+Size: 31946987520 bytes
+```
+
+This matches the previously observed removable reader/media path and is sufficient for the streamlined cutover. Proceed with balenaEtcher using the preserved custom factory image under `C:\Users\smartagriintern\lorawan-recovery\gateway-01\custom-v4.12.0-sim7600-20260827\target-output\`. Do not select the same-named official rollback image under `factory-v4.12.0`.
+### Production microSD custom-image flash PASS - 2026-08-28
+
+The approved Phase 11 single-card cutover has now written the verified custom ChirpStack Gateway OS factory image to the production microSD using balenaEtcher, and the operator reports the flash completed successfully. The written source was the preserved custom image under `C:\Users\smartagriintern\lorawan-recovery\gateway-01\custom-v4.12.0-sim7600-20260827\target-output\`, not the same-named official rollback image under `factory-v4.12.0`.
+
+Because a factory image replaces the previous card contents, do not assume the prior Wi-Fi management address/configuration is already present on first boot. First boot should use Ethernet DHCP when available or the Gateway OS commissioning AP, allow first-boot filesystem expansion/reboot to finish, and prove the SIM7600 runtime driver path before restoring the verified gateway configuration/private backup.
+
+Current cutover state:
+
+```text
+CUSTOM_FACTORY_IMAGE_FLASHED=YES
+BALEANAETCHER_FLASH_REPORTED_SUCCESS=YES
+PRODUCTION_SD_CARD_WRITTEN=YES
+ROLLBACK_IMAGE_PRESERVED=YES
+NEXT=BOOT_CUSTOM_IMAGE_AND_PROVE_MODEM_DRIVERS
+```
+### Custom-image first-boot SIM7600 runtime proof PASS - 2026-08-28
+
+The freshly flashed custom Gateway OS booted successfully and runtime modem binding is proven. This closes the custom kernel/module objective; do not repeat build/package checks unless a later runtime regression appears.
+
+Observed runtime evidence:
+
+```text
+SIM7600 USB ID: 1e0e:9001
+modules loaded: option, usb_wwan, qmi_wwan, cdc_wdm, usbserial
+serial devices: /dev/ttyUSB0 through /dev/ttyUSB4
+QMI control: /dev/cdc-wdm0
+QMI network device: wwan0
+qmi_wwan registered the modem data interface successfully
+```
+
+The custom image therefore provides both the SIMCom serial path and a working QMI-capable control/network path. The next step is to restore the verified Gateway OS configuration archive, then restore the protected Mosquitto/private bundle as required, and re-verify only the operational identity/path: RAK5146, Gateway EUI `0016c001f139a1cb`, AS923, Wi-Fi management, local Mosquitto/MQTT Forwarder path, and UDP Forwarder disabled.
+
+### Normal Gateway OS configuration restore PASS - 2026-08-28
+
+The verified `gateway-os-backup-20260826-082144.tar.gz` was restored successfully after the custom-image SIM7600 driver proof. The gateway returned to its working management/configuration state. Treat this restore step as PASS and do not repeat it unless a later service check fails. Next restore the protected Mosquitto/private bundle, then run one compact identity/service verification.
+
+### Mosquitto package reinstall PASS - 2026-08-28
+
+After the custom factory-image flash and normal configuration restore, the protected `/etc/mosquitto` tree was restored from the verified private bundle, but the Mosquitto executable/init script was absent because the original broker packages had lived in the previous writable overlay. `opkg update` completed with signed OpenWrt 24.10.7 feeds, then `opkg install mosquitto-ssl mosquitto-client-ssl` installed Mosquitto 2.0.18-r4 and dependencies successfully.
+
+`opkg` detected that the restored `/etc/mosquitto/mosquitto.conf` differed from the package default and preserved the restored production file, placing the package default at `/etc/mosquitto/mosquitto.conf-opkg`. Treat this as expected/pass behavior. Next boundary: confirm `/etc/config/mosquitto` uses `option use_uci '0'`, then enable/restart Mosquitto and verify loopback-only `127.0.0.1:1883`.
+
+### Mosquitto local recovery PASS / bridge TLS pending - 2026-08-28
+
+After reinstalling `mosquitto-ssl` and `mosquitto-client-ssl`, the restored static broker configuration is active with `mosquitto.owrt.use_uci=0`. Mosquitto is running as `mosquitto -c /etc/mosquitto/mosquitto.conf` and listens only on `127.0.0.1:1883`. The local MQTT Forwarder reconnected as gateway EUI `0016c001f139a1cb`, so the local packet-forwarding-to-buffer path is restored.
+
+The two restored bridges still target the old/test endpoint `lora-test-server:8883` and currently report TLS errors. Treat this as a separate outbound bridge TLS issue, not as a failure of the custom image, modem drivers, local broker, or restored gateway configuration. Do not weaken verification with `bridge_insecure true`; isolate the TLS failure with the documented `openssl s_client` mTLS/hostname test.
+
+### Restored bridge failure reclassified as network reachability - 2026-08-28
+
+The restored Mosquitto bridges still target the lab endpoint `lora-test-server:8883`. The direct `openssl s_client` test failed before TLS negotiation with `BIO_connect: Host is unreachable` / `errno=113`. The documented lab name maps `lora-test-server` to `192.168.8.50`. Therefore the current blocker is IP reachability to the old lab server, not CA validation, certificate hostname validation, client-certificate rejection, or the custom Gateway OS image. Do not regenerate certificates or weaken TLS. Check the restored `/etc/hosts` mapping, gateway route, and reachability of `192.168.8.50` first.
+
+### Cloud MQTT cutover decision - 2026-08-28
+
+The restored `lora-test-server:8883` bridge is now retired from the active Phase 11 path. Do not spend additional time repairing the old lab VM merely to complete the custom-image cutover. The intended production gateway path remains local MQTT Forwarder -> loopback Mosquitto buffer -> public `mqtt.<DOMAIN>:8883`.
+
+Current repository evidence proves the cloud MQTT service only on the private/internal identity `mqtt.internal.lorawan.com`; Phase 10 host-owned HAProxy anchor listeners are ready, but the provider-owned public activation is still incomplete. No real public MQTT FQDN or Reserved IPv4 is recorded, and the broker certificates have not yet been reissued with the real public MQTT SAN. Therefore do not point the gateway at a Droplet raw public IP and do not invent a public hostname.
+
+Next external inputs required for the public gateway bridge are: one real public domain/FQDN, one assigned same-region Reserved IPv4, provider firewall allowance for public MQTT `8883/tcp`, DNS `mqtt.<DOMAIN>` -> Reserved IPv4, and broker certificates valid for both `mqtt.internal.lorawan.com` and the real public `mqtt.<DOMAIN>` name. Once those are available, change only the two Mosquitto bridge `address` lines, preserve mTLS verification, and validate the cloud path before moving LTE to the normal route.
+
+
+### Post-build field LTE commissioning PASS - 2026-08-28
+
+The custom image's modem support has now been proven beyond driver enumeration. On the physical gateway, `/dev/ttyUSB2` returned live SIM7600 AT responses, the SIM reported `+CPIN: READY`, the modem registered to DITO LTE (`+CEREG: 0,1`, `+COPS: ... "515 66 DITO",7`), and the DITO data APN `internet.dito.ph` was configured through OpenWrt logical interface `lte` using QMI on `/dev/cdc-wdm0`.
+
+`ifup lte` created the dynamic `lte_4` child on kernel device `wwan0` and obtained IPv4 `100.73.25.125/30` with carrier gateway `100.73.25.126`. A temporary host route forced `1.1.1.1` through that LTE path and returned public ping replies with exit status 0; the temporary route was then removed. This proves that the custom Gateway OS build provides a working end-to-end SIM7600 QMI data path, not merely loadable kernel modules.
+
+Do not duplicate the LTE commissioning commands here. The authoritative, repeatable field procedure is [Phase 11 section 11.9 - Verified SIM7600 / DITO QMI commissioning path](../../server/cloud-production/11-raspberry-pi-4g-backhaul.md#119-verified-sim7600--dito-qmi-commissioning-path---2026-08-28).
+
+Current staging remains intentional: `network.lte.defaultroute=0` and `network.lte.peerdns=0` stay in place until the real public `mqtt.<DOMAIN>:8883` ingress, Reserved Public IPv4, firewall, DNS, and public-name broker certificate are commissioned and validated. The image/build objective itself is complete; do not rebuild the image to solve the remaining public MQTT activation work.

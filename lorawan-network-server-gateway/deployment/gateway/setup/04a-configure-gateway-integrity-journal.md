@@ -42,6 +42,30 @@ remote MQTT
 
 Mosquitto remains the **availability buffer**. The journal is the **tamper-evidence record**. Do not merge them into one file or claim that `mosquitto.db` becomes immutable.
 
+### Runtime service boundary: writer vs uploader
+
+Treat evidence recording and evidence upload as two separate long-running responsibilities:
+
+```text
+Concentratord
+     |
+     v
+gateway-integrity-journal
+     |
+     v
+local crash-safe hash-chained segments
+     |
+     v
+gateway-journal-uploader
+     |
+     v
+HTTPS + mTLS -> cloud evidence ingest
+```
+
+The journal writer must continue to record while WAN is unavailable. The uploader may stop/retry without blocking the writer. A reviewed implementation may use one codebase with separate subcommands, but the runtime responsibilities, failure states, and permissions must remain separable.
+
+The full server-side service topology and trust boundaries are documented in [Gateway Integrity Guide 4](../../server/integrations/gateway-integrity/04-service-architecture-and-runtime-contract.md).
+
 > [!IMPORTANT]
 > This repository defines the journal contract and acceptance tests. It does not currently contain a completed, reviewed `gateway-integrity-journal` executable. Do not invent a package or unreviewed shell script and call it production-ready. Build or obtain a reviewed implementation, pin its version and SHA-256, then prove every test below.
 
