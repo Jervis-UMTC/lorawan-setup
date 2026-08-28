@@ -23,6 +23,8 @@ The implementation order is therefore:
 
 Do not merge these responsibilities into Node-RED. Node-RED owns ingestion and the atomic enqueue operation; the adapter owns asynchronous KMS/Fabric work. For v2, the separate gateway-evidence verifier owns source verification. If the verifier, adapter, KMS, or Fabric stops, the telemetry transaction must still complete and the outbox row must remain durable; v2 simply remains ineligible for sealing until the evidence policy allows it.
 
+The canonical watcher/service topology is documented in [`gateway-integrity/04-service-architecture-and-runtime-contract.md`](../integrations/gateway-integrity/04-service-architecture-and-runtime-contract.md). In that architecture, the Fabric Adapter **does not watch Concentratord, journal files, or gateway MQTT topics**. It watches only durable eligible outbox work and reads verifier-owned `gateway_evidence.event_verification` state for v2. This prevents the signer/submission process from becoming the authority that decides whether its own source evidence is trustworthy.
+
 This repository does not currently contain a completed adapter image. Treat `<PINNED_FABRIC_ADAPTER_IMAGE>` as an unresolved input, not an image that already exists.
 
 ## Step 1: Back up the telemetry database

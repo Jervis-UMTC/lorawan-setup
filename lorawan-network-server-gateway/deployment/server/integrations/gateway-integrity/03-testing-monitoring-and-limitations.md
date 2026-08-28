@@ -224,6 +224,41 @@ WAN reconnects
 
 Independent sensor signatures, another gateway/witness, TPM/secure element, or hardware monotonic state can reduce this threat. The baseline Raspberry Pi software journal cannot make it disappear.
 
+## 3.15A Monitoring architecture: observe durable state, not one mega-watcher
+
+Operational monitoring is read-only and sits outside the verification trust path. Do not create another privileged service that owns all credentials just to answer whether the pipeline is healthy.
+
+The evidence pipeline itself records the authoritative state:
+
+```text
+gateway journal state / upload receipts
+        +
+gateway_evidence.checkpoints / segments / mqtt_gateway_events / event_verification
+        +
+telemetry.fabric_outbox
+        =
+read-only operational health picture
+```
+
+Grafana or operator queries may read approved status/freshness fields. They must never write verifier status, clear evidence gaps, requeue security conflicts, sign with OpenBao, or submit to Fabric.
+
+Keep these dimensions separate in dashboards:
+
+```text
+DELIVERY HEALTH
+  Is MQTT/ChirpStack telemetry arriving?
+
+EVIDENCE HEALTH
+  Is journal/checkpoint/MQTT-witness verification current?
+
+ATTESTATION HEALTH
+  Are verified outbox events being sealed and committed?
+```
+
+For example, fresh telemetry with a stale checkpoint is **not** a fully healthy gateway. Delivery is healthy while evidence anchoring is degraded.
+
+See [04-service-architecture-and-runtime-contract.md](04-service-architecture-and-runtime-contract.md) for the canonical service topology and failure ownership.
+
 ## 3.16 Gateway monitoring
 
 Monitor:

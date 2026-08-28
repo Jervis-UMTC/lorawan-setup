@@ -5,6 +5,29 @@ This guide defines the server roles and database state needed to turn uploaded g
 > [!IMPORTANT]
 > The repository does not currently contain completed images for these roles. Names such as `gateway-evidence-verifier` describe responsibilities, not deployable images. Production requires reviewed source/builds, pinned immutable digests, startup self-tests, and the tests in the next guide.
 
+## 2.0 Runtime topology and durable handoffs
+
+The detailed cross-service architecture is defined in [04-service-architecture-and-runtime-contract.md](04-service-architecture-and-runtime-contract.md). The essential runtime rule is:
+
+```text
+Gateway journal/uploader
+        -> evidence ingest -> protected evidence + PostgreSQL metadata
+
+Cloud MQTT
+        -> read-only MQTT evidence collector -> PostgreSQL capture index
+
+protected evidence + MQTT witness + ChirpStack + trusted decoder + TimescaleDB
+        -> evidence verifier -> gateway_evidence.event_verification
+
+status = verified
+        -> telemetry.fabric_outbox eligibility
+        -> Fabric Adapter -> OpenBao + Fabric
+```
+
+PostgreSQL is the durable coordination boundary. The evidence services must not depend on an in-memory message passed directly from the verifier to the Fabric Adapter. The verifier persists its result; the Adapter later reads that result under its own least-privilege database role.
+
+Do not deploy one service with gateway-upload credentials, MQTT read access, verifier write access, OpenBao signing authority, and Fabric submission credentials. Separating those permissions is part of the security design, not merely a packaging preference.
+
 ## 2.1 Separate the roles
 
 ```text

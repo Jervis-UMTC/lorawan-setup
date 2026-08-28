@@ -120,6 +120,9 @@ A later layer cannot make an earlier false input true. Fabric can permanently pr
 1. [01-evidence-contract-and-checkpoints.md](01-evidence-contract-and-checkpoints.md) — What the gateway records, what the server anchors, and the verification-state model.
 2. [02-server-verifier-and-reconciliation.md](02-server-verifier-and-reconciliation.md) — Server components, database model, correlation, trusted decoding, and the Fabric evidence gate.
 3. [03-testing-monitoring-and-limitations.md](03-testing-monitoring-and-limitations.md) — Outage, tamper, gap, monitoring, and residual-risk tests.
+4. [04-service-architecture-and-runtime-contract.md](04-service-architecture-and-runtime-contract.md) — Canonical long-running service topology, ownership boundaries, exact end-to-end lifecycle, startup order, failure behavior, monitoring, and implementation sequence.
+
+When another manual or diagram is unclear about **which service watches which boundary**, use Guide 4 as the canonical topology. The journal, uploader, evidence ingest, MQTT collector, verifier, trusted decoder, and Fabric Adapter are separate responsibilities; do not collapse them into one privileged watcher.
 
 First complete the gateway-side manuals:
 
