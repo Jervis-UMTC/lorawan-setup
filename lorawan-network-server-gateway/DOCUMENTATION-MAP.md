@@ -72,7 +72,7 @@ deployment/
     ├── data-layer/  # TimescaleDB, Node-RED, Grafana
     ├── fabric-attestation/ # Fabric handoff, OpenBao Transit, outbox/adapter, reconciliation
     ├── cloud-production/   # current three-Droplet HA build and live evidence log
-    └── integrations/       # reusable technology and gateway-evidence contracts
+    └── integrations/       # reusable technology and gateway-evidence contracts; gateway-integrity/04 is the canonical integrity-watcher service topology
 ```
 
 ---
