@@ -395,34 +395,36 @@ Do not let Node-RED call Fabric directly.
 
 ## 19.15 Node-RED then Grafana
 
-Run both only on `ulc-03`.
+Run Grafana on `ulc-03`. Run Node-RED as **active/passive**: A active initially on `ulc-03`, B staged but stopped on `ulc-02`.
 
-Follow [12a-node-red-timescale-telemetry.md](12a-node-red-timescale-telemetry.md). Before opening the Node-RED editor, prove its **two real local routes from ulc-03**:
+Follow [12a-node-red-timescale-telemetry.md](12a-node-red-timescale-telemetry.md). Before opening the active Node-RED editor, prove the two local dependency routes on **both Node-RED candidates**:
 
 ```text
 MQTT
-Node-RED -> mqtt.internal.lorawan.com:18884
-         -> ulc-03 HAProxy 10.104.0.8:18884
-         -> Mosquitto-1 / Mosquitto-2 :8884 mTLS backends
-         -> read-only application-uplink ACL
+Node-RED A -> mqtt.internal.lorawan.com:18884 -> ulc-03 10.104.0.8:18884
+Node-RED B -> mqtt.internal.lorawan.com:18884 -> ulc-02 10.104.0.4:18884
+           -> Mosquitto-1 / Mosquitto-2 :8886 mTLS backends
+           -> host-specific read-only application-uplink identity
 
 DATABASE
-Node-RED -> pgbouncer.internal.lorawan.com:6432
-         -> ulc-03 local PgBouncer
-         -> local HAProxy :15432
-         -> current Patroni primary
-         -> lorawan_telemetry [TimescaleDB]
+Node-RED A -> pgbouncer.internal.lorawan.com:6432 -> ulc-03 local PgBouncer
+Node-RED B -> pgbouncer.internal.lorawan.com:6432 -> ulc-02 local PgBouncer
+           -> local HAProxy :15432
+           -> current Patroni primary
+           -> lorawan_telemetry [TimescaleDB]
 ```
 
-1. Map both logical names to `ulc-03` (`10.104.0.8`) for the Node-RED container.
-2. Test MQTT TLS with the Node-RED client certificate and a read-only subscription to `application/+/device/+/event/up`.
-3. Test PostgreSQL TLS as `telemetry_writer` through PgBouncer.
-4. Run the Timescale rollback insert/duplicate tests from [../integrations/timescaledb/03-connect-and-verify.md](../integrations/timescaledb/03-connect-and-verify.md).
-5. Deploy Node-RED using [../integrations/node-red/01-deploy-node-red.md](../integrations/node-red/01-deploy-node-red.md), applying the cloud substitutions in [../integrations/node-red/02-configure-mqtt-and-postgresql.md](../integrations/node-red/02-configure-mqtt-and-postgresql.md).
-6. First deploy only `mqtt in -> json -> debug` and prove one real **EMU-01 Agriculture Kit payload-v2** ChirpStack application uplink arrives with `payload_version=2`, `test_sequence`, `sensor_validity_bitmap`, and the expected decoded sensor fields.
-7. Then enable the parameterized PostgreSQL writes and prove that EMU-01 uplink produces one canonical `telemetry.uplinks` row plus the reviewed `telemetry.measurements` rows; invalid sensor bits must not be stored as measured stale values.
-8. Deliberately replay the same event and prove the uniqueness rules prevent duplicates.
-9. Only after Node-RED storage is correct, deploy Grafana using [14a-grafana-cloud-deployment.md](14a-grafana-cloud-deployment.md).
+1. On ulc-03 map both logical names to `10.104.0.8`; on ulc-02 map them to `10.104.0.4`.
+2. Prove private MQTT `:18884` and PgBouncer `:6432` locally on both candidates.
+3. Test each host-specific MQTT certificate against the read-only `application/+/device/+/event/up` ACL.
+4. Test PostgreSQL TLS as `telemetry_writer` through each candidate's local PgBouncer.
+5. Run the Timescale rollback insert/duplicate tests from [../integrations/timescaledb/03-connect-and-verify.md](../integrations/timescaledb/03-connect-and-verify.md).
+6. Stage the same pinned image/flows/settings on both candidates; start only Node-RED A on ulc-03 and prove Node-RED B on ulc-02 is stopped.
+7. First deploy only `mqtt in -> json -> debug` on A and prove one real **EMU-01 Agriculture Kit payload-v2** ChirpStack application uplink arrives with `payload_version=2`, `test_sequence`, `sensor_validity_bitmap`, and the expected decoded sensor fields.
+8. Enable the parameterized PostgreSQL writes and prove that uplink produces one canonical `telemetry.uplinks` row plus the reviewed `telemetry.measurements` rows; invalid sensor bits must not be stored as measured stale values.
+9. Deliberately replay the same event and prove the uniqueness rules prevent duplicates.
+10. Follow [../integrations/node-red/06-active-passive-ha.md](../integrations/node-red/06-active-passive-ha.md) for the fenced promotion/failback acceptance test in Phase 15; do not test by running both subscribers together.
+11. Only after Node-RED storage is correct, deploy Grafana using [14a-grafana-cloud-deployment.md](14a-grafana-cloud-deployment.md).
 
 Visible data path:
 
@@ -432,7 +434,7 @@ ChirpStack -> Node-RED -> TimescaleDB hypertables -> Grafana
 
 **Stop here. Do not enable Fabric selection** if Node-RED cannot prove retry-safe storage first.
 
-If `ulc-03` later disappears, Node-RED/Grafana may pause. That expected failure behavior is tested in Phase 15; do not stop `ulc-03` during setup.
+If `ulc-03` later disappears, Node-RED A is lost but Node-RED B on `ulc-02` is the promotion target; Grafana may still pause. Do not inject that failure during setup. Phase 15 proves fencing, B promotion, a fresh exactly-once post-promotion telemetry row, and controlled failback.
 
 ## 19.16 OpenBao
 
@@ -531,7 +533,7 @@ lorawan_telemetry + fabric_outbox still available
 Valkey remains available/promotable
 ChirpStack + MQTT remain available
 fabric_outbox remains available; adapter-1/2 remain available only when deployed
-Node-RED pauses
+Node-RED A is lost; fenced Node-RED B promotion on ha-02 restores fresh ingestion
 Grafana pauses
 ```
 

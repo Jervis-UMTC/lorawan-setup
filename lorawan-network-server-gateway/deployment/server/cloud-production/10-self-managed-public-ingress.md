@@ -816,3 +816,37 @@ no automatic failback is configured
 Automatic host-loss takeover, RTO, post-takeover real uplink, API-outage behavior, and no-failback recovery are **not Phase 10 pass conditions**. They are Phase 15 acceptance tests after Phase 14B passes.
 
 Next required setup phase: [11-raspberry-pi-4g-backhaul.md](11-raspberry-pi-4g-backhaul.md).
+
+### Public MQTT readiness correction - gateway mTLS is a host-owned prerequisite - 2026-08-28
+
+Phase 10H proved both anchor `:8883` TLS-passthrough candidates, but those listeners are **not yet public gateway-ready**. Live Phase 12A inventory supersedes the older planning assumption: Mosquitto `:8884` currently has `require_certificate=false`, no `use_identity_as_username`, and no gateway-specific ACL. In addition, no cloud-issued client certificate for Gateway EUI `0016c001f139a1cb` is recorded yet.
+
+Close this host-owned prerequisite **before** Reserved-IP/DNS activation:
+
+1. issue a cloud MQTT `clientAuth` certificate with CN exactly `0016c001f139a1cb`;
+2. add the exact-EUI `as923` ACL: gateway event/state are writable and only that gateway's command hierarchy is readable;
+3. enable `require_certificate true`, `use_identity_as_username true`, and `allow_anonymous false` on the gateway-facing `:8884` listener, one broker at a time;
+4. through each already-commissioned anchor `:8883`, verify the broker as `mqtt.internal.lorawan.com`, prove the gateway certificate authenticates as the EUI, prove the exact-EUI ACL, and prove a client without a certificate is rejected;
+5. only then continue with the provider-owned public MQTT items: real public MQTT FQDN, public broker SAN, Reserved IPv4, Cloud Firewall `8883/tcp`, and DNS.
+
+This removes a sequencing gap: gateway client identity and broker-side mTLS readiness are cloud host work and do **not** depend on the final public domain. Do not point the physical gateway at an individual Droplet public IP.
+
+### Gateway MQTT cloud client certificate issuance PASS - 2026-08-28
+
+The real physical Gateway EUI `0016c001f139a1cb` now has a dedicated cloud MQTT client identity issued on `ulc-03` from the commissioned internal CA. Issuance directory: `/root/lorawan-pg-ca/gateway-0016c001f139a1cb-issuance-20260828T015149Z`; protected transfer bundle is its `transfer/` subdirectory. The certificate subject is `CN = 0016c001f139a1cb`, issuer `CN = LoRaWAN PostgreSQL Internal CA`, serial `D8732205912F3C3AC56E0A01E1E10583`, validity `2026-08-28 01:51:51Z` through `2027-09-29 01:51:51Z`, SHA-256 fingerprint `82:C6:9A:D7:12:5D:8C:45:F3:8F:BA:AB:F9:6E:7E:3B:41:F4:BE:78:95:FE:16:05:FD:58:2E:09:9D:F3:0A:ED`, and certificate SHA-256 `f348cef6e280dff82722ff908cc96e694faf183eec1dffc55a7abc690cb472d8`.
+
+The certificate chains successfully for `sslclient`, is rejected for `sslserver`, and its public key matches the RSA-3072 private key. The issuing CA SHA-256 remains `6773c652aadcc1740e630b3e0ee13ccaff9427df5418e89571b4630584ea4ddb`; the existing CA serial-file SHA-256 remained byte-identical at `50df8c462ef9465ab9198284fa1234f0cbfa4f33eb9779ce6d50dd23a618463d` because issuance used an explicit random serial. `GATEWAY_MQTT_CLIENT_CERT_ISSUANCE=PASS`. No Mosquitto, HAProxy, DNS, firewall, or gateway runtime was changed by issuance.
+
+Next boundary: canary-harden `ulc-01` gateway-facing Mosquitto `:8884` only to require client certificates, map certificate CN to MQTT username, and enforce an exact-EUI `as923` gateway ACL. Preserve ChirpStack `:8885` and Node-RED `:8886`. After `ulc-01` passes direct mTLS verification with the new gateway certificate, repeat the same bounded rollout on `ulc-02`.
+### ulc-01 gateway mTLS canary PASS - 2026-08-28
+
+`ulc-01:8884` was hardened from server-TLS-only to gateway client-certificate authentication without changing the ChirpStack `:8885` listener. The active gateway listener now has `require_certificate true`, `use_identity_as_username true`, `allow_anonymous false`, and `/etc/mosquitto/gateway.acl`. The exact Gateway EUI `0016c001f139a1cb` is permitted to write only its own `as923/.../event/#` and `state/#` topics and read only its own `command/#` hierarchy. Mosquitto restarted successfully, `:8884` and `:8885` remained listening, the issued gateway certificate completed TLS and MQTT CONNECT/SUBSCRIBE successfully, and a no-client-certificate connection was rejected. Rollback copy: `/etc/mosquitto/gateway-mtls-20260828T015613Z`. Next boundary: apply the same bounded change to `ulc-02` and prove the same certificate/ACL behavior there before transferring the cloud certificate bundle to Gateway OS.
+### ulc-02 gateway mTLS rollout PASS - 2026-08-28
+
+`ulc-02:8884` now matches the proven `ulc-01` gateway-authentication boundary: `require_certificate true`, `use_identity_as_username true`, `allow_anonymous false`, and `/etc/mosquitto/gateway.acl`. Gateway EUI `0016c001f139a1cb` is limited to its own AS923 event/state/command hierarchy. Mosquitto restarted successfully; `:8884` and ChirpStack `:8885` remained listening. The issued gateway certificate completed TLS, MQTT CONNECT, and own-command SUBSCRIBE successfully, while a no-client-certificate connection was rejected. Rollback copy: `/etc/mosquitto/gateway-mtls-20260828T015801Z`. Therefore both cloud MQTT broker backends now enforce the intended per-gateway mTLS identity. Next boundary: transfer only the three-file cloud certificate bundle (`ca.crt`, `0016c001f139a1cb.crt`, `0016c001f139a1cb.key`) to Gateway OS; do not change the working local Mosquitto topology yet.
+### ulc-02 gateway mTLS state observed - 2026-08-28
+
+Live read-only inspection after the first rollout wrapper showed `ulc-02` is already in the intended gateway mTLS state: `/etc/mosquitto/conf.d/tls.conf` has `listener 8884`, `require_certificate true`, `allow_anonymous false`, `use_identity_as_username true`, and `acl_file /etc/mosquitto/gateway.acl`; `/etc/mosquitto/gateway.acl` exists as `0640 root:mosquitto`; `per_listener_settings true` remains active; and the dedicated ChirpStack listener remains `10.104.0.4:8885` with its own password/ACL files. Therefore do not reapply the mutation. The remaining boundary is a direct positive mTLS/MQTT proof with gateway certificate CN `0016c001f139a1cb` plus a no-client-certificate rejection proof.
+### Both cloud gateway MQTT brokers mTLS acceptance PASS - 2026-08-28
+
+Direct verification from `ulc-03` against `ulc-02:8884` using the issued gateway identity `CN = 0016c001f139a1cb` passed TLS, MQTT CONNECT, and subscription to the gateway's own `as923/gateway/0016c001f139a1cb/command/#` hierarchy. A client without a certificate was rejected. Combined with the earlier `ulc-01` canary proof, both gateway-facing Mosquitto backends now enforce per-gateway mTLS and the exact EUI ACL while preserving the dedicated ChirpStack `:8885` listeners. The cloud broker-side gateway authentication boundary is therefore complete. Next: transfer only `ca.crt`, `0016c001f139a1cb.crt`, and `0016c001f139a1cb.key` from the protected `ulc-03` issuance bundle to Gateway OS; do not alter the local loopback broker topology during certificate import.

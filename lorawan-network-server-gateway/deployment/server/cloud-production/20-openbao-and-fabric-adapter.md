@@ -262,7 +262,7 @@ Gateway-integrity v2 has a similar implementation gate for its reviewed ingestor
 
 ```text
 LoRaWAN             continues
-Node-RED            continues while ha-03 is healthy
+Node-RED            continues on the current active host; standby remains stopped
 PostgreSQL telemetry continues
 fabric_outbox       accumulates
 adapters             wait/reconcile/retry
@@ -286,7 +286,8 @@ KMS endpoint remains usable
 ### ha-03 lost
 
 ```text
-Node-RED + Grafana pause
+Node-RED A is lost; after fencing, Node-RED B on ha-02 is promoted
+Grafana pauses
 PostgreSQL stays available on ha-01/ha-02
 lorawan_telemetry stays available
 fabric_outbox stays available

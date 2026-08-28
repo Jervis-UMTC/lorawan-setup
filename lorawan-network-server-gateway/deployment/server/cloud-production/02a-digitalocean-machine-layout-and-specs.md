@@ -221,26 +221,30 @@ Fabric adapter
   one shared PostgreSQL outbox
 ```
 
-## 2A.8 Why Node-RED and Grafana stay single
+## 2A.8 Node-RED active/passive; Grafana remains single
 
-The POC is trying to prove the **LoRaWAN control-plane HA architecture** without adding more processes than necessary.
-
-So:
+Node-RED is now part of the application availability target. Keep one active instance on ha-03/ulc-03 and a **stopped, pre-staged standby** on ha-02/ulc-02. The standby consumes no steady-state Node-RED container memory while stopped, but the resource test must prove ha-02 can carry the extra Node-RED workload after promotion.
 
 ```text
-ha-03 lost
-  -> Node-RED pauses
-  -> Grafana pauses
+normal
+  -> Node-RED A active on ha-03
+  -> Node-RED B stopped on ha-02
+  -> Grafana on ha-03
 
-but
+ha-03 lost
+  -> fence/confirm old Node-RED unavailable
+  -> promote Node-RED B on ha-02
+  -> fresh telemetry processing resumes
+  -> Grafana may pause
+
+and
   -> PostgreSQL stays available
-  -> existing telemetry stays available through PG replicas
-  -> existing fabric_outbox stays available
-  -> adapters on ha-01/ha-02 can keep processing existing jobs
+  -> existing telemetry/fabric_outbox stay available
+  -> adapters on ha-01/ha-02 can keep processing eligible jobs
   -> ChirpStack/MQTT continue
 ```
 
-A future deployment can duplicate Node-RED/Grafana if that application layer also needs HA.
+Do not run both Node-RED subscribers concurrently. Grafana remains single for the current POC because dashboard interruption does not stop ingestion. Active/passive Node-RED availability and Grafana availability are separate concerns.
 
 ## 2A.9 Expected one-host failures
 

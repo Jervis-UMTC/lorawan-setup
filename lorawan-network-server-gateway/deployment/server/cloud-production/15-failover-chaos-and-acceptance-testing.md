@@ -163,13 +163,14 @@ fabric_outbox remains
 Valkey remains available/promotable
 ChirpStack + MQTT continue
 existing fabric_outbox remains; deployed adapter-1/2 may continue eligible work
-Node-RED pauses
+Node-RED A on ha-03 is lost; after fencing, Node-RED B on ha-02 is promoted
+fresh post-promotion uplink reaches TimescaleDB exactly once
 Grafana pauses
 ```
 
 This test specifically proves that telemetry/outbox **storage** is no longer a single `ha-03` service.
 
-Restore `ha-03`, wait for PostgreSQL/etcd/Valkey/OpenBao membership to return to 3/3, then restart/verify Node-RED and Grafana. Send a new uplink and prove telemetry ingestion resumes before the next test.
+Restore `ha-03`, wait for PostgreSQL/etcd/Valkey/OpenBao membership to return to 3/3, but **do not automatically start Node-RED A** while Node-RED B is active. Re-stage/synchronize A as the stopped standby, then perform the documented fenced failback as a separate step. Grafana may be restarted on ha-03. Record the Node-RED promotion time and any missing QoS-0 uplinks during the transition; active/passive availability does not imply replay.
 
 ## 15.5 Planned PostgreSQL switchover
 
@@ -322,7 +323,7 @@ If that happens, resize and repeat the same test. The resize result is part of t
 |---|---|
 | `ha-01` loss | Reserved IPv4 moves automatically to `ha-02`, DNS stays unchanged, `ha-02` path carries LoRaWAN, quorum groups survive |
 | `ha-02` loss | after deliberately starting with the Reserved IPv4 on `ha-02`, it moves automatically to `ha-01` with DNS unchanged |
-| `ha-03` loss | LoRaWAN + PostgreSQL/outbox survive; Node-RED/Grafana may pause |
+| `ha-03` loss | LoRaWAN + PostgreSQL/outbox survive; fenced Node-RED B promotion on ha-02 restores fresh telemetry processing exactly once; Grafana may pause |
 | PG switchover | all DB clients keep same endpoint |
 | PG primary loss | one new primary, no manual DSN change |
 | Valkey primary loss | Sentinel promotion works |

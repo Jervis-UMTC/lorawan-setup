@@ -124,6 +124,24 @@ Why both dumps matter: `lorawan_telemetry` contains the Timescale hypertables an
 
 The corrected fresh-backup retry is **PASS** on `ulc-03`. Host identity was verified outside PostgreSQL and the local Spilo member returned `pg_is_in_recovery() = true`. Both `chirpstack` and `lorawan_telemetry` exist. Source metadata recorded PostgreSQL `18.6`, ChirpStack counts `tenant=1, application=0, device_profile=0, device=0, gateway=0`, telemetry counts `uplinks=0, measurements=0, device_registry=0`, TimescaleDB `2.29.2`, hypertables `measurements,uplinks`, and `fabric_outbox_count=0`. Fresh custom-format dumps were created under `/home/opsadmin/backups/phase13a-20260827T032756Z`: `chirpstack.dump` about 99 KiB and `lorawan_telemetry.dump` about 58 KiB. Both archives passed `pg_restore --list`; `SOURCE-METADATA.txt`, both dumps, and `SHA256SUMS` are mode `0600`; `sha256sum -c SHA256SUMS` passed for all three hashed files. The TimescaleDB `continuous_agg` circular-foreign-key warning is expected for this full custom-format dump and does not invalidate the archive; the isolated restore rehearsal remains the authoritative restore proof. The database-backup sub-gate is therefore complete locally, but Phase 13A remains open until this directory is copied off the target Droplets and destination hashes are verified.
 
+### Streamlined Phase 13A path for normal-path commissioning - 2026-08-28
+
+For the current POC, use the minimum rollback boundary needed to continue **non-destructive** Phase 12 / normal-path testing quickly. The fresh `chirpstack` and `lorawan_telemetry` dumps have already passed local `pg_restore --list` and SHA-256 verification on `ulc-03`; do not recreate or re-parse them unless the source state changes.
+
+The fast Phase 13A checkpoint is:
+
+```text
+existing verified logical dumps on ulc-03
+    -> package/copy once to the administration workstation
+    -> verify one transport SHA-256
+    -> retain the off-host copy
+    -> continue normal-path commissioning
+```
+
+Do **not** require an isolated database restore, etcd snapshot restore rehearsal, destructive membership exercise, or failure injection merely to continue normal-path commissioning. Those stronger DR proofs become mandatory before Phase 15 destructive/failover testing. This streamlining does not remove Patroni, etcd, HAProxy, PgBouncer, Valkey/Sentinel, MQTT HA, or any other HA component.
+
+For the current backup `/home/opsadmin/backups/phase13a-20260827T032756Z`, one compressed archive plus one SHA-256 sidecar is sufficient for the transport step. The internal dump catalogs and hashes are already proven at source.
+
 ## 13.4 Copy PostgreSQL backups off the three Droplets
 
 If the backup was created on `ha-01`, `ha-02`, or `ha-03`, copy the entire protected backup directory to the administration workstation or another approved off-host location before the destructive test.
@@ -131,6 +149,10 @@ If the backup was created on `ha-01`, `ha-02`, or `ha-03`, copy the entire prote
 Then recalculate the checksums at the destination and compare with `SHA256SUMS`.
 
 A dump that exists only on a Droplet scheduled for failure is not a useful rollback copy.
+
+### Phase 13A off-host transport PASS - 2026-08-28
+
+The compressed transport archive `phase13a-20260827T032756Z.tar.gz` was copied from `ulc-03` to the Windows administration workstation using the proven `id_ed25519_home_ops` SSH identity. The source SHA-256 was `e97d50c31252ede1fe55b734b6686f270e92ebecb69a36d637b04fbf726cda1c`; Windows `Get-FileHash -Algorithm SHA256` returned the same value and the operator obtained `PHASE13A_OFFHOST_COPY=PASS`. Treat the streamlined Phase 13A transport checkpoint as PASS. For normal-path commissioning, do not repeat the database dumps, dump-catalog checks, isolated restore rehearsal, or destructive DR tests now; the stronger recovery proof remains deferred to the later destructive/failover test boundary.
 
 ## 13.5 etcd snapshot before destructive coordination tests
 
@@ -276,16 +298,18 @@ These are future deployment hardening, not reasons to remove Patroni, TimescaleD
 
 ## 13.11 Phase 13A pass condition
 
-Phase 13A passes before Phase 12 when:
+For the current **non-destructive normal-path commissioning**, Phase 13A passes when:
 
-- current `chirpstack` and `lorawan_telemetry` logical dumps exist outside the target Droplets;
-- dump catalogs parse and checksums match the off-host copies;
-- an isolated `lorawan_telemetry` restore succeeds with Timescale hypertables/constraints intact;
-- the current etcd snapshot/member/config record exists off-host;
-- current non-secret HAProxy/PgBouncer/Mosquitto/Valkey/ChirpStack configuration references are captured;
-- when a legacy source exists, its final migration backup procedure and off-host destination are ready.
+- the already-validated current `chirpstack` and `lorawan_telemetry` logical dumps exist outside the target Droplets;
+- the off-host transport archive/hash matches the source transport hash;
+- current non-secret HAProxy/PgBouncer/Mosquitto/Valkey/ChirpStack configuration references remain documented;
+- when a legacy authoritative source exists, its final migration backup/off-host destination is ready.
 
-After **13A PASS**, continue to [12-gateway-and-device-migration.md](12-gateway-and-device-migration.md) only when Phase 11 has also passed. If Phase 11 is still hardware-blocked, keep the 13A evidence as the current rollback checkpoint and resume Phase 11 when the gateway becomes available. Do not start fault injection.
+Do not repeat source `pg_restore --list` or dump SHA-256 checks when those exact dump files have already passed and have not changed.
+
+Before **Phase 15 destructive/failover testing**, complete the stronger DR gate that was intentionally deferred for speed: isolated `lorawan_telemetry` restore with Timescale objects intact, required etcd snapshot/member/config evidence, and any other destructive-recovery prerequisite relevant to the planned fault.
+
+After the streamlined **13A PASS**, continue to [12-gateway-and-device-migration.md](12-gateway-and-device-migration.md) only when the Phase 11 normal path is also ready. Do not start fault injection until the stronger pre-Phase-15 DR gate passes.
 
 ## 13.12 Phase 13B final full-stack snapshot
 
@@ -307,3 +331,7 @@ final service image/config hashes needed to recreate the tested baseline
 Re-check the database dumps and isolated restore against the final schema. Phase 13B must not rely only on the earlier 13A archives because the application/outbox state has changed.
 
 **Phase 13B PASS does not itself authorize fault injection.** Next run the healthy evidence-harness dry run in [14-observability-alerting-and-logging.md](14-observability-alerting-and-logging.md), then the hard gate in [14b-pre-test-commissioning-gate.md](14b-pre-test-commissioning-gate.md).
+
+### Phase 13A transport archive created PASS - 2026-08-28
+
+The streamlined off-host transport archive was created successfully on `ulc-03` from the already-validated source directory `/home/opsadmin/backups/phase13a-20260827T032756Z`. The resulting archive is `/home/opsadmin/backups/phase13a-20260827T032756Z.tar.gz`, size about 28 KiB, with SHA-256 `e97d50c31252ede1fe55b734b6686f270e92ebecb69a36d637b04fbf726cda1c`. The sidecar `phase13a-20260827T032756Z.tar.gz.sha256` was created successfully. Treat archive creation as PASS. The only remaining fast-path transport gate is to copy the archive to the administration workstation and confirm the destination SHA-256 matches exactly; do not recreate the database dumps or rerun their source validation.
