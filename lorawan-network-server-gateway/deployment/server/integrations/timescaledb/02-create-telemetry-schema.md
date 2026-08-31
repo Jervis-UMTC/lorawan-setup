@@ -102,6 +102,9 @@ CREATE TABLE IF NOT EXISTS telemetry.uplinks (
     device_model        TEXT,
     decoder_version     TEXT,
     gateway_id          TEXT,
+    gateway_uplink_id   BIGINT,
+    gateway_frequency_hz BIGINT,
+    gateway_context_base64 TEXT,
     region              TEXT,
     f_port              INTEGER,
     f_cnt               BIGINT,
@@ -141,6 +144,14 @@ ALTER TABLE telemetry.uplinks ADD COLUMN IF NOT EXISTS asset_id TEXT;
 
 ~~~sql
 ALTER TABLE telemetry.uplinks ADD COLUMN IF NOT EXISTS device_model TEXT;
+~~~
+
+Preserve the first ChirpStack gateway reception identity used by the Node-RED mapping. These nullable fields are backward-compatible with existing telemetry and are required only when an event is selected for gateway-verified `telemetry-attestation-v2` correlation. Do not infer them later from timestamps.
+
+~~~sql
+ALTER TABLE telemetry.uplinks ADD COLUMN IF NOT EXISTS gateway_uplink_id BIGINT;
+ALTER TABLE telemetry.uplinks ADD COLUMN IF NOT EXISTS gateway_frequency_hz BIGINT;
+ALTER TABLE telemetry.uplinks ADD COLUMN IF NOT EXISTS gateway_context_base64 TEXT;
 ~~~
 
 ~~~sql

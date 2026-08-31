@@ -12,6 +12,7 @@ services:
       NODE_RED_ADMIN_PASSWORD_HASH: ${NODE_RED_ADMIN_PASSWORD_HASH}
       NODE_RED_MQTT_CLIENT_ID: ${NODE_RED_MQTT_CLIENT_ID}
       LORAWAN_REGION_ID: ${LORAWAN_REGION_ID}
+      FABRIC_SELECTED_DEV_EUI: ${FABRIC_SELECTED_DEV_EUI:-0000000000000000}
       TELEMETRY_DB_USER: ${TELEMETRY_DB_USER}
       TELEMETRY_DB_PASSWORD: ${TELEMETRY_DB_PASSWORD}
       NODE_EXTRA_CA_CERTS: /run/pgbouncer/ca.crt
@@ -20,7 +21,7 @@ services:
       - /etc/lorawan-pki/mqtt/ca.crt:/run/mqtt/ca.crt:ro
       - /etc/lorawan-pki/node-red-mqtt/client.crt:/run/mqtt/client.crt:ro
       - /etc/lorawan-pki/node-red-mqtt/client.key:/run/mqtt/client.key:ro
-      - /etc/lorawan-pki/pgbouncer/ca.crt:/run/pgbouncer/ca.crt:ro
+      - /etc/lorawan-pki/node-red-pgbouncer/ca.crt:/run/pgbouncer/ca.crt:ro
     extra_hosts:
       - "mqtt.internal.lorawan.com:${NODE_RED_LOCAL_IP}"
       - "pgbouncer.internal.lorawan.com:${NODE_RED_LOCAL_IP}"

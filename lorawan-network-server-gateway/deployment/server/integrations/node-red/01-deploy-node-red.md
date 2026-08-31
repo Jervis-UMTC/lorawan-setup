@@ -74,7 +74,7 @@ services:
       - /etc/lorawan-pki/mqtt/ca.crt:/run/mqtt/ca.crt:ro
       - /etc/lorawan-pki/node-red-mqtt/client.crt:/run/mqtt/client.crt:ro
       - /etc/lorawan-pki/node-red-mqtt/client.key:/run/mqtt/client.key:ro
-      - /etc/lorawan-pki/pgbouncer/ca.crt:/run/pgbouncer/ca.crt:ro
+      - /etc/lorawan-pki/node-red-pgbouncer/ca.crt:/run/pgbouncer/ca.crt:ro
     extra_hosts:
       - "mqtt.internal.lorawan.com:${NODE_RED_LOCAL_IP}"
       - "pgbouncer.internal.lorawan.com:${NODE_RED_LOCAL_IP}"
@@ -84,9 +84,11 @@ Use `NODE_RED_LOCAL_IP=10.104.0.8` on ulc-03 and `NODE_RED_LOCAL_IP=10.104.0.4` 
 
 The `group_add` entry gives the container's `uid=1000(node-red)` process supplementary read access to files owned `root:node-red-secrets` without making those files readable through host GID `1000`. Keep the MQTT private key `0640 root:node-red-secrets` and the PKI directory `0750 root:node-red-secrets`.
 
+PgBouncer keeps its commissioned CA under `/etc/lorawan-pki/pgbouncer` as `root:postgres` and intentionally does not grant Node-RED access to the PostgreSQL host group. Before starting a candidate, copy only the public CA certificate to `/etc/lorawan-pki/node-red-pgbouncer/ca.crt`, with directory `0750 root:node-red-secrets` and file `0640 root:node-red-secrets`, and verify that its SHA-256 matches the commissioned PgBouncer CA. The container then reads the dedicated copy at `/run/pgbouncer/ca.crt`; do not loosen the original PgBouncer PKI permissions.
+
 **Why these host mappings:** each Node-RED candidate uses its own local MQTT HAProxy `:18884` and PgBouncer `:6432`. This removes ulc-03 as a dependency of the standby. The logical TLS names stay unchanged while the local IP differs per host.
 
-The canonical shared cloud files are maintained under `deployment/server/integrations/node-red/runtime/` (`compose.yml`, `settings.js`, `package.json`, `package-lock.json`, and the environment template). Copy/review that bundle rather than independently recreating A and B by hand. `flows.json` remains a separately reviewed artifact until its runtime validation is complete.
+The canonical shared cloud files are maintained under `deployment/server/integrations/node-red/runtime/` (`compose.yml`, `settings.js`, `package.json`, `package-lock.json`, `flows.json`, and the environment template). The current A/B staging uses the same reviewed bytes, including `flows.json` SHA-256 `02be61d7fafdaa8877b9b6f5cf5ef32f7685730e300d4af55b49aadd76518718`. Copy/review that bundle rather than independently recreating A and B by hand; host-specific secrets and client private keys remain outside it.
 
 Validate the Compose artifacts on **both** hosts, but start only Node-RED A on ulc-03:
 

@@ -188,7 +188,7 @@ Next: return to [Phase 12A](../../cloud-production/12a-node-red-timescale-teleme
 
 ### Standby secret-group runtime boundary
 
-Each candidate uses a host-local `node-red-secrets` group for its own MQTT client private key. The Node-RED container receives only that group's numeric GID through Compose `group_add`; do not add the host login user to the secret group. Keep each key `0640 root:node-red-secrets`, its directory `0750 root:node-red-secrets`, and the Node-RED data directory numeric `1000:1000` mode `0700`. `NODE_RED_SECRET_GID` is host-specific protected deployment metadata and is not part of the shared flow bundle.
+Each candidate uses a host-local `node-red-secrets` group for its own MQTT client private key. The Node-RED container receives only that group's numeric GID through Compose `group_add`; do not add the host login user to the secret group. Keep each key `0640 root:node-red-secrets`, its directory `0750 root:node-red-secrets`, and the Node-RED data directory numeric `1000:1000` mode `0700`. `NODE_RED_SECRET_GID` is host-specific protected deployment metadata and is not part of the shared flow bundle. The same secret group also protects the candidate-local PgBouncer public-CA copy at `/etc/lorawan-pki/node-red-pgbouncer/ca.crt` (`0640 root:node-red-secrets`, directory `0750`). Its bytes must match the commissioned `/etc/lorawan-pki/pgbouncer/ca.crt` on that host; do not grant the container membership in the host `postgres` group.
 
 ### Repository-backed shared runtime layer
 

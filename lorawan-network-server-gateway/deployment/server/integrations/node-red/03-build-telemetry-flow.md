@@ -131,6 +131,11 @@ const receivedAt = new Date().toISOString();
 const fPort = numberOrNull(p.fPort);
 const fCnt = numberOrNull(p.fCnt);
 const gatewayId = rxInfo.gatewayId ? String(rxInfo.gatewayId).toLowerCase() : null;
+const gatewayUplinkIdRaw = numberOrNull(rxInfo.uplinkId);
+const gatewayUplinkId = Number.isInteger(gatewayUplinkIdRaw) && gatewayUplinkIdRaw >= 0 && gatewayUplinkIdRaw <= 0xffffffff ? gatewayUplinkIdRaw : null;
+const gatewayFrequencyRaw = numberOrNull((p.txInfo || {}).frequency);
+const gatewayFrequencyHz = Number.isInteger(gatewayFrequencyRaw) && gatewayFrequencyRaw > 0 ? gatewayFrequencyRaw : null;
+const gatewayContextBase64 = typeof rxInfo.context === 'string' ? rxInfo.context : null;
 const deduplicationId = String(p.deduplicationId || '').trim();
 const eventKey = deduplicationId || [
     devEui,
@@ -218,11 +223,11 @@ msg.query = [
     '  INSERT INTO telemetry.uplinks (',
     '    event_key, time, received_at, application_id, application_name, ',
     '    device_id, device_name, device_model, decoder_version, dev_eui, ',
-    '    gateway_id, region, f_port, f_cnt, confirmed, temperature_c, ',
+    '    gateway_id, gateway_uplink_id, gateway_frequency_hz, gateway_context_base64, region, f_port, f_cnt, confirmed, temperature_c, ',
     '    humidity_percent, battery_v, rssi_dbm, snr_db, payload_json, ',
     '    raw_data, mqtt_topic',
     '  ) VALUES (',
-    '    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, ',
+    '    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $25, $26, $27, $12, ',
     '    $13, $14, $15, $16, $17, $18, $19, $20, $21::jsonb, $22, $23',
     '  ) ON CONFLICT (event_key, time) DO NOTHING',
     '  RETURNING event_key, time',
@@ -270,7 +275,10 @@ msg.params = [
     JSON.stringify(decoded),               // $21
     p.data || null,                        // $22
     msg.topic || null,                     // $23
-    JSON.stringify(metrics)                // $24
+    JSON.stringify(metrics),               // $24
+    gatewayUplinkId,                       // $25
+    gatewayFrequencyHz,                    // $26
+    gatewayContextBase64                   // $27
 ];
 
 msg.telemetrySummary = {
@@ -281,7 +289,10 @@ msg.telemetrySummary = {
     validity,
     deviceModel,
     decoderVersion,
-    metricCount: metrics.length
+    metricCount: metrics.length,
+    gatewayUplinkId,
+    gatewayFrequencyHz,
+    gatewayContextPresent: gatewayContextBase64 !== null
 };
 
 return msg;
@@ -289,7 +300,9 @@ return msg;
 
 The code rejects malformed identity/time and rejects a payload that is not the frozen Agriculture Kit payload v2. It uses ChirpStack's `deduplicationId` when available; otherwise it derives a stable key from device identity, frame counter, port, and event time. Do not add a retry counter or current receipt time to the event key.
 
-`payload_json` preserves `test_sequence`, the complete decoded sensor object, and `sensor_validity_bitmap`. Invalid sensor groups are retained in `payload_json`, while their normalized measurement rows use `quality='invalid'` and a null measurement value so an old/sentinel value is not mislabeled as a valid physical measurement. The battery field has no payload-v2 validity bit; a positive finite voltage is normalized as measured, while the documented USB-only `0` sentinel remains visible in `payload_json`/the compatibility column and is marked invalid in normalized metrics.
+`payload_json` preserves `test_sequence`, the complete decoded sensor object, and `sensor_validity_bitmap`. Invalid sensor groups are retained in `payload_json`, while their normalized measurement rows use `quality='invalid'` and a null measurement value so an old/sentinel value is not mislabeled as a valid physical measurement.
+
+For gateway-verified `telemetry-attestation-v2`, the same first ChirpStack reception already used for `gateway_id`, RSSI, and SNR also preserves `rxInfo[0].uplinkId` and `rxInfo[0].context`, while `txInfo.frequency` is stored beside them. These nullable provenance fields are not a trust decision; they are deterministic join material for the independent verifier. Existing v1 rows may leave them null. Never reconstruct a missing v2 join by choosing the nearest MQTT timestamp. The battery field has no payload-v2 validity bit; a positive finite voltage is normalized as measured, while the documented USB-only `0` sentinel remains visible in `payload_json`/the compatibility column and is marked invalid in normalized metrics.
 
 `device_model` and `decoder_version` are provenance, not cosmetic labels. `decoderVersion` identifies **this Node-RED normalization mapping**, not the ChirpStack binary codec. Increment it for any material change to source-field names, scaling assumptions, units, or validity behavior.
 
@@ -339,7 +352,11 @@ A valid EMU-01 payload-v2 event should create one canonical uplink row plus one 
 
 For v2 evidence, Node-RED must never directly write `gateway_evidence.event_verification.status='verified'`. That state belongs to the independent verifier after it checks the earlier gateway and delivery evidence.
 
-## 3.6 Verify duplicate handling
+## 3.6 Verify duplicate handling and optional atomic Fabric enqueue
+
+The cloud HA runtime keeps Fabric selection as deployment policy rather than baking a real device identity into the shared flow. `FABRIC_SELECTED_DEV_EUI` is passed through the protected host environment. Until hardware returns, use the reserved fake DevEUI `0000000000000000` only for the documented pre-arrival synthetic fixture. When the approved real staging device is known, change only the protected environment value on both Node-RED candidates; keep the reviewed flow bytes identical.
+
+The same PostgreSQL statement must contain a data-modifying `queued_fabric` CTE that inserts `event_key='uplink:' || <source event key>` into `telemetry.fabric_outbox` with `schema_version='telemetry-attestation-v1'` only when the selected DevEUI matches. In the deployed cloud runtime the selection boolean remains parameter `$25`; the original telemetry parameters remain `$1` through `$24`, and the optional first-reception provenance is appended as `$26` through `$28`. The simpler standalone example above has no outbox CTE, so its provenance parameters begin at `$25`. Because the CTE selects only from `inserted_uplink`, replaying the same event cannot create another outbox job.
 
 Replay the same sanitized Inject-node message once. The row counts for its `event_key` and `time` must not increase:
 

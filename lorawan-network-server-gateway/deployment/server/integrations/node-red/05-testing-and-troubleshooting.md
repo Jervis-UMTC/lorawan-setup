@@ -39,6 +39,8 @@ For the cloud profile, the editor must remain bound to loopback rather than the 
 
 Healthy active output shows the container running without a restart loop and logs without settings, credential-secret, palette, or flow-load errors. **If both hosts show a running Node-RED ingestion container, treat that as split-brain and stop/fence one before troubleshooting anything else.**
 
+If Node.js reports `Ignoring extra certs from /run/pgbouncer/ca.crt` with `Permission denied`, do not change PgBouncer PKI modes. Verify the host has `/etc/lorawan-pki/node-red-pgbouncer/ca.crt` as `0640 root:node-red-secrets`, that its SHA-256 matches `/etc/lorawan-pki/pgbouncer/ca.crt`, and that Compose mounts the dedicated Node-RED copy to `/run/pgbouncer/ca.crt`. Recreate only the affected Node-RED container after correcting the mount so `NODE_EXTRA_CA_CERTS` is readable at process startup.
+
 ## 5.2 Confirm MQTT publishes application uplinks
 
 Single-host lab:
@@ -186,9 +188,9 @@ Also query `telemetry.measurements`. If uplinks exist but measurements do not, f
 
 Before a sensor arrives, you can test Node-RED and PostgreSQL with a synthetic message injected into the flow. This proves only the application pipeline; it does not prove RF reception, LoRaWAN activation, encryption, or gateway downlink.
 
-Use a reserved fake DevEUI such as `0000000000000000`, a unique `deduplicationId`, and obviously synthetic values. Prefer a development database. In a shared database, record the exact test event key and remove only those rows after verification; confirm the target counts before every delete.
+Use the reserved fake DevEUI `0000000000000000`, a unique `deduplicationId`, and obviously synthetic values. The cloud runtime defaults `FABRIC_SELECTED_DEV_EUI` to this all-zero fixture identity, so the same pre-arrival test can also prove the missing atomic `telemetry + fabric_outbox` enqueue path without selecting ordinary application events. When a real staging DevEUI is approved later, replace only the protected environment value on both Node-RED candidates. Prefer a development database. In this shared POC database, record the exact test event key and remove only those synthetic rows after all Node-RED/Grafana verification is complete; confirm target counts before every delete.
 
-Do not publish synthetic data to the production ChirpStack application topic. Prefer an Inject node wired directly to the normalization function. Synthetic success proves only JSON parsing, mapping, permissions, duplicate handling, and database writes; it does not prove RF, LoRaWAN activation, key validity, or downlink behavior.
+Do not publish synthetic data to the production ChirpStack application topic. Prefer an Inject node wired directly to the normalization function. Synthetic success proves JSON parsing, mapping, permissions, duplicate handling, database writes, atomic outbox enqueue, and the server-side Grafana read path; it does not prove RF, LoRaWAN activation, key validity, gateway delivery, or downlink behavior.
 
 ## 5.9 EMU-01 real-sensor acceptance
 
