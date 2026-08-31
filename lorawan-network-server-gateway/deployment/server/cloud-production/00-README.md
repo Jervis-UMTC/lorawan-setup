@@ -12,7 +12,7 @@ This POC is **not capacity sizing for production**. A few sensor uplinks are eno
 
 ## Deployment sequence and document status
 
-The numbering identifies the component manuals, but after Phase 9 the **dependency order is authoritative**. Phase 9 ChirpStack is COMPLETE / PASS. Phase 10 is the active setup boundary. Every remaining runtime feature required by the POC must be deployed and proven on its normal path before Phase 15 begins. Intentional host, process, broker, database, KMS, Fabric, or LTE failures are reserved for Phase 15; setup manuals must not consume those acceptance tests early.
+The numbering identifies the component manuals, but after Phase 9 the **dependency order is authoritative**. The core cloud HA stack through ChirpStack is commissioned; Phase 13A fast-path backup, OpenBao 3-node KMS normal path, the Fabric outbox database layer, Node-RED A/B server runtime, and Grafana server-only staging are also commissioned. Physical-gateway-dependent acceptance is temporarily deferred. There is no remaining Grafana server mutation to perform while the gateway is unavailable. Intentional host, process, broker, database, KMS, Fabric, or LTE failures remain reserved for Phase 15.
 
 Status meaning:
 
@@ -22,7 +22,7 @@ Status meaning:
 
 | Order | Manual | Status |
 |---:|---|---|
-| 0 | [00-build-execution-log.md](00-build-execution-log.md) | live evidence log |
+| 0 | [00-current-server-continuation-checkpoint.md](00-current-server-continuation-checkpoint.md) + [00-build-execution-log.md](00-build-execution-log.md) | **READ CHECKPOINT FIRST** for current state; execution log preserves detailed history |
 | 1 | [01-architecture-decisions-and-scope.md](01-architecture-decisions-and-scope.md) | REFERENCE |
 | 2 | [02-capacity-cost-and-ip-plan.md](02-capacity-cost-and-ip-plan.md) + [02a-digitalocean-machine-layout-and-specs.md](02a-digitalocean-machine-layout-and-specs.md) | REFERENCE / recorded baseline |
 | 3 | [03-digitalocean-vpc-droplets-and-firewalls.md](03-digitalocean-vpc-droplets-and-firewalls.md) | host-side three-Droplet/east-west foundation evidenced; provider firewall, Reserved IPv4, and public DNS remain externally managed or not yet evidenced |
@@ -32,14 +32,14 @@ Status meaning:
 | 7 | [07-haproxy-and-pgbouncer.md](07-haproxy-and-pgbouncer.md) | **COMPLETE / VALIDATED - HAProxy database routing + three-node PgBouncer TLS/SCRAM commissioning + Patroni failover routing PASS** |
 | 8 | [08-mqtt-and-valkey.md](08-mqtt-and-valkey.md) | **CORE SERVICE LAYER COMPLETE / VALIDATED - MQTT TLS broker failover PASS; Valkey/Sentinel HA + dual writable-primary HAProxy routing PASS; ChirpStack MQTT workload identity/ACL commissioning remains a Phase 9 dependency** |
 | 9 | [09-chirpstack-cloud-cluster.md](09-chirpstack-cloud-cluster.md) | **COMPLETE / PASS - two private ChirpStack nodes, dependency paths, coexistence, reciprocal single-instance survival, and clean rejoin proven** |
-| 10 | [10-self-managed-public-ingress.md](10-self-managed-public-ingress.md) | **ACTIVE PREFLIGHT - host-side readiness proven; provider/DNS/public-PKI inputs still required before public mutation** |
-| 11 | [11-raspberry-pi-4g-backhaul.md](11-raspberry-pi-4g-backhaul.md) + [11A current continuation checkpoint](11a-phase11-continuation-checkpoint.md) | **ACTIVE REQUIRED PRE-TEST SETUP** - custom SIM7600-capable Gateway OS build currently compiling; gateway SD still untouched; no outage injection here |
-| 12 | [12-gateway-and-device-migration.md](12-gateway-and-device-migration.md) | **REQUIRED PRE-TEST SETUP** - authoritative cloud gateway/device cutover or fresh provisioning |
-| 12A | [12a-node-red-timescale-telemetry.md](12a-node-red-timescale-telemetry.md) | **REQUIRED PRE-TEST SETUP** - Node-RED validation/normalization before TimescaleDB + atomic outbox enqueue |
-| 13 | [13-backup-restore-and-disaster-recovery.md](13-backup-restore-and-disaster-recovery.md) | **REQUIRED TWICE** - 13A pre-cutover safety checkpoint and 13B final full-stack pre-test snapshot |
-| 14A | [14a-grafana-cloud-deployment.md](14a-grafana-cloud-deployment.md) | **REQUIRED PRE-TEST SETUP** - Grafana only after Node-RED stores real telemetry |
-| 20 | [20-openbao-and-fabric-adapter.md](20-openbao-and-fabric-adapter.md) | **REQUIRED PRE-TEST SETUP despite numbering** - OpenBao + reviewed dual Fabric adapters + one normal commit; OpenBao-only infrastructure may be commissioned in parallel using [20A](20a-openbao-three-node-ha-deployment.md) |
-| 14 | [14-observability-alerting-and-logging.md](14-observability-alerting-and-logging.md) | **REQUIRED PRE-TEST SETUP** - healthy-baseline evidence harness after final backup |
+| 10 | [10-self-managed-public-ingress.md](10-self-managed-public-ingress.md) | **HOST-SIDE BOUNDARY PASS / EXTERNAL INPUTS PENDING** - provider Reserved IPv4/firewall/public DNS/public PKI remain externally controlled or unevidenced |
+| 11 | [11-raspberry-pi-4g-backhaul.md](11-raspberry-pi-4g-backhaul.md) + [11A current continuation checkpoint](11a-phase11-continuation-checkpoint.md) | **HARDWARE-DEFERRED REQUIRED SETUP** - resume when the physical gateway is available; do not infer completion from server state |
+| 12 | [12-gateway-and-device-migration.md](12-gateway-and-device-migration.md) | **HARDWARE-DEFERRED REQUIRED SETUP** - authoritative gateway/device cutover or fresh provisioning waits for Phase 11 physical access |
+| 12A | [12a-node-red-timescale-telemetry.md](12a-node-red-timescale-telemetry.md) | **SERVER APPLICATION COMMISSIONING PASS / REAL-RF ACCEPTANCE DEFERRED** - atomic telemetry + outbox enqueue and replay were proven synthetically; A remains active/healthy and B fenced; do not repeat until real gateway/EMU-01 acceptance |
+| 13 | [13-backup-restore-and-disaster-recovery.md](13-backup-restore-and-disaster-recovery.md) | **13A FAST-PATH PASS / 13S SERVER-ONLY SNAPSHOT ACTIVE / 13B FINAL LATER** - current server exports/backup tooling may be pre-staged now; final full-stack snapshot waits for remaining dependencies |
+| 14A | [14a-grafana-cloud-deployment.md](14a-grafana-cloud-deployment.md) | **SERVER-ONLY STAGING COMPLETE / PASS; REAL-DATA ACCEPTANCE DEFERRED** - Grafana 13.2.0 runs loopback-only with strict-TLS `telemetry_reader` datasource and provisioned dashboard; real-reading freshness acceptance waits for hardware |
+| 20 | [20-openbao-and-fabric-adapter.md](20-openbao-and-fabric-adapter.md) | **OPENBAO + OUTBOX + ADAPTER SOURCE/BUILD PASS / FABRIC EXECUTION BLOCKED** - KMS/audit, outbox, adapter source/tests, four-binary build lock, and standby wiring are prepared; immutable OCI deployment plus the real external Fabric handoff/credential activation remain |
+| 14 | [14-observability-alerting-and-logging.md](14-observability-alerting-and-logging.md) | **14S SERVER-ONLY HARNESS PASS / FINAL PHASE 14 AFTER 13B** - `SERVER_ONLY_EVIDENCE_HARNESS=PASS` for the commissioned server baseline; do not repeat it without relevant state change, but rerun the final healthy baseline after all required dependencies are commissioned |
 | 14B | [14b-pre-test-commissioning-gate.md](14b-pre-test-commissioning-gate.md) | **HARD GO/NO-GO** - all setup must pass before Phase 15 |
 | 15 | [15-failover-chaos-and-acceptance-testing.md](15-failover-chaos-and-acceptance-testing.md) | **FIRST FAILURE-INJECTION PHASE** |
 | 16 | [16-operations-upgrades-and-scaling.md](16-operations-upgrades-and-scaling.md) | STANDBY / DRAFT |
@@ -50,9 +50,9 @@ Status meaning:
 
 **Parallel-safe OpenBao exception:** the OpenBao-only infrastructure subphase in [20A](20a-openbao-three-node-ha-deployment.md) may be commissioned while Phase 11 is compiling because it does not require gateway traffic, Node-RED, Grafana, the Fabric adapter image, or the external Fabric handoff. This exception does not move full Phase 20 ahead of Phase 12A/14A; it only removes idle time by preparing the independent 3-node KMS normal path.
 
-**Authoritative pre-test order:** `Phase 10 -> Phase 11 -> Phase 13A -> Phase 12 -> Phase 12A Node-RED/TimescaleDB -> Phase 14A Grafana -> Phase 20 OpenBao/Fabric -> Phase 13B -> Phase 14 -> Phase 14B -> Phase 15`. The numbering is retained for existing filenames; dependency order wins. **Hardware-unavailable exception:** Phase 13A's cloud backup/restore checkpoint may be executed while Phase 11 is temporarily blocked by lack of physical gateway access because 13A does not mutate the gateway. This does not reorder the cutover dependency: Phase 12 remains blocked until both Phase 11 normal-path commissioning and Phase 13A have passed. The runtime application path is `ChirpStack -> Node-RED -> TimescaleDB -> Grafana`, while Fabric work is asynchronous through `telemetry.fabric_outbox`.
+**Authoritative pre-test order:** normal dependency order remains `Phase 10 -> Phase 11 -> Phase 13A -> Phase 12 -> Phase 12A -> Phase 14A -> Phase 20 -> Phase 13B -> Phase 14 -> Phase 14B -> Phase 15`. The numbering is retained for existing filenames; dependency order wins. **Server-first hardware-unavailable exception:** cloud-only work may be prepared or commissioned early when it does not require gateway traffic and does not weaken a later gate. Under that exception, Phase 13A fast backup, OpenBao 20A, the Fabric outbox database layer, Node-RED server runtime, and Grafana server staging may proceed while Phase 11/12 and real-uplink acceptance wait for physical access. Early server staging never converts a hardware-dependent or external-provider gate into PASS. The runtime application path remains `ChirpStack -> Node-RED -> TimescaleDB -> Grafana`; Fabric work remains asynchronous through `telemetry.fabric_outbox`.
 
-**Current stop point:** Phase 9 is COMPLETE / PASS. Phase 10 host-owned ingress work is complete for its current boundary while provider-owned Reserved-IP/firewall/public-DNS/public-PKI activation remains externally pending. **Phase 11 is the active operator task**; its pinned Gateway OS `v4.12.0` Raspberry Pi Base image with SIM7600 support is currently compiling and the gateway SD card has not been touched. Read [11A current continuation checkpoint](11a-phase11-continuation-checkpoint.md) before resuming Phase 11 in a new session. Phase 13A was paused after preflight while Phase 11 is active; Phase 12 remains blocked until Phase 11 normal-path commissioning and Phase 13A both pass. Do not begin Phase 15 merely because the LoRaWAN core is healthy. The full-feature target requires every pre-test component, including Grafana, OpenBao, and the reviewed Fabric adapter runtime, to be commissioned first. If a required implementation such as the Fabric adapter or selected gateway-integrity runtime is absent, Phase 14B is `BLOCKED` and counted fault testing does not begin.
+**Current continuation boundary:** the commissioned server stack includes etcd, PostgreSQL/Patroni/TimescaleDB, HAProxy/PgBouncer, Mosquitto, Valkey/Sentinel, two-node ChirpStack, Phase 13A fast-path backup/off-host transport, the three-node OpenBao/KMS path including its audit prerequisite, the Fabric outbox database layer, Node-RED A/B with A active and B fenced on the atomic-outbox revision, and Grafana on `ulc-03`. The Node-RED synthetic atomic-outbox/replay proof and Grafana synthetic datasource/read-path proof are complete, their exact fixtures were cleaned, and the reserved synthetic identity is back to zero. Phase 13S and Phase 14S are PASS and must not be repeated. The gateway/security evidence **source implementation boundary is now complete enough for deployment**: ingest, collector, verifier/trusted decoder, verifier-owned `verified` promotion, S3 backend, Fabric adapter, frozen v1/v2 canonical vectors, four locked Linux/amd64 binaries, scratch packaging validation, and three-host deployment/standby wiring exist. The next server-first boundary is operational commissioning: build/push/pin four OCI images, provision the durable evidence store, apply `gateway_evidence` migration/login identities and PgBouncer refresh, issue Evidence PKI/MQTT identities, commission private replicas/shared-443 routing, and stage adapter-1/2 disabled. Fabric execution remains blocked only by immutable image deployment plus the real external Fabric handoff and deliberate SecretID/identity activation. Physical Gateway Phases 11/12 plus real EMU-01 Phase 12A/14A remain deferred; provider-owned Reserved IPv4/firewall/public DNS/public PKI remain external. Final Phase 13B/14, Phase 14B, and Phase 15 remain blocked until their actual dependencies are commissioned.
 
 ## POC resources
 
@@ -80,10 +80,10 @@ Do not create managed PostgreSQL, managed Valkey, block volumes, dedicated monit
 
 ## Target service placement
 
-The following is the **full intended placement**, not a guarantee that every listed service is already commissioned. At the present checkpoint, etcd, PostgreSQL/Patroni, HAProxy database routing, PgBouncer, Mosquitto on `ulc-01/02`, and Valkey/Sentinel on all three nodes are live-validated. The application databases, TimescaleDB telemetry schema, runtime database roles, hardened PostgreSQL HBA policy, and logical backup boundary are also commissioned. ChirpStack itself is the next active deployment phase. Public ingress, Node-RED/Grafana deployment, OpenBao, Fabric adapters, and final gateway migration remain later work.
+The following is the **full intended placement**, not a guarantee that every listed evidence/Fabric service is already commissioned. Current live server evidence covers etcd, PostgreSQL/Patroni/TimescaleDB, HAProxy/PgBouncer, Mosquitto, Valkey/Sentinel, two-node ChirpStack, OpenBao 3/3, the Fabric outbox schema, Node-RED A/B atomic-outbox runtime with exactly one active instance, and Grafana on `ulc-03`. Evidence/Fabric source/build work now matches the placement below; the remaining server work is image/storage/DB/PKI/network commissioning. Fabric adapter-1/2 may be deployed in fail-closed standby before the external handoff, but ledger submission remains disabled until the explicit activation preflight and credential boundary pass. Public provider ingress and physical gateway cutover remain separate external/hardware boundaries.
 
 ```text
-ha-01
+ha-01 / ulc-01
   etcd-1
   PostgreSQL / Patroni-1
   HAProxy
@@ -92,9 +92,11 @@ ha-01
   Mosquitto-1 preferred
   Valkey-1 + Sentinel-1
   OpenBao-1
-  Fabric adapter-1
+  gateway-evidence-ingest-1 target
+  gateway-mqtt-evidence-collector-1 target
+  Fabric adapter-1 target
 
-ha-02
+ha-02 / ulc-02
   etcd-2
   PostgreSQL / Patroni-2
   HAProxy
@@ -103,17 +105,26 @@ ha-02
   Mosquitto-2 backup
   Valkey-2 + Sentinel-2
   OpenBao-2
-  Fabric adapter-2
+  Node-RED B standby / fenced except during promotion
+  gateway-evidence-ingest-2 target
+  gateway-evidence-verifier-1 + trusted decoder target
+  Fabric adapter-2 target
 
-ha-03
+ha-03 / ulc-03
   etcd-3
   PostgreSQL / Patroni-3
   HAProxy            private DB + internal MQTT routing
   PgBouncer          telemetry/Grafana DB pooling
   Valkey-3 + Sentinel-3
   OpenBao-3
-  Node-RED
-  Grafana
+  Node-RED A active
+  Grafana            non-critical visualization; single instance acceptable
+  gateway-mqtt-evidence-collector-2 target
+  gateway-evidence-verifier-2 + trusted decoder target
+
+external / independently durable
+  raw gateway-evidence object storage target
+  must survive one Droplet loss; not two local folders
 ```
 
 ## The main simplification: one PostgreSQL HA cluster

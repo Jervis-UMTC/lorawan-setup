@@ -6,10 +6,11 @@ Choose the target before starting.
 
 Start with:
 
-1. [cloud-production/00-README.md](cloud-production/00-README.md) for the architecture map and boundaries;
-2. [cloud-production/02-capacity-cost-and-ip-plan.md](cloud-production/02-capacity-cost-and-ip-plan.md) for the non-secret IP/version worksheet;
-3. [cloud-production/00-build-execution-log.md](cloud-production/00-build-execution-log.md) for the real executed commands, failures, fixes, and accepted checkpoint;
-4. continue only with the next numbered manual when it is no longer marked `STANDBY / DRAFT`.
+1. [cloud-production/00-current-server-continuation-checkpoint.md](cloud-production/00-current-server-continuation-checkpoint.md) for the exact current server state and immediate new-chat resume point;
+2. [cloud-production/00-README.md](cloud-production/00-README.md) for the architecture map and phase boundaries;
+3. [cloud-production/02-capacity-cost-and-ip-plan.md](cloud-production/02-capacity-cost-and-ip-plan.md) for the non-secret IP/version worksheet;
+4. [cloud-production/00-build-execution-log.md](cloud-production/00-build-execution-log.md) for detailed executed commands, failures, fixes, and historical evidence;
+5. follow the dependency/status table in `cloud-production/00-README.md`; file numbering is not the execution order after the core HA stack, and server-only preparation may advance while an explicitly hardware-dependent gate is deferred.
 
 [cloud-production/19-cloud-ha-grafana-deployment-day-runbook.md](cloud-production/19-cloud-ha-grafana-deployment-day-runbook.md) is the complete target sequence reference, not proof that its later phases are already validated.
 
@@ -56,5 +57,5 @@ Each suite has its own pass conditions. Stop at the first failing layer.
 - **[ha-cluster/](ha-cluster/00-README.md)**: Deploy etcd quorum, Spilo/Patroni PostgreSQL HA, HAProxy, PgBouncer, Mosquitto, Valkey, ChirpStack, and gateway MQTT mTLS.
 - **[data-layer/](data-layer/00-README.md)**: Deploy TimescaleDB hypertables for IoT telemetry, Node-RED normalization flows, and Grafana monitoring dashboards with read-only database accounts.
 - **[fabric-attestation/](fabric-attestation/00-README.md)**: Collect the external Fabric handoff, deploy OpenBao Transit, create the durable outbox/adapter, and test commit/reconciliation behavior. Gateway-evidence v2 contracts live under `integrations/gateway-integrity/`.
-- **[cloud-production/](cloud-production/00-README.md)**: Current three-Droplet HA proof of concept / future-deployment scale model. TimescaleDB stays enabled inside the Patroni cluster; Node-RED/Grafana are on ha-03; OpenBao is 3-member; Fabric adapter execution has an explicit implementation-readiness gate.
+- **[cloud-production/](cloud-production/00-README.md)**: Current three-Droplet HA proof of concept / future-deployment scale model. TimescaleDB stays inside Patroni; Node-RED A is active on ulc-03 with B fenced on ulc-02; Grafana is on ulc-03; OpenBao is 3-member. The immediate server-first engineering priority is the missing gateway/security evidence-service implementation under `integrations/gateway-integrity/`; OpenBao audit closure is deferred until before Fabric signing credentials are issued.
 - **[integrations/](integrations/node-red/00-README.md)**: Consult reusable technology-specific manuals.

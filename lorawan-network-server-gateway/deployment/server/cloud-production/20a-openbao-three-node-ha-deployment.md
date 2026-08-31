@@ -1,6 +1,6 @@
 # 20A. OpenBao Three-Node HA Deployment Runbook
 
-> **Status: PREPARED / NOT YET EXECUTED.** This runbook commissions only the OpenBao KMS portion of Phase 20 while the physical Gateway OS work continues. It keeps the existing HA architecture intact and proves only the healthy normal path. OpenBao member-loss, quorum-loss, restart/unseal recovery, Raft restore, adapter-loss, and Fabric-outage tests remain Phase 15 work.
+> **Status: COMPLETE / PASS FOR THE OPENBAO NORMAL PATH.** Recorded execution below proves the three-node Raft cluster, private TLS, stable HAProxy KMS endpoints, Transit key/policy/AppRole boundary, and normal sign/verify acceptance. Keep all three members running. OpenBao member-loss, quorum-loss, restart/unseal recovery, Raft restore, adapter-loss, and Fabric-outage tests remain Phase 15 work; Fabric adapter deployment is a separate blocked Phase 20 boundary.
 
 ## 20A.1 Goal
 

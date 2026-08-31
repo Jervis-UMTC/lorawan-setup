@@ -1,6 +1,6 @@
 # 20. OpenBao + Fabric Adapter for the Tiny HA POC
 
-> **Status: REQUIRED PRE-TEST SETUP / DRAFT despite file number 20.** For the full-feature POC, OpenBao and both reviewed Fabric adapter workers must be commissioned on their **normal path before Phase 15**. If the adapter implementation/image is still absent, Phase 14B is `BLOCKED`; do not begin counted chaos testing with an intentionally incomplete architecture.
+> **Status: OPENBAO + OUTBOX SERVER BOUNDARY PASS / FABRIC EXECUTION BLOCKED.** The three-node OpenBao normal path and `telemetry.fabric_outbox` database layer are commissioned. The remaining full-feature Phase 20 work requires a completed reviewed/pinned Fabric adapter runtime plus the real external Fabric handoff and one normal confirmed ledger commit. Until those inputs exist, Phase 14B is `BLOCKED`; do not invent an adapter image, issue a runtime SecretID prematurely, or begin counted chaos testing with an intentionally incomplete architecture.
 
 ## 20.1 Goal
 
@@ -221,7 +221,28 @@ client identity
 
 Do not deploy a Fabric test network on these three Droplets.
 
-## 20.8A Adapter implementation readiness gate
+## 20.8A Server-first security and cryptographic readiness before an adapter exists
+
+The adapter implementation gate below does **not** prevent independent preparation that requires no gateway hardware and no Fabric worker runtime.
+
+Before any future Fabric-adapter SecretID is issued, require:
+
+```text
+OpenBao 3/3 healthy/unsealed through the stable :18200 endpoint
+OpenBao audit-device state explicitly inspected and a reviewed audit path commissioned
+fabric-adapter SecretID accessor count remains zero while no runtime exists
+Node-RED selected-event atomic telemetry + outbox enqueue proven with the isolated synthetic fixture
+frozen telemetry-attestation-v1 canonical-byte fixture hash reproduces exactly
+expected v1 SHA-256 = c2952e8cddc7f39a17522cb49dd3292c9af75c00fdc37172f74bb3dc955f3a5c
+```
+
+The frozen v1 canonical string is already committed in `../integrations/hyperledger-fabric/04-data-contract-and-chaincode.md`. Reproducing its exact SHA-256 is safe now and proves the byte fixture has not drifted. A true RFC 8785 **canonicalizer implementation** still belongs to the reviewed adapter/runtime and must pass the same vector at startup; hashing the already-frozen canonical string is not a substitute for that implementation test.
+
+OpenBao auditing is part of the **signing** trust boundary. The Fabric security/incident-response manuals depend on KMS audit evidence to establish a possible unauthorized-signing window. The current cloud execution history does not record a commissioned audit device, so inspect that state and close the gap before releasing any signing workload credential. This does **not** block the gateway/security evidence ingest, collector, verifier, trusted-decoder, storage, or database implementation because those services hold no OpenBao/Fabric signing authority. Keep audit storage protected and separate from Raft data, use bounded host-side rotation, and avoid casually disabling/re-enabling an audit device because that destroys its existing salt/HMAC continuity.
+
+Do not issue a SecretID merely to prove AppRole exists. The current cloud `fabric-adapter` AppRole has a RoleID and **zero SecretID accessors**; preserve that state until a reviewed adapter implementation and credential-delivery workflow exist. For the eventual two-worker deployment, use separate adapter-1/adapter-2 OpenBao workload identities where practical instead of copying one long-lived reusable SecretID to both hosts.
+
+## 20.8B Adapter implementation readiness gate
 
 The detailed outbox/adapter reference currently states that this repository **does not yet contain a completed reviewed Fabric adapter image**. `<PINNED_FABRIC_ADAPTER_IMAGE>` is therefore an unresolved implementation input, not a deployable image name.
 

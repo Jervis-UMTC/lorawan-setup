@@ -407,14 +407,21 @@ The current telemetry function uses parameters `$1` through `$24`. Append **one*
 
 The SQL above deliberately queues `telemetry-attestation-v1` and remains the executable compatibility baseline while the new gateway verifier images do not yet exist.
 
-Immediately before `return msg;` in the Node-RED function, append the policy value after the existing metrics parameter:
+Keep selection policy outside the shared flow so A/B remain byte-identical. The cloud runtime passes `FABRIC_SELECTED_DEV_EUI` through the protected host environment. Until a real staging device is approved, the reserved value `0000000000000000` selects only the documented pre-arrival synthetic fixture. When hardware returns, replace that protected environment value on both Node-RED candidates with the approved lowercase 16-hexadecimal staging DevEUI.
+
+Before building the parameter array, validate and derive the policy value:
 
 ```javascript
-const fabricSelected = devEui === '<APPROVED_TEST_DEV_EUI>';
-msg.params.push(fabricSelected); // $25
+const fabricSelectedDevEui = String(env.get('FABRIC_SELECTED_DEV_EUI') || '0000000000000000').trim().toLowerCase();
+if (!/^[0-9a-f]{16}$/.test(fabricSelectedDevEui)) {
+    node.error('FABRIC_SELECTED_DEV_EUI must be exactly 16 hexadecimal characters');
+    return null;
+}
+const fabricSelected = devEui === fabricSelectedDevEui;
+// Append fabricSelected as parameter $25 after the existing metrics parameter.
 ```
 
-Replace `<APPROVED_TEST_DEV_EUI>` with the lowercase 16-hexadecimal DevEUI of the staging device. Verify `msg.params.length === 25` in a temporary debug node during commissioning, then remove that debug output. **Stop here** if the length is not exactly `25`; an incorrect parameter position can queue the wrong event or break the atomic SQL statement.
+Verify the deployed function has exactly 25 parameters during commissioning. **Stop here** if the parameter count or position differs; an incorrect parameter position can queue the wrong event or break the atomic SQL statement.
 
 PostgreSQL executes a data-modifying CTE once as part of the surrounding statement. If the statement fails, the telemetry row, measurements, and outbox insert roll back together.
 

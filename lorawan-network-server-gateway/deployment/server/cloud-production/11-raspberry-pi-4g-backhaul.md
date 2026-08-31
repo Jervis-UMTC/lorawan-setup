@@ -1,6 +1,6 @@
 # 11. Gateway OS Delivery Buffer and Integrity Journal over a USB 4G/LTE Dongle
 
-> **Status: REQUIRED PRE-TEST SETUP / ACTIVE.** The physical gateway is available again. Preserve the known hardware baseline (Raspberry Pi 4B + RAK5146 + Waveshare SIM7600G-H) and resume from the read-only reuse/modem inventory before changing live gateway state. Phase 13A cloud backup work is paused while Phase 11 is active; Phase 12 still requires both Phase 11 normal-path commissioning and Phase 13A PASS. The Phase 10 provider-owned Reserved-IP/firewall/DNS work remains pending externally. **Do not perform LTE-outage, gateway-reboot, broker-loss, or queue-drain failure experiments here; Phase 15 owns those tests after the full setup gate passes.**
+> **Status: REQUIRED PRE-TEST SETUP / HARDWARE DEFERRED.** The physical gateway is not currently accessible. Preserve all recorded Phase 11 evidence and resume from `11a-phase11-continuation-checkpoint.md` when hardware access returns; do not redo passed server-side MQTT/certificate work merely because the hardware track is paused. The streamlined Phase 13A backup checkpoint is already PASS. Phase 12 remains hardware-dependent, while server-only commissioning continues independently. Provider-owned Reserved IPv4/firewall/public DNS/public PKI remain external. **Do not perform LTE-outage, gateway-reboot, broker-loss, or queue-drain failure experiments here; Phase 15 owns those tests after the full setup gate passes.**
 
 ## 11.0 Fast reuse gate - inspect before changing the gateway
 

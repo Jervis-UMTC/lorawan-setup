@@ -401,6 +401,19 @@ Verify chain, hostname, expiry, key usage, and issuer. Automate expiry alerts wi
 
 ## 4.13 Hardening acceptance
 
+### Current server-first security gaps — 2026-08-29
+
+The original host baseline is accepted, but a later full-stack audit found service-security items that are **not** closed merely by the host-hardening PASS:
+
+- certificate-expiry monitoring is required below, but no commissioned checker/timer is recorded;
+- Fabric/KMS incident response depends on OpenBao audit evidence, but no commissioned OpenBao audit device is recorded;
+- only the Spilo image has a detailed recorded vulnerability/hardening review; the other immutable service images still need scan/provenance coverage or an explicitly accepted gap;
+- Docker log/resource/security options are documented consistently for Spilo/OpenBao, but Node-RED, Grafana, ChirpStack, and etcd require a read-only effective-runtime inventory before any hardening recreate is justified;
+- etcd private HTTP remains an explicit POC transport-security exception, not production transport-security signoff;
+- UFW remains intentionally inactive until an independent provider/recovery-console path exists; do not trade remote availability for a cosmetic firewall checkbox.
+
+Current server-first priority is the missing gateway/security evidence runtime because it is part of the required v2 architecture and does not need OpenBao/Fabric signing authority. After the evidence services are minimally commissioned, close OpenBao audit evidence **before releasing any Fabric signing credential**, then certificate-expiry monitoring, deterministic Fabric-v1 exact-byte/digest preflight, and live container-security inventory. Do not combine setup with unrelated HA/failure injection.
+
 Complete only when:
 
 - SSH password and root login policy is verified without lockout;

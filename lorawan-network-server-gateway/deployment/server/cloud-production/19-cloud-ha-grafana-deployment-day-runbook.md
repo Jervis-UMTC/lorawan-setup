@@ -1,6 +1,6 @@
 # 19. Absolute-Minimum 3-Server HA POC Runbook
 
-> **Status: SEQUENCE REFERENCE, NOT EXECUTION AUTHORITY.** The live build has completed through Phase 9 ChirpStack HA and is now in Phase 10 public-ingress setup. Follow each component manual for exact current commands. The mandatory remaining pre-test order is Phase 10 -> 11 -> 13A -> 12 -> 12A -> 14A -> 20 -> 13B -> 14 -> 14B; **Phase 15 is the first intentional failure-injection phase**.
+> **Status: SEQUENCE REFERENCE, NOT EXECUTION AUTHORITY.** The live server build includes the core HA stack, Phase 13A fast backup, OpenBao 3-node normal path, Fabric outbox schema, Node-RED server runtime, and Grafana server-only staging. Grafana 13.2.0 is already running loopback-only with strict-TLS read-only PostgreSQL access and a provisioned dashboard; only its real EMU-01 freshness correlation remains hardware-dependent. Gateway/cutover and real-uplink acceptance remain deferred. Full Fabric execution still waits for a reviewed adapter implementation and external handoff. Follow each component manual and `00-build-execution-log.md` for current evidence. **Phase 15 remains the first intentional failure-injection phase**.
 
 Use this runbook to build a **small scale model of the future deployment**.
 
@@ -424,7 +424,7 @@ Node-RED B -> pgbouncer.internal.lorawan.com:6432 -> ulc-02 local PgBouncer
 8. Enable the parameterized PostgreSQL writes and prove that uplink produces one canonical `telemetry.uplinks` row plus the reviewed `telemetry.measurements` rows; invalid sensor bits must not be stored as measured stale values.
 9. Deliberately replay the same event and prove the uniqueness rules prevent duplicates.
 10. Follow [../integrations/node-red/06-active-passive-ha.md](../integrations/node-red/06-active-passive-ha.md) for the fenced promotion/failback acceptance test in Phase 15; do not test by running both subscribers together.
-11. Only after Node-RED storage is correct, deploy Grafana using [14a-grafana-cloud-deployment.md](14a-grafana-cloud-deployment.md).
+11. Grafana server staging may proceed now using [14a-grafana-cloud-deployment.md](14a-grafana-cloud-deployment.md) even while the physical gateway is unavailable. The immutable Grafana 13.2.0 image/runtime preflight is already PASS; finish secure data-source/dashboard staging against the empty schema, but do not claim full Phase 14A until a real Node-RED-stored EMU-01 event proves freshness/latest-reading behavior.
 
 Visible data path:
 

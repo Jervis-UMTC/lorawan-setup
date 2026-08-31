@@ -1,6 +1,6 @@
 # 14. Minimal POC Observability and Evidence Capture
 
-> **Status: REQUIRED PRE-TEST SETUP / DRAFT.** After Phase 13B, run this evidence harness once against the **fully healthy system without injecting any fault**. The purpose is to prove every command, permission, evidence path, and timestamp field works before Phase 15.
+> **Status: 14S SERVER-ONLY HARNESS PRE-STAGING MAY PROCEED / FINAL PHASE 14 AFTER 13B.** The final healthy-baseline evidence run still occurs only after Phase 13B against the fully commissioned system. While hardware/provider/Fabric dependencies are unavailable, an interim **14S server-only harness** may be run against the already commissioned server components to prove commands, permissions, UTC timestamps, redaction, and evidence-directory structure early. `14S` is preparation evidence, not the final Phase 14 PASS.
 
 The POC needs **repeatable evidence**, not a production monitoring platform.
 
@@ -10,11 +10,43 @@ The important rule is:
 
 > First prove the evidence harness on a fully healthy baseline. Only after Phase 14B passes should the same capture set be used before, during, and after Phase 15 failures.
 
+### Phase 14S server-only evidence-harness pre-stage
+
+Before the final Phase 13B exists, the server-only portion of the harness may be exercised once with a `SERVER-PRESTAGE-...` run ID. Populate only a `before/` state; do not create a fake failure state. Prove non-secret capture for the components that are actually deployed: host resources, etcd, Patroni/PostgreSQL/TimescaleDB, PgBouncer/HAProxy, Valkey/Sentinel, Mosquitto, ChirpStack, Node-RED A/B state, Grafana, OpenBao, and `telemetry.fabric_outbox`. Record hardware/provider/Fabric-adapter/gateway-integrity fields as `DEFERRED` or `BLOCKED` rather than inventing values.
+
+The 14S pass marker is `SERVER_ONLY_EVIDENCE_HARNESS=PASS`. This means the server-side commands/permissions are ready. It does **not** authorize Phase 15 and does not replace the final healthy-baseline run.
+
+### Phase 14S current execution state - 2026-08-29
+
+The first server-only healthy-state capture created run ID `SERVER-PRESTAGE-20260829T133354Z` under `/home/opsadmin/lorawan-ha-evidence/SERVER-PRESTAGE-20260829T133354Z`. It is read-only: no service restart, configuration mutation, backup, or failure injection is part of this run.
+
+The following gates are authoritative PASS and must not be repeated merely because a later harness step stopped:
+
+```text
+THREE_HOST_EVIDENCE=PASS
+ETCD_3_MEMBER_HEALTH=PASS
+PATRONI_1_LEADER_2_REPLICAS=PASS
+POSTGRES_TIMESCALE_OUTBOX=PASS
+NODE_RED_SINGLE_ACTIVE=PASS
+```
+
+At capture time Patroni reported `10.104.0.2` as the single leader and `10.104.0.4` / `10.104.0.8` as replicas. Node-RED A was `running|0|healthy` with HTTP 200 on `127.0.0.1:1880`; Node-RED B remained fenced/stopped. The recurring PostgreSQL locale warning remained non-blocking.
+
+The first Grafana step printed `GRAFANA_CONTAINER=FAIL`, but this was a discovery-harness false negative rather than a service failure. The harness searched Docker's displayed image text for the word `grafana`; because the immutable image was displayed as digest prefix `3fd54ae12146`, no candidate was found. A direct read-only diagnostic then proved the Compose-labeled container `grafana` was `running`, restart count `0`, `OOMKilled=false`, memory limit `536870912`, listener `127.0.0.1:3000`, and `/api/health` returned database `ok`, Grafana `13.2.0`, commit `f681b1359f6a0b8ecb9f2c49a88ac72b75bde73b`. `GRAFANA_RUNTIME_DISCOVERY=PASS` is authoritative.
+
+The corrected resume preserved Steps 1-6, then passed `GRAFANA_HEALTH=PASS` using the Compose service label / loopback port rather than image-name text, and passed `CHIRPSTACK_TWO_NODE_RUNTIME=PASS` on `ulc-01` and `ulc-02`. These are now authoritative and must not be rerun merely because the next OpenBao probe stopped.
+
+The OpenBao step then failed before collecting any member state because `docker exec openbao bao status -format=json` used the CLI default `https://127.0.0.1:8200`. The commissioned OpenBao listeners are intentionally bound to the host-private addresses `10.104.0.2:8200`, `10.104.0.4:8200`, and `10.104.0.8:8200`; container loopback is not a commissioned listener. The resulting `dial tcp 127.0.0.1:8200: connect: connection refused` is therefore a harness-address defect, not evidence of OpenBao service failure. Resume only from OpenBao onward and set `BAO_ADDR=https://<that-node-private-ip>:8200` plus `BAO_CACERT=/openbao/tls/ca.crt` for every in-container `bao status` call.
+
+The final resume set `BAO_ADDR` explicitly to each commissioned private OpenBao API address and `BAO_CACERT=/openbao/tls/ca.crt`. All three members returned `initialized=true`, `sealed=false`, and `ha_enabled=true`, so `OPENBAO_3_NODE_HEALTH=PASS` is authoritative. The harness then wrote the provider/hardware/Fabric/gateway-integrity items as `DEFERRED` or `BLOCKED`, passed the evidence secret-sanity scan, normalized the evidence tree to mode `0700` directories / `0600` files, and generated a final SHA-256 manifest covering the complete 16-file evidence set. `DEFERRED_BLOCKED_RECORD=PASS`, `EVIDENCE_SECRET_GATE=PASS`, `EVIDENCE_SHA256=PASS`, and `EVIDENCE_FILESYSTEM_PROTECTION=PASS` are authoritative.
+
+`SERVER_ONLY_EVIDENCE_HARNESS=PASS` is therefore complete for run `SERVER-PRESTAGE-20260829T133354Z`. The evidence directory is `/home/opsadmin/lorawan-ha-evidence/SERVER-PRESTAGE-20260829T133354Z`. No service restart, configuration mutation, backup, or failure injection occurred during this 14S run. Do not repeat 14S merely to continue setup or begin a new chat; the final Phase 14 healthy-baseline evidence capture still occurs after final Phase 13B against the fully commissioned system.
+
 ### Phase 14 healthy-baseline dry run
 
-Create a normal evidence directory and populate the `before/` state for every deployed component. Do not create a fake `during/` failure state. Verify all commands run non-interactively with the intended least-privilege access, timestamps are UTC, and no secrets are copied into evidence.
+After the final Phase 13B snapshot exists, create a normal evidence directory and populate the `before/` state for every deployed component. Do not create a fake `during/` failure state. Verify all commands run non-interactively with the intended least-privilege access, timestamps are UTC, and no secrets are copied into evidence.
 
-The dry run must include Node-RED, Grafana, OpenBao, both Fabric adapters, the latest normal Fabric commit, the current Reserved-IP owner, and the final Phase 13B backup-set identifier.
+The final dry run must include Node-RED, Grafana, OpenBao, both Fabric adapters, the latest normal Fabric commit, the current Reserved-IP owner, and the final Phase 13B backup-set identifier.
 
 ## 14.1 What every Phase 15 failure run must answer
 
@@ -422,6 +454,87 @@ LoRaWAN stays healthy
 outbox later reconciles/drains
 ```
 
+## 14.12A Gateway-integrity evidence-service capture
+
+Add this section only after the reviewed v2 evidence services are actually deployed. It is distinct from the generic test evidence folder: these files prove the **security lineage services themselves**.
+
+Capture at minimum:
+
+```text
+gateway-journal.txt
+  journal version/executable hash
+  process/restarts
+  last sequence/record hash
+  open/closed segment IDs
+  storage usage/reserve
+  unuploaded segment count/bytes
+  uploader retry state
+  latest accepted checkpoint receipt age
+
+evidence-storage.txt
+  backend/path identity without secrets
+  free space/capacity
+  object count/oldest backlog where meaningful
+  no-overwrite/append-only configuration evidence
+
+evidence-ingest.txt
+  ingest-1 + ingest-2 process/version/image digest
+  per-replica health/restart/OOM/resource state
+  listener/SNI/backend identity
+  accepted/rejected/conflicting upload counters
+  latest accepted checkpoint/segment receipt
+  duplicate retry convergence to one identity
+  unknown/unauthenticated-client rejection evidence
+
+mqtt-evidence-collector.txt
+  collector-1 + collector-2 process/version/image digest
+  four persistent broker sessions: each collector -> broker-1 + broker-2
+  dedicated client IDs/identity names without secrets
+  subscription scope
+  collector lag/latest captured gateway event
+  deterministic capture_key convergence
+  publish/command permission denial result
+
+evidence-verifier.txt
+  verifier-1 + verifier-2 process/version/image digest
+  identical trusted-decoder digest
+  current worker_id/lease state
+  oldest pending work
+  pending/verified/evidence_gap/integrity_failure counts
+  unmatched journal/MQTT/application counts
+  checkpoint conflict count
+  trusted-decoder mismatch count
+  expired-lease reclaim evidence from commissioning/Phase15 as appropriate
+
+trusted-decoder.txt
+  decoder_id/version or code hash
+  fixed-vector self-test result
+  latest raw_app_data_sha256/normalized_digest_sha256 references for the selected event
+
+gateway-evidence-state.txt
+  selected source event key/observed_at
+  verification_id/status/reason
+  journal segment/sequence/hash references
+  checkpoint ID
+  MQTT gateway_event_id
+  verified_at/update age
+
+checkpoint-freshness.txt
+  latest accepted checkpoint per gateway
+  sequence/segment and server_received_at
+  age relative to current UTC
+```
+
+Do not copy raw private keys, bearer tokens, unrestricted payload dumps, or OpenBao/Fabric credentials into the Phase 14 folder. Raw segments/events remain in the protected evidence store; Phase 14 records stable IDs, hashes, status, and bounded sanitized excerpts.
+
+Diagnostic rule:
+
+```text
+telemetry fresh + MQTT fresh + checkpoint stale
+```
+
+means delivery is healthy while the evidence upload/ingest path is degraded. Keep those states separate.
+
 ## 14.13 Grafana
 
 Grafana is visual confirmation, not the source of truth for failover timing.
@@ -455,6 +568,14 @@ For each component, save the same command output three times:
     chirpstack.txt
     openbao.txt
     outbox.txt
+    gateway-journal.txt              # when v2 deployed
+    evidence-storage.txt             # when v2 deployed
+    evidence-ingest.txt              # when v2 deployed
+    mqtt-evidence-collector.txt      # when v2 deployed
+    evidence-verifier.txt            # when v2 deployed
+    trusted-decoder.txt              # when v2 deployed
+    gateway-evidence-state.txt       # when v2 deployed
+    checkpoint-freshness.txt         # when v2 deployed
   during/
     same files
   after/
@@ -484,6 +605,8 @@ Reserved IPv4 current owner + failover timer state
 Node-RED state + current flow hash + latest stored event
 Grafana state + dashboard hash + latest visible reading age
 OpenBao 3/3 + Transit normal-path result
+when v2 is selected: journal/uploader + ingest + evidence storage + MQTT collector + verifier + trusted decoder + checkpoint freshness + verification-state evidence
+when v2 is selected: one real staging lineage already reached verified before any Fabric v2 seal
 Fabric adapter-1/2 + outbox counts + last confirmed tx
 ```
 

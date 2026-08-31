@@ -157,7 +157,7 @@ ChirpStack image/version/digest:
 OpenBao version/image digest:
 Node-RED image/version/digest:
 Node-RED PostgreSQL palette/node version:
-Grafana image/version/digest:
+Grafana image/version/digest: 13.2.0 / grafana/grafana@sha256:3fd54ae1214669f8355f065ec9f6445d5279a3d77095ab048ca045685272429b / runtime UID:GID 472:0 / server staging PASS 2026-08-29 / PostgreSQL plugin 13.0.1
 Fabric adapter image digest: REQUIRED for full-feature PASS; currently BLOCKED until reviewed implementation exists
 ```
 
@@ -167,35 +167,46 @@ Also record configuration hashes for files that must be identical or intentional
 
 ## 2.3 Target service placement
 
-This is the intended full placement, not the current runtime inventory. At the present checkpoint etcd is the only clustered application technology in this list with a live-validated deployment; later components remain standby.
+This is the intended full placement, not a guarantee that every target runtime is commissioned. Current server evidence covers the core HA stack, ChirpStack, OpenBao, the Fabric outbox database layer, Node-RED A/B server runtime, and Grafana server-only staging. Fabric adapter execution remains blocked on its reviewed implementation and external handoff, while physical gateway/public-provider and real-telemetry acceptance boundaries remain separate.
 
 ```text
-ha-01
+ha-01 / ulc-01
   PostgreSQL/Patroni-1 + etcd-1
   HAProxy + PgBouncer
   ChirpStack-1
   Mosquitto-1
   Valkey-1 + Sentinel-1
   OpenBao-1
-  Fabric adapter-1 target placement; runtime only after readiness gate
+  gateway-evidence-ingest-1 target
+  gateway-mqtt-evidence-collector-1 target
+  Fabric adapter-1 target; runtime only after readiness gate
 
-ha-02
+ha-02 / ulc-02
   PostgreSQL/Patroni-2 + etcd-2
   HAProxy + PgBouncer
   ChirpStack-2
   Mosquitto-2
   Valkey-2 + Sentinel-2
   OpenBao-2
-  Fabric adapter-2 target placement; runtime only after readiness gate
+  Node-RED B standby / normally fenced
+  gateway-evidence-ingest-2 target
+  gateway-evidence-verifier-1 + trusted decoder target
+  Fabric adapter-2 target; runtime only after readiness gate
 
-ha-03
+ha-03 / ulc-03
   PostgreSQL/Patroni-3 + etcd-3
   HAProxy + PgBouncer
   private internal MQTT route for Node-RED
   Valkey-3 + Sentinel-3
   OpenBao-3
-  Node-RED
-  Grafana
+  Node-RED A active
+  Grafana single-instance visualization
+  gateway-mqtt-evidence-collector-2 target
+  gateway-evidence-verifier-2 + trusted decoder target
+
+external / independent failure domain
+  raw gateway-evidence object storage target
+  exact backend pending proof; must satisfy one-Droplet-loss durability
 ```
 
 ## 2.4 Shared database layout
