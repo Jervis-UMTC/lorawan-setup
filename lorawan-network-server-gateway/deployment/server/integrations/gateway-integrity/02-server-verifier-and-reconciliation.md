@@ -148,6 +148,7 @@ CREATE TABLE IF NOT EXISTS gateway_evidence.mqtt_gateway_events (
     gateway_id               TEXT NOT NULL,
     mqtt_topic               TEXT NOT NULL,
     broker_received_at       TIMESTAMPTZ NOT NULL,
+    capture_key_sha256       TEXT NOT NULL,
     serialized_event_sha256  TEXT NOT NULL,
     phy_payload_sha256       TEXT,
     uplink_id                TEXT,
@@ -155,11 +156,18 @@ CREATE TABLE IF NOT EXISTS gateway_evidence.mqtt_gateway_events (
     rssi_dbm                 INTEGER,
     snr_db                   DOUBLE PRECISION,
     collector_version        TEXT NOT NULL,
-    object_ref               TEXT
+    object_ref               TEXT,
+    CONSTRAINT gateway_mqtt_capture_key_ck CHECK (
+      capture_key_sha256 ~ '^[0-9a-f]{64}$'
+      AND serialized_event_sha256 ~ '^[0-9a-f]{64}$'
+    ),
+    UNIQUE (capture_key_sha256)
 );
 ```
 
-Preserve the exact serialized event outside the row when forensic replay requires it.
+`capture_key_sha256` is the deterministic logical-event identity used by replicated collectors. The reviewed collector contract must freeze its exact byte construction, for example a versioned hash over the MQTT topic plus a delimiter plus the exact serialized broker event. Two collectors observing the same logical MQTT delivery therefore race safely on one uniqueness key instead of creating two authoritative counterparts. A true conflicting observation is never rewritten to fit the existing row.
+
+Preserve the exact serialized event outside the row when forensic replay requires it. Raw-object creation uses the same stable capture identity and create-if-absent semantics so active/active collectors cannot silently overwrite one another.
 
 ### Per-application-event verification
 
@@ -181,6 +189,10 @@ CREATE TABLE IF NOT EXISTS gateway_evidence.event_verification (
     normalized_digest_sha256 TEXT,
     status                   TEXT NOT NULL DEFAULT 'pending',
     reason_code              TEXT,
+    worker_id                TEXT,
+    lease_expires_at         TIMESTAMPTZ,
+    attempts                 INTEGER NOT NULL DEFAULT 0,
+    next_attempt_at          TIMESTAMPTZ NOT NULL DEFAULT now(),
     verified_at              TIMESTAMPTZ,
     created_at               TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at               TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -192,6 +204,35 @@ CREATE TABLE IF NOT EXISTS gateway_evidence.event_verification (
 ```
 
 Keep payload objects in evidence/object storage and telemetry tables; this row is a lineage index.
+
+### HA-ready verifier claim semantics
+
+The executable migration must make verifier work claimable by more than one worker without allowing two workers to author the same result concurrently. The normal pattern mirrors the Fabric outbox but keeps the verifier's security state separate:
+
+```sql
+WITH candidate AS (
+  SELECT verification_id
+  FROM gateway_evidence.event_verification
+  WHERE status = 'pending'
+    AND next_attempt_at <= now()
+    AND (lease_expires_at IS NULL OR lease_expires_at <= now())
+  ORDER BY next_attempt_at, verification_id
+  FOR UPDATE SKIP LOCKED
+  LIMIT 1
+)
+UPDATE gateway_evidence.event_verification AS v
+SET worker_id = $1,
+    lease_expires_at = now() + $2::interval,
+    attempts = attempts + 1,
+    updated_at = now()
+FROM candidate AS c
+WHERE v.verification_id = c.verification_id
+RETURNING v.*;
+```
+
+Commit the lease before reading raw evidence or running the trusted decoder. Do not hold a PostgreSQL row lock across object-store reads, decoding, or correlation. A crashed worker leaves only an expiring lease; another replica can reclaim the same pending row. A terminal transition to `verified`, `evidence_gap`, `integrity_failure`, or `not_required` clears the lease fields in the same transaction that persists the result.
+
+Segment/checkpoint cryptographic checks are deterministic. If multiple event workers reference the same pending segment, they may independently compute the same validation result, but any persisted segment-state transition must be conditional/idempotent and must never turn an existing failure into verified.
 
 ## 2.4 Least-privilege roles
 
@@ -302,7 +343,7 @@ fPort
 rxInfo gateway IDs
 ```
 
-Prefer a direct documented correlation identifier from the pinned ChirpStack release. Otherwise define and version a unique composite. Timestamp-only matching is prohibited.
+The pinned ChirpStack 4.18 path now provides the direct correlation material: `integration.UplinkEvent.rxInfo[]` preserves the original `gw.UplinkRxInfo`, including `uplink_id`. The reviewed repository Node-RED candidate therefore preserves the same first reception already used for Gateway EUI/RSSI/SNR as `gateway_id`, `gateway_uplink_id`, `gateway_frequency_hz`, `gateway_context_base64`, `rssi_dbm`, and `snr_db`. For v2, the verifier uses Gateway EUI + uplink ID + frequency + gateway context to locate the MQTT witness, then reopens/redecodes its raw object and compares RSSI/SNR/PHYPayload/correlation digest as integrity checks. Missing provenance stays pending. **Timestamp-only or nearest-event matching is prohibited.**
 
 ## 2.9 Trusted decoder comparison
 
@@ -406,5 +447,7 @@ The full segment remains off-chain. The existing OpenBao seal and Fabric envelop
 ```
 
 Telemetry may remain queryable while evidence is pending. Dashboards must not present `pending` as the same thing as cryptographically verified history.
+
+Current source boundary: the Go verifier implements the deterministic application→MQTT join, immutable MQTT-object reopen/redecode, exact closed-journal parsing, every-predecessor-object verification back to segment 1/`GENESIS`, exact journal↔MQTT record matching, accepted-checkpoint digest recomputation, and the verifier-owned terminal promotion. When every required lineage/decoder comparison succeeds, `CompleteVerified` persists the complete projection and atomically writes `status='verified'` only for the still-`pending`, still-owned lease row; the migration's verified-row completeness invariant remains the database backstop. This source authority is build-tested, but no live evidence row or physical-gateway lineage is claimed until production storage, migration/credentials, replica deployment, and real gateway acceptance are commissioned.
 
 Next: [03-testing-monitoring-and-limitations.md](03-testing-monitoring-and-limitations.md)

@@ -51,7 +51,7 @@ Hash rule:
 record_hash = SHA256(UTF8(RFC8785(record_body)))
 ```
 
-The wrapper stores the body and current hash separately. Nullable keys follow one fixed present-with-`null` rule for this version.
+The wrapper stores the body and current hash separately. Nullable keys follow one fixed present-with-`null` rule for this version. The first predecessor token is exact uppercase `GENESIS`. The authoritative cross-language bytes and fixed vector now live at `../../../../evidence-services/contracts/gateway-journal-v1/README.md`; the independent fixture record hashes to `443014973b6eab5a01b75f9715470cffdabb05318ac19620c60c5b20fe0e4823`.
 
 ## 1.3 What this proves
 
@@ -91,12 +91,13 @@ last_sequence
 record_count
 final_record_hash
 closed_at
+content_sha256
 segment_hash
 ```
 
-Every record hash and previous-record link must verify. The next segment must reference the preceding segment hash.
+Every complete line is `RFC8785(JSON object) + LF`. `content_sha256` hashes the exact header+record JSONL bytes before the footer. `segment_hash` hashes the documented twelve-field UTF-8 preimage separated by single NUL bytes with no trailing NUL; `object_sha256` hashes the complete closed JSONL object including the footer. Segment `1` uses exact `previous_segment_hash=GENESIS`; later segments use the preceding lowercase 64-hex segment hash. The full byte contract and independently reproduced two-record vector are frozen at `../../../../evidence-services/contracts/gateway-journal-segment-v1/README.md`.
 
-Freeze the exact segment-hash byte encoding in the implementation specification. A format version cannot depend on implementation-specific object ordering or ambiguous concatenation.
+This removes implementation-specific object ordering and ambiguous concatenation from the segment version. The verifier must reproduce these exact bytes before it may trust segment lineage.
 
 ## 1.5 Checkpoint contract
 
@@ -130,7 +131,7 @@ request/correlation ID
 checkpoint_digest
 ```
 
-Preserve gateway time and server receipt time separately.
+Preserve gateway time and server receipt time separately. `evidence-ingest-receipt-v1` now returns the accepted identity/hash plus the original persisted server time and stable receipt ID. Gateway-side evidence retirement still remains disabled until the real HTTP uploader, durable receipt-file persistence, production raw store, and physical reconciliation path are commissioned.
 
 ## 1.6 Why the checkpoint is the off-device anchor
 

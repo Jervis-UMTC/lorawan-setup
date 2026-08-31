@@ -1,5 +1,7 @@
 # 3. Testing, Monitoring, and Software-Only Limitations
 
+> **Role in the streamlined journey:** this guide is the extended validation / Phase 15 reference. Initial evidence-service deployment does **not** require running every outage, reboot, tamper, deletion, reorder, rollback, storage-pressure, or failure-recovery case here. Use Guide 6 for the minimum commissioning checks that prove the services start, share durable state correctly, and process one representative path. Run the deeper cases here later when the full stack and hardware are available or when a specific defect requires them.
+
 Use a staging gateway and approved test device. Never alter the only copy of production evidence to demonstrate tamper detection.
 
 ## 3.1 Capture a baseline

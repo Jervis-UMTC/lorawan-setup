@@ -67,7 +67,7 @@ The journal writer must continue to record while WAN is unavailable. The uploade
 The full server-side service topology and trust boundaries are documented in [Gateway Integrity Guide 4](../../server/integrations/gateway-integrity/04-service-architecture-and-runtime-contract.md).
 
 > [!IMPORTANT]
-> This repository defines the journal contract and acceptance tests. It does not currently contain a completed, reviewed `gateway-integrity-journal` executable. Do not invent a package or unreviewed shell script and call it production-ready. Build or obtain a reviewed implementation, pin its version and SHA-256, then prove every test below.
+> This repository defines the journal contract and extended acceptance tests. It does not currently contain a completed, reviewed `gateway-integrity-journal` executable. Build the reviewed Rust implementation now against the pinned/saved Concentratord 4.7.1 event contract and fixtures, pin its version and SHA-256, and run the **minimum package checks** below. Reboot/WAN/torn-tail/tamper/deletion tests remain later extended validation and do not block source implementation or cloud evidence-service deployment.
 
 ---
 
@@ -126,16 +126,29 @@ Concentratord remains the only process that controls the RAK5146 SPI hardware.
 
 The journal must consume a **supported read-only Concentratord event/IPC interface for the exact pinned Gateway OS release**. It must not open `/dev/spidev*`, reset the radio, or start another packet forwarder.
 
-Before implementation record:
+Current project target, which must be re-proved on the gateway before compiling/installing the final journal:
 
 ```text
-Gateway OS release:             <PINNED_GATEWAY_OS_RELEASE>
-Concentratord version:          <PINNED_CONCENTRATORD_VERSION>
-Journal implementation:        <PINNED_JOURNAL_VERSION>
-Journal executable SHA-256:     <PINNED_JOURNAL_SHA256>
-Gateway EUI:                    <GATEWAY_EUI>
-Region topic prefix:            <REGION_TOPIC_PREFIX>
+Gateway OS release:             ChirpStack Gateway OS 4.12.0 Base
+Concentratord package/version:   chirpstack-concentratord-sx1302 4.7.1
+Concentratord event IPC:         ipc:///tmp/concentratord_event
+Gateway EUI:                     0016c001f139a1cb
+Region:                          AS923
+Journal implementation language: Rust
 ```
+
+The compatible source contract is now pinned for implementation review:
+
+```text
+Concentratord 4.7.1 commit: 0904a8ddf4eeb3150b4675b35f067865cb68827d
+Concentratord chirpstack_api: 4.17.0
+MQTT Forwarder 4.6.0 commit: 04e870b4af97bebb278ab29259941fd8b3aad72b
+MQTT Forwarder chirpstack_api: 4.18.0
+gw.proto SHA-256: 227fda5fd77fb115cb00610fb1ea1fa87c3112d972fc6534342dc7083a6dc12b
+Correlation contract: concentratord-uplink-correlation-v1
+```
+
+The two published API artifacts contain byte-identical `gw.proto`. Concentratord sends `gw.Event` with `uplink_frame`; MQTT Forwarder publishes the contained `gw.UplinkFrame` on `event/up`. The reviewed adapter therefore correlates semantic fields rather than raw Protobuf bytes. Before deployment still record the final journal executable SHA-256 and, once hardware access returns, capture one real paired Concentratord/MQTT uplink and require the same correlation digest. The journal remains an independent read-only subscriber beside MQTT Forwarder; it is not a second packet forwarder.
 
 Stop if the proposed journal needs direct SPI ownership.
 
@@ -288,12 +301,13 @@ last_sequence
 record_count
 final_record_hash
 closed_at
+content_sha256
 segment_hash
 ```
 
-The next segment references the previous `segment_hash`.
+The next segment references the previous `segment_hash`. Segment `1` uses exact sentinel `GENESIS`; later segments require the preceding lowercase 64-hex segment hash.
 
-The implementation must freeze the exact byte encoding used to calculate `segment_hash`. Never use ambiguous string concatenation such as `hash1 + hash2 + "53" + "100"` without a documented length/fixed-width contract.
+The byte encoding is now frozen by `../../../evidence-services/contracts/gateway-journal-segment-v1/README.md`: every complete line is RFC 8785 JSON followed by one LF byte; `content_sha256` covers the exact pre-footer JSONL bytes; `segment_hash` covers the documented twelve UTF-8 fields joined by single NUL separators with no trailing NUL; `object_sha256` covers the complete closed object including the footer. Do not substitute normal JSON serialization or another delimiter.
 
 ---
 
@@ -303,8 +317,8 @@ A power interruption must not make the journal guess which complete records exis
 
 Implementation requirements:
 
-- use a length-prefixed or otherwise self-delimiting record format;
-- append complete record body + hash as one logical record;
+- use the frozen canonical JSONL format: exactly one RFC 8785 object plus one LF per complete line;
+- append complete record body + hash as one canonical `kind=record` line;
 - flush according to a documented durability interval;
 - verify the open segment from its beginning at startup;
 - automatically discard only an incomplete final/torn record;
@@ -421,10 +435,10 @@ journal uploader
   -> HTTPS + mutual TLS
   -> gateway evidence ingest endpoint
   -> server stores checkpoint append-only
-  -> server returns receipt ID and server_received_at
+  -> server returns a receipt binding accepted identity/hash + receipt ID + server_received_at
 ```
 
-The exact endpoint is defined in the server gateway-integrity guides.
+The exact endpoint is defined in the server gateway-integrity guides. `evidence-ingest-receipt-v1` now provides the complete accepted identity/hash + original server-time receipt and the Rust gateway source validates it. The uploader still **must not retire local evidence after 200/201**: HTTP transport, durable receipt-file persistence, production raw storage, and the physical reconciliation gate remain uncommissioned, and no evidence-delete API exists.
 
 The server copy is the anchor. A checkpoint stored only on the Pi is not.
 
@@ -486,20 +500,24 @@ A journal failure should alert and create an evidence gap, but the default archi
 
 ---
 
-## 14. Commissioning tests
+## 14. Minimum commissioning and later extended validation
 
-### Test A - one real uplink
+For the **implementation/package gate**, do not wait for physical RF hardware. Feed saved, schema-compatible Concentratord event fixtures through the same journal parsing path. Minimum proof is: one valid fixture creates one monotonic sequence and expected record hash; a short fixture sequence preserves `previous_record_hash`; a small staging threshold proves segment-chain continuity; and process restart does not rewrite already-closed history.
+
+When physical gateway access returns, repeat only the first normal-path check with one real uplink before claiming gateway commissioning. Reboot/WAN/torn-tail/tamper/deletion cases remain **extended Guide 3 / Phase 15 validation**, not mandatory setup ceremony.
+
+### Test A - one fixture now / one real uplink later
 
 Pass when:
 
-- MQTT Forwarder produces the normal event;
+- the saved Concentratord fixture, or later the corresponding real gateway event, is accepted through the pinned event contract;
 - exactly one new gateway journal sequence appears;
 - the journal contains the expected Gateway EUI and raw PHYPayload/source evidence;
 - recomputing the record hash matches the stored hash.
 
-### Test B - chain continuity
+### Test B - short chain continuity
 
-Generate at least five uplinks.
+Use a short saved fixture sequence during package validation; when hardware is available, a few real uplinks are sufficient.
 
 Pass when every record's `previous_record_hash` equals the preceding recomputed record hash.
 
@@ -514,7 +532,7 @@ Pass when:
 - the new segment references the previous segment hash;
 - normal operation never modifies the closed segment.
 
-### Test D - clean reboot
+### Extended Test D - clean reboot
 
 Generate records, reboot, then generate more.
 
@@ -524,13 +542,13 @@ Pass when:
 - boot ID changes;
 - the first post-reboot record references the last pre-reboot hash.
 
-### Test E - torn-tail recovery
+### Extended Test E - torn-tail recovery
 
 In staging, interrupt the journal while the current segment is being written.
 
 Pass when startup removes only an incomplete final record. A previously complete invalid record must stop normal evidence continuity and raise an error.
 
-### Test F - WAN outage
+### Extended Test F - WAN outage
 
 Disconnect only WAN/backhaul.
 
@@ -541,7 +559,7 @@ Pass when:
 - closed segments remain stored;
 - the server checkpoint does not falsely advance.
 
-### Test G - WAN recovery
+### Extended Test G - WAN recovery
 
 Restore connectivity.
 
@@ -552,13 +570,13 @@ Pass when:
 - a new checkpoint extends the latest server anchor;
 - server verification reports continuity.
 
-### Test H - tamper a copy
+### Extended Test H - tamper a copy
 
 Copy one closed staging segment and alter one byte in the copy only.
 
 Pass when the server verifier rejects the modified copy.
 
-### Test I - deleted-record fixture
+### Extended Test I - deleted-record fixture
 
 Use an isolated copied fixture with one record removed.
 

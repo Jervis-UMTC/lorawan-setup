@@ -119,15 +119,21 @@ A later layer cannot make an earlier false input true. Fabric can permanently pr
 
 1. [01-evidence-contract-and-checkpoints.md](01-evidence-contract-and-checkpoints.md) — What the gateway records, what the server anchors, and the verification-state model.
 2. [02-server-verifier-and-reconciliation.md](02-server-verifier-and-reconciliation.md) — Server components, database model, correlation, trusted decoding, and the Fabric evidence gate.
-3. [03-testing-monitoring-and-limitations.md](03-testing-monitoring-and-limitations.md) — Outage, tamper, gap, monitoring, and residual-risk tests.
+3. [03-testing-monitoring-and-limitations.md](03-testing-monitoring-and-limitations.md) — **Extended validation / Phase 15 reference** for outage, reboot, tamper, gap, and other fault cases. These tests are not all prerequisites for the first working evidence-service deployment.
 4. [04-service-architecture-and-runtime-contract.md](04-service-architecture-and-runtime-contract.md) — Canonical long-running service topology, ownership boundaries, exact end-to-end lifecycle, startup order, failure behavior, monitoring, and implementation sequence.
+5. [05-preimplementation-readiness-and-deployment-gate.md](05-preimplementation-readiness-and-deployment-gate.md) — Freeze replicated placement, shared-443/mTLS ingress, PKI, cross-host evidence storage, database/grants/worker leases, dual-broker collector identity, trusted decoder, v2 vector, observability, and the minimum proof required before the missing runtimes are activated.
+6. [06-replicated-ha-deployment-journey.md](06-replicated-ha-deployment-journey.md) — **Minimum commissioning journey:** one guarded block per boundary, two-replica health, one representative functional path, evidence paths, PASS markers, and resume rules. Deep fault testing stays in Guide 3 / Phase 15.
+7. [07-implementation-blueprint-and-ha-placement.md](07-implementation-blueprint-and-ha-placement.md) — Concrete software blueprint: Rust gateway journal/uploader, Go cloud services, raw-storage durability decision, exact HA host placement, verifier work discovery, service health contracts, source-tree shape, and implementation order.
 
-When another manual or diagram is unclear about **which service watches which boundary**, use Guide 4 as the canonical topology. The journal, uploader, evidence ingest, MQTT collector, verifier, trusted decoder, and Fabric Adapter are separate responsibilities; do not collapse them into one privileged watcher.
+When another manual or diagram is unclear about **which service watches which boundary**, use Guide 4 as the canonical topology. Use Guide 5 when the question is **what must be ready before those services can be safely installed**, Guide 6 for the guarded deployment journey, and Guide 7 when the question is **what code we are actually building and where its HA replicas will live**. The journal, uploader, evidence ingest, MQTT collector, verifier, trusted decoder, and Fabric Adapter are separate responsibilities; do not collapse them into one privileged watcher.
 
-First complete the gateway-side manuals:
+Current implementation order is **server/security-evidence first** while physical gateway access is unavailable:
 
-- [Gateway 4A. Configure the integrity journal](../../../gateway/setup/04a-configure-gateway-integrity-journal.md)
-- [Gateway 6. Verify the complete gateway](../../../gateway/setup/06-verify-gateway-os.md)
+1. build the Go cloud evidence services, trusted decoder, versioned migration, and storage interface from Guides 5-7;
+2. build the Rust gateway journal/uploader against saved/pinned Concentratord event fixtures in parallel, but defer physical installation to hardware access;
+3. minimally commission the cloud replicas using Guide 6;
+4. later resume [Gateway 4A](../../../gateway/setup/04a-configure-gateway-integrity-journal.md) and [Gateway 6](../../../gateway/setup/06-verify-gateway-os.md) for the real gateway lineage;
+5. close OpenBao audit before releasing any Fabric signing credential, not before the evidence verifier stack.
 
 ## Initial implementation resource budget
 
@@ -138,7 +144,7 @@ cpus: "${LAB_EVIDENCE_SERVICE_CPUS}"      # 0.20 CPU per role
 mem_limit: "${LAB_EVIDENCE_SERVICE_MEM}" # 192 MiB per role
 ```
 
-Three roles would therefore add up to **576 MiB RAM and 0.60 CPU**. Keep the roles separate because they have different trust responsibilities. Measure the actual implementations before deciding production sizing.
+One instance of each of the three server roles would add up to **576 MiB RAM and 0.60 CPU**, but the replicated cloud target uses **two instances of each role**. At the same initial ceiling that is **1152 MiB RAM and 1.20 CPU across the three-host cluster**, balanced at roughly **384 MiB / 0.40 CPU of evidence-service budget per host** by the current placement candidate. These are only starting ceilings; measure the reviewed implementations before freezing placement or production sizing.
 
 ## Implementation-status rule
 

@@ -237,21 +237,32 @@ This service is an independent delivery witness. It does not replace ChirpStack 
 
 This is the correlation engine, but it is still not a Fabric signer.
 
-Its work loop is conceptually:
+Its work is split into two logical loops so initial work creation is explicit:
 
 ```text
-find pending segment/event work
-  -> verify uploaded-object digest
-  -> verify record hashes and previous_record_hash links
-  -> verify segment hash and previous_segment_hash continuity
-  -> verify continuity from latest accepted cloud checkpoint
-  -> find exactly one remote MQTT counterpart
-  -> link the corresponding accepted ChirpStack application event
-  -> run the pinned trusted decoder
-  -> load the matching TimescaleDB telemetry row
-  -> compare approved normalized fields
-  -> write event_verification result
+discovery/reconciliation loop
+  -> scan durable evidence-selected application work, primarily telemetry-attestation-v2 source/outbox identities
+  -> idempotently ensure one gateway_evidence.event_verification row exists
+  -> new work begins as status=pending
+  -> duplicate discovery uses the unique source identity and does not create a second authority row
+
+verification worker loop
+  -> claim pending work with DB lease and commit before evidence reads
+  -> load exactly one accepted application source + first-reception provenance
+  -> locate MQTT by exact Gateway-EUI/uplink-ID/frequency/context tuple
+  -> reopen raw MQTT object, recompute object/capture identity, re-decode pinned gw.UplinkFrame
+  -> recompute concentratord-uplink-correlation-v1 and compare application reception metadata
+  -> locate the journal record carrying that semantic digest
+  -> reopen and exactly verify the matching closed segment object
+  -> reopen and exactly verify every predecessor segment object back to segment 1 / GENESIS
+  -> verify record hashes, previous_record_hash links, segment hashes, and cross-segment continuity
+  -> load the accepted checkpoint for the matched segment final sequence and recompute checkpoint_digest
+  -> run the pinned trusted decoder on exact application bytes
+  -> compare the matching TimescaleDB normalized rows
+  -> persist the complete lineage projection and atomically promote the owned pending row to status=verified
 ```
+
+Node-RED must not create `verified` state, and the Fabric adapter must not create verifier authority rows. The verifier is now the sole application-level author of that transition: `CompleteVerified` is lease-owner fenced, requires the row to remain `pending`, clears the worker lease, records `verified_at`, and writes the complete lineage projection in the same update. The migration additionally rejects incomplete verified rows. This does not claim a live verified event before the production evidence stack and real gateway lineage are commissioned. A separate Kafka/RabbitMQ/Valkey queue is not required for this low-rate design because durable discovery, uniqueness, retries, and leases already live in PostgreSQL.
 
 The verifier owns transitions into states such as:
 
@@ -293,6 +304,38 @@ normalized digest
 The verifier compares this result with the stored telemetry row. This prevents the Node-RED flow from becoming its own evidence authority.
 
 The decoder version or code identity must be pinned and recorded with the verification result.
+
+### 4.2A Replication and failover model
+
+Replication is defined per responsibility; do not clone processes without defining how duplicate work becomes safe.
+
+```text
+Gateway edge
+  gateway-integrity-journal        one physical gateway; crash-safe local state, not fake HA
+  gateway-journal-uploader         one physical gateway; restart/resume from durable acknowledgement state
+
+Cloud evidence tier
+  gateway-evidence-ingest          2 replicas, active/active
+  gateway-mqtt-evidence-collector  2 replicas, active/active
+  gateway-evidence-verifier        2 replicas, active/active DB-leased workers
+  trusted decoder                  same immutable/stateless package on both verifier replicas
+  raw evidence storage             cross-host durable; must survive one Droplet loss
+  gateway_evidence PostgreSQL      inherits commissioned 3-node Patroni HA
+
+Later sealing tier
+  OpenBao                          commissioned 3-node Raft HA
+  fabric-adapter                   target two lease-safe workers
+```
+
+**Ingest replicas:** both may receive the same gateway retry. Checkpoint `(gateway_id,last_sequence)` and segment `(gateway_id,segment_id)` identities are authoritative. Exact duplicate content is idempotent; different content under an existing identity is a security conflict. Raw objects are create-only. A response is not successful until both the raw-object durability rule and PostgreSQL metadata commit are satisfied.
+
+**Collector replicas:** each replica uses its own revocable MQTT client identity and maintains persistent read-only sessions to both commissioned broker backends, not merely one session through the active/standby HAProxy route. The brokers do not replicate session state. Both collector replicas may therefore observe the same event. A versioned deterministic `capture_key_sha256` plus create-if-absent object semantics and a database uniqueness constraint collapse those duplicate observations into one logical MQTT counterpart.
+
+**Verifier replicas:** both run the same reviewed image and trusted-decoder digest. Pending `event_verification` rows are claimed with a short `FOR UPDATE SKIP LOCKED` transaction plus expiring `worker_id` lease. The worker commits the lease before object reads/decoding and clears it only when persisting a terminal result. Expired leases are reclaimable after a crash. No verifier replica receives OpenBao or Fabric authority.
+
+**Raw evidence storage:** two local directories are not replication. The selected live backend must provide at least two independent durable copies or equivalent erasure/replication semantics across failure domains. Initial commissioning proves the configured durability policy plus normal create/get/exact-SHA behavior; the deliberate one-Droplet-loss recovery exercise is deferred to Guide 3 / Phase 15. PostgreSQL `object_ref` remains logical/stable even if a storage replica moves. The commissioned Patroni replicas currently stream asynchronously, so PostgreSQL HA alone must not be treated as proof that a newly acknowledged raw evidence byte-object already exists on another member at ACK time. Keep PostgreSQL as metadata/state unless an explicit stronger raw-byte durability mechanism is separately proven.
+
+**Single-host loss behavior:** normal telemetry may continue; evidence work may pause briefly but must resume without rewriting historical objects, creating a second authoritative MQTT counterpart, or losing an already-accepted checkpoint. A replica loss is a Phase 15 failure test, not part of commissioning.
 
 ### Durable state - `gateway_evidence`
 
@@ -574,7 +617,7 @@ A safe logical order is:
 8. fabric-adapter starts only after its reviewed image, credentials, and external Fabric handoff exist
 ```
 
-Services may restart independently because security state is durable. Restarting the verifier or Fabric Adapter must not erase jobs or require reconstructing previously sealed evidence from mutable current telemetry.
+Services may restart independently because security state is durable. Restarting one evidence replica, the verifier pool, or the Fabric Adapter must not erase jobs or require reconstructing previously sealed evidence from mutable current telemetry. Replication never changes trust ownership: two ingestors are still only ingestors, two collectors are still read-only witnesses, and two verifiers still cannot sign.
 
 ---
 
@@ -700,7 +743,7 @@ Build and commission in this order. Do not start at Fabric and work backward.
 9. **Fabric Adapter implementation** — only after the reviewed image/runtime exists and the external Fabric handoff is frozen.
 10. **OpenBao/Fabric end-to-end attestation** — prove persisted seal verification, valid commit, unknown-result reconciliation, and idempotency.
 
-At every step, execute the matching failure test before advancing to the next trust boundary.
+For **initial commissioning**, prove only the minimum normal-path and trust-boundary checks needed to show the component works and cannot exceed its intended authority. Keep outage, process-loss, lease-expiry, tamper/reorder/delete/checkpoint-conflict, and other fault matrices in Guide 3 / Phase 15. A deeper failure test is required early only when the specific boundary cannot be trusted without it, such as rejecting an unauthenticated evidence upload.
 
 ---
 
@@ -716,7 +759,9 @@ Gateway journal executable                                        -> contract de
 Gateway evidence ingest/collector/verifier images                 -> contracts defined; reviewed runtimes still required
 ```
 
-Do not convert these missing runtimes into “LIVE” by creating placeholder shell scripts or imaginary image names. The next implementation work must produce reviewed source, reproducible builds, pinned versions/digests, startup self-tests, and the documented acceptance tests.
+Do not convert these missing runtimes into “LIVE” by creating placeholder shell scripts or imaginary image names. The next implementation work must produce reviewed source, reproducible builds, pinned versions/digests, startup self-tests, and the **minimum commissioning checks** from Guide 6. The extended Guide 3 / Phase 15 failure matrix does not block the first working deployment.
+
+Evidence-service implementation may proceed before OpenBao audit closure because the ingest, collector, verifier, and trusted decoder hold no signing or Fabric authority. OpenBao audit becomes mandatory before the later `fabric-adapter` signing workload receives credentials.
 
 ---
 
