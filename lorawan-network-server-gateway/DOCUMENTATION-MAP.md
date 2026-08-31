@@ -46,17 +46,24 @@ Start here:
 
 [deployment/00-README.md](deployment/00-README.md)
 
-Use this path for the complete HA/integration architecture or production/cloud work. For the current real-cloud build, start with [deployment/server/cloud-production/00-README.md](deployment/server/cloud-production/00-README.md), then read [00-build-execution-log.md](deployment/server/cloud-production/00-build-execution-log.md) to see what is actually validated.
+Use this path for the complete HA/integration architecture or production/cloud work. For the current real-cloud build, start with [deployment/server/cloud-production/00-current-server-continuation-checkpoint.md](deployment/server/cloud-production/00-current-server-continuation-checkpoint.md) first for the exact resume point, then [00-README.md](deployment/server/cloud-production/00-README.md) for the architecture/status map and [00-build-execution-log.md](deployment/server/cloud-production/00-build-execution-log.md) only when detailed historical evidence is needed.
 
 Current cloud continuation boundary:
 
 ```text
-Phase 5  etcd                         VALIDATED
-Phase 6  PostgreSQL/Patroni/TimescaleDB VALIDATED
-Phase 7  HAProxy + PgBouncer          VALIDATED
-Phase 8  Mosquitto + Valkey/Sentinel  VALIDATED
-Phase 9  ChirpStack                   ACTIVE NEXT PHASE
-Phase 10+                              STANDBY / refine before execution
+Core HA: etcd + PostgreSQL/Patroni/TimescaleDB + HAProxy/PgBouncer   VALIDATED
+Messaging: Mosquitto + Valkey/Sentinel + two-node ChirpStack         VALIDATED
+Phase 13A fast backup/off-host transport                              PASS
+OpenBao 3-node KMS normal path                                        PASS
+telemetry.fabric_outbox database layer                                PASS
+Node-RED A/B atomic-outbox runtime                                    PASS; A active, B fenced
+Grafana server-only synthetic datasource/read path                    PASS; real EMU-01 still deferred
+Gateway/security evidence-service source/runtime                      CURRENT IMPLEMENTATION PRIORITY
+OpenBao audit device                                                   REQUIRED BEFORE FABRIC SIGNING CREDENTIALS
+Phase 11/12 physical gateway/cutover                                  HARDWARE DEFERRED
+Phase 12A real EMU-01 storage/replay acceptance                       HARDWARE DEFERRED
+Full Fabric adapter + external handoff                                BLOCKED / implementation input
+Phase 14B / Phase 15                                                   BLOCKED until required gates close
 ```
 
 [19-cloud-ha-grafana-deployment-day-runbook.md](deployment/server/cloud-production/19-cloud-ha-grafana-deployment-day-runbook.md) remains the full target-sequence reference; it is not evidence that later technologies are already commissioned.
@@ -72,7 +79,7 @@ deployment/
     ├── data-layer/  # TimescaleDB, Node-RED, Grafana
     ├── fabric-attestation/ # Fabric handoff, OpenBao Transit, outbox/adapter, reconciliation
     ├── cloud-production/   # current three-Droplet HA build and live evidence log
-    └── integrations/       # reusable technology and gateway-evidence contracts; gateway-integrity/04 is the canonical integrity-watcher service topology
+    └── integrations/       # reusable technology and gateway-evidence contracts; gateway-integrity/04 is canonical topology, /07 is the implementation + HA placement blueprint
 ```
 
 ---
