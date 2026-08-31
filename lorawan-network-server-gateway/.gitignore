@@ -1,0 +1,8 @@
+# Project-local developer toolchains, caches, and generated build output.
+# These paths are reproducible from tracked source + pinned checksums and must not be committed.
+.tmp-go-build/
+evidence-services/cloud/.dev-tools/
+evidence-services/cloud/.dev-cache/
+evidence-services/cloud/.dev-out/
+evidence-services/cloud/.dev-out.building/
+evidence-services/cloud/.dev-image-context/
