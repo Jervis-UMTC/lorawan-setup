@@ -1,0 +1,18 @@
+# Explicit activation overlay for the Fabric adapter. Do not include this file
+# during pre-handoff standby deployment. Enabling it requires the complete
+# protected database/OpenBao/Fabric handoff below.
+services:
+  fabric-adapter:
+    env_file:
+      - "${FABRIC_ADAPTER_ENV_FILE:?set protected Fabric adapter env file}"
+    environment:
+      FABRIC_ADAPTER_ENABLED: "true"
+      FABRIC_ADAPTER_WORKER_ID: "${FABRIC_ADAPTER_WORKER_ID:?set stable per-host adapter worker id}"
+    volumes:
+      - "${EVIDENCE_POSTGRES_CA_HOST_PATH:?set PostgreSQL CA host path}:/run/evidence/postgres/ca.crt:ro"
+      - "${OPENBAO_CA_HOST_PATH:?set OpenBao CA host path}:/run/openbao/ca.crt:ro"
+      - "${OPENBAO_APPROLE_ROLE_ID_HOST_PATH:?set OpenBao AppRole RoleID host path}:/run/openbao-approle/role_id:ro"
+      - "${OPENBAO_APPROLE_SECRET_ID_HOST_PATH:?set OpenBao AppRole SecretID host path}:/run/openbao-approle/secret_id:ro"
+      - "${FABRIC_TLS_ROOT_CERT_HOST_PATH:?set Fabric TLS root certificate host path}:/run/fabric/tls/ca.crt:ro"
+      - "${FABRIC_CERT_HOST_PATH:?set Fabric client certificate host path}:/run/fabric/identity/client.crt:ro"
+      - "${FABRIC_KEY_HOST_PATH:?set Fabric client private key host path}:/run/fabric/identity/client.key:ro"

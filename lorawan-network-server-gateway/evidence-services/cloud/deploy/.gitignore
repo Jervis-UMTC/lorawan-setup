@@ -1,0 +1,7 @@
+# Live deployment inputs belong under /etc on the servers, never Git.
+*.env
+*.crt
+*.key
+*.pem
+*.p12
+*.pfx

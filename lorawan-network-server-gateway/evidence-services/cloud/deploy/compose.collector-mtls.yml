@@ -1,0 +1,7 @@
+services:
+  collector:
+    volumes:
+      - "${EVIDENCE_MQTT_BROKER1_CERT_HOST_PATH:?set broker-1 collector certificate host path}:/run/evidence/mqtt/broker1.crt:ro"
+      - "${EVIDENCE_MQTT_BROKER1_KEY_HOST_PATH:?set broker-1 collector private-key host path}:/run/evidence/mqtt/broker1.key:ro"
+      - "${EVIDENCE_MQTT_BROKER2_CERT_HOST_PATH:?set broker-2 collector certificate host path}:/run/evidence/mqtt/broker2.crt:ro"
+      - "${EVIDENCE_MQTT_BROKER2_KEY_HOST_PATH:?set broker-2 collector private-key host path}:/run/evidence/mqtt/broker2.key:ro"

@@ -1,0 +1,87 @@
+services:
+  metadata-etcd:
+    image: ${SEAWEED_METADATA_ETCD_IMAGE:?set immutable metadata-etcd image}
+    container_name: seaweedfs-metadata-etcd
+    restart: unless-stopped
+    network_mode: host
+    mem_limit: 96m
+    cpus: 0.20
+    pids_limit: 128
+    volumes:
+      - /srv/seaweedfs/metadata-etcd:/etcd-data
+    command:
+      - /usr/local/bin/etcd
+      - --name=${SEAWEED_META_MEMBER_NAME:?set metadata member name}
+      - --data-dir=/etcd-data
+      - --listen-client-urls=http://${SEAWEED_NODE_IP:?set node IP}:${SEAWEED_META_CLIENT_PORT:?},http://127.0.0.1:${SEAWEED_META_CLIENT_PORT:?}
+      - --advertise-client-urls=http://${SEAWEED_NODE_IP:?set node IP}:${SEAWEED_META_CLIENT_PORT:?}
+      - --listen-peer-urls=http://${SEAWEED_NODE_IP:?set node IP}:${SEAWEED_META_PEER_PORT:?}
+      - --initial-advertise-peer-urls=http://${SEAWEED_NODE_IP:?set node IP}:${SEAWEED_META_PEER_PORT:?}
+      - --initial-cluster=${SEAWEED_META_INITIAL_CLUSTER:?set metadata cluster}
+      - --initial-cluster-state=new
+      - --initial-cluster-token=${SEAWEED_META_CLUSTER_TOKEN:?set metadata cluster token}
+      - --auto-compaction-mode=revision
+      - --auto-compaction-retention=10000
+      - --quota-backend-bytes=268435456
+    logging:
+      driver: local
+      options:
+        max-size: 10m
+        max-file: "3"
+
+  seaweedfs:
+    image: ${SEAWEEDFS_IMAGE:?set immutable SeaweedFS image}
+    container_name: seaweedfs
+    restart: unless-stopped
+    network_mode: host
+    depends_on:
+      - metadata-etcd
+    mem_limit: 256m
+    cpus: 0.50
+    pids_limit: 256
+    environment:
+      GOMEMLIMIT: 220MiB
+      GOGC: "100"
+    volumes:
+      - /srv/seaweedfs/master:/data/master
+      - /srv/seaweedfs/volume:/data/volume
+      - /etc/lorawan-cloud/seaweedfs/filer.toml:/etc/seaweedfs/filer.toml:ro
+      - /etc/lorawan-cloud/seaweedfs/s3.json:/etc/seaweedfs/s3.json:ro
+    command:
+      - server
+      - -master=true
+      - -volume=true
+      - -filer=true
+      - -s3=true
+      - -ip=${SEAWEED_NODE_IP:?set node IP}
+      - -ip.bind=${SEAWEED_NODE_IP:?set node IP}
+      - -dataCenter=${SEAWEED_DATACENTER:?set data center}
+      - -rack=${SEAWEED_RACK:?set rack}
+      - -dir=/data/volume
+      - -master.dir=/data/master
+      - -master.port=${SEAWEED_MASTER_PORT:?}
+      - -master.port.grpc=${SEAWEED_MASTER_GRPC_PORT:?}
+      - -master.peers=${SEAWEED_MASTER_PEERS:?set master peers}
+      - -master.defaultReplication=${SEAWEED_REPLICATION:?}
+      - -master.volumeSizeLimitMB=${SEAWEED_VOLUME_SIZE_LIMIT_MB:?}
+      - -volume.port=${SEAWEED_VOLUME_PORT:?}
+      - -volume.port.grpc=${SEAWEED_VOLUME_GRPC_PORT:?}
+      - -volume.max=${SEAWEED_VOLUME_MAX:?}
+      - -volume.index=leveldb
+      - -filer.port=${SEAWEED_FILER_PORT:?}
+      - -filer.port.grpc=${SEAWEED_FILER_GRPC_PORT:?}
+      - -filer.defaultReplicaPlacement=${SEAWEED_REPLICATION:?}
+      - -filer.disableDirListing=true
+      - -s3.port=${SEAWEED_S3_BACKEND_PORT:?}
+      - -s3.port.grpc=${SEAWEED_S3_GRPC_PORT:?}
+      - -s3.port.iceberg=0
+      - -s3.ip.bind=127.0.0.1
+      - -s3.config=/etc/seaweedfs/s3.json
+      - -s3.iam.readOnly=true
+      - -s3.allowDeleteBucketNotEmpty=false
+      - -s3.externalUrl=https://evidence-objects.internal.lorawan.com:${SEAWEED_S3_TLS_FRONTEND_PORT:?}
+    logging:
+      driver: local
+      options:
+        max-size: 20m
+        max-file: "3"

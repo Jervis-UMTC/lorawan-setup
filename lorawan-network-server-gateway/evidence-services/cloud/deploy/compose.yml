@@ -1,0 +1,95 @@
+name: lorawan-gateway-evidence
+
+x-evidence-runtime: &evidence-runtime
+  user: "65532:65532"
+  read_only: true
+  cap_drop:
+    - ALL
+  security_opt:
+    - no-new-privileges:true
+  pids_limit: 128
+  mem_limit: 192m
+  cpus: "0.20"
+  restart: unless-stopped
+  stop_grace_period: 15s
+  logging:
+    driver: json-file
+    options:
+      max-size: "10m"
+      max-file: "3"
+  networks:
+    - evidence
+  extra_hosts:
+    - "pgbouncer.internal.lorawan.com:${EVIDENCE_PGBOUNCER_HOST_IP:?set local PgBouncer host IP}"
+    - "evidence-objects.internal.lorawan.com:${EVIDENCE_PRIVATE_BIND_IP:?set private host IP}"
+
+services:
+  ingest:
+    <<: *evidence-runtime
+    profiles: ["ingest"]
+    image: "${EVIDENCE_INGEST_IMAGE:?set immutable gateway-evidence-ingest image@sha256 digest}"
+    env_file:
+      - "${EVIDENCE_COMMON_ENV_FILE:-/etc/lorawan-cloud/gateway-evidence/common.env}"
+      - "${EVIDENCE_INGEST_ENV_FILE:-/dev/null}"
+    environment:
+      EVIDENCE_LISTEN_ADDR: "0.0.0.0:8080"
+    ports:
+      - "${EVIDENCE_PRIVATE_BIND_IP:?set private host IP}:${EVIDENCE_INGEST_HOST_PORT:-1}:8080/tcp"
+    volumes:
+      - "${EVIDENCE_POSTGRES_CA_HOST_PATH:?set PostgreSQL CA host path}:/run/evidence/postgres/ca.crt:ro"
+      - "${EVIDENCE_S3_CA_HOST_PATH:?set S3 CA host path}:/run/evidence/s3/ca.crt:ro"
+      - "${EVIDENCE_INGEST_TLS_CERT_HOST_PATH:-/dev/null}:/run/evidence/ingest/tls.crt:ro"
+      - "${EVIDENCE_INGEST_TLS_KEY_HOST_PATH:-/dev/null}:/run/evidence/ingest/tls.key:ro"
+      - "${EVIDENCE_INGEST_CLIENT_CA_HOST_PATH:-/dev/null}:/run/evidence/ingest/client-ca.crt:ro"
+
+  collector:
+    <<: *evidence-runtime
+    profiles: ["collector"]
+    image: "${EVIDENCE_COLLECTOR_IMAGE:?set immutable gateway-mqtt-evidence-collector image@sha256 digest}"
+    env_file:
+      - "${EVIDENCE_COMMON_ENV_FILE:-/etc/lorawan-cloud/gateway-evidence/common.env}"
+      - "${EVIDENCE_COLLECTOR_ENV_FILE:-/dev/null}"
+    environment:
+      EVIDENCE_LISTEN_ADDR: "0.0.0.0:8080"
+      EVIDENCE_MQTT_BROKER1_CLIENT_ID: "${EVIDENCE_MQTT_BROKER1_CLIENT_ID:-inactive-broker1}"
+      EVIDENCE_MQTT_BROKER2_CLIENT_ID: "${EVIDENCE_MQTT_BROKER2_CLIENT_ID:-inactive-broker2}"
+    ports:
+      - "127.0.0.1:${EVIDENCE_COLLECTOR_HEALTH_PORT:-1}:8080/tcp"
+    volumes:
+      - "${EVIDENCE_POSTGRES_CA_HOST_PATH:?set PostgreSQL CA host path}:/run/evidence/postgres/ca.crt:ro"
+      - "${EVIDENCE_S3_CA_HOST_PATH:?set S3 CA host path}:/run/evidence/s3/ca.crt:ro"
+      - "${EVIDENCE_MQTT_CA_HOST_PATH:-/dev/null}:/run/evidence/mqtt/ca.crt:ro"
+
+  verifier:
+    <<: *evidence-runtime
+    profiles: ["verifier"]
+    image: "${EVIDENCE_VERIFIER_IMAGE:?set immutable gateway-evidence-verifier image@sha256 digest}"
+    env_file:
+      - "${EVIDENCE_COMMON_ENV_FILE:-/etc/lorawan-cloud/gateway-evidence/common.env}"
+      - "${EVIDENCE_VERIFIER_ENV_FILE:-/dev/null}"
+    environment:
+      EVIDENCE_LISTEN_ADDR: "0.0.0.0:8080"
+      EVIDENCE_VERIFIER_WORKER_ID: "${EVIDENCE_VERIFIER_WORKER_ID:-inactive-verifier}"
+    ports:
+      - "127.0.0.1:${EVIDENCE_VERIFIER_HEALTH_PORT:-1}:8080/tcp"
+    volumes:
+      - "${EVIDENCE_POSTGRES_CA_HOST_PATH:?set PostgreSQL CA host path}:/run/evidence/postgres/ca.crt:ro"
+      - "${EVIDENCE_S3_CA_HOST_PATH:?set S3 CA host path}:/run/evidence/s3/ca.crt:ro"
+
+  fabric-adapter:
+    <<: *evidence-runtime
+    profiles: ["fabric-adapter"]
+    image: "${EVIDENCE_ADAPTER_IMAGE:?set immutable gateway-fabric-adapter image@sha256 digest}"
+    environment:
+      FABRIC_ADAPTER_ENABLED: "false"
+      FABRIC_ADAPTER_LISTEN_ADDR: "0.0.0.0:8080"
+      FABRIC_ADAPTER_LOG_LEVEL: "info"
+    extra_hosts:
+      - "pgbouncer.internal.lorawan.com:${EVIDENCE_PGBOUNCER_HOST_IP:?set local PgBouncer host IP}"
+      - "openbao-kms.internal.lorawan.com:${EVIDENCE_PRIVATE_BIND_IP:?set private host IP}"
+    ports:
+      - "127.0.0.1:${EVIDENCE_ADAPTER_HEALTH_PORT:-1}:8080/tcp"
+
+networks:
+  evidence:
+    driver: bridge

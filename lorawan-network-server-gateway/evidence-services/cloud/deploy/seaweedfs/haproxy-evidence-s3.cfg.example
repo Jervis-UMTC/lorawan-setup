@@ -1,0 +1,36 @@
+# Merge this frontend/backend into the already-commissioned host HAProxy only
+# after replacing <NODE_VPC_IP> and <TLS_COMBINED_PEM>. The Seaweed S3 backend
+# remains on 127.0.0.1:18333 and is never exposed directly.
+#
+# This is also an integrity boundary. Runtime evidence clients only need HEAD,
+# GET and create-only PUT. DELETE, multipart POST, bucket administration, ACL
+# mutation, and unconditional overwrite are deliberately impossible through the
+# runtime endpoint even though SeaweedFS's S3 Write action is broader.
+#
+# The live three-node commissioning additionally proved:
+# - TLS minimum 1.2
+# - exactly one If-None-Match header is required on PUT
+# - the header value must be exactly *
+# - HEAD health checks carry the logical object-store Host header
+
+frontend evidence_s3_tls
+    bind <NODE_VPC_IP>:18443 ssl crt <TLS_COMBINED_PEM> ssl-min-ver TLSv1.2 alpn h2,http/1.1
+    mode http
+
+    acl evidence_read method GET HEAD
+    acl evidence_put method PUT
+    acl evidence_if_none_match_one req.hdr_cnt(If-None-Match) eq 1
+    acl evidence_create_only req.hdr(If-None-Match) -m str "*"
+
+    http-request return status 405 if !evidence_read !evidence_put
+    http-request return status 428 if evidence_put !evidence_if_none_match_one
+    http-request return status 428 if evidence_put !evidence_create_only
+
+    default_backend seaweed_s3_local
+
+backend seaweed_s3_local
+    mode http
+    option httpchk
+    http-check send meth HEAD uri / hdr Host evidence-objects.internal.lorawan.com
+    http-check expect rstatus ^[234][0-9][0-9]$
+    server local_seaweed_s3 127.0.0.1:18333 check

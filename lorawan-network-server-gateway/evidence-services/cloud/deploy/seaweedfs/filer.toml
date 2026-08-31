@@ -1,0 +1,17 @@
+[filer.options]
+# Never allow a filer HTTP recursive delete to turn one request into a tree wipe.
+recursive_delete = false
+
+# Filer namespace metadata uses its own quorum. Do not point this at the Patroni
+# DCS etcd on 2379/2380: storage metadata must not enlarge the database DCS blast
+# radius.
+[etcd]
+enabled = true
+servers = "10.104.0.2:12379,10.104.0.4:12379,10.104.0.8:12379"
+username = ""
+password = ""
+key_prefix = "lorawan.seaweedfs."
+timeout = "3s"
+tls_ca_file = ""
+tls_client_crt_file = ""
+tls_client_key_file = ""

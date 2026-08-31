@@ -1,0 +1,45 @@
+{
+  "identities": [
+    {
+      "name": "gateway-evidence-ingest",
+      "credentials": [
+        {
+          "accessKey": "<INGEST_S3_ACCESS_KEY>",
+          "secretKey": "<INGEST_S3_SECRET_KEY>"
+        }
+      ],
+      "actions": [
+        "Read:lorawan-evidence",
+        "List:lorawan-evidence",
+        "Write:lorawan-evidence"
+      ]
+    },
+    {
+      "name": "gateway-mqtt-evidence-collector",
+      "credentials": [
+        {
+          "accessKey": "<COLLECTOR_S3_ACCESS_KEY>",
+          "secretKey": "<COLLECTOR_S3_SECRET_KEY>"
+        }
+      ],
+      "actions": [
+        "Read:lorawan-evidence",
+        "List:lorawan-evidence",
+        "Write:lorawan-evidence"
+      ]
+    },
+    {
+      "name": "gateway-evidence-verifier",
+      "credentials": [
+        {
+          "accessKey": "<VERIFIER_S3_ACCESS_KEY>",
+          "secretKey": "<VERIFIER_S3_SECRET_KEY>"
+        }
+      ],
+      "actions": [
+        "Read:lorawan-evidence",
+        "List:lorawan-evidence"
+      ]
+    }
+  ]
+}
