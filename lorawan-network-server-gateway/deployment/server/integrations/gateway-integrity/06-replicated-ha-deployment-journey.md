@@ -511,7 +511,7 @@ Runtime S3 identities are installed for ingest, collector, and verifier. Ingest/
 
 Internal object-store PKI is live. CA SHA-256 is `c1dedc8cc6b58217e955cf763868b429dacdd933bbe7d9ffed147122e9d013fd`; logical endpoint is `evidence-objects.internal.lorawan.com:18443`. HAProxy on ulc-01/02/03 accepts GET/HEAD and only conditional PUT with exactly one `If-None-Match: *`; other methods are `405` and bad/unconditional PUT is `428`. Raw Seaweed S3 remains loopback-only. `HAPROXY_EVIDENCE_S3_3_NODE=PASS` is authoritative. Retained HAProxy fixtures exist on all three nodes and must not be deleted merely to tidy commissioning evidence.
 
-**S9 remains pending.** Full `EVIDENCE_OBJECTSTORE=PASS` is not yet claimed because `gateway-evidence-ingest objectstore-contract-write` plus cross-host `objectstore-contract-verify` must run from the accepted production binary. Discovery proved that accepted binary/image is not present on ulc-01/02/03, and the evidence source/binaries are currently untracked rather than available from `origin/main`. Do not substitute another build or weaken this binary gate.
+**S9 COMPLETE / PASS on 2026-09-01.** The locked production `gateway-evidence-ingest` helper executed `objectstore-contract-write` through `https://evidence-objects.internal.lorawan.com:18443`; the retained object and race fixture were then verified cross-host from `ulc-03`. Record `OBJECTSTORE_CONTRACT=PASS`, `SEAWEEDFS_S9_WRITE=PASS`, `SEAWEEDFS_S9_CROSS_HOST_VERIFY=PASS`, and `EVIDENCE_OBJECTSTORE=PASS`. Retain the commissioning fixtures and do not repeat S0-S9 without a storage change or failure.
 
 ### `gateway_evidence` database migration
 
@@ -554,7 +554,7 @@ Three harness defects were corrected during the rollout and must not be reintrod
 
 Before leader persistence, brand-new physical-replication `IDENTIFY_SYSTEM` sessions were created from ulc-02 source `10.104.0.4` and ulc-03 source `10.104.0.8` using `standby`, SCRAM, and `sslmode=verify-full`. Both returned system identifier `7676855802088521796`, timeline `3`, LSN `0/68000000`. `FRESH_REPLICATION_AUTH_TO_ULC01=PASS` is authoritative.
 
-### Current workload LOGIN issuance stop
+### Evidence database credentials + PgBouncer rollout
 
 The planned identities are:
 
@@ -567,20 +567,15 @@ evidence_verifier_ulc02   -> gateway_evidence_verifier
 evidence_verifier_ulc03   -> gateway_evidence_verifier
 ```
 
-The issuance block started from a clean zero-login boundary. `evidence_ingest_ulc01` was created successfully with LOGIN, SCRAM-SHA-256, INHERIT, no superuser/createdb/createrole/replication/bypassrls, and exactly one direct membership in `gateway_evidence_ingestor`. Its pending high-entropy credential is protected under `/root/evidence-db-bootstrap/` and must never be printed or copied into Markdown.
+Historical issuance note: the first `evidence_ingest_ulc01` login exposed the missing group-level database CONNECT grant, producing `permission denied for database "lorawan_telemetry"`. That stop was correctly attributed to the database ACL layer rather than HBA/TLS/SCRAM and was fixed without rotating the existing credential. The PASS results below supersede that intermediate stop.
 
-The first direct `sslmode=verify-full` connection reached PostgreSQL and failed with:
+**CONNECT authority correction: PASS on 2026-09-01.** After two harness-only attempts that stopped before mutation, the corrected gate re-proved pre-state `t|t|t|t|f|f|f|f`, granted `CONNECT ON DATABASE lorawan_telemetry` only to `gateway_evidence_ingestor`, `gateway_evidence_collector`, and `gateway_evidence_verifier`, and proved post-state `t|t|t|t|t|t|t|t` on all three PostgreSQL members while `PUBLIC` remained denied. The existing `evidence_ingest_ulc01` password was not regenerated; its fresh direct SCRAM + verify-full session succeeded and its exact least-privilege role structure remained intact.
 
-```text
-FATAL: permission denied for database "lorawan_telemetry"
-DETAIL: User does not have CONNECT privilege.
-```
+**Evidence LOGIN issuance: COMPLETE / PASS on 2026-09-01.** Safe-resume preserved `evidence_ingest_ulc01`, created only the five absent roles, and closed all six with unique protected SCRAM credentials, one exact intended NOLOGIN authority membership, inherited database CONNECT, direct verify-full authentication, and three-node catalog state `6|6|6|6|6|6`. PgBouncer remained unchanged at four entries with zero evidence identities throughout.
 
-Treat this as a **database CONNECT privilege design stop**, not a HBA, TLS, password, SCRAM, or role-membership failure. At this checkpoint only `evidence_ingest_ulc01` exists; the other five workload LOGIN identities have not been created by the failed block. PgBouncer is still unchanged at its existing four-entry `0640 root:postgres` userlist and contains zero evidence identities.
+**PgBouncer three-node evidence expansion: COMPLETE / PASS on 2026-09-01.** The final live inspection found `ulc-01`, `ulc-02`, and `ulc-03` already converged on the same ten-entry/six-evidence SCRAM userlist, mode `0640 root:postgres`, size `1582` bytes, SHA-256 `665f1592c96ca276681a454b9cbcd6ab8ab0cbfb4594b8ddd443239db58df391`. The prior four-role file is SHA-256 `e159c1c3e408eb091629083a81738c730bb8d2ab3c07ecbc6aaf109c51b9d5e8`. Rollback directories are `/etc/pgbouncer/evidence-userlist-rollout-20260901T004328Z` on `ulc-01`, `...T020032Z` on `ulc-02`, and `...T020244Z` on `ulc-03`. The `ulc-02`/`ulc-03` rollback sets prove byte-identical before/candidate verifiers for all four pre-existing roles. PgBouncer remains active/enabled with PIDs `1698991`, `1512906`, and `1690020`, matching their pre-expansion recorded PIDs and therefore proving reload without process restart.
 
-The root cause is now resolved from the authoritative Phase 6 database-credential record: `PUBLIC` CONNECT on `lorawan_telemetry` was deliberately revoked, and CONNECT was granted only to the original `telemetry_writer`, `telemetry_reader`, and `fabric_adapter` runtime roles. The later evidence migration correctly created schema/table authority roles but did not add database-level CONNECT, so the new evidence LOGIN can authenticate but cannot enter the database.
-
-**Exact resume point:** first re-prove the current CONNECT matrix, then grant `CONNECT ON DATABASE lorawan_telemetry` to the three NOLOGIN authority shells `gateway_evidence_ingestor`, `gateway_evidence_collector`, and `gateway_evidence_verifier`. Because the workload LOGIN roles use `INHERIT` and each has exactly one intended authority membership, this keeps database admission group-based instead of adding six per-user grants. Verify that `PUBLIC` remains denied and only the intended authority shells gain CONNECT, then rerun the issuance block in safe-resume mode. Do not recreate `evidence_ingest_ulc01`, rotate its already-generated password, rerun the migration, or redo the HBA rollout merely because this later privilege gate stopped.
+A fresh strict verify-full acceptance used three commissioned evidence roles against physical endpoints `10.104.0.2:6432`, `.4:6432`, and `.8:6432`. All three authenticated, negotiated TLS 1.3 / `TLS_AES_256_GCM_SHA384`, and reached writable `lorawan_telemetry` on current Patroni primary `10.104.0.2`. PgBouncer expansion is no longer a resume item. SeaweedFS S9, PKI/collector identities, immutable OCI rollout, replicated service readiness, shared-443, and Grafana evidence views subsequently passed; the cloud journey is now `EVIDENCE_CLOUD_RUNTIME=PASS`.
 
 ## 6.14 Final commissioning rule
 
@@ -602,3 +597,7 @@ Fabric adapter           -> lease-safe dual workers
 ```
 
 No component may claim replication merely because `replicas: 2` appears in Compose.
+
+### 6.15 Current cloud commissioning result - 2026-09-01
+
+The complete server-side journey is now PASS: raw-object storage S0-S9, database roles/PgBouncer, Evidence PKI, four collector mTLS identities/ACLs, immutable GHCR refs, all six active evidence replicas, dual-broker collector readiness, disabled Fabric standbys, shared-443 mTLS passthrough, one representative deduplicated gateway-style MQTT witness, and read-only Grafana checkpoint/verification panels. The next step is no longer another cloud replica: build/install the Gateway OS target package and prove one physical lineage.

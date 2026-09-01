@@ -67,7 +67,7 @@ The journal writer must continue to record while WAN is unavailable. The uploade
 The full server-side service topology and trust boundaries are documented in [Gateway Integrity Guide 4](../../server/integrations/gateway-integrity/04-service-architecture-and-runtime-contract.md).
 
 > [!IMPORTANT]
-> This repository defines the journal contract and extended acceptance tests. It does not currently contain a completed, reviewed `gateway-integrity-journal` executable. Build the reviewed Rust implementation now against the pinned/saved Concentratord 4.7.1 event contract and fixtures, pin its version and SHA-256, and run the **minimum package checks** below. Reboot/WAN/torn-tail/tamper/deletion tests remain later extended validation and do not block source implementation or cloud evidence-service deployment.
+> The repository now contains the tested Rust 1.82 writer/uploader runtime: crash-safe hash-chained persistence, age/count segment rotation, durable fsync-backed receipt state, HTTPS/mTLS upload with server-name/CA/client-identity verification, bounded retry/backoff, restart-idempotent receipt handling, and the pinned optional Concentratord ZeroMQ subscriber. The current default gate passes 28 tests total, format, Clippy and locked build. What remains is target-native `concentratord-zmq` compilation in the Gateway OS/OpenWrt toolchain, package/service definitions and installation, and real gateway IPC/RF acceptance. Do not install unrelated Windows compilers to fabricate target acceptance. Local evidence retirement remains deliberately unimplemented.
 
 ---
 
@@ -438,7 +438,7 @@ journal uploader
   -> server returns a receipt binding accepted identity/hash + receipt ID + server_received_at
 ```
 
-The exact endpoint is defined in the server gateway-integrity guides. `evidence-ingest-receipt-v1` now provides the complete accepted identity/hash + original server-time receipt and the Rust gateway source validates it. The uploader still **must not retire local evidence after 200/201**: HTTP transport, durable receipt-file persistence, production raw storage, and the physical reconciliation gate remain uncommissioned, and no evidence-delete API exists.
+The exact endpoint is defined in the server gateway-integrity guides. `evidence-ingest-receipt-v1` provides the complete accepted identity/hash + original server-time receipt; the Rust uploader validates it, persists it canonically with fsync/rename semantics, and skips already-receipted work after restart. The server production raw-storage and ingest path are commissioned. The uploader still **must not retire local evidence after 200/201** because no reviewed evidence-delete/retirement API exists and final physical reconciliation/retention policy remains a gateway acceptance gate.
 
 The server copy is the anchor. A checkpoint stored only on the Pi is not.
 
@@ -601,3 +601,12 @@ Pass when sequence/hash verification reports the gap and does not rebuild or ren
 ## Next step
 
 Continue with [05-configure-mqtt-forwarder.md](05-configure-mqtt-forwarder.md), then prove both paths in [06-verify-gateway-os.md](06-verify-gateway-os.md).
+
+
+## Implemented Gateway OS package state - 2026-09-01
+
+The journal is implemented in the accepted Gateway OS image as `gateway-evidence 0.1.0-r2`. Both ARM executables and procd services are present. The writer is enabled with an `S99` boot link; the uploader has no boot link and UCI `enabled '0'`. Journal state is `/etc/gateway-evidence/journal`, receipts are `/etc/gateway-evidence/receipts`, and the configured gateway EUI is `0016c001f139a1cb`.
+
+The uploader's `enable` action is guarded during package/image construction (`IPKG_INSTROOT`) and only creates runtime rc.d links when its UCI section is explicitly enabled. The factory image leaves `ingest_url` blank and contains no files under the evidence TLS paths. Provision the CA/client certificate/key separately before enabling upload.
+
+Independent factory-SquashFS inspection confirmed the binaries, dedicated users/groups, boot defaults, persistent paths, and absence of embedded evidence TLS material. Real Concentratord IPC capture and a real accepted upload receipt remain post-flash commissioning checks, not image-build blockers.

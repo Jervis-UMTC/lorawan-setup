@@ -1,6 +1,6 @@
 # 3. Create the Minimum DigitalOcean HA Foundation
 
-> **Evidence boundary:** the three active Droplets and their host-observed `10.104.0.0/20` east-west path are evidenced in the live build log. The current operator is not authorized to modify or verify the DigitalOcean Cloud Firewall. This repository also does not currently contain execution evidence that the Reserved IPv4 or public DNS has been commissioned. Provider-side items below are therefore target/handoff guidance until the account owner confirms them.
+> **Evidence boundary:** the three active Droplets and their host-observed `10.104.0.0/20` east-west path are evidenced in the live build log. Reserved IPv4 `129.212.208.168` and the three DuckDNS public service names are commissioned for the normal path. The current operator still does not independently claim DigitalOcean Cloud Firewall control-panel policy or Reserved-IP reassignment authority; the remaining provider boundary is failover/mobility authorization and acceptance.
 
 This guide creates the **three-Droplet minimum HA test environment** defined in [02a-digitalocean-machine-layout-and-specs.md](02a-digitalocean-machine-layout-and-specs.md).
 
@@ -122,7 +122,7 @@ ip route
 
 ## 3.4 One Reserved IPv4 for self-managed public ingress
 
-**STANDBY / provider-owned step:** the target design uses one DigitalOcean Reserved IPv4 assigned to `ha-01` initially, with no managed Network Load Balancer. The current repository does not contain execution evidence that this Reserved IPv4 has been commissioned, so do not mark it complete until the provider owner/current authorized operator supplies that evidence.
+**CURRENT NORMAL PATH / PASS:** DigitalOcean Reserved IPv4 `129.212.208.168` is commissioned and currently assigned to `ulc-01` / `ha-01`, with no managed Network Load Balancer. Public ChirpStack, Evidence, and MQTT normal-path acceptance is recorded in Phase 10. What remains open is provider API authority and controlled reassignment/failover acceptance between `ulc-01` and `ulc-02`; do not infer Cloud Firewall control-panel policy merely from endpoint reachability.
 
 The public shape is:
 

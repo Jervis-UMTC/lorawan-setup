@@ -232,11 +232,11 @@ Choose stale thresholds from the device's actual reporting interval and operatio
 
 ## 2.11A Gateway evidence status panel
 
-Add this only after the reviewed [Gateway Integrity](../gateway-integrity/00-README.md) schema exists and the Grafana read-only role has explicit `SELECT` access to the approved status view/table.
+The cloud POC commissioned this panel on 2026-09-01 after the reviewed [Gateway Integrity](../gateway-integrity/00-README.md) schema existed and `telemetry_reader` was verified to have explicit read-only access to the approved evidence views. For new deployments, keep the same prerequisite.
 
 Visualization: **Table** or **Stat**.
 
-Example query for recent evidence-selected events:
+The commissioned cloud dashboard uses the approved read-only view:
 
 ~~~sql
 SELECT
@@ -245,12 +245,11 @@ SELECT
     gateway_id,
     status,
     reason_code,
-    verified_at,
-    now() - updated_at AS evidence_state_age
-FROM gateway_evidence.event_verification
-WHERE $__timeFilter(observed_at)
+    attempts,
+    verified_at
+FROM gateway_evidence.verification_status
 ORDER BY observed_at DESC
-LIMIT 200;
+LIMIT 20;
 ~~~
 
 Interpret the values literally:
@@ -267,18 +266,20 @@ Do not map `pending` or `evidence_gap` to green merely because the sensor value 
 
 ## 2.11B Gateway checkpoint freshness panel
 
-For operators, add one row per gateway showing the latest accepted off-device anchor. Prefer an approved view that exposes only safe metadata. Conceptual query:
+For operators, show one row per gateway with the latest accepted off-device anchor. The commissioned cloud dashboard uses the approved view:
 
 ~~~sql
-SELECT DISTINCT ON (gateway_id)
+SELECT
     gateway_id,
-    last_sequence,
     segment_id,
-    server_received_at AS last_checkpoint_at,
-    now() - server_received_at AS checkpoint_age
-FROM gateway_evidence.checkpoints
-ORDER BY gateway_id, last_sequence DESC;
+    last_sequence,
+    server_received_at,
+    checkpoint_age
+FROM gateway_evidence.checkpoint_status
+ORDER BY gateway_id;
 ~~~
+
+On `ulc-03`, these two panels are file-provisioned alongside the original four telemetry panels and were loaded by Grafana without a container restart.
 
 A stale checkpoint with fresh MQTT telemetry means the evidence path is degraded independently of delivery.
 

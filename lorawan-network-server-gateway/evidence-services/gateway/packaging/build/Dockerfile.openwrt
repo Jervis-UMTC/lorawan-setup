@@ -1,0 +1,25 @@
+FROM rust@sha256:d9c3c6f1264a547d84560e06ffd79ed7a799ce0bff0980b26cf10d29af888377 AS rust182
+
+FROM ubuntu@sha256:2260313b31c8c011cd2eebe728008efac1b3982be73eb71348ea2648d2c0e09b
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        build-essential \
+        ca-certificates \
+        cmake \
+        make \
+        pkg-config \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY --from=rust182 /usr/local/cargo /usr/local/cargo
+COPY --from=rust182 /usr/local/rustup /usr/local/rustup
+
+ENV CARGO_HOME=/usr/local/cargo \
+    RUSTUP_HOME=/usr/local/rustup \
+    PATH=/usr/local/cargo/bin:$PATH
+
+RUN rustup target add armv7-unknown-linux-musleabihf --toolchain 1.82.0 \
+    && rustc -V \
+    && ldd --version | head -n 1
+
+WORKDIR /src

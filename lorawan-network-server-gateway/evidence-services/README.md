@@ -29,22 +29,20 @@ Implemented as repository source/static-policy artifacts:
 - trusted-decoder startup self-test plus build-time package-digest gate;
 - `gateway-evidence-verifier` executable source using the `gateway_evidence_verifier` PostgreSQL authority boundary;
 - separate `gateway-fabric-adapter` source with pinned Fabric Gateway v1.12.0/JCS v1.0.1, frozen v1/v2 startup vectors, immutable OpenBao seal persistence/verification, seven-argument Fabric submit/reconciliation state machine, read-only reconstruction mode, and fail-closed pre-handoff standby runtime;
-- a Rust 1.82 gateway crate with exact `gateway-journal-v1` RFC 8785 hashing, canonical JSONL segment framing, monotonic state, torn-tail recovery, segment/checkpoint upload projection, independently reproduced fixed record/segment/object vectors, strict receipt validation/state, and a compiled `gw.Event`/`gw.UplinkFrame` Concentratord adapter pinned to the commissioned schema with an independent semantic correlation vector;
+- a Rust 1.82 gateway runtime with separate writer/uploader executables, exact `gateway-journal-v1` RFC 8785 hashing, canonical JSONL segments, monotonic crash-safe fsync-backed persistence/recovery, optional pinned ZeroMQ Concentratord subscriber, deterministic correlation, durable canonical receipt storage, HTTPS/mTLS curl transport, bounded retry/backoff, `--sync-once`, and continuous loops. The current default source gate passes 28 tests plus format/Clippy/locked build; target-native OpenWrt compilation and physical installation remain;
 - `migrations/001_gateway_evidence.sql` with the evidence schema, worker-lease state, canonical lowercase Gateway-EUI constraints, database-level checkpoint monotonicity trigger, segment-1 `GENESIS`/later-predecessor constraints, verified-row projection completeness constraints, indexes, views, and least-privilege role grants;
 - `migrations/001_gateway_evidence.verify.sql` for post-migration schema/ACL/invariant verification.
 
-Not implemented or commissioned yet:
+Current live/pending boundary:
 
-- selection and live commissioning of a production durable raw-object service. The Go source now includes an S3-compatible immutable backend with HTTPS/explicit-CA validation, conditional create-if-absent semantics, idempotent duplicate comparison, bounded reads, and tests; what remains is choosing/provisioning a real backend whose replication/failure domain demonstrably survives one Droplet loss;
-- registry OCI images for the cloud evidence services; four Linux/amd64 executable candidates are compiled/tested and locked, and static scratch packaging validation passes, but image build/push/registry digest pinning is still pending;
-- live collector identities/ACLs and four commissioned MQTT sessions;
-- live verifier authority exercise; source can author `verified` only through the complete-lineage lease-fenced path, but no live verified row is claimed until production storage/migration/credentials/replicas and one real gateway lineage are commissioned;
-- one real commissioned-gateway Concentratord event plus corresponding MQTT `event/up` fixture to validate the frozen synthetic `concentratord-uplink-correlation-v1` contract against physical runtime bytes;
-- gateway HTTP transport and durable on-disk receipt-file persistence; request/receipt validation state exists, but **all local evidence-retirement/delete behavior remains intentionally absent**;
-- Evidence PKI/shared-443 ingress adapter/configuration;
-- live PostgreSQL migration, role credentials, or evidence listeners.
+- **cloud evidence runtime is commissioned / PASS**: SeaweedFS 4.41 S0-S9; the `gateway_evidence` PostgreSQL migration/HBA/CONNECT/six SCRAM LOGINs; the ten-role PgBouncer userlist on all three nodes; immutable GHCR image digests; Evidence PKI; four distinct read-only collector mTLS identities/ACLs; ingest-1/2; collector-1/2 each connected to both physical brokers; verifier-1/2 with the pinned trusted decoder; shared anchor `:443` TCP/SNI routing; and Grafana evidence checkpoint/verification panels;
+- Fabric adapter-1/2 are deployed from immutable images only in `FABRIC_ADAPTER_ENABLED=false` standby; no SecretID/ledger transaction is claimed;
+- the Rust writer/uploader source runtime is implemented and tested. OpenWrt UCI/procd package source exists; the remaining gateway implementation gate is target-native `concentratord-zmq` cross-build/package installation and real IPC/RF acceptance. **Local evidence retirement/delete remains intentionally absent**;
+- one real commissioned-gateway journal + corresponding MQTT/application lineage remains hardware-dependent before a live verifier-owned `verified` row is claimed;
+- the public ChirpStack/Evidence/MQTT normal path is commissioned on Reserved IPv4 `129.212.208.168`; only Reserved-IP reassignment/failover authority and controlled acceptance remain provider-dependent;
+- Fabric ledger execution remains blocked on the external Fabric handoff and deliberate adapter credential activation.
 
-The repository host does not require a global Go installation. `cloud/scripts/dev-build.ps1` bootstraps checksum-pinned Go 1.25.0 into project-local ignored paths, isolates all Go caches, and the current four-service tree passes `gofmt`, `go test ./...`, `go build ./...`, and Linux/amd64 builds. The checksum-pinned offline reset-toolchain recovery mechanism was proven earlier; current four-binary acceptance is the full offline build plus exact-lock packaging validation, not a newly claimed reset replay. The Rust side is pinned by `gateway/rust-toolchain.toml` to Rust 1.82.0 and `gateway/scripts/dev-build.ps1` verifies the exact rustc commit, locked crate graph, formatting, tests, Clippy, and build. `scripts/verify-build.ps1` is the one-command entry point for both halves, including cached offline mode. Registry Docker/OCI image execution remains a separate gate.
+The repository host does not require a global Go installation. `cloud/scripts/dev-build.ps1` bootstraps checksum-pinned Go 1.25.0 into project-local ignored paths, isolates all Go caches, and the current four-service tree passes `gofmt`, `go test ./...`, `go build ./...`, and Linux/amd64 builds. The four accepted cloud images are now published and pinned by immutable GHCR digests in the production release file. The Rust side is pinned by `gateway/rust-toolchain.toml` to Rust 1.82.0; the current default writer/uploader source gate passes 28 tests total, formatting, Clippy, and locked build. The separate native/OpenWrt target build remains required for `concentratord-zmq` and final gateway binaries.
 
 ## Layout
 
@@ -84,10 +82,10 @@ evidence-services/
   migrations/
 ```
 
-The Go `cmd/` trees contain source wiring; generated binaries stay in ignored `.dev-out/`. The Rust gateway tree contains the journal/segment/state/upload contract core and pinned Concentratord adapter, while physical IPC/runtime packaging remains a later gate. Rebuild instructions start at `BUILD.md`. Server reconstruction is defined in `cloud/deploy/README.md` and uses the same tracked Compose bundle on all three hosts with profile-specific host env files. Do not commit generated toolchains, caches, targets, binaries, live env files, credentials, or private keys.
+The Go `cmd/` trees contain source wiring; generated binaries stay in ignored `.dev-out/`. The Rust gateway tree contains the writer/uploader runtime plus OpenWrt package source; target cross-build and physical package/IPC acceptance remain the later gate. Rebuild instructions start at `BUILD.md`. Server reconstruction is defined in `cloud/deploy/README.md` and uses the same tracked Compose bundle on all three hosts with profile-specific host env files. Do not commit generated toolchains, caches, targets, binaries, live env files, credentials, or private keys.
 
 ## Safety boundary
 
 The filesystem object store and in-memory metadata repository are intentionally development/test-only. They prove API semantics such as create-if-absent, exact duplicate idempotency, conflicting duplicate rejection, checkpoint regression rejection, and SHA-256 verification. They do **not** satisfy the live cloud requirements for one-Droplet-loss raw-byte durability or PostgreSQL-backed metadata HA.
 
-`001_gateway_evidence.sql` is an implementation artifact, not evidence that the live Patroni cluster has been mutated. Apply it only through the guarded deployment journey after the production raw-store, compiled runtimes, restore, PKI/ingress, and credential gates are ready.
+`001_gateway_evidence.sql` is the reproducible source of the already-commissioned live schema/ACL boundary. Do not reapply it to the current Patroni cluster; use it for rebuild/recovery or a deliberate forward migration.

@@ -54,17 +54,23 @@ Current cloud continuation boundary:
 Core HA: etcd + PostgreSQL/Patroni/TimescaleDB + HAProxy/PgBouncer   VALIDATED
 Messaging: Mosquitto + Valkey/Sentinel + two-node ChirpStack         VALIDATED
 Phase 13A fast backup/off-host transport                              PASS
-OpenBao 3-node KMS normal path                                        PASS
+OpenBao 3-node KMS + audit                                            PASS
 telemetry.fabric_outbox database layer                                PASS
 Node-RED A/B atomic-outbox runtime                                    PASS; A active, B fenced
-Grafana server-only synthetic datasource/read path                    PASS; real EMU-01 still deferred
-Gateway/security evidence-service source/runtime                      CURRENT IMPLEMENTATION PRIORITY
-OpenBao audit device                                                   REQUIRED BEFORE FABRIC SIGNING CREDENTIALS
-Phase 11/12 physical gateway/cutover                                  HARDWARE DEFERRED
-Phase 12A real EMU-01 storage/replay acceptance                       HARDWARE DEFERRED
-Full Fabric adapter + external handoff                                BLOCKED / implementation input
+Grafana server-only synthetic datasource/read path                    PASS; real EMU-01 deferred
+SeaweedFS evidence storage S0-S9                                      PASS
+Evidence migration/HBA/CONNECT/six LOGIN identities                   PASS
+PgBouncer evidence SCRAM expansion                                    THREE-NODE PASS
+Cloud evidence replicas / Evidence PKI / shared :443                  PASS
+Public ChirpStack/Evidence/MQTT normal path                            PASS
+Reserved-IP reassignment/failover authority                           EXTERNAL AUTH PENDING
+Gateway writer/uploader + flash-ready AS923/SIM7600/journal image     BUILD/PACKAGE PASS; physical lineage pending
+Phase 11/12 + real EMU-01/gateway lineage                             HARDWARE ACCEPTANCE PENDING
+Fabric adapter ledger activation                                      EXTERNAL HANDOFF DEPENDENT
 Phase 14B / Phase 15                                                   BLOCKED until required gates close
 ```
+
+For the next physical session, start with [TOMORROW-SENSOR-GATEWAY-BRINGUP.md](TOMORROW-SENSOR-GATEWAY-BRINGUP.md), then use the concise [current state board](deployment/server/cloud-production/00-current-server-continuation-checkpoint.md) when broader server context is needed. The cloud/public normal paths and flash-ready Gateway OS package are commissioned; the remaining normal-path work is real gateway + EMU-01 hardware acceptance. Use `00-build-execution-log.md` only for historical detail.
 
 [19-cloud-ha-grafana-deployment-day-runbook.md](deployment/server/cloud-production/19-cloud-ha-grafana-deployment-day-runbook.md) remains the full target-sequence reference; it is not evidence that later technologies are already commissioned.
 

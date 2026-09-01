@@ -1,0 +1,6 @@
+[Unit]
+Description=LoRaWAN certificate expiry health check
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/lorawan-certificate-health

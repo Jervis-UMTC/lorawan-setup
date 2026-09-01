@@ -531,3 +531,21 @@ The gateway is ready for normal operation when all of these are true:
 - Operators understand that the cloud-anchored history is stronger than a local checksum, but the software-only unanchored offline tail is not claimed to be unforgeable against full gateway root compromise.
 
 Continue with [Gateway operations](../operations/01-register-and-test.md) for registration, routine tests, backup, recovery, and troubleshooting.
+
+
+## Current flash-image baseline - 2026-09-01
+
+Use this exact factory artifact for the next clean flash:
+
+```text
+file=chirpstack-gateway-os-4.12.0-base-bcm27xx-bcm2709-rpi-2-squashfs-factory.img.gz
+bytes=28900364
+sha256=bafe8b97baf9353df2654b1c8b71fa53d2ff764cd264d0ed6c924dd25a5ec67d
+recovery=C:\Users\smartagriintern\lorawan-recovery\gateway-01\custom-v4.12.0-sim7600-as923-journal-20260901
+```
+
+Pre-flash acceptance already proved generated checksums, gzip/partition integrity, independent SquashFS extraction, RAK5146/SX1302 + AS923/as923 defaults, AS923-1 923.2/923.4 MHz channel files, SIM7600/QMI modules and `uqmi`, local Mosquitto, Concentratord/MQTT Forwarder, writer boot enablement, uploader default disablement, and no embedded gateway-evidence TLS secrets.
+
+After flashing, validate only the hardware/runtime boundary: boot and writable overlay; RAK5146 Concentratord on AS923; SIM7600 tty/QMI enumeration; Mosquitto on `127.0.0.1:1883` with writable `/etc/mosquitto/data`; normal MQTT Forwarder enabled while UDP/mesh paths remain disabled; evidence writer running; uploader still disabled until mTLS provisioning; and one real uplink producing a journal record and reaching the telemetry path after protected bridge credentials are restored/provisioned.
+
+Production MQTT bridge private keys/certificates and evidence-uploader mTLS material are intentionally not firmware contents. Keep them in the protected provisioning/recovery path.

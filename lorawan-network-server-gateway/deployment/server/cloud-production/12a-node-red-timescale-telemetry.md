@@ -94,14 +94,18 @@ Use the same frontend/backend policy on both candidate hosts; only the bind addr
 frontend node_red_mqtt_tls
     bind <THIS_NODE_PRIVATE_IP>:18884
     mode tcp
+    timeout client 300s
     default_backend node_red_mqtt_brokers
 
 backend node_red_mqtt_brokers
     mode tcp
+    timeout server 300s
     option tcp-check
     server mqtt-ulc01 10.104.0.2:8886 check
     server mqtt-ulc02 10.104.0.4:8886 check backup
 ```
+
+Do not let this MQTT route inherit the global `60s` HAProxy client/server idle timeouts. Node-RED uses MQTT keepalive `60`; the commissioned route therefore uses explicit `300s` frontend/backend timeouts so the proxy does not race the MQTT keepalive interval. Live verification on 2026-09-01 showed the earlier reconnect loop disappear after the scoped override and a fresh client connection; a control `mosquitto_sub` through the same HAProxy + mTLS route completed two clean `PINGREQ` / `PINGRESP` cycles.
 
 Candidate addresses are `10.104.0.8` on ulc-03 and `10.104.0.4` on ulc-02. The ulc-03 `:18884` frontend is already commissioned and must be preserved. Before enabling the passive Node-RED, commission the equivalent private `10.104.0.4:18884` frontend on ulc-02 and validate it with `haproxy -c` before reload.
 

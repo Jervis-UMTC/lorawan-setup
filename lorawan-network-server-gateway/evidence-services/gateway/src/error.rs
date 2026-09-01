@@ -6,6 +6,7 @@ pub enum Error {
     InvalidOwned(String),
     Canonical(String),
     Json(String),
+    Io(String),
     Chain(String),
     TornTail,
 }
@@ -17,6 +18,7 @@ impl Display for Error {
             Self::InvalidOwned(message) => write!(f, "invalid gateway evidence: {message}"),
             Self::Canonical(message) => write!(f, "canonicalization failed: {message}"),
             Self::Json(message) => write!(f, "JSON parsing failed: {message}"),
+            Self::Io(message) => write!(f, "gateway evidence I/O failed: {message}"),
             Self::Chain(message) => write!(f, "journal continuity failed: {message}"),
             Self::TornTail => write!(f, "open segment ends with an incomplete final record"),
         }

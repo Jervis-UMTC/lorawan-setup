@@ -127,13 +127,14 @@ A later layer cannot make an earlier false input true. Fabric can permanently pr
 
 When another manual or diagram is unclear about **which service watches which boundary**, use Guide 4 as the canonical topology. Use Guide 5 when the question is **what must be ready before those services can be safely installed**, Guide 6 for the guarded deployment journey, and Guide 7 when the question is **what code we are actually building and where its HA replicas will live**. The journal, uploader, evidence ingest, MQTT collector, verifier, trusted decoder, and Fabric Adapter are separate responsibilities; do not collapse them into one privileged watcher.
 
-Current implementation order is **server/security-evidence first** while physical gateway access is unavailable:
+Current implementation order is now **gateway-target-first** because the cloud evidence lane is commissioned:
 
-1. build the Go cloud evidence services, trusted decoder, versioned migration, and storage interface from Guides 5-7;
-2. build the Rust gateway journal/uploader against saved/pinned Concentratord event fixtures in parallel, but defer physical installation to hardware access;
-3. minimally commission the cloud replicas using Guide 6;
-4. later resume [Gateway 4A](../../../gateway/setup/04a-configure-gateway-integrity-journal.md) and [Gateway 6](../../../gateway/setup/06-verify-gateway-os.md) for the real gateway lineage;
-5. close OpenBao audit before releasing any Fabric signing credential, not before the evidence verifier stack.
+1. keep the completed cloud boundary intact: SeaweedFS S0-S9, database/PgBouncer, immutable GHCR images, PKI/MQTT identities, replicas, shared-443 and Grafana evidence views are PASS;
+2. use the pinned Gateway OS/OpenWrt build environment to compile the implemented Rust writer/uploader with `concentratord-zmq` for the exact Raspberry Pi target;
+3. verify the OpenWrt package/UCI/procd ownership, persistent journal/receipt paths, curl dependency, and least-privilege gateway identities;
+4. stage the consolidated MQTT + Evidence gateway handoff bundle and produce the reproducible Gateway OS package/image;
+5. when hardware is reachable, resume [Gateway 4A](../../../gateway/setup/04a-configure-gateway-integrity-journal.md) and [Gateway 6](../../../gateway/setup/06-verify-gateway-os.md) for one real physical lineage;
+6. preserve the already-PASS public ChirpStack/Evidence/MQTT normal path, keep Reserved-IP reassignment/failover authority as the remaining provider gate, and release Fabric signing credentials only after the external Fabric handoff/activation gate.
 
 ## Initial implementation resource budget
 
@@ -148,9 +149,7 @@ One instance of each of the three server roles would add up to **576 MiB RAM and
 
 ## Implementation-status rule
 
-The repository currently documents the **contracts and acceptance behavior**. Do not claim that a `gateway-integrity-journal`, `gateway-evidence-ingestor`, `gateway-mqtt-evidence-collector`, or `gateway-evidence-verifier` image already exists unless a reviewed artifact is actually present and pinned.
-
-A missing implementation is a deployment blocker. It is not permission to replace the design with an unreviewed production script.
+The repository now contains the contracts, commissioned cloud runtime, and an implemented/tested Rust writer/uploader source runtime. Cloud registry digests and replicated services are live; the remaining implementation blocker is the exact Gateway OS/OpenWrt target build/package and physical lineage. Do not replace that target validation with an unreviewed script, generic host binary, or imaginary image.
 
 ## Core rule
 

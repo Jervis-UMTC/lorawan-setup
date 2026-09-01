@@ -4,11 +4,14 @@ Use this path for the complete gateway/server architecture. It is separate from 
 
 ## Current cloud HA starting point
 
-For the current work, start with the cloud-production status map and live execution log:
+For the current work, start from the live continuation material, not from the original phase numbering:
 
-1. **[server/cloud-production/00-README.md](server/cloud-production/00-README.md)** — numbered phase/status map.
-2. **[server/cloud-production/00-build-execution-log.md](server/cloud-production/00-build-execution-log.md)** — what has actually been executed and validated.
-3. Continue only with the next numbered phase that is no longer marked `STANDBY / DRAFT`.
+1. **[server/cloud-production/00-evidence-services-and-gateway-journal-continuation.md](server/cloud-production/00-evidence-services-and-gateway-journal-continuation.md)** — immediate new-chat execution board; the cloud evidence lane and public normal path are commissioned. Gateway OS/OpenWrt setup/package is delegated to a separate agent and must not be duplicated by the server lane; Reserved-IP failover authority and Fabric activation remain separate external gates.
+2. **[server/cloud-production/00-current-server-continuation-checkpoint.md](server/cloud-production/00-current-server-continuation-checkpoint.md)** — authoritative broader server state and do-not-repeat list.
+3. **[server/cloud-production/00-README.md](server/cloud-production/00-README.md)** — architecture/phase status map.
+4. **[server/cloud-production/00-build-execution-log.md](server/cloud-production/00-build-execution-log.md)** — detailed historical execution evidence only when needed.
+
+Continue by dependency/resume point, not simply by the next file number.
 
 The [full target sequence runbook](server/cloud-production/19-cloud-ha-grafana-deployment-day-runbook.md) remains useful as an architecture/build-order reference, but its post-etcd sections are **standby**, not commands to execute blindly.
 

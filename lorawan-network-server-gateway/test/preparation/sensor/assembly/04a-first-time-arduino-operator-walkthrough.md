@@ -2033,7 +2033,7 @@ Soil moisture = 0 %
 Soil temperature = 31.30 C
 ```
 
-**Status: INVALID CALIBRATION / SOIL NOT PASSED.**
+**Historical status at this diagnostic point: INVALID CALIBRATION / SOIL NOT PASSED. SUPERSEDED by the later accepted dry=560, wet=328 calibration and final soil PASS recorded below.**
 
 Reasons:
 
@@ -2179,7 +2179,7 @@ dry calibration value            PASS = 560
 wet calibration value            PASS = 328
 calibration separation            PASS = 232 counts
 stored dry/wet pair               PASS candidate = 560 / 328
-wet-to-dry moisture response      PENDING
+wet-to-dry moisture response      HISTORICALLY PENDING HERE; LATER PASS / COMPLETE
 ```
 
 After the example saves the values, verify the stored calibration and moisture response:

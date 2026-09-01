@@ -34,6 +34,10 @@ Commands are run in one of these places:
 
 Replace every value written inside angle brackets before running a command. For example, replace `<GATEWAY_IP>` with the gateway address and `<GATEWAY_EUI>` with the 16-character ID shown by Concentratord.
 
+## Engineering/build-first note
+
+When preparing the full v2 evidence path on a workstation, start the pinned Rust build (`evidence-services/gateway/scripts/dev-build.ps1`) before the physical setup sequence. That build currently validates the journal core and warms the Cargo cache; it does **not** yet produce an installable Gateway OS package. Finish the writer/uploader runtime and package before Step 4A is treated as deployable.
+
 ## Setup order
 
 1. [Assemble the Raspberry Pi and RAK5146](01-hardware-assembly.md)

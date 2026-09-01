@@ -749,19 +749,24 @@ For **initial commissioning**, prove only the minimum normal-path and trust-boun
 
 ## 4.11 Current implementation status boundary
 
-As of the current recorded cloud build evidence:
+Current recorded state:
 
 ```text
-telemetry.fabric_outbox database schema/ACL/immutability boundary  -> commissioned / PASS
-OpenBao 3-node normal-path KMS boundary                           -> prepared / PASS
-Fabric Adapter runtime                                            -> BLOCKED until reviewed implementation + external handoff
-Gateway journal executable                                        -> contract defined; reviewed runtime still required
-Gateway evidence ingest/collector/verifier images                 -> contracts defined; reviewed runtimes still required
+telemetry.fabric_outbox schema/ACL/immutability              -> commissioned / PASS
+OpenBao 3-node KMS + audit                                  -> commissioned / PASS
+SeaweedFS raw evidence infrastructure S0-S9                 -> commissioned / PASS
+gateway_evidence migration/HBA/CONNECT/six LOGIN identities -> commissioned / PASS
+PgBouncer evidence expansion                                -> three-node ten-role PASS
+Immutable cloud OCI + ingest/collector/verifier replicas    -> commissioned / PASS
+Evidence PKI + collector MQTT identities/ACLs               -> commissioned / PASS
+Shared anchor :443 SNI + Grafana evidence views             -> commissioned / PASS
+Fabric adapter immutable standbys                           -> disabled / PASS; external activation pending
+Gateway Rust writer/uploader source runtime                 -> 28-test/build PASS; target OpenWrt package pending
 ```
 
-Do not convert these missing runtimes into “LIVE” by creating placeholder shell scripts or imaginary image names. The next implementation work must produce reviewed source, reproducible builds, pinned versions/digests, startup self-tests, and the **minimum commissioning checks** from Guide 6. The extended Guide 3 / Phase 15 failure matrix does not block the first working deployment.
+The cloud implementation is now live rather than a source-only claim. The next work is target-specific: compile/package `concentratord-zmq` in the pinned Gateway OS/OpenWrt toolchain, install the protected gateway identities/config, and prove one physical lineage. The extended Guide 3 / Phase 15 failure matrix does not block that first real normal-path deployment.
 
-Evidence-service implementation may proceed before OpenBao audit closure because the ingest, collector, verifier, and trusted decoder hold no signing or Fabric authority. OpenBao audit becomes mandatory before the later `fabric-adapter` signing workload receives credentials.
+OpenBao audit closure is already complete. Preserve that audit boundary and keep Fabric-adapter SecretID/ledger activation at zero until the external Fabric handoff and enabled-adapter preflight pass.
 
 ---
 

@@ -1,5 +1,6 @@
 # Live deployment inputs belong under /etc on the servers, never Git.
 *.env
+!release.commissioned.env
 *.crt
 *.key
 *.pem

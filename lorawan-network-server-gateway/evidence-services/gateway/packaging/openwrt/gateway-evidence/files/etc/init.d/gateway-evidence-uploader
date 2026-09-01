@@ -1,0 +1,71 @@
+#!/bin/sh /etc/rc.common
+
+START=99
+STOP=19
+USE_PROCD=1
+
+# OpenWrt default_postinst enables every packaged init script. Keep the
+# uploader boot-disabled until mTLS provisioning explicitly opts in.
+enable() {
+	[ -n "$IPKG_INSTROOT" ] && return 0
+	config_load gateway-evidence
+	config_get enabled uploader enabled '0'
+	[ "$enabled" = '1' ] || return 0
+
+	local name='gateway-evidence-uploader'
+	ln -sf "../init.d/$name" "/etc/rc.d/S${START}${name}"
+	ln -sf "../init.d/$name" "/etc/rc.d/K${STOP}${name}"
+}
+
+start_service() {
+	config_load gateway-evidence
+	config_get enabled uploader enabled '0'
+	[ "$enabled" = '1' ] || return 0
+
+	config_get gateway_id uploader gateway_id
+	config_get state_dir uploader state_dir
+	config_get receipt_dir uploader receipt_dir
+	config_get ingest_url uploader ingest_url
+	config_get ca_cert uploader ca_cert_path
+	config_get client_cert uploader client_cert_path
+	config_get client_key uploader client_key_path
+	config_get http_client uploader http_client_path
+	config_get retry_initial uploader retry_initial_seconds
+	config_get retry_max uploader retry_max_seconds
+	config_get poll_seconds uploader poll_seconds
+
+	mkdir -p "$receipt_dir" /etc/gateway-evidence/tls
+	chown gateway-evidence-upload:gateway-evidence "$receipt_dir"
+	chmod 2750 "$receipt_dir"
+	chown gateway-evidence-upload:gateway-evidence /etc/gateway-evidence/tls
+	chmod 0700 /etc/gateway-evidence/tls
+
+	procd_open_instance
+	procd_set_param command /usr/bin/gateway-evidence-uploader
+	procd_set_param user gateway-evidence-upload
+	procd_set_param group gateway-evidence
+	procd_set_param env \
+		"GATEWAY_EVIDENCE_GATEWAY_ID=$gateway_id" \
+		"GATEWAY_EVIDENCE_STATE_DIR=$state_dir" \
+		"GATEWAY_EVIDENCE_RECEIPT_DIR=$receipt_dir" \
+		"GATEWAY_EVIDENCE_INGEST_URL=$ingest_url" \
+		"GATEWAY_EVIDENCE_CA_CERT_PATH=$ca_cert" \
+		"GATEWAY_EVIDENCE_CLIENT_CERT_PATH=$client_cert" \
+		"GATEWAY_EVIDENCE_CLIENT_KEY_PATH=$client_key" \
+		"GATEWAY_EVIDENCE_HTTP_CLIENT_PATH=$http_client" \
+		"GATEWAY_EVIDENCE_RETRY_INITIAL_SECONDS=$retry_initial" \
+		"GATEWAY_EVIDENCE_RETRY_MAX_SECONDS=$retry_max" \
+		"GATEWAY_EVIDENCE_POLL_SECONDS=$poll_seconds"
+	procd_set_param respawn 3600 5 -1
+	procd_set_param file /etc/config/gateway-evidence
+	procd_close_instance
+}
+
+service_triggers() {
+	procd_add_reload_trigger gateway-evidence
+}
+
+reload_service() {
+	stop
+	start
+}

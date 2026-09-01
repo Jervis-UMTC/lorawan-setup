@@ -131,7 +131,7 @@ request/correlation ID
 checkpoint_digest
 ```
 
-Preserve gateway time and server receipt time separately. `evidence-ingest-receipt-v1` now returns the accepted identity/hash plus the original persisted server time and stable receipt ID. Gateway-side evidence retirement still remains disabled until the real HTTP uploader, durable receipt-file persistence, production raw store, and physical reconciliation path are commissioned.
+Preserve gateway time and server receipt time separately. `evidence-ingest-receipt-v1` returns the accepted identity/hash plus the original persisted server time and stable receipt ID. The Rust uploader transport and durable receipt-file persistence are implemented, and the server S9/ingest path is commissioned. Gateway-side evidence retirement still remains disabled because no reviewed delete/retirement API exists and the physical reconciliation/retention policy has not yet been commissioned.
 
 ## 1.6 Why the checkpoint is the off-device anchor
 

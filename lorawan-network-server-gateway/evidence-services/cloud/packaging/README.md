@@ -75,13 +75,15 @@ gateway-fabric-adapter
 
 ## Static packaging validation
 
-This works even on a host without Docker:
+This works even on a host without Docker, provided the host is allowed to execute PowerShell scripts:
 
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\evidence-services\cloud\packaging\build-images.ps1 -Offline -ValidateOnly
 ```
 
 It reruns the reproducible Go build from the local cache, recomputes/injects the trusted-decoder source-package digest into the verifier, verifies every output against `binaries.lock`, and checks the minimal Dockerfile invariants. It never claims an image digest.
+
+`-ExecutionPolicy Bypass` is process-scoped and **cannot override a domain/enterprise `MachinePolicy=Restricted`**. If Group Policy blocks script execution, use an approved build host or have the workstation policy corrected through the normal administrative channel. Do not inline-copy the build script, weaken enterprise policy, or accept hand-built binaries as a substitute for the pinned build/lock gate. A fresh build host also needs the cached/offline inputs described in `../BUILD.md`, or one successful online bootstrap before `-Offline` can work.
 
 ## Build on a Docker Buildx host
 
@@ -105,4 +107,4 @@ Do not record `OCI_IMAGE_REPRODUCIBILITY=PASS` unless that command actually pass
 
 Never put DSNs, passwords, MQTT credentials, private keys, certificates, or raw evidence into the image. Supply them at deployment time through protected environment files and read-only mounts.
 
-The root filesystem should be mounted read-only by the deployment definition. The filesystem object-store backend remains development-only. The cloud source now also contains the S3-compatible immutable backend used by the production interface; production activation is still blocked until a real S3-compatible/managed backend is selected, provisioned, and its replication/failure-domain behavior is proven to survive one Droplet loss.
+The root filesystem should be mounted read-only by the deployment definition. The filesystem object-store backend remains development-only. Production uses the S3-compatible backend against the commissioned self-hosted SeaweedFS 4.41 HA endpoint. Storage infrastructure/replication/TLS/create-only semantics and S9 production-helper cross-host acceptance are PASS. The four cloud OCI images are built, published, and pinned by immutable GHCR digests; this packaging directory remains the reproducible rebuild path.

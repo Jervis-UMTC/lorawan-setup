@@ -1,0 +1,25 @@
+#!/bin/sh
+set -eu
+
+DIR=/etc/lorawan-pki/public/chirpstack-certs
+TARGET=$DIR/public.pem
+TMP=$(mktemp "$DIR/public.pem.new.XXXXXX")
+trap 'rm -f "$TMP"' EXIT
+
+cat > "$TMP"
+chmod 0600 "$TMP"
+openssl x509 -in "$TMP" -noout -checkend 86400 >/dev/null
+openssl x509 -in "$TMP" -noout -ext subjectAltName | grep -Fq 'DNS:smartagri-chirpstack.duckdns.org'
+CERTPUB=$(openssl x509 -in "$TMP" -pubkey -noout | openssl pkey -pubin -outform DER 2>/dev/null | sha256sum | awk '{print $1}')
+KEYPUB=$(openssl pkey -in "$TMP" -pubout -outform DER 2>/dev/null | sha256sum | awk '{print $1}')
+[ "$CERTPUB" = "$KEYPUB" ]
+if [ -f "$TARGET" ] && cmp -s "$TMP" "$TARGET"; then exit 0; fi
+
+BACKUP=$DIR/public.pem.prev
+if [ -f "$TARGET" ]; then cp -a "$TARGET" "$BACKUP"; fi
+install -o root -g root -m 0600 "$TMP" "$TARGET"
+if ! haproxy -c -f /etc/haproxy/haproxy.cfg >/dev/null 2>&1; then
+    if [ -f "$BACKUP" ]; then cp -a "$BACKUP" "$TARGET"; else rm -f "$TARGET"; fi
+    exit 1
+fi
+systemctl reload haproxy

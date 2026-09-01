@@ -137,6 +137,70 @@ pub struct StoredReceipt {
     pub server_received_at: String,
 }
 
+impl StoredReceipt {
+    pub fn validate(&self) -> Result<()> {
+        if self.receipt_version != RECEIPT_VERSION {
+            return Err(Error::Invalid("unsupported stored receipt version"));
+        }
+        validate_gateway_id(&self.gateway_id)?;
+        validate_hash(&self.receipt_id)?;
+        validate_utc_millis(&self.server_received_at)?;
+        if self.segment_id == 0
+            || self.segment_id > i64::MAX as u64
+            || self.last_sequence == 0
+            || self.last_sequence > i64::MAX as u64
+        {
+            return Err(Error::Invalid(
+                "stored receipt identity is outside cloud contract",
+            ));
+        }
+        let (primary_digest, object_sha256) = match self.artifact_type.as_str() {
+            "checkpoint" => {
+                let digest = self.checkpoint_digest.as_deref().ok_or(Error::Invalid(
+                    "checkpoint receipt is missing checkpoint_digest",
+                ))?;
+                validate_hash(digest)?;
+                if self.segment_hash.is_some() || self.object_sha256.is_some() {
+                    return Err(Error::Invalid(
+                        "checkpoint receipt contains segment-only hashes",
+                    ));
+                }
+                (digest, "")
+            }
+            "segment" => {
+                if self.checkpoint_digest.is_some() {
+                    return Err(Error::Invalid("segment receipt contains checkpoint_digest"));
+                }
+                let segment_hash = self
+                    .segment_hash
+                    .as_deref()
+                    .ok_or(Error::Invalid("segment receipt is missing segment_hash"))?;
+                let object_sha256 = self
+                    .object_sha256
+                    .as_deref()
+                    .ok_or(Error::Invalid("segment receipt is missing object_sha256"))?;
+                validate_hash(segment_hash)?;
+                validate_hash(object_sha256)?;
+                (segment_hash, object_sha256)
+            }
+            _ => return Err(Error::Invalid("unsupported stored receipt artifact_type")),
+        };
+        let expected = receipt_id(
+            &self.artifact_type,
+            &self.gateway_id,
+            self.segment_id,
+            self.last_sequence,
+            primary_digest,
+            object_sha256,
+            &self.server_received_at,
+        );
+        if expected != self.receipt_id {
+            return Err(Error::Chain("stored receipt_id mismatch".to_string()));
+        }
+        Ok(())
+    }
+}
+
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub struct UploadReceiptState {
     pub checkpoint_receipts: BTreeMap<u64, StoredReceipt>,
@@ -230,7 +294,7 @@ impl IngestReceipt {
         if self.receipt_id != expected_receipt {
             return Err(Error::Chain("ingest receipt_id mismatch".to_string()));
         }
-        Ok(StoredReceipt {
+        let stored = StoredReceipt {
             receipt_id: self.receipt_id.clone(),
             receipt_version: self.receipt_version.clone(),
             artifact_type: self.artifact_type.clone(),
@@ -241,21 +305,61 @@ impl IngestReceipt {
             segment_hash: self.segment_hash.clone(),
             object_sha256: self.object_sha256.clone(),
             server_received_at: self.server_received_at.clone(),
-        })
+        };
+        stored.validate()?;
+        Ok(stored)
     }
 }
 
 impl UploadReceiptState {
+    pub fn validate_for_gateway(&self, gateway_id: &str) -> Result<()> {
+        validate_gateway_id(gateway_id)?;
+        for (segment_id, receipt) in &self.checkpoint_receipts {
+            receipt.validate()?;
+            if receipt.gateway_id != gateway_id
+                || receipt.artifact_type != "checkpoint"
+                || receipt.segment_id != *segment_id
+            {
+                return Err(Error::Chain(
+                    "checkpoint receipt state identity mismatch".to_string(),
+                ));
+            }
+        }
+        for (segment_id, receipt) in &self.segment_receipts {
+            receipt.validate()?;
+            if receipt.gateway_id != gateway_id
+                || receipt.artifact_type != "segment"
+                || receipt.segment_id != *segment_id
+            {
+                return Err(Error::Chain(
+                    "segment receipt state identity mismatch".to_string(),
+                ));
+            }
+        }
+        Ok(())
+    }
+
     pub fn record_checkpoint(&mut self, receipt: StoredReceipt) -> Result<()> {
+        if receipt.artifact_type != "checkpoint" {
+            return Err(Error::Invalid(
+                "checkpoint receipt store requires checkpoint artifact_type",
+            ));
+        }
         record_receipt(&mut self.checkpoint_receipts, receipt)
     }
 
     pub fn record_segment(&mut self, receipt: StoredReceipt) -> Result<()> {
+        if receipt.artifact_type != "segment" {
+            return Err(Error::Invalid(
+                "segment receipt store requires segment artifact_type",
+            ));
+        }
         record_receipt(&mut self.segment_receipts, receipt)
     }
 }
 
 fn record_receipt(store: &mut BTreeMap<u64, StoredReceipt>, receipt: StoredReceipt) -> Result<()> {
+    receipt.validate()?;
     if let Some(existing) = store.get(&receipt.segment_id) {
         if existing != &receipt {
             return Err(Error::Chain(

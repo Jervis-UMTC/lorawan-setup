@@ -1,6 +1,6 @@
 # Reproducible Cloud Evidence Deployment Bundle
 
-This directory is the tracked server-side deployment candidate for the four Go evidence/attestation services: ingest, MQTT collector, verifier, and Fabric adapter. It deliberately stops **before** live activation. Rebuilding a server should require the repository plus protected credentials/PKI and the selected durable S3-compatible service; it should not require reconstructing Compose commands from chat history.
+This directory is the tracked and **commissioned** server-side deployment bundle for the four Go evidence/attestation services: ingest, MQTT collector, verifier, and Fabric adapter. The base profile is live on the three cloud hosts; the Fabric adapter is intentionally activated only as disabled standby. Rebuilding a server should require the repository plus protected credentials/PKI and the selected durable S3-compatible service; it should not require reconstructing Compose commands from chat history.
 
 The Fabric adapter has two deliberately separate deployment states. The base `compose.yml` runs adapter-1/2 with `FABRIC_ADAPTER_ENABLED=false`, so they expose only local health/readiness and do not open PostgreSQL, read an OpenBao SecretID, or contact Fabric. Actual ledger submission requires the explicit `compose.fabric-adapter-enabled.yml` overlay and must pass `fabric-adapter-enable-preflight.sh` first.
 
@@ -32,7 +32,8 @@ compose.yml                    base four-service definition; adapter is hard-fro
 compose.collector-mtls.yml     collector client-certificate mounts
 compose.fabric-adapter-enabled.yml
                                explicit activation overlay; never use for standby staging
-release.env.example            immutable OCI digest references for all four binaries
+release.env.example            template for immutable OCI digest references
+release.commissioned.env       exact non-secret commissioned four-image GHCR release
 hosts/*.env.example            exact node placement + host ports + enabled-adapter mount paths
 env/common.env.example         non-secret common DB/S3 settings
 env/ingest.env.example         protected ingest DB/S3 credentials + TLS paths
@@ -47,7 +48,7 @@ fabric-adapter-enable-preflight.sh
                                separate no-mutation gate before enabling ledger submission
 ```
 
-The Compose definition runs every container as numeric `65532:65532`, read-only root filesystem, all Linux capabilities dropped, `no-new-privileges`, PID limit 128, bounded Docker logs, and no in-image shell/health utility. Collector/verifier/Fabric-adapter health listeners bind host loopback only. Ingest binds only the selected private host IP/backend port; public `evidence.<DOMAIN>:443` remains an independent HAProxy/SNI design gate.
+The Compose definition runs every container as numeric `65532:65532`, read-only root filesystem, all Linux capabilities dropped, `no-new-privileges`, PID limit 128, bounded Docker logs, and no in-image shell/health utility. Collector/verifier/Fabric-adapter health listeners bind host loopback only. Ingest binds only the selected private host IP/backend port. The public Evidence route is now commissioned through the shared HAProxy SNI frontend at `smartagri-evidence.duckdns.org:443`.
 
 ## Inputs that intentionally remain external
 
@@ -134,15 +135,26 @@ gateway_evidence_collector
 gateway_evidence_verifier
 ```
 
-Create separate LOGIN identities at deployment time and grant each only its matching group role. The examples intentionally use `<INGEST_LOGIN>`, `<COLLECTOR_LOGIN>`, and `<VERIFIER_LOGIN>` because canonical login names/passwords are not frozen until credential issuance.
+The production LOGIN identities are now frozen and live. Preserve these mappings rather than creating new ad-hoc names:
+
+```text
+evidence_ingest_ulc01     -> gateway_evidence_ingestor
+evidence_ingest_ulc02     -> gateway_evidence_ingestor
+evidence_collector_ulc01  -> gateway_evidence_collector
+evidence_collector_ulc03  -> gateway_evidence_collector
+evidence_verifier_ulc02   -> gateway_evidence_verifier
+evidence_verifier_ulc03   -> gateway_evidence_verifier
+```
+
+All six are SCRAM LOGIN roles with exactly one intended NOLOGIN authority membership and inherited CONNECT on `lorawan_telemetry`. Protected plaintext custody remains outside Git/Markdown under the commissioned root-only bootstrap boundary.
 
 Every DSN uses the commissioned logical endpoint `pgbouncer.internal.lorawan.com:6432`, database `lorawan_telemetry`, hostname-verified TLS, and the mounted PostgreSQL CA. Because this internal name is not assumed to exist in public DNS, Compose maps it inside every container to the **local node private IP** (`10.104.0.2`, `.4`, or `.8`), preserving the local PgBouncer -> local HAProxy -> Patroni-primary path. The Go pool also enforces SCRAM-SHA-256 and verifies role membership/writable-primary routing on every new physical DB session.
 
-After creating each evidence LOGIN role, regenerate the protected PgBouncer SCRAM verifier candidate from authoritative PostgreSQL state and refresh `/etc/pgbouncer/userlist.txt` **one node at a time** (`ulc-01`, then `ulc-02`, then `ulc-03`), preserving existing role verifiers. Reload PgBouncer in place and prove the new credential through that node's `:6432` endpoint before advancing. Creating the PostgreSQL role without this refresh will leave PgBouncer authentication stale.
+All six PostgreSQL LOGIN roles and the three-node PgBouncer expansion are commissioned. Every PgBouncer node has the exact ten-entry/six-evidence SCRAM userlist SHA-256 `665f1592c96ca276681a454b9cbcd6ab8ab0cbfb4594b8ddd443239db58df391`, with the original four-role verifier set preserved for rollback and proven byte-identical across the expansion. Fresh strict verify-full evidence authentication passed through all three physical `:6432` endpoints and routed to the current writable Patroni primary. Do not regenerate PgBouncer userlists again unless a later credential change requires it.
 
 ### S3 credentials
 
-The object-store backend is implemented, but the service is not selected/provisioned yet. The minimum permission split should be:
+The production object-store backend is selected and commissioned through S9: SeaweedFS 4.41 behind the internal HAProxy TLS/create-only endpoint `https://evidence-objects.internal.lorawan.com:18443`. The locked production helper write and cross-host retained-object verification are PASS. Runtime S3 identities are already installed with the following permission split:
 
 ```text
 ingest:    HeadBucket + GetObject + PutObject on evidence prefix
@@ -212,7 +224,7 @@ The script does not pull images, start containers, issue credentials, alter perm
 
 ## Base/standby activation command
 
-Do **not** run this until image digests, object storage, DB migration/login roles + three-node PgBouncer verifier refresh, Evidence PKI, shared-443 design, and live host resource preflight are approved. Production collectors use mTLS, so collector hosts include the collector override:
+This boundary was commissioned on 2026-09-01 after image digests, SeaweedFS S9, the DB/PgBouncer roles, Evidence PKI, shared-443 design, and all three host preflights passed. The command remains the reproducible start/recovery path. Production collectors use mTLS, so collector hosts include the collector override:
 
 ```sh
 sudo docker compose \
@@ -250,6 +262,21 @@ sudo docker compose \
 
 On ulc-01 include `-f compose.collector-mtls.yml` as well when managing the whole host stack. If the external Fabric Gateway requires a separate **transport mTLS** client certificate rather than server-auth TLS plus the Fabric application identity currently implemented, stop at the preflight failure and extend/rebuild the adapter; never disable TLS verification to force the connection.
 
+## Commissioned immutable release - 2026-09-01
+
+Tracked `release.commissioned.env` and the production release files use these immutable references. The current hosts may use protected exact preloaded-image overrides with `--pull never` because the legacy host registry credential cannot read the new private GHCR packages; do not weaken package privacy as a workaround. A rebuild should either provision authorized registry-read access or preload images whose content identity has been verified against the commissioned release.
+
+```text
+EVIDENCE_INGEST_IMAGE=ghcr.io/jervis-umtc/lorawan/gateway-evidence-ingest@sha256:f2fd695e8d2505a12202b4fabd92d035c562e16d4e308ccf9436a08a36aaec1a
+EVIDENCE_COLLECTOR_IMAGE=ghcr.io/jervis-umtc/lorawan/gateway-mqtt-evidence-collector@sha256:0bcaaa127f913157596a87077235d4f0717fa1c29f08d8aca8568c3167ed2cff
+EVIDENCE_VERIFIER_IMAGE=ghcr.io/jervis-umtc/lorawan/gateway-evidence-verifier@sha256:3416496fa563154fbd7209a575acd040b735b3c4f4159902fc886e78167195c0
+EVIDENCE_ADAPTER_IMAGE=ghcr.io/jervis-umtc/lorawan/gateway-fabric-adapter@sha256:cd4308e8985d74ea7fab957a2a4adadd1831b776a8f9af2fdd6291179df83e7a
+```
+
+All three authoritative `preflight.sh` runs passed. Live placement is `ulc-01=ingest-1+collector-1+adapter-1-disabled`, `ulc-02=ingest-2+verifier-1+adapter-2-disabled`, `ulc-03=collector-2+verifier-2`. Every runtime uses numeric `65532:65532`, read-only rootfs, `cap_drop: ALL`, `no-new-privileges`, `pids_limit: 128`, `192 MiB`, `0.20 CPU`, bounded logs, and `restart: unless-stopped`.
+
+SeaweedFS S9, Evidence PKI, four distinct read-only collector mTLS identities/ACLs, the dual-broker collector readiness gate, replicated ingest/verifier readiness, and the private/shared-443 normal path are PASS. Adapter containers are healthy only in `FABRIC_ADAPTER_ENABLED=false` standby and must stay that way until the external Fabric activation gate.
+
 ## What is still not claimed
 
-The four Linux/amd64 binaries and exact checksum lock are reproducible and the packaging validator accepts all four. This bundle still does **not** claim registry OCI `image@sha256` digests, durable S3 commissioning, live `gateway_evidence` migration/login credentials, Evidence PKI, shared public `:443`, Linux Compose/preflight execution for the newest adapter files, or live service commissioning. It exists so those remaining deployment inputs can be filled into one repeatable, reviewable server layout rather than rebuilt manually later.
+Do not call the complete v2 lineage or public-ingress HA finished yet. The public ChirpStack/Evidence/MQTT normal path is already PASS. Remaining claims are deliberately narrower: Reserved-IP reassignment/failover authority and controlled acceptance; the Gateway OS/OpenWrt target package and physical Concentratord/MQTT/journal/uploader lineage; and a real external Fabric transaction after the handoff. Do not redo the already-passed cloud evidence commissioning without a relevant state change.

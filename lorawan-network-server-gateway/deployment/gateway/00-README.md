@@ -1,6 +1,6 @@
 # Deployment Track: Gateway Setup & Field Operations
 
-Use this directory for the complete physical gateway: Gateway OS setup, persistent buffering, the software integrity journal when its reviewed implementation exists, field operations, and security hardening.
+Use this directory for the complete physical gateway: Gateway OS setup, persistent buffering, the software integrity journal, field operations, and security hardening. The journal contract/core source now exists and builds under pinned Rust, but its deployable Gateway OS writer/uploader runtime and package are still being completed.
 
 ---
 
@@ -34,6 +34,6 @@ deployment/gateway/
 
 ## Operational Procedures Summary
 
-- **[setup/](setup/00-README.md)**: Install ChirpStack Gateway OS Base, configure Concentratord for AS923, establish persistent loopback Mosquitto buffer, and enable the software integrity journal v2.
+- **[setup/](setup/00-README.md)**: Install ChirpStack Gateway OS Base, configure Concentratord for AS923, establish persistent loopback Mosquitto buffering, and commission the software integrity journal v2 after its Rust runtime/package boundary passes. For a new engineering session, warm the pinned Rust build/cache before waiting for physical-gateway installation.
 - **[operations/](operations/01-register-and-test.md)**: Register gateways in ChirpStack, execute automated static configuration backups (`sysupgrade -b`), run 4G migration and outage availability tests, perform RF site surveys, and configure SSH/VPN security hardening.
 - **[references/](references/README.md)**: Consult hardware checklist PDFs and official RAK5146 datasheets.

@@ -1,0 +1,25 @@
+#!/bin/sh
+set -eu
+
+THRESHOLD=${CERT_CHECK_SECONDS:-1814400}
+LIST=$(mktemp)
+trap 'rm -f "$LIST"' EXIT
+
+find -L /etc/lorawan-pki /etc/letsencrypt/live -type f \( -name '*.crt' -o -name '*.pem' \) 2>/dev/null | sort -u > "$LIST"
+
+FAILED=0
+COUNT=0
+while IFS= read -r cert; do
+    if openssl x509 -in "$cert" -noout >/dev/null 2>&1; then
+        COUNT=$((COUNT + 1))
+        if ! openssl x509 -in "$cert" -noout -checkend "$THRESHOLD" >/dev/null 2>&1; then
+            logger -p daemon.err -t lorawan-cert-health "certificate expires within threshold: $cert"
+            echo "EXPIRING:$cert"
+            FAILED=1
+        fi
+    fi
+done < "$LIST"
+
+echo "CERTIFICATES_CHECKED=$COUNT"
+[ "$COUNT" -gt 0 ]
+exit "$FAILED"

@@ -118,7 +118,7 @@ The repository then cloned successfully and is pinned to Gateway OS tag `v4.12.0
 
 The initial Compose blocker (`unknown flag: --rm`) is **resolved**, not current. `make init` then completed the expensive feed update/install and stopped only on the final pre-environment `quilt init` with `No series file found`; the later target switch resolved the real patch path and successfully applied the Raspberry Pi target patches. The Raspberry Pi Base environment is therefore already selected. Do not rerun Docker installation, clone, feed installation, or target switching merely to reproduce earlier evidence.
 
-The next attempted non-interactive package edit failed before changing modem package state because `openwrt/scripts/config` is a directory in this pinned tree. The corrected build block uses minimal `.config` updates plus `make defconfig` and an eight-package verification gate. The operator reports that this corrected block has reached the compilation stage and is still compiling. Final image/manifest/hash output has not yet been captured, so the build remains **ACTIVE / NOT YET PASS**. See [Phase 11A - Current Continuation Checkpoint](../../server/cloud-production/11a-phase11-continuation-checkpoint.md) before resuming in a new session.
+The next attempted non-interactive package edit failed before changing modem package state because `openwrt/scripts/config` is a directory in this pinned tree. The corrected build block uses minimal `.config` updates plus `make defconfig` and an eight-package verification gate. **This is historical troubleshooting, not current status:** later sections prove the build, artifact hashes, physical flash, SIM7600/QMI runtime, LTE connectivity, and the superseding 2026-09-01 flash-ready AS923+journal image. Do not resume from this intermediate point.
 
 The earlier H-1/H-2/H-3/H-4A probes are retained as historical evidence in the Phase 11 deployment log, not as separate operator gates. From this point use one streamlined build flow:
 
@@ -691,9 +691,9 @@ The restored Mosquitto bridges still target the lab endpoint `lora-test-server:8
 
 The restored `lora-test-server:8883` bridge is now retired from the active Phase 11 path. Do not spend additional time repairing the old lab VM merely to complete the custom-image cutover. The intended production gateway path remains local MQTT Forwarder -> loopback Mosquitto buffer -> public `mqtt.<DOMAIN>:8883`.
 
-Current repository evidence proves the cloud MQTT service only on the private/internal identity `mqtt.internal.lorawan.com`; Phase 10 host-owned HAProxy anchor listeners are ready, but the provider-owned public activation is still incomplete. No real public MQTT FQDN or Reserved IPv4 is recorded, and the broker certificates have not yet been reissued with the real public MQTT SAN. Therefore do not point the gateway at a Droplet raw public IP and do not invent a public hostname.
+The cloud public MQTT endpoint is now commissioned as `smartagri-mqtt.duckdns.org:8883` through Reserved IPv4 `129.212.208.168`. The broker identity preserves its internal name and includes the public DuckDNS SAN; the real Gateway EUI client certificate completed strict hostname-verified mTLS, MQTT CONNECT, and an authorized command subscription. Do not point the gateway at a raw Droplet public IP.
 
-Next external inputs required for the public gateway bridge are: one real public domain/FQDN, one assigned same-region Reserved IPv4, provider firewall allowance for public MQTT `8883/tcp`, DNS `mqtt.<DOMAIN>` -> Reserved IPv4, and broker certificates valid for both `mqtt.internal.lorawan.com` and the real public `mqtt.<DOMAIN>` name. Once those are available, change only the two Mosquitto bridge `address` lines, preserve mTLS verification, and validate the cloud path before moving LTE to the normal route.
+When the physical gateway is reachable, change only the two Mosquitto bridge `address` lines from the retired lab endpoint to `smartagri-mqtt.duckdns.org:8883`, preserve the existing CA/client certificate/key and strict hostname verification, then prove buffered QoS 1 uplink delivery before making LTE the normal route. Reserved-IP reassignment/failover authority remains a separate HA acceptance item and does not block this normal-path cutover.
 
 
 ### Post-build field LTE commissioning PASS - 2026-08-28
@@ -705,3 +705,19 @@ The custom image's modem support has now been proven beyond driver enumeration. 
 Do not duplicate the LTE commissioning commands here. The authoritative, repeatable field procedure is [Phase 11 section 11.9 - Verified SIM7600 / DITO QMI commissioning path](../../server/cloud-production/11-raspberry-pi-4g-backhaul.md#119-verified-sim7600--dito-qmi-commissioning-path---2026-08-28).
 
 Current staging remains intentional: `network.lte.defaultroute=0` and `network.lte.peerdns=0` stay in place until the real public `mqtt.<DOMAIN>:8883` ingress, Reserved Public IPv4, firewall, DNS, and public-name broker certificate are commissioned and validated. The image/build objective itself is complete; do not rebuild the image to solve the remaining public MQTT activation work.
+
+
+## Flash-ready AS923 + SIM7600 + journal release - 2026-09-01
+
+The current accepted factory image supersedes the earlier modem-only candidate for new flashes. It is built from ChirpStack Gateway OS v4.12.0 commit `2112dbdbda48cd77ec1b82499e389abd728e84a1`, OpenWrt `b40dfac0a31695596f7c1f5f1519302ca8237f6e`, target `bcm27xx/bcm2709`, and the proven `DEVICE_rpi-2` profile.
+
+```text
+file=chirpstack-gateway-os-4.12.0-base-bcm27xx-bcm2709-rpi-2-squashfs-factory.img.gz
+bytes=28900364
+sha256=bafe8b97baf9353df2654b1c8b71fa53d2ff764cd264d0ed6c924dd25a5ec67d
+recovery=C:\Users\smartagriintern\lorawan-recovery\gateway-01\custom-v4.12.0-sim7600-as923-journal-20260901
+```
+
+Verified contents include RAK5146/SX1302 with `AS923` / `as923`, AS923-1 923.2/923.4 MHz channel-file entries, SIM7600 serial/QMI support, `uqmi`, `mosquitto-ssl 2.0.18-r4`, ChirpStack Concentratord 4.7.1, MQTT Forwarder 4.6.0, and `gateway-evidence 0.1.0-r2`. Local Mosquitto listens only on `127.0.0.1:1883`; a first-boot UCI-default creates/chowns its persistent data directory before `S80mosquitto`. The evidence writer is boot-enabled; the uploader is installed but disabled until its HTTPS/mTLS credentials are provisioned. No evidence TLS secrets are baked into the image.
+
+The reproducible non-secret inputs are tracked under `deployment/gateway/image-overlay/`. The historical full SIM7600 `.config` size, following its symlink, is `283853` bytes; earlier `190216`-byte notes are stale. The Windows recovery copy was hashed again after transfer and matched the build artifact byte-for-byte. Physical radio/modem/real-uplink checks remain post-flash hardware acceptance.

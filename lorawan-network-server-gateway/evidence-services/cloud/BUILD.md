@@ -2,7 +2,7 @@
 
 This manual owns the developer/build-host setup for the Go evidence services under this directory. It is deliberately self-contained: a fresh Windows build host does **not** need a global Go installation, administrator changes, a PowerShell profile edit, or `go env -w` state.
 
-It does not commission the cloud services. Live PostgreSQL migration, credentials, durable raw-object storage, PKI/shared-443 ingress, OCI packaging, replica rollout, and real-gateway acceptance remain separate gates.
+This build manual is not itself the deployment procedure, but the cloud services built from it are now commissioned. The live PostgreSQL migration/HBA/CONNECT/six-login boundary, three-node PgBouncer evidence auth, SeaweedFS S0-S9, immutable GHCR image refs, PKI/MQTT identities, replicated services, shared-443 and evidence observability are PASS. The remaining end-to-end gate is the Gateway OS target package/physical lineage, plus separate provider/Fabric external inputs.
 
 ## Pinned build inputs
 

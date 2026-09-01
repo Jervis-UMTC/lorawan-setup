@@ -18,12 +18,9 @@ Frozen/current source contracts:
 Still intentionally unresolved rather than guessed:
 
 - one real captured Concentratord 4.7.1 `gw.Event` plus the corresponding MQTT Forwarder 4.6.0 `event/up` witness to prove the frozen synthetic correlation contract against physical runtime bytes;
-- real Go compilation/unit tests and a reproducible immutable verifier image for the implemented correlation source;
-- the explicit future verifier authority transition that may author `status='verified'` only after production storage, live migration/credentials, two-replica commissioning, and one real physical-gateway lineage have passed;
-- the real gateway HTTP uploader transport plus durable receipt-file persistence and the separately reviewed policy that may eventually retire already-anchored local evidence; `evidence-ingest-receipt-v1` itself is frozen but intentionally does not enable deletion;
-- production HAProxy/shared-443 mechanism for conveying verified gateway client identity to the ingest backend;
-- complete `telemetry-attestation-v2` RFC 8785 vector;
-- production raw-object backend;
-- live collector credential/ACL form and exact four deployed client IDs, which are deployment artifacts rather than source-contract constants.
+- the Gateway OS/OpenWrt target build/package/service installation for the implemented Rust writer/uploader, including target-native `concentratord-zmq` and physical filesystem/IPC behavior. `evidence-ingest-receipt-v1` is frozen and deletion/retirement remains intentionally absent;
+- one live verifier-owned `status='verified'` row. The cloud replicas and authority path are commissioned, but a real verified row still waits for one complete physical-gateway journal/MQTT/application lineage;
+- the public ChirpStack/Evidence/MQTT normal path is commissioned; the remaining provider-owned item is Reserved-IP reassignment/failover authority and controlled acceptance;
+- one real external Fabric handoff/transaction. The immutable disabled adapter standbys and v1/v2 RFC 8785 canonicalization vectors are already commissioned/frozen.
 
 A version identifier must never be retained if its byte-level or security contract changes.

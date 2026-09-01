@@ -8,7 +8,7 @@ The receipt is designed for **idempotent uploader acknowledgement**. It binds th
 
 The response is authenticated in transit by the reviewed HTTPS/mTLS server connection. `receipt_id` is an unkeyed SHA-256 integrity identifier so Go and Rust can independently prove that the response fields belong together. Anyone with arbitrary gateway-root access can rewrite local receipt state and recompute an unkeyed hash; therefore this receipt does not replace TLS, remote server evidence, or the later verifier.
 
-The Rust gateway source validates and can serialize receipt state, but this contract **does not authorize deletion or retirement of local evidence**. That destructive policy remains disabled until the real uploader transport, durable receipt-file persistence, production raw store, and one normal physical-gateway reconciliation path are commissioned.
+The Rust gateway source now validates and durably persists canonical receipt state and the HTTPS/mTLS uploader is implemented; SeaweedFS S9 and the cloud ingest path are commissioned. This contract **still does not authorize deletion or retirement of local evidence**. That destructive policy remains disabled until a reviewed retention/delete policy exists and one normal physical-gateway reconciliation path proves the complete lifecycle.
 
 ## Common response fields
 

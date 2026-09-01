@@ -101,6 +101,23 @@ pub struct VerifiedClosedSegment {
     pub object_sha256: String,
 }
 
+impl VerifiedClosedSegment {
+    pub fn metadata(&self) -> SegmentMetadata {
+        SegmentMetadata {
+            segment_version: self.header.segment_version.clone(),
+            gateway_id: self.header.gateway_id.clone(),
+            segment_id: self.header.segment_id,
+            first_sequence: self.header.first_sequence,
+            last_sequence: self.footer.last_sequence,
+            record_count: self.footer.record_count,
+            previous_segment_hash: self.header.previous_segment_hash.clone(),
+            final_record_hash: self.footer.final_record_hash.clone(),
+            segment_hash: self.footer.segment_hash.clone(),
+            object_sha256: self.object_sha256.clone(),
+        }
+    }
+}
+
 #[derive(Debug, Clone, PartialEq)]
 pub struct RecoveredOpenSegment {
     pub header: SegmentHeader,
@@ -130,6 +147,7 @@ struct FooterLine {
     footer: SegmentFooter,
 }
 
+#[derive(Clone)]
 pub struct SegmentBuilder {
     header: SegmentHeader,
     bytes: Vec<u8>,
@@ -159,6 +177,34 @@ impl SegmentBuilder {
             record_count: 0,
             final_record_hash: None,
         })
+    }
+
+    pub fn from_recovered(
+        recovered: &RecoveredOpenSegment,
+        expected_previous_record_hash: impl Into<String>,
+    ) -> Result<Self> {
+        let mut builder = Self::new(recovered.header.clone(), expected_previous_record_hash)?;
+        for record in &recovered.records {
+            let rebuilt_hash = builder.append(record.record_body.clone())?;
+            if rebuilt_hash != record.record_hash {
+                return Err(Error::Chain(
+                    "recovered record hash changed while rebuilding open segment".to_string(),
+                ));
+            }
+        }
+        Ok(builder)
+    }
+
+    pub fn bytes(&self) -> &[u8] {
+        &self.bytes
+    }
+
+    pub fn header(&self) -> &SegmentHeader {
+        &self.header
+    }
+
+    pub fn record_count(&self) -> u64 {
+        self.record_count
     }
 
     pub fn append(&mut self, body: RecordBody) -> Result<String> {

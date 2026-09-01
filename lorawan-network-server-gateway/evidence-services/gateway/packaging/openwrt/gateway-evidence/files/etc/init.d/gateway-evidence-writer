@@ -1,0 +1,46 @@
+#!/bin/sh /etc/rc.common
+
+START=99
+STOP=20
+USE_PROCD=1
+
+start_service() {
+	config_load gateway-evidence
+	config_get enabled writer enabled '1'
+	[ "$enabled" = '1' ] || return 0
+
+	config_get gateway_id writer gateway_id
+	config_get event_url writer concentratord_event_url
+	config_get state_dir writer state_dir
+	config_get budget writer journal_budget_bytes
+	config_get max_records writer segment_max_records
+	config_get max_age writer segment_max_age_seconds
+
+	mkdir -p "$state_dir"
+	chown gateway-evidence:gateway-evidence "$state_dir"
+	chmod 2750 "$state_dir"
+
+	procd_open_instance
+	procd_set_param command /usr/bin/gateway-evidence-writer
+	procd_set_param user gateway-evidence
+	procd_set_param group gateway-evidence
+	procd_set_param env \
+		"GATEWAY_EVIDENCE_GATEWAY_ID=$gateway_id" \
+		"GATEWAY_EVIDENCE_CONCENTRATORD_EVENT_URL=$event_url" \
+		"GATEWAY_EVIDENCE_STATE_DIR=$state_dir" \
+		"GATEWAY_EVIDENCE_JOURNAL_BUDGET_BYTES=$budget" \
+		"GATEWAY_EVIDENCE_SEGMENT_MAX_RECORDS=$max_records" \
+		"GATEWAY_EVIDENCE_SEGMENT_MAX_AGE_SECONDS=$max_age"
+	procd_set_param respawn 3600 5 -1
+	procd_set_param file /etc/config/gateway-evidence
+	procd_close_instance
+}
+
+service_triggers() {
+	procd_add_reload_trigger gateway-evidence
+}
+
+reload_service() {
+	stop
+	start
+}

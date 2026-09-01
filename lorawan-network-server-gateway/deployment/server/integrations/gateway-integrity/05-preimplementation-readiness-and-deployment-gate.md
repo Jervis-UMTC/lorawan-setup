@@ -1,6 +1,6 @@
 # Gateway Evidence Services Pre-Implementation Readiness and Deployment Gate
 
-> **Status: PRE-IMPLEMENTATION ACTIVE / LIVE V2 RUNTIME BLOCKED.** Use this guide to finish every safe design, security, packaging, and evidence-capture decision before reviewed gateway-integrity executables/images exist. Passing this guide does **not** mean the evidence services are deployed. It means the project is ready to deploy them without inventing architecture during the change window.
+> **Status: READINESS CONTRACT PASS / CLOUD RUNTIME + PUBLIC NORMAL PATH COMMISSIONED.** The cloud pre-implementation/deployment gate is closed: SeaweedFS S0-S9, database/HBA/CONNECT/six LOGINs, three-node PgBouncer evidence auth, immutable OCI refs, Evidence PKI/MQTT identities, replicated services, shared-443, read-only evidence observability, and the public ChirpStack/Evidence/MQTT normal path are PASS. The remaining normal-path gate is the Gateway OS/OpenWrt target package plus one real physical lineage; Reserved-IP failover authority and Fabric remain separate external gates.
 
 This guide is for the full cloud/full-feature gateway-integrity path. The minimum dissertation VM remains a separate v1-compatible profile unless its methodology is explicitly changed.
 
@@ -78,35 +78,33 @@ The verifier decides whether evidence is trustworthy. The Fabric adapter signs/s
 Already available/commissioned:
 
 ```text
-PostgreSQL/TimescaleDB HA foundation
-telemetry.uplinks + telemetry.measurements
-telemetry.fabric_outbox
-OpenBao 3-node normal path
-Grafana read-only telemetry path
-cloud MQTT gateway/ChirpStack/Node-RED listener separation
-Phase 14S operational evidence harness
+PostgreSQL/TimescaleDB HA foundation + telemetry/outbox              PASS
+OpenBao 3-node KMS + audit                                           PASS
+Node-RED/Grafana server paths                                        PASS
+cloud MQTT gateway/ChirpStack/Node-RED listener separation          PASS
+SeaweedFS raw evidence infrastructure S0-S9                          PASS
+gateway_evidence migration + HBA + CONNECT + six LOGIN identities    PASS
+PgBouncer evidence expansion                                         PASS on all three nodes
+immutable cloud OCI refs + six evidence replicas                     PASS
+Evidence PKI + four collector MQTT identities/ACLs                   PASS
+shared anchor :443 SNI route + end-to-end evidence mTLS              PASS
+read-only Grafana checkpoint/verification panels                     PASS
+cloud ingest/collector/verifier/trusted-decoder/Fabric adapter source BUILD/TEST PASS
+v1/v2 canonicalization and correlation vectors                       FROZEN / PASS
 ```
 
-Not currently present as reviewed executable artifacts:
+Still not live-complete:
 
 ```text
-gateway-integrity-journal runtime
-gateway-journal-uploader runtime
-gateway-evidence-ingest runtime
-gateway-mqtt-evidence-collector runtime
-gateway-evidence-verifier runtime
-pinned trusted-decoder runtime/library
-gateway-integrity v2 canonicalization fixture/vector
-reviewed Fabric adapter runtime
+Gateway OS target-native concentratord-zmq build   TARGET TOOLCHAIN PENDING
+Gateway OS package/service installation            PENDING
+real verified gateway journal/uploader lineage     HARDWARE DEPENDENT
+public WAN ChirpStack/Evidence/MQTT normal path     PASS
+Reserved-IP reassignment/failover authority          EXTERNAL PROVIDER INPUT
+Fabric ledger activation                           EXTERNAL HANDOFF DEPENDENT
 ```
 
-Therefore the live marker remains:
-
-```text
-GATEWAY_EVIDENCE_RUNTIME=BLOCKED
-```
-
-until the implementation-artifact gate below passes.
+`GATEWAY_EVIDENCE_RUNTIME=SERVER_PASS_GATEWAY_PENDING` is the accurate current marker: the replicated cloud runtime is commissioned, while the physical gateway lineage is not yet claimed.
 
 ## 5.4 Decisions and artifacts that can be frozen now
 
@@ -202,7 +200,7 @@ evidence.<DOMAIN>   -> evidence service only
 
 A possible HAProxy design is one shared TLS frontend with SNI/hostname routing, multiple certificates, and evidence-route-specific client-certificate enforcement. Treat that as a design candidate until the exact HAProxy 2.8 configuration is reviewed and validated off-path. Do not weaken ChirpStack HTTPS or make client certificates globally mandatory for ordinary browser/API users by accident.
 
-Provider Reserved IPv4, public DNS, public certificate issuance, and provider firewall activation remain external inputs. The server-side config can be prepared only after the exact domain/certificate strategy is known.
+The public normal path is now commissioned on Reserved IPv4 `129.212.208.168` with `smartagri-chirpstack.duckdns.org`, `smartagri-evidence.duckdns.org`, and `smartagri-mqtt.duckdns.org`. ChirpStack ordinary HTTPS, Evidence gateway mTLS/no-client rejection, and MQTT gateway mTLS CONNECT/SUBSCRIBE are accepted. The remaining provider input is least-privilege Reserved-IP reassignment authority plus controlled failover acceptance; do not conflate that open HA test with the already-working public normal path.
 
 ### D. Evidence PKI profile
 
@@ -237,7 +235,7 @@ Never reset journal history during certificate rotation.
 
 ### E. Protected raw evidence store contract
 
-The raw-evidence backend is now selected at design/staging level: **SeaweedFS OSS 4.41** on ulc-01/02/03, with one master/volume/filer/S3 process per host, a separate three-member metadata-etcd quorum on `12379/12380`, and SeaweedFS placement `010`. Each Droplet is modeled as a distinct rack in the same `sgp1` data center, so `010` creates one additional raw-data copy on another physical host. This is not yet a live commissioning PASS: exact image digests, live memory usage, cluster membership, bucket placement, internal TLS, and the production application's conditional-write contract still have to be proven on the servers. See `../../../../evidence-services/cloud/deploy/seaweedfs/README.md`.
+The raw-evidence backend is selected and **commissioned through S9**: SeaweedFS OSS 4.41 on ulc-01/02/03, with one master/volume/filer/S3 process per host, a separate three-member metadata-etcd quorum on `12379/12380`, and SeaweedFS placement `010`. Each Droplet is modeled as a distinct rack in the same `sgp1` data center, so `010` creates one additional raw-data copy on another physical host. Live cluster membership, bucket placement, internal TLS, least-privilege S3 identities, two-rack replication, HAProxy create-only semantics, the locked production `gateway-evidence-ingest` helper write, and cross-host retained-object verification are all PASS. See `../../../../evidence-services/cloud/deploy/seaweedfs/README.md`.
 
 Required behavior:
 
@@ -299,7 +297,7 @@ Fabric adapter
   never INSERT/UPDATE verifier result
 ```
 
-Do not apply placeholder roles/schema to the live cluster before the reviewed runtimes, migration, object-store contract, and restore plan exist. The goal now is to freeze the migration artifact, not to create unused credentials.
+The reviewed migration/role boundary is now live and must not be re-applied. The three authority roles remain NOLOGIN capability shells; database CONNECT is granted at that group layer, and six node-specific SCRAM LOGIN identities inherit exactly one intended authority role. Preserve these names/ACLs and use the migration as rebuild/recovery source, not as a command to rerun on the commissioned cluster.
 
 ### G. MQTT evidence collector identity
 
@@ -477,25 +475,25 @@ Active implementation work now:
 [x] implement gateway-evidence-verifier discovery/lease/application-trusted-decoder source with lease-fenced verifier-owned `verified` promotion
 [x] implement deterministic application/MQTT/journal/checkpoint verifier lineage with full predecessor-object verification and atomic complete-lineage terminal transition
 [x] implement/test the separate Fabric adapter with v1/v2 JCS startup vectors, OpenBao seal verification, submit/reconciliation state machine, and fail-closed standby mode
-[ ] build/push immutable cloud OCI images and run minimum startup/smoke checks
+[x] build/push immutable cloud OCI images, pin `image@sha256` refs, and run minimum startup/smoke checks
 [x] create the reproducible three-host Compose deployment bundle, secret-safe env/host templates, four-image release file, disabled adapter-1/2 standby placement, and separate Fabric activation preflight under `evidence-services/cloud/deploy/`
 [x] implement and compile/test the Rust journal/segment/state core + independent fixed vectors
 [x] freeze evidence-ingest-receipt-v1 + stable retry receipt IDs/server time + Rust receipt validation state; no deletion path
 [x] pin Concentratord 4.7.1 + MQTT Forwarder 4.6.0 upstream schema and implement `concentratord-uplink-correlation-v1` with an independent synthetic vector; Rust adapter Cargo PASS and the complete Go collector/verifier correlation path now passes Go tests/build
-[ ] select/stage the real durable raw-evidence backend before live cloud activation
-[ ] finalize shared-443/SNI/mTLS + Evidence PKI before exposing ingest
-[ ] prepare read-only Grafana evidence views after schema names are final
+[x] select and commission SeaweedFS 4.41 durable raw-evidence infrastructure through S9 with cross-host production-helper verification
+[x] finalize and commission shared-443 TCP/SNI passthrough + Evidence PKI; ChirpStack normal HTTPS and evidence client-certificate enforcement both verified
+[x] provision read-only Grafana checkpoint and verification-state panels through the existing `telemetry_reader` datasource
 ```
 
-The cloud source is beyond static-only validation: the pinned project-local Go 1.25.0 build path passes `gofmt`, `go test ./...`, `go build ./...`, and Linux/amd64 cross-builds. The current four-service tree has an accepted exact artifact set frozen in `cloud/packaging/binaries.lock`; `build-images.ps1 -Offline -ValidateOnly` rebuilds all four and passes the binary lock plus minimal `FROM scratch` Dockerfile gate. The checksum-pinned `-ResetToolchain` recovery mechanism was proven earlier; do not claim a new reset replay of the current four-binary tree. No OCI image ID/registry digest is claimed because this repository runner has no Docker/Buildx. Rust/Cargo 1.82 also compiles/tests the journal/segment/state core. No physical gateway package was installed.
+The cloud source is beyond static-only validation: the pinned project-local Go 1.25.0 build path passes `gofmt`, `go test ./...`, `go build ./...`, and Linux/amd64 cross-builds. The current four-service tree has an accepted exact artifact set frozen in `cloud/packaging/binaries.lock`; `build-images.ps1 -Offline -ValidateOnly` rebuilds all four and passes the binary lock plus minimal `FROM scratch` Dockerfile gate. The checksum-pinned `-ResetToolchain` recovery mechanism was proven earlier; do not claim a new reset replay of the current four-binary tree. The accepted images were built/pushed through the Linux Buildx path and the production hosts now use immutable `ghcr.io/jervis-umtc/lorawan/...@sha256` references; host pull/inspection and runtime startup are commissioned. Rust/Cargo 1.82 also compiles/tests the journal/segment/state core. No physical gateway package was installed.
 
-Verifier boundary: journal bytes, uplink schema, and the deterministic correlation path are implemented rather than guessed. Concentratord 4.7.1 is pinned to commit `0904a8ddf4eeb3150b4675b35f067865cb68827d` / `chirpstack_api 4.17.0`; MQTT Forwarder 4.6.0 is pinned to commit `04e870b4af97bebb278ab29259941fd8b3aad72b` / `chirpstack_api 4.18.0`; both published API artifacts contain byte-identical `gw.proto` SHA-256 `227fda5fd77fb115cb00610fb1ea1fa87c3112d972fc6534342dc7083a6dc12b`. ChirpStack 4.18 preserves `gw.UplinkRxInfo.uplink_id` inside application `rxInfo`, so the reviewed Node-RED provenance fields provide the first reception's Gateway EUI, uplink ID, frequency, context, RSSI, and SNR without a timestamp fallback. The Go verifier reopens/redecodes the MQTT object, verifies the semantic digest, fully verifies the matching closed journal segment and every predecessor object back to segment 1, recomputes the accepted checkpoint digest, and calls the lease-fenced `CompleteVerified` path only after the complete lineage and trusted-decoder comparison succeed. Go compilation/tests and the four deterministic Linux binary candidates are PASS. Remaining blockers are registry OCI build/push/digest pinning, production replicated raw storage, live migration/credentials/two-replica deployment, Evidence PKI/shared-443 commissioning, and one real physical-gateway lineage.
+Verifier boundary: journal bytes, uplink schema, and the deterministic correlation path are implemented rather than guessed. Concentratord 4.7.1 is pinned to commit `0904a8ddf4eeb3150b4675b35f067865cb68827d` / `chirpstack_api 4.17.0`; MQTT Forwarder 4.6.0 is pinned to commit `04e870b4af97bebb278ab29259941fd8b3aad72b` / `chirpstack_api 4.18.0`; both published API artifacts contain byte-identical `gw.proto` SHA-256 `227fda5fd77fb115cb00610fb1ea1fa87c3112d972fc6534342dc7083a6dc12b`. ChirpStack 4.18 preserves `gw.UplinkRxInfo.uplink_id` inside application `rxInfo`, so the reviewed Node-RED provenance fields provide the first reception's Gateway EUI, uplink ID, frequency, context, RSSI, and SNR without a timestamp fallback. The Go verifier reopens/redecodes the MQTT object, verifies the semantic digest, fully verifies the matching closed journal segment and every predecessor object back to segment 1, recomputes the accepted checkpoint digest, and calls the lease-fenced `CompleteVerified` path only after the complete lineage and trusted-decoder comparison succeed. Go compilation/tests and the four deterministic Linux binary candidates are PASS. Live migration/credentials are no longer blockers. Those former cloud blockers are closed: three-node PgBouncer expansion, OCI digest pinning, SeaweedFS S9, Evidence PKI, collector ACLs, replicated services, shared-443 and read-only Grafana evidence views are live PASS. Full v2 normal-path acceptance now waits on the Gateway OS target package/physical lineage, plus public-provider activation where WAN access is required.
 
-Uploader boundary: `evidence-ingest-receipt-v1` is now implemented at source level. PostgreSQL returns the original `server_received_at`/`uploaded_at` on an exact retry; Go binds accepted identity/hash + that time into a stable receipt ID; Rust independently validates the checkpoint/segment receipt vectors and rejects conflicting stored receipts. This is **not** approval to delete local evidence: the HTTP uploader process, durable receipt-file persistence, production raw store, and physical-gateway reconciliation are still uncommissioned, and the Rust source contains no retirement/delete API.
+Uploader boundary: `evidence-ingest-receipt-v1`, the Rust HTTP/mTLS uploader process, durable receipt-file persistence and bounded retry/backoff are implemented and pass the current 28-test/default build gate. PostgreSQL returns the original `server_received_at`/`uploaded_at` on exact retry; Rust validates the returned identity/hash, persists canonical receipts before considering work acknowledged, and is restart-idempotent. SeaweedFS S9 and cloud ingest are commissioned. This is **not** approval to delete local evidence: the Rust source intentionally contains no retirement/delete API and physical-gateway reconciliation/retention policy remains pending.
 
 Collector reliability note: a QoS 1 subscription does not upgrade a publisher's QoS 0 PUBLISH. The collector can withhold protocol acknowledgment only for received QoS > 0; final offline witness durability therefore requires the gateway-side publisher/bridge to use QoS 1 for the evidence topic path. The current gateway staging history still records QoS 0 with final QoS 1 planned, so do not claim outage-proof MQTT evidence until that later gateway boundary is closed.
 
-The filesystem backend is **development-only** and may not be called HA storage. It exists so raw-storage vendor selection does not block source implementation. Live evidence acceptance still requires the durable one-Droplet-loss backend contract.
+The filesystem backend is **development-only** and may not be called HA storage. Production raw storage is the commissioned SeaweedFS S3-compatible path; S0-S9, including the exact locked production Go helper and cross-host retained-object verification, are PASS. Full application acceptance now waits on the physical gateway lineage rather than another storage gate.
 
 OpenBao audit-device closure is complete. Preserve the commissioned audit path/rotation behavior and keep Fabric-adapter SecretID issuance at zero until the explicit activation preflight plus external Fabric handoff are ready.
 
@@ -543,9 +541,12 @@ At the present repository state:
 EVIDENCE_CONTRACTS=PASS
 EVIDENCE_REPLICATION_DESIGN=PASS
 EVIDENCE_IMPLEMENTATION_BLUEPRINT=PASS
-EVIDENCE_PREIMPLEMENTATION_GATE=ACTIVE
-GATEWAY_EVIDENCE_RUNTIME=BLOCKED
+EVIDENCE_PREIMPLEMENTATION_GATE=PASS
+EVIDENCE_CLOUD_RUNTIME=PASS
+PUBLIC_INGRESS_NORMAL_PATH=PASS
+PUBLIC_RESERVED_IP_FAILOVER=EXTERNAL_AUTH_PENDING
+GATEWAY_EVIDENCE_RUNTIME=SERVER_PASS_GATEWAY_PENDING
 GATEWAY_EVIDENCE_V2_NORMAL_PATH=NOT_YET_CLAIMED
 ```
 
-The blocker is missing reviewed implementation artifacts and unresolved deployment decisions, not lack of a conceptual architecture.
+The reviewed cloud implementation/deployment decisions and ordinary public Internet path are no longer blockers. The remaining normal-path gate is target Gateway OS packaging plus one physical gateway lineage; Reserved-IP failover authority/acceptance and Fabric remain separate external gates.

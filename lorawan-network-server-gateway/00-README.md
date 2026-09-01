@@ -18,6 +18,8 @@ Choose your objective first:
 
 For complete documentation layout and research alignment, see [DOCUMENTATION-MAP.md](DOCUMENTATION-MAP.md).
 
+**Next physical session:** use [TOMORROW-SENSOR-GATEWAY-BRINGUP.md](TOMORROW-SENSOR-GATEWAY-BRINGUP.md) as the single sensor + flashed-gateway execution path. Historical continuation notes are not operator entry points.
+
 ---
 
 ## Supported Architecture Overview
@@ -25,15 +27,14 @@ For complete documentation layout and research alignment, see [DOCUMENTATION-MAP
 ```text
 LoRaWAN Edge (Sensors & Raspberry Pi 4B + RAK5146 Gateway)
   -> ChirpStack Concentratord
-  -> MQTT Forwarder -> local Mosquitto disk buffer (loopback :1883)
-  -> mTLS Bridge (:8883)
-  -> Server Mosquitto Broker
-  -> ChirpStack Network Server
-  -> Node-RED validation / normalization
-  -> TimescaleDB telemetry + durable Fabric outbox
-  -> Fabric Adapter canonical evidence + SHA-256
-  -> OpenBao sign / verify
-  -> Hyperledger Fabric
+      |-> MQTT Forwarder -> local Mosquitto disk buffer -> mTLS -> Server Mosquitto
+      `-> gateway integrity journal -> hash-chained segments/checkpoints -> HTTPS/mTLS evidence ingest
+
+Server evidence path
+  Server Mosquitto -> read-only evidence collectors -> immutable SeaweedFS raw evidence
+  ChirpStack -> Node-RED validation/normalization -> TimescaleDB telemetry + durable Fabric outbox
+  journal + MQTT witness + application/telemetry -> evidence verifier + pinned trusted decoder
+  verified v2 only -> Fabric Adapter -> OpenBao sign/verify -> Hyperledger Fabric
 ```
 
 ---

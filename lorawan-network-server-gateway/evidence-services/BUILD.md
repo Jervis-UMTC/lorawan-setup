@@ -2,6 +2,16 @@
 
 Use this page when setting the project up again on a Windows amd64 development/build host.
 
+## Efficient new-session start
+
+The cloud evidence services are commissioned. For current work, inspect the Gateway OS/OpenWrt target build environment first. Use the pinned Rust default gate only when a source regression check is useful:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\evidence-services\gateway\scripts\dev-build.ps1
+```
+
+The current Rust source implements the writer/uploader runtime and passes 28 tests plus format/Clippy/locked build, but this workstation command does not create or validate the final OpenWrt `concentratord-zmq` binary/package. The target build/package and physical lineage are the current gateway gates.
+
 ## One command
 
 Prerequisites:

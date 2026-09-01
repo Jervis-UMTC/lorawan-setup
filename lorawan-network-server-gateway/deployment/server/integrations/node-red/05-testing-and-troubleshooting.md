@@ -96,6 +96,8 @@ cloud
   MQTT CA + Node-RED client certificate/key readable
   logical name resolves to the current Node-RED host's private HAProxy
   HAProxy sees at least one healthy Mosquitto :8886 backend
+  :18884 frontend timeout client = 300s
+  :18884 backend timeout server = 300s
 ```
 
 For both profiles verify the topic is exactly `application/+/device/+/event/up` and Node-RED has reloaded the intended broker configuration.
@@ -117,6 +119,8 @@ sudo docker compose -f /etc/lorawan-cloud/mosquitto/compose.yml logs --since=10m
 ~~~
 
 A TLS error should be fixed at the CA/name/client-certificate layer. Do not disable verification to make the MQTT node turn green.
+
+If the client repeatedly connects successfully and then disconnects near exact multiples of the configured MQTT keepalive, inspect the **client-side close and HAProxy idle-timeout boundary before changing certificates or broker ACLs**. The commissioned Node-RED client uses keepalive `60`, while the node-local HAProxy `:18884` route must explicitly use `timeout client 300s` and `timeout server 300s`; inheriting the global `60s` defaults is not accepted. On 2026-09-01 the Mosquitto log showed the client closing the TLS connection (`unexpected eof while reading`), while Linux conntrack/TCP timers were much longer and a standard `mosquitto_sub` through the same mTLS route completed two clean keepalive request/response cycles. After the scoped HAProxy timeout override and a fresh Node-RED MQTT connection, the active client remained continuously connected well beyond the previous failure window.
 
 ## 5.5 Messages arrive but the function drops them
 

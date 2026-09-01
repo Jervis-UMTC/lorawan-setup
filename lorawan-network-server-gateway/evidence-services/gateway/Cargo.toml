@@ -5,6 +5,10 @@ edition = "2021"
 rust-version = "1.82"
 publish = false
 
+[features]
+default = []
+concentratord-zmq = ["dep:zmq"]
+
 [dependencies]
 base64 = "0.22"
 serde = { version = "1.0", features = ["derive"] }
@@ -13,6 +17,7 @@ serde_jcs = "=0.1.0"
 sha2 = "0.10"
 prost = "=0.14.3"
 prost-derive = "=0.14.3"
+zmq = { version = "=0.10.0", optional = true }
 
 [lints.rust]
 unsafe_code = "forbid"

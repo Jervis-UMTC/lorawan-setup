@@ -1,0 +1,10 @@
+[Unit]
+Description=Daily LoRaWAN certificate expiry health check
+
+[Timer]
+OnCalendar=daily
+RandomizedDelaySec=1h
+Persistent=true
+
+[Install]
+WantedBy=timers.target

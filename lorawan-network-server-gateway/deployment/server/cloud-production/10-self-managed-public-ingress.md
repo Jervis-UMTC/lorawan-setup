@@ -1,6 +1,28 @@
 # 10. Self-Managed Public Ingress with HAProxy + Reserved IP
 
-> **Status: ACTIVE PRE-TEST SETUP / PREFLIGHT IN PROGRESS.** Phase 9 application commissioning is complete. Phase 10 commissions the normal public HTTPS/MQTT path, manual Reserved-IP mobility, and an armed failover controller. **Do not intentionally fail a host in this phase.** Automatic host-loss takeover is tested only in Phase 15 after the full pre-test gate passes.
+> **Status: PUBLIC NORMAL PATH COMPLETE / PASS; RESERVED-IP FAILOVER AUTHORITY + CONTROLLED REASSIGNMENT ACCEPTANCE PENDING.** ChirpStack HTTPS, Evidence mTLS, and gateway MQTT mTLS are live through the commissioned Reserved IPv4. The remaining provider-side boundary is least-privilege Reserved-IP reassignment authority plus controlled failover acceptance. **Do not intentionally fail a host here merely to re-prove the normal path.**
+
+### Public normal-path activation result - 2026-09-01
+
+The current public ingress is commissioned through DigitalOcean Reserved IPv4 `129.212.208.168`, currently owned by `ulc-01`:
+
+```text
+smartagri-chirpstack.duckdns.org:443
+smartagri-evidence.duckdns.org:443
+smartagri-mqtt.duckdns.org:8883
+```
+
+Accepted evidence: normal system-trust HTTPS to ChirpStack PASS; Evidence public server-name/chain PASS; Evidence without a client certificate rejected; the real Gateway EUI Evidence client returned `/readyz`; MQTT public hostname verification PASS; the real gateway MQTT client completed mTLS, `CONNACK 0`, and an authorized command subscription. ChirpStack uses a Let's Encrypt certificate with renewal deploy-hook synchronization from `ulc-01` to the prepared `ulc-02` standby; a reconciliation timer and daily certificate-expiry monitoring are installed. MQTT and Evidence retain their dedicated private client-auth CAs while their server identities include the public DuckDNS SANs.
+
+```text
+PUBLIC_CHIRPSTACK_443=PASS
+EVIDENCE_PUBLIC_443=PASS
+PUBLIC_MQTT_8883=PASS
+PUBLIC_INGRESS_NORMAL_PATH=PASS
+PUBLIC_RESERVED_IP_FAILOVER=EXTERNAL_AUTH_PENDING
+```
+
+This latest result supersedes the older Phase 10 preflight statements below that say public DNS, Reserved IPv4, or public PKI do not yet exist. Those paragraphs remain as historical execution context. Do not claim automatic Reserved-IP takeover until a suitable DigitalOcean API identity exists and controlled reassignment has been accepted.
 
 ## 10.0 Activation preflight - read-only, no public mutation
 
@@ -260,18 +282,40 @@ ulc-02 anchor IP :443
 ulc-02 anchor IP :8883
 ```
 
-Conceptually:
+The commissioned host-side `:443` pattern is a shared TCP/SNI dispatcher so evidence mTLS stays end-to-end while ChirpStack retains ordinary browser/API TLS termination:
 
 ```haproxy
-frontend chirpstack_https
-    bind <THIS_HOST_ANCHOR_IP>:443 ssl crt /etc/lorawan-pki/public/chirpstack.pem
-    ...
+frontend shared_https_sni
+    bind <THIS_HOST_ANCHOR_IP>:443
+    mode tcp
+    tcp-request inspect-delay 5s
+    tcp-request content accept if { req_ssl_hello_type 1 }
+    acl sni_evidence req.ssl_sni -i evidence.internal.lorawan.com
+    acl sni_chirpstack req.ssl_sni -i chirpstack.internal.lorawan.com
+    use_backend evidence_https_passthrough if sni_evidence
+    use_backend chirpstack_https_termination if sni_chirpstack
+    default_backend chirpstack_https_termination
+
+backend evidence_https_passthrough
+    mode tcp
+    server evidence-ingest-local <THIS_HOST_PRIVATE_IP>:18100 check
+
+backend chirpstack_https_termination
+    mode tcp
+    server chirpstack-tls-local 127.0.0.1:14443 check
+
+frontend chirpstack_https_internal
+    bind 127.0.0.1:14443 ssl crt /etc/lorawan-pki/public/chirpstack-staging.pem
+    mode http
+    default_backend chirpstack_public_backends
 
 frontend mqtt_public
     mode tcp
     bind <THIS_HOST_ANCHOR_IP>:8883
     ...
 ```
+
+This pattern is live/validated on `10.15.0.5` and `10.15.0.7`. The `10.15.0.x` addresses are DigitalOcean anchor addresses local to each Droplet, not the `10.104.0.x` service VPC. Later public activation replaces internal SNI/certificate inputs with real public identities without changing the trust split.
 
 Do **not** change these private listeners to anchor IPs:
 
@@ -302,6 +346,7 @@ Create/update:
 ```text
 chirpstack.<DOMAIN>  A  <RESERVED_IP>
 mqtt.<DOMAIN>        A  <RESERVED_IP>
+evidence.<DOMAIN>    A  <RESERVED_IP>
 ```
 
 Verify from `ADMIN`:
@@ -309,9 +354,10 @@ Verify from `ADMIN`:
 ```bash
 getent ahostsv4 chirpstack.<DOMAIN>
 getent ahostsv4 mqtt.<DOMAIN>
+getent ahostsv4 evidence.<DOMAIN>
 ```
 
-Both should resolve to the same Reserved IPv4.
+All three should resolve to the same Reserved IPv4.
 
 ## 10.8 Prove manual reassignment before automating it
 
@@ -327,6 +373,12 @@ openssl s_client \
   -cert <STAGING_MQTT_CLIENT_CERT> \
   -key <STAGING_MQTT_CLIENT_KEY> \
   -verify_return_error </dev/null
+
+curl --fail --silent --show-error \
+  --cacert <EVIDENCE_CA> \
+  --cert <GATEWAY_EVIDENCE_CLIENT_CERT> \
+  --key <GATEWAY_EVIDENCE_CLIENT_KEY> \
+  https://evidence.<DOMAIN>/readyz >/dev/null
 ```
 
 Then deliberately move the Reserved IP to `ulc-02`:

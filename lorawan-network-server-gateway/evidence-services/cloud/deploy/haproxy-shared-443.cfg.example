@@ -1,0 +1,36 @@
+# Commissioned shared-443 pattern. Replace placeholders with the physical host values.
+# DigitalOcean 10.15.x anchor addresses are provider ingress anchors, NOT the 10.104.x east-west VPC.
+# This replaces a direct ChirpStack :443 frontend; do not append a second :443 bind.
+
+frontend shared_https_sni
+    bind <THIS_HOST_ANCHOR_IP>:443
+    mode tcp
+    option tcplog
+    tcp-request inspect-delay 5s
+    tcp-request content accept if { req_ssl_hello_type 1 }
+    acl sni_evidence req.ssl_sni -i evidence.internal.lorawan.com smartagri-evidence.duckdns.org
+    acl sni_chirpstack req.ssl_sni -i chirpstack.internal.lorawan.com smartagri-chirpstack.duckdns.org
+    use_backend evidence_https_passthrough if sni_evidence
+    use_backend chirpstack_https_termination if sni_chirpstack
+    default_backend chirpstack_https_termination
+
+backend evidence_https_passthrough
+    mode tcp
+    option tcp-check
+    server evidence-ingest-local <THIS_HOST_SERVICE_IP>:18100 check
+
+backend chirpstack_https_termination
+    mode tcp
+    option tcp-check
+    server chirpstack-tls-local 127.0.0.1:14443 check
+
+frontend chirpstack_https_internal
+    bind 127.0.0.1:14443 ssl crt /etc/lorawan-pki/public/chirpstack-certs/
+    mode http
+    option httplog
+    option forwardfor
+    http-request set-header X-Forwarded-Proto https
+    default_backend chirpstack_public_backends
+
+# Keep the existing chirpstack_public_backends definition and the existing
+# anchor :8883 TCP-passthrough MQTT frontend/backends.

@@ -6,3 +6,4 @@ evidence-services/cloud/.dev-cache/
 evidence-services/cloud/.dev-out/
 evidence-services/cloud/.dev-out.building/
 evidence-services/cloud/.dev-image-context/
+firmware/EMU01_Agriculture_Node/emu01_credentials.h

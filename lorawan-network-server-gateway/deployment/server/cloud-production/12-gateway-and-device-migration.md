@@ -1,6 +1,6 @@
 # 12. Gateway and Device Migration
 
-> **Status: REQUIRED PRE-TEST SETUP / DRAFT.** Do not cut over a gateway or device until the Phase 11 normal path is commissioned, provider-owned public MQTT activation is available for the physical gateway bridge, and the **Phase 13A backup safety checkpoint** has passed. For the current non-destructive fast path, the verified off-host logical-backup archive/hash is sufficient; isolated restore and destructive DR proof remain deferred to the later Phase 15 boundary. This is a cutover/provisioning phase, not a chaos phase.
+> **Status: REQUIRED PRE-TEST SETUP / DRAFT.** Public MQTT normal-path activation and the Phase 13A backup safety checkpoint are available. Do not cut over a gateway or device until the remaining Phase 11 Gateway OS normal-path package/configuration is installed and verified on the physical gateway. For the current non-destructive fast path, the verified off-host logical-backup archive/hash is sufficient; isolated restore and destructive DR proof remain deferred to the later Phase 15 boundary. This is a cutover/provisioning phase, not a chaos phase.
 
 This guide supports two real deployment cases: migration from an older authoritative server-hosted ChirpStack installation, or fresh provisioning directly into the new cloud when there is no authoritative legacy database to import. Do not pretend a fresh deployment is a database migration. When a legacy source exists, the `source` host is the machine that currently runs ChirpStack and its Compose project; it is not the Raspberry Pi Gateway OS appliance.
 
@@ -309,4 +309,27 @@ Direct verification from `ulc-03` against `ulc-02:8884` using the issued gateway
 
 The Phase 13A fast backup checkpoint is now PASS: `phase13a-20260827T032756Z.tar.gz` exists off-host on the Windows administration workstation and its SHA-256 matches the `ulc-03` source (`e97d50c31252ede1fe55b734b6686f270e92ebecb69a36d637b04fbf726cda1c`). Do not repeat database dumps or restore rehearsal during normal-path commissioning.
 
-Phase 12 **physical gateway cutover remains blocked only by the provider-owned public MQTT endpoint**. The gateway-side cloud client certificate, exact-EUI broker ACL, broker mTLS acceptance, local Mosquitto buffer, SIM7600 QMI data session, and public LTE connectivity are already proven. Until the real `mqtt.<DOMAIN>:8883` endpoint, Reserved IPv4, firewall rule, DNS, and public broker SAN exist, do not repoint the physical gateway bridge and do not promote LTE to the normal/default route. Provider-independent application/telemetry preparation may continue in parallel.
+Phase 12 is no longer blocked by the public MQTT endpoint. `smartagri-mqtt.duckdns.org:8883` through Reserved IPv4 `129.212.208.168` has passed public-name verification, real gateway mTLS CONNECT, and authorized SUBSCRIBE. The gateway-side cloud certificate, exact-EUI ACL, local Mosquitto buffer, SIM7600 QMI data session, and public LTE connectivity are also proven. The remaining cutover boundary is physical Gateway OS access: repoint the bridge, preserve strict TLS/mTLS, prove QoS 1 delivery and application flow, then promote LTE according to Phase 11. Reserved-IP automatic failover remains a separate HA test, not a normal-path blocker.
+
+### Production ChirpStack gateway/device provisioning PASS - 2026-09-01
+
+The cloud ChirpStack 4.19 registry was verified empty before provisioning, then populated through the supported authenticated gRPC API rather than by copying rows from the older ChirpStack 4.9 lab database. Current production objects are:
+
+```text
+application:     dissertation-sensors
+gateway:         Gateway-01
+gateway EUI:     0016c001f139a1cb
+device profile:  EMU-01 RAK4631 AS923
+device:          dissertation-emu-01
+device EUI:      ac1f09fffe296d29
+JoinEUI:         0000000000000000
+region:          AS923 / region id as923
+LoRaWAN MAC:     1.0.2
+regional params: B
+activation:      OTAA
+class:           A
+ADR algorithm:   default
+expected uplink: 15 seconds
+```
+
+The EMU-01 LoRaWAN root key was transferred through protected temporary files and verified byte-for-byte against the previously working lab key without recording or printing the key value. The production JavaScript payload codec was likewise verified byte-for-byte against the reviewed payload-v2 decoder. SEC-02 remains intentionally outside the permanent production registry as a security/test fixture. The temporary global ChirpStack provisioning API key was revoked after provisioning and its protected on-host token file was removed. `PRODUCTION_CHIRPSTACK_REGISTRY=PASS` is authoritative; tomorrow's remaining acceptance requires the real flashed gateway and EMU-01 radio uplink, not more server object creation.

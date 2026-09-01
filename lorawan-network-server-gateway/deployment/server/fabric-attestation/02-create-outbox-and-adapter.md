@@ -25,7 +25,7 @@ Do not merge these responsibilities into Node-RED. Node-RED owns ingestion and t
 
 The canonical watcher/service topology is documented in [`gateway-integrity/04-service-architecture-and-runtime-contract.md`](../integrations/gateway-integrity/04-service-architecture-and-runtime-contract.md). In that architecture, the Fabric Adapter **does not watch Concentratord, journal files, or gateway MQTT topics**. It watches only durable eligible outbox work and reads verifier-owned `gateway_evidence.event_verification` state for v2. This prevents the signer/submission process from becoming the authority that decides whether its own source evidence is trustworthy.
 
-This repository does not currently contain a completed adapter image. Treat `<PINNED_FABRIC_ADAPTER_IMAGE>` as an unresolved input, not an image that already exists.
+The immutable cloud adapter image is commissioned as `ghcr.io/jervis-umtc/lorawan/gateway-fabric-adapter@sha256:cd4308e8985d74ea7fab957a2a4adadd1831b776a8f9af2fdd6291179df83e7a`. Adapter-1 on ulc-01 and adapter-2 on ulc-02 are live only in fail-closed `FABRIC_ADAPTER_ENABLED=false` standby. Do not issue a SecretID or enable ledger submission until the external Fabric handoff and activation preflight pass.
 
 ## Step 1: Back up the telemetry database
 
