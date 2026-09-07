@@ -31,6 +31,11 @@ COMMENT ON COLUMN telemetry.fabric_outbox.fabric_prepared_tx IS
 COMMENT ON COLUMN telemetry.fabric_outbox.fabric_commit_status_request IS
   'Signed Fabric Gateway commit-status request persisted with txid before first orderer submit.';
 
+-- The adapter intentionally has relation-level SELECT but column-scoped UPDATE.
+-- Grant only the new durable transaction-material columns it must populate.
+GRANT UPDATE (fabric_record_id, fabric_prepared_tx, fabric_commit_status_request)
+  ON telemetry.fabric_outbox TO fabric_adapter;
+
 CREATE OR REPLACE FUNCTION telemetry.enforce_fabric_outbox_immutability()
 RETURNS trigger
 LANGUAGE plpgsql
