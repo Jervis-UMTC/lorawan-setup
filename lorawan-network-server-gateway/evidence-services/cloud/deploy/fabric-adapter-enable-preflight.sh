@@ -165,10 +165,28 @@ require_env_exact FABRIC_TLS_ROOT_CERT '/run/fabric/tls/ca.crt'
 require_env_exact FABRIC_CERT_PATH '/run/fabric/identity/client.crt'
 require_env_exact FABRIC_KEY_PATH '/run/fabric/identity/client.key'
 
-for key in FABRIC_MSP_ID FABRIC_CHANNEL FABRIC_CHAINCODE FABRIC_SUBMIT_FUNCTION FABRIC_QUERY_FUNCTION; do
+for key in FABRIC_MSP_ID FABRIC_CHANNEL FABRIC_CHAINCODE FABRIC_AUTHENTICATED_SOURCE_SYSTEM_ID FABRIC_SUBMIT_FUNCTION FABRIC_QUERY_FUNCTION FABRIC_VERIFY_FUNCTION; do
   value=$(get_env_value "$FABRIC_ADAPTER_ENV_FILE" "$key")
   [ -n "$value" ] || fail "$key must not be empty"
 done
+
+require_env_exact FABRIC_TLS_SERVER_NAME 'peer1.hrc.local'
+require_env_exact FABRIC_MSP_ID 'HrcMSP'
+require_env_exact FABRIC_CHANNEL 'hrc-channel'
+require_env_exact FABRIC_CHAINCODE 'hrc-evidence'
+require_env_exact FABRIC_SUBMIT_FUNCTION 'CreateSourceBoundAnchor'
+require_env_exact FABRIC_QUERY_FUNCTION 'QuerySourceBoundAnchor'
+require_env_exact FABRIC_VERIFY_FUNCTION 'VerifySourceBoundDigest'
+
+FABRIC_CONTRACT=$(grep -m1 -E '^FABRIC_CONTRACT=' "$FABRIC_ADAPTER_ENV_FILE" || true)
+[ "$FABRIC_CONTRACT" = 'FABRIC_CONTRACT=' ] || fail 'FABRIC_CONTRACT must be present and empty for the HRC default contract; do not use the Caliper hrcEvidence alias'
+
+FABRIC_SOURCE_SYSTEM_ID=$(get_env_value "$FABRIC_ADAPTER_ENV_FILE" FABRIC_AUTHENTICATED_SOURCE_SYSTEM_ID)
+printf '%s' "$FABRIC_SOURCE_SYSTEM_ID" | grep -Eq '^[A-Za-z0-9._:-]{1,128}$' || fail 'FABRIC_AUTHENTICATED_SOURCE_SYSTEM_ID violates the HRC source-ID contract'
+for legacy_function in CreateAnchor QueryAnchor QueryAnchorByRecordID VerifyDigest; do
+  grep -Eq "^(FABRIC_SUBMIT_FUNCTION|FABRIC_QUERY_FUNCTION|FABRIC_VERIFY_FUNCTION)=${legacy_function}$" "$FABRIC_ADAPTER_ENV_FILE" && fail "legacy Fabric function ${legacy_function} must not be configured for the Task 37 adapter identity"
+done
+pass 'HRC Task 37 source-bound channel/chaincode/function/default-contract/source-ID contract'
 
 FABRIC_ENDPOINT=$(get_env_value "$FABRIC_ADAPTER_ENV_FILE" FABRIC_GATEWAY_ENDPOINT)
 FABRIC_TLS_NAME=$(get_env_value "$FABRIC_ADAPTER_ENV_FILE" FABRIC_TLS_SERVER_NAME)
@@ -181,7 +199,12 @@ FABRIC_PORT=${FABRIC_ENDPOINT##*:}
 printf '%s' "$FABRIC_PORT" | grep -Eq '^[0-9]+$' || fail 'Fabric Gateway port must be numeric'
 [ "$FABRIC_PORT" -ge 1 ] && [ "$FABRIC_PORT" -le 65535 ] || fail 'Fabric Gateway port must be 1..65535'
 [ -n "$FABRIC_TLS_NAME" ] || fail 'FABRIC_TLS_SERVER_NAME must not be empty'
+[ "$FABRIC_ENDPOINT" != '10.43.25.198:7051' ] || fail '10.43.25.198:7051 is the Fabric K3s ClusterIP and is not reachable/authorized from ULC-01/ULC-02; use the restricted handoff endpoint'
 pass 'external Fabric endpoint syntax'
+
+FABRIC_CA_SHA256=$(sha256sum "$FABRIC_TLS_ROOT_CERT_HOST_PATH" | awk '{print $1}') || fail 'cannot hash Fabric TLS root certificate'
+[ "$FABRIC_CA_SHA256" = 'a7083e83fb6e1609cb512926bc02015a004284dc37b16baf29a2a8c546b1b6ef' ] || fail 'Fabric TLS root certificate does not match the HRC handoff root CA fingerprint'
+pass 'HRC Fabric TLS root CA fingerprint'
 
 # Prove the Fabric application certificate and private key are a pair without
 # printing private-key material.
@@ -189,6 +212,12 @@ CERT_PUB=$(openssl x509 -in "$FABRIC_CERT_HOST_PATH" -pubkey -noout 2>/dev/null 
 KEY_PUB=$(openssl pkey -in "$FABRIC_KEY_HOST_PATH" -pubout -outform DER 2>/dev/null | sha256sum | awk '{print $1}') || fail 'cannot derive Fabric private-key public key'
 [ -n "$CERT_PUB" ] && [ "$CERT_PUB" = "$KEY_PUB" ] || fail 'Fabric certificate/private key do not match'
 pass 'Fabric client certificate/private-key match'
+
+FABRIC_CERT_SUBJECT=$(openssl x509 -in "$FABRIC_CERT_HOST_PATH" -noout -subject -nameopt RFC2253 2>/dev/null) || fail 'cannot inspect Fabric client certificate subject'
+printf '%s' "$FABRIC_CERT_SUBJECT" | grep -Eq '(^|,)OU=client(,|$)' || fail 'Fabric client identity must be a least-privilege OU=client identity'
+printf '%s' "$FABRIC_CERT_SUBJECT" | grep -Fq 'CN=hrc-org-admin' && fail 'hrc-org-admin must never be used by the LoRaWAN Fabric adapter'
+printf '%s' "$FABRIC_CERT_SUBJECT" | grep -Fq 'CN=task39-benchmark-writer' && fail 'task39-benchmark-writer is reserved for Task 39 and must never be used by the LoRaWAN Fabric adapter'
+pass 'dedicated least-privilege Fabric client identity class'
 
 # Verify the already-commissioned stable OpenBao route using the same hostname
 # the container will use while forcing resolution to this host's local HAProxy.

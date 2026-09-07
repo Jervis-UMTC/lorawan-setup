@@ -18,7 +18,11 @@ type OutboxWork struct {
 	EvidenceSigningKeyID *string
 	EvidenceSignature    *string
 	EvidenceSealedAt     *time.Time
+	FinalizedPayload     []byte
 	FabricTxID           *string
+	FabricRecordID       *string
+	FabricPreparedTx     []byte
+	FabricCommitRequest  []byte
 }
 
 type SourceRow struct {
@@ -62,20 +66,43 @@ type Seal struct {
 	SealedAt      time.Time
 }
 
-type FabricAttestation struct {
-	SchemaVersion string
-	EventKey      string
-	EventType     string
-	Digest        string
-	SealAlgorithm string
-	SealKeyID     string
-	SealSignature string
+type FabricAnchor struct {
+	AuthenticatedSourceSystemID string
+	SourceRecordID              string
+	Digest                      string
+	PayloadLength               int
+	ExactPayload                []byte
+	SourceType                  string
+	Producer                    string
+	ProducedAt                  string
+	SchemaVersion               string
+}
+
+type FabricPreparedSubmission struct {
+	TransactionID       string
+	PreparedTransaction []byte
+	CommitStatusRequest []byte
+	CreateOutcome       string
+	RecordID            string
 }
 
 type FabricQueryResult struct {
-	Found     bool
-	EventKey  string
-	Digest    string
-	TxID      string
-	Committed bool
+	Found                       bool
+	RecordID                    string
+	AuthenticatedSourceSystemID string
+	SourceRecordID              string
+	DigestAlgorithm             string
+	Digest                      string
+	PayloadLength               int
+	SourceType                  string
+	Producer                    string
+	ProducedAt                  string
+	SchemaVersion               string
+}
+
+type FabricVerifyResult struct {
+	Outcome        string
+	RecordID       string
+	ExpectedDigest string
+	ObservedDigest string
 }

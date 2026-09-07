@@ -3,10 +3,13 @@ package fabricadapter
 import (
 	"errors"
 	"os"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
 )
+
+var hrcSourceIDPattern = regexp.MustCompile(`^[A-Za-z0-9._:-]{1,128}$`)
 
 type Config struct {
 	Enabled              bool
@@ -39,8 +42,10 @@ type Config struct {
 	FabricChannel        string
 	FabricChaincode      string
 	FabricContract       string
+	FabricSourceSystemID string
 	FabricSubmitFunction string
 	FabricQueryFunction  string
+	FabricVerifyFunction string
 }
 
 func LoadConfig() (Config, error) {
@@ -81,8 +86,10 @@ func LoadConfig() (Config, error) {
 	cfg.FabricChannel = strings.TrimSpace(os.Getenv("FABRIC_CHANNEL"))
 	cfg.FabricChaincode = strings.TrimSpace(os.Getenv("FABRIC_CHAINCODE"))
 	cfg.FabricContract = strings.TrimSpace(os.Getenv("FABRIC_CONTRACT"))
+	cfg.FabricSourceSystemID = strings.TrimSpace(os.Getenv("FABRIC_AUTHENTICATED_SOURCE_SYSTEM_ID"))
 	cfg.FabricSubmitFunction = strings.TrimSpace(os.Getenv("FABRIC_SUBMIT_FUNCTION"))
 	cfg.FabricQueryFunction = strings.TrimSpace(os.Getenv("FABRIC_QUERY_FUNCTION"))
+	cfg.FabricVerifyFunction = strings.TrimSpace(os.Getenv("FABRIC_VERIFY_FUNCTION"))
 
 	if cfg.DatabaseMaxConns, err = envInt32("FABRIC_ADAPTER_DB_MAX_CONNS", cfg.DatabaseMaxConns, 1, 32); err != nil {
 		return Config{}, err
@@ -126,26 +133,31 @@ func LoadConfig() (Config, error) {
 		return Config{}, errors.New("FABRIC_ADAPTER_WORKER_ID must be 1 through 128 characters when enabled")
 	}
 	required := map[string]string{
-		"FABRIC_ADAPTER_DATABASE_URL":    cfg.DatabaseDSN,
-		"OPENBAO_ADDR":                   cfg.OpenBaoAddr,
-		"OPENBAO_CA_FILE":                cfg.OpenBaoCAFile,
-		"OPENBAO_APPROLE_ROLE_ID_FILE":   cfg.OpenBaoRoleIDFile,
-		"OPENBAO_APPROLE_SECRET_ID_FILE": cfg.OpenBaoSecretIDFile,
-		"FABRIC_GATEWAY_ENDPOINT":        cfg.FabricEndpoint,
-		"FABRIC_TLS_SERVER_NAME":         cfg.FabricTLSServerName,
-		"FABRIC_TLS_ROOT_CERT":           cfg.FabricTLSRootCert,
-		"FABRIC_MSP_ID":                  cfg.FabricMSPID,
-		"FABRIC_CERT_PATH":               cfg.FabricCertPath,
-		"FABRIC_KEY_PATH":                cfg.FabricKeyPath,
-		"FABRIC_CHANNEL":                 cfg.FabricChannel,
-		"FABRIC_CHAINCODE":               cfg.FabricChaincode,
-		"FABRIC_SUBMIT_FUNCTION":         cfg.FabricSubmitFunction,
-		"FABRIC_QUERY_FUNCTION":          cfg.FabricQueryFunction,
+		"FABRIC_ADAPTER_DATABASE_URL":           cfg.DatabaseDSN,
+		"OPENBAO_ADDR":                          cfg.OpenBaoAddr,
+		"OPENBAO_CA_FILE":                       cfg.OpenBaoCAFile,
+		"OPENBAO_APPROLE_ROLE_ID_FILE":          cfg.OpenBaoRoleIDFile,
+		"OPENBAO_APPROLE_SECRET_ID_FILE":        cfg.OpenBaoSecretIDFile,
+		"FABRIC_GATEWAY_ENDPOINT":               cfg.FabricEndpoint,
+		"FABRIC_TLS_SERVER_NAME":                cfg.FabricTLSServerName,
+		"FABRIC_TLS_ROOT_CERT":                  cfg.FabricTLSRootCert,
+		"FABRIC_MSP_ID":                         cfg.FabricMSPID,
+		"FABRIC_CERT_PATH":                      cfg.FabricCertPath,
+		"FABRIC_KEY_PATH":                       cfg.FabricKeyPath,
+		"FABRIC_CHANNEL":                        cfg.FabricChannel,
+		"FABRIC_CHAINCODE":                      cfg.FabricChaincode,
+		"FABRIC_AUTHENTICATED_SOURCE_SYSTEM_ID": cfg.FabricSourceSystemID,
+		"FABRIC_SUBMIT_FUNCTION":                cfg.FabricSubmitFunction,
+		"FABRIC_QUERY_FUNCTION":                 cfg.FabricQueryFunction,
+		"FABRIC_VERIFY_FUNCTION":                cfg.FabricVerifyFunction,
 	}
 	for name, value := range required {
 		if strings.TrimSpace(value) == "" {
 			return Config{}, errors.New(name + " is required when FABRIC_ADAPTER_ENABLED=true")
 		}
+	}
+	if !hrcSourceIDPattern.MatchString(cfg.FabricSourceSystemID) {
+		return Config{}, errors.New("FABRIC_AUTHENTICATED_SOURCE_SYSTEM_ID must match [A-Za-z0-9._:-]{1,128}")
 	}
 	return cfg, nil
 }

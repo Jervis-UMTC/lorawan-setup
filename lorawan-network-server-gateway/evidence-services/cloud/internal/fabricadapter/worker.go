@@ -6,9 +6,12 @@ import (
 	"crypto/sha256"
 	"encoding/binary"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"regexp"
 	"strings"
+	"sync/atomic"
 	"time"
 )
 
@@ -16,6 +19,8 @@ var (
 	ErrLocalSealInvalid     = errors.New("local Fabric evidence seal is invalid")
 	ErrEvidenceConstruction = errors.New("Fabric evidence construction failed")
 )
+
+var hrcRecordIDPattern = regexp.MustCompile(`^[A-Za-z0-9._:-]{1,128}$`)
 
 type SignerOperationError struct {
 	Err error
@@ -34,6 +39,7 @@ type Worker struct {
 	retryBase       time.Duration
 	retryMax        time.Duration
 	retryJitter     time.Duration
+	sourceSystemID  string
 }
 
 func NewWorker(repository Repository, signer EvidenceSigner, ledger LedgerClient, cfg Config) (*Worker, error) {
@@ -49,6 +55,9 @@ func NewWorker(repository Repository, signer EvidenceSigner, ledger LedgerClient
 	if cfg.MaxAttempts < 1 || cfg.RetryBase <= 0 || cfg.RetryMax < cfg.RetryBase || cfg.RetryJitter < 0 {
 		return nil, errors.New("Fabric adapter retry configuration is invalid")
 	}
+	if !hrcSourceIDPattern.MatchString(cfg.FabricSourceSystemID) {
+		return nil, errors.New("Fabric authenticated source-system ID is invalid")
+	}
 	return &Worker{
 		repository:      repository,
 		signer:          signer,
@@ -59,6 +68,7 @@ func NewWorker(repository Repository, signer EvidenceSigner, ledger LedgerClient
 		retryBase:       cfg.RetryBase,
 		retryMax:        cfg.RetryMax,
 		retryJitter:     cfg.RetryJitter,
+		sourceSystemID:  cfg.FabricSourceSystemID,
 	}, nil
 }
 
@@ -68,7 +78,7 @@ func (w *Worker) RunOnce(ctx context.Context) (bool, error) {
 		return false, fmt.Errorf("claim Fabric reconciliation work: %w", err)
 	}
 	if work != nil {
-		return true, w.reconcile(ctx, *work)
+		return true, w.withLeaseHeartbeat(ctx, *work, w.reconcile)
 	}
 
 	work, err = w.repository.ClaimWork(ctx, w.workerID, w.processingLease)
@@ -78,7 +88,54 @@ func (w *Worker) RunOnce(ctx context.Context) (bool, error) {
 	if work == nil {
 		return false, nil
 	}
-	return true, w.process(ctx, *work)
+	return true, w.withLeaseHeartbeat(ctx, *work, w.process)
+}
+
+func (w *Worker) withLeaseHeartbeat(ctx context.Context, work OutboxWork, fn func(context.Context, OutboxWork) error) error {
+	opCtx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
+	interval := w.processingLease / 3
+	if interval < time.Second {
+		interval = time.Second
+	}
+	leaseErrCh := make(chan error, 1)
+	var finished atomic.Bool
+	go func() {
+		ticker := time.NewTicker(interval)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-opCtx.Done():
+				return
+			case <-ticker.C:
+				renewCtx, renewCancel := context.WithTimeout(opCtx, interval)
+				err := w.repository.RenewLease(renewCtx, work.OutboxID, w.workerID, w.processingLease)
+				renewCancel()
+				if err != nil {
+					if finished.Load() {
+						return
+					}
+					select {
+					case leaseErrCh <- err:
+					default:
+					}
+					cancel()
+					return
+				}
+			}
+		}
+	}()
+
+	err := fn(opCtx, work)
+	finished.Store(true)
+	cancel()
+	select {
+	case leaseErr := <-leaseErrCh:
+		return leaseErr
+	default:
+		return err
+	}
 }
 
 func (w *Worker) process(ctx context.Context, work OutboxWork) error {
@@ -121,43 +178,151 @@ func (w *Worker) process(ctx context.Context, work OutboxWork) error {
 		return err
 	}
 
-	attestation := FabricAttestation{
-		SchemaVersion: work.SchemaVersion,
-		EventKey:      work.EventKey,
-		EventType:     work.EventType,
-		Digest:        seal.DigestSHA256,
-		SealAlgorithm: seal.Algorithm,
-		SealKeyID:     seal.SigningKeyID,
-		SealSignature: seal.Signature,
+	anchor, err := w.buildAnchor(ctx, work)
+	if err != nil {
+		if errors.Is(err, ErrEvidenceConstruction) {
+			return w.repository.MarkDeadLetter(ctx, work.OutboxID, w.workerID, "fabric_anchor_construction_failure", boundedError(err))
+		}
+		return err
 	}
-	result, submitErr := w.ledger.Submit(ctx, attestation)
-	if result.Committed && result.TransactionID != "" && submitErr == nil {
-		return w.repository.MarkConfirmed(ctx, work.OutboxID, w.workerID, result.TransactionID)
+	prepared, prepareErr := w.ledger.Prepare(ctx, anchor)
+	if prepareErr != nil {
+		if IsPermanentFabricError(prepareErr) {
+			return w.repository.MarkDeadLetter(ctx, work.OutboxID, w.workerID, "fabric_prepare_permanent_failure", boundedError(prepareErr))
+		}
+		return w.retryFailure(ctx, work, "fabric_prepare_failure", prepareErr)
 	}
-	if result.Unknown && result.TransactionID != "" {
-		return w.repository.MarkSubmittedUnknown(ctx, work.OutboxID, w.workerID, result.TransactionID, w.retryDelay(work.Attempts), boundedError(submitErr))
+	if prepared.TransactionID == "" || prepared.RecordID == "" || len(prepared.PreparedTransaction) == 0 || len(prepared.CommitStatusRequest) == 0 {
+		return w.repository.MarkDeadLetter(ctx, work.OutboxID, w.workerID, "fabric_prepare_invalid", "Fabric preparation returned incomplete durable transaction material")
 	}
-	if result.TransactionID != "" && !result.Unknown && !result.Committed {
+	if err := w.repository.PersistPreparedSubmission(ctx, work.OutboxID, w.workerID, prepared.TransactionID, prepared.RecordID, prepared.PreparedTransaction, prepared.CommitStatusRequest); err != nil {
+		return err
+	}
+	result, submitErr := w.ledger.SubmitPrepared(ctx, prepared)
+	if result.TransactionID == "" {
+		result.TransactionID = prepared.TransactionID
+	}
+	if result.Committed && result.TransactionID == prepared.TransactionID && submitErr == nil {
+		return w.confirmAnchor(ctx, work, anchor, result.TransactionID, prepared.RecordID)
+	}
+	if result.Unknown {
+		return w.repository.MarkSubmittedUnknown(ctx, work.OutboxID, w.workerID, prepared.TransactionID, w.retryDelay(work.Attempts), boundedError(submitErr))
+	}
+	if result.TransactionID != "" && !result.Committed {
 		return w.repository.MarkDeadLetter(ctx, work.OutboxID, w.workerID, "fabric_commit_invalid", boundedError(submitErr))
 	}
+	return w.repository.MarkSubmittedUnknown(ctx, work.OutboxID, w.workerID, prepared.TransactionID, w.retryDelay(work.Attempts), boundedError(submitErr))
+}
 
-	query, queryErr := w.ledger.Query(ctx, work.EventKey)
-	if queryErr == nil && query.Found {
-		if query.Digest != seal.DigestSHA256 {
-			return w.repository.MarkDeadLetter(ctx, work.OutboxID, w.workerID, "fabric_digest_conflict", "existing Fabric attestation has a different digest")
+func (w *Worker) buildAnchor(ctx context.Context, work OutboxWork) (FabricAnchor, error) {
+	if !hrcRecordIDPattern.MatchString(work.SourceEventKey) {
+		return FabricAnchor{}, fmt.Errorf("%w: source_event_key is not a valid HRC SourceRecordID", ErrEvidenceConstruction)
+	}
+	source, err := w.repository.LoadSource(ctx, work)
+	if err != nil {
+		if errors.Is(err, ErrSourceMissing) {
+			return FabricAnchor{}, fmt.Errorf("%w: source row missing", ErrEvidenceConstruction)
 		}
-		if query.TxID != "" {
-			return w.repository.MarkConfirmed(ctx, work.OutboxID, w.workerID, query.TxID)
+		return FabricAnchor{}, fmt.Errorf("load Fabric anchor source: %w", err)
+	}
+	// HRC Task 37 protects the exact finalized JSON artifact emitted at the
+	// upstream acceptance boundary. finalized_payload is immutable BYTEA on the
+	// outbox row; never reconstruct it from JSONB, structs, maps, or projections.
+	payload := append([]byte(nil), work.FinalizedPayload...)
+	if err := validateFinalizedExactPayload(payload); err != nil {
+		return FabricAnchor{}, fmt.Errorf("%w: %v", ErrEvidenceConstruction, err)
+	}
+	digestBytes := sha256.Sum256(payload)
+	digest := hex.EncodeToString(digestBytes[:])
+	if work.SchemaVersion == SchemaVersionV2 {
+		verification, err := w.repository.LoadVerification(ctx, work)
+		if err != nil {
+			if errors.Is(err, ErrVerificationMissing) {
+				return FabricAnchor{}, fmt.Errorf("%w: verified gateway row missing", ErrEvidenceConstruction)
+			}
+			return FabricAnchor{}, fmt.Errorf("load gateway verification for Fabric anchor: %w", err)
 		}
-		return w.repository.MarkDeadLetter(ctx, work.OutboxID, w.workerID, "fabric_existing_attestation_txid_unavailable", "matching Fabric attestation exists but query returned no transaction ID")
+		if verification.Status != "verified" {
+			return FabricAnchor{}, fmt.Errorf("%w: gateway evidence is not verified", ErrEvidenceConstruction)
+		}
 	}
-	if IsPermanentFabricError(submitErr) {
-		return w.repository.MarkDeadLetter(ctx, work.OutboxID, w.workerID, "fabric_permanent_failure", boundedError(submitErr))
+	producer := strings.TrimSpace(source.DevEUI)
+	if producer == "" || len(producer) > 128 || strings.TrimSpace(work.EventType) == "" || len(strings.TrimSpace(work.EventType)) > 128 || len(work.SchemaVersion) > 128 {
+		return FabricAnchor{}, fmt.Errorf("%w: HRC source metadata is invalid", ErrEvidenceConstruction)
 	}
-	if queryErr != nil && IsPermanentFabricError(queryErr) {
-		return w.repository.MarkDeadLetter(ctx, work.OutboxID, w.workerID, "fabric_query_permanent_failure", boundedError(queryErr))
+	return FabricAnchor{
+		AuthenticatedSourceSystemID: w.sourceSystemID,
+		SourceRecordID:              work.SourceEventKey,
+		Digest:                      digest,
+		PayloadLength:               len(payload),
+		ExactPayload:                append([]byte(nil), payload...),
+		SourceType:                  strings.TrimSpace(work.EventType),
+		Producer:                    producer,
+		ProducedAt:                  work.ObservedAt.UTC().Format(time.RFC3339Nano),
+		SchemaVersion:               strings.TrimSpace(work.SchemaVersion),
+	}, nil
+}
+
+func validateFinalizedExactPayload(payload []byte) error {
+	if len(payload) < 1 {
+		return errors.New("exact finalized JSON payload must contain at least 1 byte")
 	}
-	return w.retryFailure(ctx, work, "fabric_transient_failure", submitErr)
+	if len(payload) > maxFabricExactPayloadBytes {
+		return fmt.Errorf("exact finalized JSON payload exceeds HRC maximum of %d bytes", maxFabricExactPayloadBytes)
+	}
+	if !json.Valid(payload) {
+		return errors.New("exact finalized payload is not valid JSON bytes")
+	}
+	return nil
+}
+
+func (w *Worker) confirmAnchor(ctx context.Context, work OutboxWork, anchor FabricAnchor, txID, recordID string) error {
+	query, err := w.ledger.Query(ctx, anchor.AuthenticatedSourceSystemID, anchor.SourceRecordID)
+	if err != nil {
+		return w.repository.MarkSubmittedUnknown(ctx, work.OutboxID, w.workerID, txID, w.retryDelay(maxInt(work.Attempts, 1)), boundedError(err))
+	}
+	if err := validateAnchorQuery(anchor, recordID, query); err != nil {
+		return w.repository.MarkDeadLetter(ctx, work.OutboxID, w.workerID, "fabric_anchor_conflict", boundedError(err))
+	}
+	verification, err := w.ledger.VerifyDigest(ctx, anchor.AuthenticatedSourceSystemID, anchor.SourceRecordID, anchor.Digest)
+	if err != nil {
+		return w.repository.MarkSubmittedUnknown(ctx, work.OutboxID, w.workerID, txID, w.retryDelay(maxInt(work.Attempts, 1)), boundedError(err))
+	}
+	if err := validateDigestVerification(recordID, anchor.Digest, verification); err != nil {
+		return w.repository.MarkDeadLetter(ctx, work.OutboxID, w.workerID, "fabric_digest_mismatch", boundedError(err))
+	}
+	return w.repository.MarkConfirmed(ctx, work.OutboxID, w.workerID, txID)
+}
+
+func validateAnchorQuery(expected FabricAnchor, expectedRecordID string, actual FabricQueryResult) error {
+	if !actual.Found {
+		return errors.New("Fabric QuerySourceBoundAnchor did not find the committed anchor")
+	}
+	if expectedRecordID == "" || actual.RecordID != expectedRecordID || actual.DigestAlgorithm != "sha256" {
+		return errors.New("Fabric QuerySourceBoundAnchor record identity or digest algorithm does not match the prepared anchor")
+	}
+	if actual.AuthenticatedSourceSystemID != expected.AuthenticatedSourceSystemID || actual.SourceRecordID != expected.SourceRecordID ||
+		actual.Digest != expected.Digest || actual.PayloadLength != expected.PayloadLength || actual.SourceType != expected.SourceType ||
+		actual.Producer != expected.Producer || actual.ProducedAt != expected.ProducedAt || actual.SchemaVersion != expected.SchemaVersion {
+		return errors.New("Fabric QuerySourceBoundAnchor fields do not match the submitted anchor")
+	}
+	return nil
+}
+
+func validateDigestVerification(expectedRecordID, expectedDigest string, actual FabricVerifyResult) error {
+	if strings.TrimSpace(expectedRecordID) == "" || strings.TrimSpace(expectedDigest) == "" {
+		return errors.New("Fabric VerifySourceBoundDigest expected identity is incomplete")
+	}
+	if actual.Outcome != "MATCH" {
+		return fmt.Errorf("Fabric VerifySourceBoundDigest outcome is %q, expected MATCH", actual.Outcome)
+	}
+	if actual.RecordID != expectedRecordID {
+		return errors.New("Fabric VerifySourceBoundDigest record_id does not match the prepared anchor")
+	}
+	if actual.ExpectedDigest != expectedDigest || actual.ObservedDigest != expectedDigest {
+		return errors.New("Fabric VerifySourceBoundDigest digest fields do not match the prepared anchor")
+	}
+	return nil
 }
 
 func (w *Worker) obtainSeal(ctx context.Context, work OutboxWork) (Seal, error) {
@@ -207,6 +372,12 @@ func (w *Worker) reconcile(ctx context.Context, work OutboxWork) error {
 	if work.FabricTxID == nil || strings.TrimSpace(*work.FabricTxID) == "" {
 		return w.repository.MarkDeadLetter(ctx, work.OutboxID, w.workerID, "reconciliation_txid_missing", "submitted/expired Fabric work has no transaction ID")
 	}
+	txID := strings.TrimSpace(*work.FabricTxID)
+	if work.FabricRecordID == nil || strings.TrimSpace(*work.FabricRecordID) == "" {
+		return w.repository.MarkSubmittedUnknown(ctx, work.OutboxID, w.workerID, txID, w.retryDelay(maxInt(work.Attempts, 1)), "durable HRC record_id is missing; governed reconciliation is required")
+	}
+	recordID := strings.TrimSpace(*work.FabricRecordID)
+
 	seal, err := w.repository.LoadSeal(ctx, work.OutboxID)
 	if err != nil {
 		return w.repository.MarkDeadLetter(ctx, work.OutboxID, w.workerID, "reconciliation_seal_missing", boundedError(err))
@@ -217,31 +388,93 @@ func (w *Worker) reconcile(ctx context.Context, work OutboxWork) error {
 		}
 		var signerErr *SignerOperationError
 		if errors.As(err, &signerErr) && IsTransientOpenBaoError(signerErr.Err) {
-			return w.repository.MarkSubmittedUnknown(ctx, work.OutboxID, w.workerID, *work.FabricTxID, w.retryDelay(maxInt(work.Attempts, 1)), boundedError(signerErr.Err))
+			return w.repository.MarkSubmittedUnknown(ctx, work.OutboxID, w.workerID, txID, w.retryDelay(maxInt(work.Attempts, 1)), boundedError(signerErr.Err))
 		}
 		if errors.As(err, &signerErr) {
 			return w.repository.MarkDeadLetter(ctx, work.OutboxID, w.workerID, "openbao_verify_permanent_failure", boundedError(signerErr.Err))
 		}
 		return err
 	}
-	query, err := w.ledger.Query(ctx, work.EventKey)
+	anchor, err := w.buildAnchor(ctx, work)
 	if err != nil {
-		if IsPermanentFabricError(err) {
-			return w.repository.MarkDeadLetter(ctx, work.OutboxID, w.workerID, "fabric_reconcile_permanent_failure", boundedError(err))
+		if errors.Is(err, ErrEvidenceConstruction) {
+			return w.repository.MarkDeadLetter(ctx, work.OutboxID, w.workerID, "fabric_anchor_construction_failure", boundedError(err))
 		}
-		return w.repository.MarkSubmittedUnknown(ctx, work.OutboxID, w.workerID, *work.FabricTxID, w.retryDelay(maxInt(work.Attempts, 1)), boundedError(err))
+		return err
 	}
-	if !query.Found {
-		return w.repository.MarkSubmittedUnknown(ctx, work.OutboxID, w.workerID, *work.FabricTxID, w.retryDelay(maxInt(work.Attempts, 1)), "Fabric attestation not found during reconciliation")
+
+	query, queryErr := w.ledger.Query(ctx, anchor.AuthenticatedSourceSystemID, anchor.SourceRecordID)
+	if queryErr == nil && query.Found {
+		if err := validateAnchorQuery(anchor, recordID, query); err != nil {
+			return w.repository.MarkDeadLetter(ctx, work.OutboxID, w.workerID, "fabric_anchor_conflict", boundedError(err))
+		}
+		verification, err := w.ledger.VerifyDigest(ctx, anchor.AuthenticatedSourceSystemID, anchor.SourceRecordID, anchor.Digest)
+		if err != nil {
+			return w.repository.MarkSubmittedUnknown(ctx, work.OutboxID, w.workerID, txID, w.retryDelay(maxInt(work.Attempts, 1)), boundedError(err))
+		}
+		if err := validateDigestVerification(recordID, anchor.Digest, verification); err != nil {
+			return w.repository.MarkDeadLetter(ctx, work.OutboxID, w.workerID, "fabric_digest_mismatch", boundedError(err))
+		}
+		return w.repository.MarkConfirmed(ctx, work.OutboxID, w.workerID, txID)
 	}
-	if query.Digest != seal.DigestSHA256 {
-		return w.repository.MarkDeadLetter(ctx, work.OutboxID, w.workerID, "fabric_digest_conflict", "Fabric reconciliation returned a conflicting digest")
+
+	if len(work.FabricCommitRequest) == 0 {
+		detail := "Fabric anchor was not confirmed and durable commit-status request is missing"
+		if queryErr != nil {
+			detail = "Fabric query failed and durable commit-status request is missing: " + boundedError(queryErr)
+		}
+		return w.repository.MarkSubmittedUnknown(ctx, work.OutboxID, w.workerID, txID, w.retryDelay(maxInt(work.Attempts, 1)), detail)
 	}
-	txID := strings.TrimSpace(*work.FabricTxID)
-	if query.TxID != "" && query.TxID != txID {
-		return w.repository.MarkDeadLetter(ctx, work.OutboxID, w.workerID, "fabric_txid_conflict", "Fabric reconciliation returned a different transaction ID")
+
+	statusResult, statusErr := w.ledger.CommitStatus(ctx, txID, work.FabricCommitRequest)
+	if statusResult.Committed && statusErr == nil {
+		return w.confirmAnchor(ctx, work, anchor, txID, recordID)
 	}
-	return w.repository.MarkConfirmed(ctx, work.OutboxID, w.workerID, txID)
+	if !statusResult.Unknown && statusErr != nil {
+		return w.repository.MarkDeadLetter(ctx, work.OutboxID, w.workerID, "fabric_commit_invalid", boundedError(statusErr))
+	}
+	if queryErr != nil && IsPermanentFabricError(queryErr) {
+		return w.repository.MarkDeadLetter(ctx, work.OutboxID, w.workerID, "fabric_reconcile_permanent_failure", boundedError(queryErr))
+	}
+
+	// A crash can occur after the endorsed transaction and signed commit-status
+	// request are persisted but before the first orderer Submit call. Once both
+	// source-bound Query and exact-tx CommitStatus have failed to prove a commit,
+	// retry only the same endorsed transaction bytes and transaction ID. Never
+	// prepare a new proposal while the prior transaction remains uncertain.
+	if len(work.FabricPreparedTx) > 0 {
+		prepared := FabricPreparedSubmission{
+			TransactionID:       txID,
+			PreparedTransaction: append([]byte(nil), work.FabricPreparedTx...),
+			CommitStatusRequest: append([]byte(nil), work.FabricCommitRequest...),
+			RecordID:            recordID,
+		}
+		retryResult, retryErr := w.ledger.SubmitPrepared(ctx, prepared)
+		if retryResult.TransactionID == "" {
+			retryResult.TransactionID = txID
+		}
+		if retryResult.Committed && retryResult.TransactionID == txID && retryErr == nil {
+			return w.confirmAnchor(ctx, work, anchor, txID, recordID)
+		}
+		if !retryResult.Unknown && retryErr != nil {
+			return w.repository.MarkDeadLetter(ctx, work.OutboxID, w.workerID, "fabric_commit_invalid", boundedError(retryErr))
+		}
+		detail := "Fabric exact transaction remains unknown after query, commit-status reconciliation, and same-tx resubmit"
+		if retryErr != nil {
+			detail += ": " + boundedError(retryErr)
+		}
+		return w.repository.MarkSubmittedUnknown(ctx, work.OutboxID, w.workerID, txID, w.retryDelay(maxInt(work.Attempts, 1)), detail)
+	}
+
+	detail := "Fabric submission remains unknown after source-bound query and commit-status reconciliation; prepared transaction bytes are unavailable"
+	if queryErr != nil && statusErr != nil {
+		detail = fmt.Sprintf("Fabric query failed: %s; commit status failed: %s; prepared transaction bytes are unavailable", boundedError(queryErr), boundedError(statusErr))
+	} else if queryErr != nil {
+		detail = "Fabric query failed: " + boundedError(queryErr) + "; prepared transaction bytes are unavailable"
+	} else if statusErr != nil {
+		detail = "Fabric commit status failed: " + boundedError(statusErr) + "; prepared transaction bytes are unavailable"
+	}
+	return w.repository.MarkSubmittedUnknown(ctx, work.OutboxID, w.workerID, txID, w.retryDelay(maxInt(work.Attempts, 1)), detail)
 }
 
 func (w *Worker) verifySeal(ctx context.Context, seal Seal) error {
