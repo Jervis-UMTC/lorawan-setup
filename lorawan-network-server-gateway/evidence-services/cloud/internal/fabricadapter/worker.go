@@ -110,7 +110,7 @@ func (w *Worker) withLeaseHeartbeat(ctx context.Context, work OutboxWork, fn fun
 				return
 			case <-ticker.C:
 				renewCtx, renewCancel := context.WithTimeout(opCtx, interval)
-				err := w.repository.RenewLease(renewCtx, work.OutboxID, w.workerID, w.processingLease)
+				err := w.repository.RenewLease(renewCtx, work.OutboxID, w.workerID, work.LeaseGeneration, w.processingLease)
 				renewCancel()
 				if err != nil {
 					if finished.Load() {
@@ -140,10 +140,10 @@ func (w *Worker) withLeaseHeartbeat(ctx context.Context, work OutboxWork, fn fun
 
 func (w *Worker) process(ctx context.Context, work OutboxWork) error {
 	if work.Attempts > w.maxAttempts {
-		return w.repository.MarkDeadLetter(ctx, work.OutboxID, w.workerID, "max_attempts_exceeded", "Fabric adapter maximum attempts exceeded before processing")
+		return w.repository.MarkDeadLetter(ctx, work.OutboxID, w.workerID, work.LeaseGeneration, "max_attempts_exceeded", "Fabric adapter maximum attempts exceeded before processing")
 	}
 	if work.SchemaVersion != SchemaVersionV1 && work.SchemaVersion != SchemaVersionV2 {
-		return w.repository.MarkDeadLetter(ctx, work.OutboxID, w.workerID, "unsupported_schema", "unsupported Fabric evidence schema version")
+		return w.repository.MarkDeadLetter(ctx, work.OutboxID, w.workerID, work.LeaseGeneration, "unsupported_schema", "unsupported Fabric evidence schema version")
 	}
 
 	seal, err := w.obtainSeal(ctx, work)
@@ -152,28 +152,28 @@ func (w *Worker) process(ctx context.Context, work OutboxWork) error {
 			return err
 		}
 		if errors.Is(err, ErrEvidenceConstruction) || errors.Is(err, ErrLocalSealInvalid) {
-			return w.repository.MarkDeadLetter(ctx, work.OutboxID, w.workerID, "evidence_seal_failure", boundedError(err))
+			return w.repository.MarkDeadLetter(ctx, work.OutboxID, w.workerID, work.LeaseGeneration, "evidence_seal_failure", boundedError(err))
 		}
 		var signerErr *SignerOperationError
 		if errors.As(err, &signerErr) {
 			if IsTransientOpenBaoError(signerErr.Err) {
 				return w.retryFailure(ctx, work, "openbao_unavailable", signerErr.Err)
 			}
-			return w.repository.MarkDeadLetter(ctx, work.OutboxID, w.workerID, "evidence_signing_failure", boundedError(signerErr.Err))
+			return w.repository.MarkDeadLetter(ctx, work.OutboxID, w.workerID, work.LeaseGeneration, "evidence_signing_failure", boundedError(signerErr.Err))
 		}
 		return err
 	}
 
 	if err := w.verifySeal(ctx, seal); err != nil {
 		if errors.Is(err, ErrLocalSealInvalid) || errors.Is(err, ErrSignatureRejected) {
-			return w.repository.MarkDeadLetter(ctx, work.OutboxID, w.workerID, "invalid_local_seal", boundedError(err))
+			return w.repository.MarkDeadLetter(ctx, work.OutboxID, w.workerID, work.LeaseGeneration, "invalid_local_seal", boundedError(err))
 		}
 		var signerErr *SignerOperationError
 		if errors.As(err, &signerErr) {
 			if IsTransientOpenBaoError(signerErr.Err) {
 				return w.retryFailure(ctx, work, "openbao_verify_unavailable", signerErr.Err)
 			}
-			return w.repository.MarkDeadLetter(ctx, work.OutboxID, w.workerID, "openbao_verify_permanent_failure", boundedError(signerErr.Err))
+			return w.repository.MarkDeadLetter(ctx, work.OutboxID, w.workerID, work.LeaseGeneration, "openbao_verify_permanent_failure", boundedError(signerErr.Err))
 		}
 		return err
 	}
@@ -181,21 +181,27 @@ func (w *Worker) process(ctx context.Context, work OutboxWork) error {
 	anchor, err := w.buildAnchor(ctx, work)
 	if err != nil {
 		if errors.Is(err, ErrEvidenceConstruction) {
-			return w.repository.MarkDeadLetter(ctx, work.OutboxID, w.workerID, "fabric_anchor_construction_failure", boundedError(err))
+			return w.repository.MarkDeadLetter(ctx, work.OutboxID, w.workerID, work.LeaseGeneration, "fabric_anchor_construction_failure", boundedError(err))
 		}
+		return err
+	}
+	if err := w.repository.RenewLease(ctx, work.OutboxID, w.workerID, work.LeaseGeneration, w.processingLease); err != nil {
 		return err
 	}
 	prepared, prepareErr := w.ledger.Prepare(ctx, anchor)
 	if prepareErr != nil {
 		if IsPermanentFabricError(prepareErr) {
-			return w.repository.MarkDeadLetter(ctx, work.OutboxID, w.workerID, "fabric_prepare_permanent_failure", boundedError(prepareErr))
+			return w.repository.MarkDeadLetter(ctx, work.OutboxID, w.workerID, work.LeaseGeneration, "fabric_prepare_permanent_failure", boundedError(prepareErr))
 		}
 		return w.retryFailure(ctx, work, "fabric_prepare_failure", prepareErr)
 	}
 	if prepared.TransactionID == "" || prepared.RecordID == "" || len(prepared.PreparedTransaction) == 0 || len(prepared.CommitStatusRequest) == 0 {
-		return w.repository.MarkDeadLetter(ctx, work.OutboxID, w.workerID, "fabric_prepare_invalid", "Fabric preparation returned incomplete durable transaction material")
+		return w.repository.MarkDeadLetter(ctx, work.OutboxID, w.workerID, work.LeaseGeneration, "fabric_prepare_invalid", "Fabric preparation returned incomplete durable transaction material")
 	}
-	if err := w.repository.PersistPreparedSubmission(ctx, work.OutboxID, w.workerID, prepared.TransactionID, prepared.RecordID, prepared.PreparedTransaction, prepared.CommitStatusRequest); err != nil {
+	if err := w.repository.PersistPreparedSubmission(ctx, work.OutboxID, w.workerID, work.LeaseGeneration, prepared.TransactionID, prepared.RecordID, prepared.PreparedTransaction, prepared.CommitStatusRequest); err != nil {
+		return err
+	}
+	if err := w.repository.RenewLease(ctx, work.OutboxID, w.workerID, work.LeaseGeneration, w.processingLease); err != nil {
 		return err
 	}
 	result, submitErr := w.ledger.SubmitPrepared(ctx, prepared)
@@ -206,12 +212,12 @@ func (w *Worker) process(ctx context.Context, work OutboxWork) error {
 		return w.confirmAnchor(ctx, work, anchor, result.TransactionID, prepared.RecordID)
 	}
 	if result.Unknown {
-		return w.repository.MarkSubmittedUnknown(ctx, work.OutboxID, w.workerID, prepared.TransactionID, w.retryDelay(work.Attempts), boundedError(submitErr))
+		return w.repository.MarkSubmittedUnknown(ctx, work.OutboxID, w.workerID, work.LeaseGeneration, prepared.TransactionID, w.retryDelay(work.Attempts), boundedError(submitErr))
 	}
 	if result.TransactionID != "" && !result.Committed {
-		return w.repository.MarkDeadLetter(ctx, work.OutboxID, w.workerID, "fabric_commit_invalid", boundedError(submitErr))
+		return w.repository.MarkDeadLetter(ctx, work.OutboxID, w.workerID, work.LeaseGeneration, "fabric_commit_invalid", boundedError(submitErr))
 	}
-	return w.repository.MarkSubmittedUnknown(ctx, work.OutboxID, w.workerID, prepared.TransactionID, w.retryDelay(work.Attempts), boundedError(submitErr))
+	return w.repository.MarkSubmittedUnknown(ctx, work.OutboxID, w.workerID, work.LeaseGeneration, prepared.TransactionID, w.retryDelay(work.Attempts), boundedError(submitErr))
 }
 
 func (w *Worker) buildAnchor(ctx context.Context, work OutboxWork) (FabricAnchor, error) {
@@ -279,19 +285,19 @@ func validateFinalizedExactPayload(payload []byte) error {
 func (w *Worker) confirmAnchor(ctx context.Context, work OutboxWork, anchor FabricAnchor, txID, recordID string) error {
 	query, err := w.ledger.Query(ctx, anchor.AuthenticatedSourceSystemID, anchor.SourceRecordID)
 	if err != nil {
-		return w.repository.MarkSubmittedUnknown(ctx, work.OutboxID, w.workerID, txID, w.retryDelay(maxInt(work.Attempts, 1)), boundedError(err))
+		return w.repository.MarkSubmittedUnknown(ctx, work.OutboxID, w.workerID, work.LeaseGeneration, txID, w.retryDelay(maxInt(work.Attempts, 1)), boundedError(err))
 	}
 	if err := validateAnchorQuery(anchor, recordID, query); err != nil {
-		return w.repository.MarkDeadLetter(ctx, work.OutboxID, w.workerID, "fabric_anchor_conflict", boundedError(err))
+		return w.repository.MarkDeadLetter(ctx, work.OutboxID, w.workerID, work.LeaseGeneration, "fabric_anchor_conflict", boundedError(err))
 	}
 	verification, err := w.ledger.VerifyDigest(ctx, anchor.AuthenticatedSourceSystemID, anchor.SourceRecordID, anchor.Digest)
 	if err != nil {
-		return w.repository.MarkSubmittedUnknown(ctx, work.OutboxID, w.workerID, txID, w.retryDelay(maxInt(work.Attempts, 1)), boundedError(err))
+		return w.repository.MarkSubmittedUnknown(ctx, work.OutboxID, w.workerID, work.LeaseGeneration, txID, w.retryDelay(maxInt(work.Attempts, 1)), boundedError(err))
 	}
 	if err := validateDigestVerification(recordID, anchor.Digest, verification); err != nil {
-		return w.repository.MarkDeadLetter(ctx, work.OutboxID, w.workerID, "fabric_digest_mismatch", boundedError(err))
+		return w.repository.MarkDeadLetter(ctx, work.OutboxID, w.workerID, work.LeaseGeneration, "fabric_digest_mismatch", boundedError(err))
 	}
-	return w.repository.MarkConfirmed(ctx, work.OutboxID, w.workerID, txID)
+	return w.repository.MarkConfirmed(ctx, work.OutboxID, w.workerID, work.LeaseGeneration, txID)
 }
 
 func validateAnchorQuery(expected FabricAnchor, expectedRecordID string, actual FabricQueryResult) error {
@@ -362,7 +368,7 @@ func (w *Worker) obtainSeal(ctx context.Context, work OutboxWork) (Seal, error) 
 	if signature == "" || keyID == "" {
 		return Seal{}, fmt.Errorf("%w: signer returned incomplete seal metadata", ErrLocalSealInvalid)
 	}
-	if _, err := w.repository.PersistSeal(ctx, work.OutboxID, w.workerID, canonical, signature, keyID); err != nil {
+	if _, err := w.repository.PersistSeal(ctx, work.OutboxID, w.workerID, work.LeaseGeneration, canonical, signature, keyID); err != nil {
 		return Seal{}, err
 	}
 	return w.repository.LoadSeal(ctx, work.OutboxID)
@@ -370,35 +376,35 @@ func (w *Worker) obtainSeal(ctx context.Context, work OutboxWork) (Seal, error) 
 
 func (w *Worker) reconcile(ctx context.Context, work OutboxWork) error {
 	if work.FabricTxID == nil || strings.TrimSpace(*work.FabricTxID) == "" {
-		return w.repository.MarkDeadLetter(ctx, work.OutboxID, w.workerID, "reconciliation_txid_missing", "submitted/expired Fabric work has no transaction ID")
+		return w.repository.MarkDeadLetter(ctx, work.OutboxID, w.workerID, work.LeaseGeneration, "reconciliation_txid_missing", "submitted/expired Fabric work has no transaction ID")
 	}
 	txID := strings.TrimSpace(*work.FabricTxID)
 	if work.FabricRecordID == nil || strings.TrimSpace(*work.FabricRecordID) == "" {
-		return w.repository.MarkSubmittedUnknown(ctx, work.OutboxID, w.workerID, txID, w.retryDelay(maxInt(work.Attempts, 1)), "durable HRC record_id is missing; governed reconciliation is required")
+		return w.repository.MarkSubmittedUnknown(ctx, work.OutboxID, w.workerID, work.LeaseGeneration, txID, w.retryDelay(maxInt(work.Attempts, 1)), "durable HRC record_id is missing; governed reconciliation is required")
 	}
 	recordID := strings.TrimSpace(*work.FabricRecordID)
 
 	seal, err := w.repository.LoadSeal(ctx, work.OutboxID)
 	if err != nil {
-		return w.repository.MarkDeadLetter(ctx, work.OutboxID, w.workerID, "reconciliation_seal_missing", boundedError(err))
+		return w.repository.MarkDeadLetter(ctx, work.OutboxID, w.workerID, work.LeaseGeneration, "reconciliation_seal_missing", boundedError(err))
 	}
 	if err := w.verifySeal(ctx, seal); err != nil {
 		if errors.Is(err, ErrLocalSealInvalid) || errors.Is(err, ErrSignatureRejected) {
-			return w.repository.MarkDeadLetter(ctx, work.OutboxID, w.workerID, "invalid_local_seal", boundedError(err))
+			return w.repository.MarkDeadLetter(ctx, work.OutboxID, w.workerID, work.LeaseGeneration, "invalid_local_seal", boundedError(err))
 		}
 		var signerErr *SignerOperationError
 		if errors.As(err, &signerErr) && IsTransientOpenBaoError(signerErr.Err) {
-			return w.repository.MarkSubmittedUnknown(ctx, work.OutboxID, w.workerID, txID, w.retryDelay(maxInt(work.Attempts, 1)), boundedError(signerErr.Err))
+			return w.repository.MarkSubmittedUnknown(ctx, work.OutboxID, w.workerID, work.LeaseGeneration, txID, w.retryDelay(maxInt(work.Attempts, 1)), boundedError(signerErr.Err))
 		}
 		if errors.As(err, &signerErr) {
-			return w.repository.MarkDeadLetter(ctx, work.OutboxID, w.workerID, "openbao_verify_permanent_failure", boundedError(signerErr.Err))
+			return w.repository.MarkDeadLetter(ctx, work.OutboxID, w.workerID, work.LeaseGeneration, "openbao_verify_permanent_failure", boundedError(signerErr.Err))
 		}
 		return err
 	}
 	anchor, err := w.buildAnchor(ctx, work)
 	if err != nil {
 		if errors.Is(err, ErrEvidenceConstruction) {
-			return w.repository.MarkDeadLetter(ctx, work.OutboxID, w.workerID, "fabric_anchor_construction_failure", boundedError(err))
+			return w.repository.MarkDeadLetter(ctx, work.OutboxID, w.workerID, work.LeaseGeneration, "fabric_anchor_construction_failure", boundedError(err))
 		}
 		return err
 	}
@@ -406,16 +412,16 @@ func (w *Worker) reconcile(ctx context.Context, work OutboxWork) error {
 	query, queryErr := w.ledger.Query(ctx, anchor.AuthenticatedSourceSystemID, anchor.SourceRecordID)
 	if queryErr == nil && query.Found {
 		if err := validateAnchorQuery(anchor, recordID, query); err != nil {
-			return w.repository.MarkDeadLetter(ctx, work.OutboxID, w.workerID, "fabric_anchor_conflict", boundedError(err))
+			return w.repository.MarkDeadLetter(ctx, work.OutboxID, w.workerID, work.LeaseGeneration, "fabric_anchor_conflict", boundedError(err))
 		}
 		verification, err := w.ledger.VerifyDigest(ctx, anchor.AuthenticatedSourceSystemID, anchor.SourceRecordID, anchor.Digest)
 		if err != nil {
-			return w.repository.MarkSubmittedUnknown(ctx, work.OutboxID, w.workerID, txID, w.retryDelay(maxInt(work.Attempts, 1)), boundedError(err))
+			return w.repository.MarkSubmittedUnknown(ctx, work.OutboxID, w.workerID, work.LeaseGeneration, txID, w.retryDelay(maxInt(work.Attempts, 1)), boundedError(err))
 		}
 		if err := validateDigestVerification(recordID, anchor.Digest, verification); err != nil {
-			return w.repository.MarkDeadLetter(ctx, work.OutboxID, w.workerID, "fabric_digest_mismatch", boundedError(err))
+			return w.repository.MarkDeadLetter(ctx, work.OutboxID, w.workerID, work.LeaseGeneration, "fabric_digest_mismatch", boundedError(err))
 		}
-		return w.repository.MarkConfirmed(ctx, work.OutboxID, w.workerID, txID)
+		return w.repository.MarkConfirmed(ctx, work.OutboxID, w.workerID, work.LeaseGeneration, txID)
 	}
 
 	if len(work.FabricCommitRequest) == 0 {
@@ -423,7 +429,7 @@ func (w *Worker) reconcile(ctx context.Context, work OutboxWork) error {
 		if queryErr != nil {
 			detail = "Fabric query failed and durable commit-status request is missing: " + boundedError(queryErr)
 		}
-		return w.repository.MarkSubmittedUnknown(ctx, work.OutboxID, w.workerID, txID, w.retryDelay(maxInt(work.Attempts, 1)), detail)
+		return w.repository.MarkSubmittedUnknown(ctx, work.OutboxID, w.workerID, work.LeaseGeneration, txID, w.retryDelay(maxInt(work.Attempts, 1)), detail)
 	}
 
 	statusResult, statusErr := w.ledger.CommitStatus(ctx, txID, work.FabricCommitRequest)
@@ -431,10 +437,10 @@ func (w *Worker) reconcile(ctx context.Context, work OutboxWork) error {
 		return w.confirmAnchor(ctx, work, anchor, txID, recordID)
 	}
 	if !statusResult.Unknown && statusErr != nil {
-		return w.repository.MarkDeadLetter(ctx, work.OutboxID, w.workerID, "fabric_commit_invalid", boundedError(statusErr))
+		return w.repository.MarkDeadLetter(ctx, work.OutboxID, w.workerID, work.LeaseGeneration, "fabric_commit_invalid", boundedError(statusErr))
 	}
 	if queryErr != nil && IsPermanentFabricError(queryErr) {
-		return w.repository.MarkDeadLetter(ctx, work.OutboxID, w.workerID, "fabric_reconcile_permanent_failure", boundedError(queryErr))
+		return w.repository.MarkDeadLetter(ctx, work.OutboxID, w.workerID, work.LeaseGeneration, "fabric_reconcile_permanent_failure", boundedError(queryErr))
 	}
 
 	// A crash can occur after the endorsed transaction and signed commit-status
@@ -449,6 +455,9 @@ func (w *Worker) reconcile(ctx context.Context, work OutboxWork) error {
 			CommitStatusRequest: append([]byte(nil), work.FabricCommitRequest...),
 			RecordID:            recordID,
 		}
+		if err := w.repository.RenewLease(ctx, work.OutboxID, w.workerID, work.LeaseGeneration, w.processingLease); err != nil {
+			return err
+		}
 		retryResult, retryErr := w.ledger.SubmitPrepared(ctx, prepared)
 		if retryResult.TransactionID == "" {
 			retryResult.TransactionID = txID
@@ -457,13 +466,13 @@ func (w *Worker) reconcile(ctx context.Context, work OutboxWork) error {
 			return w.confirmAnchor(ctx, work, anchor, txID, recordID)
 		}
 		if !retryResult.Unknown && retryErr != nil {
-			return w.repository.MarkDeadLetter(ctx, work.OutboxID, w.workerID, "fabric_commit_invalid", boundedError(retryErr))
+			return w.repository.MarkDeadLetter(ctx, work.OutboxID, w.workerID, work.LeaseGeneration, "fabric_commit_invalid", boundedError(retryErr))
 		}
 		detail := "Fabric exact transaction remains unknown after query, commit-status reconciliation, and same-tx resubmit"
 		if retryErr != nil {
 			detail += ": " + boundedError(retryErr)
 		}
-		return w.repository.MarkSubmittedUnknown(ctx, work.OutboxID, w.workerID, txID, w.retryDelay(maxInt(work.Attempts, 1)), detail)
+		return w.repository.MarkSubmittedUnknown(ctx, work.OutboxID, w.workerID, work.LeaseGeneration, txID, w.retryDelay(maxInt(work.Attempts, 1)), detail)
 	}
 
 	detail := "Fabric submission remains unknown after source-bound query and commit-status reconciliation; prepared transaction bytes are unavailable"
@@ -474,7 +483,7 @@ func (w *Worker) reconcile(ctx context.Context, work OutboxWork) error {
 	} else if statusErr != nil {
 		detail = "Fabric commit status failed: " + boundedError(statusErr) + "; prepared transaction bytes are unavailable"
 	}
-	return w.repository.MarkSubmittedUnknown(ctx, work.OutboxID, w.workerID, txID, w.retryDelay(maxInt(work.Attempts, 1)), detail)
+	return w.repository.MarkSubmittedUnknown(ctx, work.OutboxID, w.workerID, work.LeaseGeneration, txID, w.retryDelay(maxInt(work.Attempts, 1)), detail)
 }
 
 func (w *Worker) verifySeal(ctx context.Context, seal Seal) error {
@@ -500,9 +509,9 @@ func (w *Worker) verifySeal(ctx context.Context, seal Seal) error {
 
 func (w *Worker) retryFailure(ctx context.Context, work OutboxWork, category string, cause error) error {
 	if work.Attempts >= w.maxAttempts {
-		return w.repository.MarkDeadLetter(ctx, work.OutboxID, w.workerID, "max_attempts_exhausted", boundedError(cause))
+		return w.repository.MarkDeadLetter(ctx, work.OutboxID, w.workerID, work.LeaseGeneration, "max_attempts_exhausted", boundedError(cause))
 	}
-	return w.repository.MarkFailed(ctx, work.OutboxID, w.workerID, w.retryDelay(maxInt(work.Attempts, 1)), category, boundedError(cause))
+	return w.repository.MarkFailed(ctx, work.OutboxID, w.workerID, work.LeaseGeneration, w.retryDelay(maxInt(work.Attempts, 1)), category, boundedError(cause))
 }
 
 func (w *Worker) retryDelay(attempt int) time.Duration {

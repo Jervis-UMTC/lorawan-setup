@@ -25,14 +25,14 @@ type Repository interface {
 	LoadOutboxReadOnly(context.Context, int64) (*OutboxWork, error)
 	LoadSource(context.Context, OutboxWork) (SourceRow, error)
 	LoadVerification(context.Context, OutboxWork) (VerificationRow, error)
-	PersistSeal(context.Context, int64, string, CanonicalSealInput, string, string) (Seal, error)
+	PersistSeal(context.Context, int64, string, int64, CanonicalSealInput, string, string) (Seal, error)
 	LoadSeal(context.Context, int64) (Seal, error)
-	PersistPreparedSubmission(context.Context, int64, string, string, string, []byte, []byte) error
-	RenewLease(context.Context, int64, string, time.Duration) error
-	MarkConfirmed(context.Context, int64, string, string) error
-	MarkSubmittedUnknown(context.Context, int64, string, string, time.Duration, string) error
-	MarkFailed(context.Context, int64, string, time.Duration, string, string) error
-	MarkDeadLetter(context.Context, int64, string, string, string) error
+	PersistPreparedSubmission(context.Context, int64, string, int64, string, string, []byte, []byte) error
+	RenewLease(context.Context, int64, string, int64, time.Duration) error
+	MarkConfirmed(context.Context, int64, string, int64, string) error
+	MarkSubmittedUnknown(context.Context, int64, string, int64, string, time.Duration, string) error
+	MarkFailed(context.Context, int64, string, int64, time.Duration, string, string) error
+	MarkDeadLetter(context.Context, int64, string, int64, string, string) error
 }
 
 type PostgresRepository struct {
@@ -101,19 +101,20 @@ SET status = 'processing',
     worker_id = $1,
     processing_started_at = now(),
     lease_expires_at = now() + make_interval(secs => $2::double precision),
+    lease_generation = o.lease_generation + 1,
     %s
     updated_at = now()
 FROM candidate AS c
 WHERE o.outbox_id = c.outbox_id
 RETURNING o.outbox_id, o.event_key, o.source_event_key, o.observed_at,
-          o.event_type, o.schema_version, o.attempts,
+          o.event_type, o.schema_version, o.attempts, o.lease_generation,
           o.canonical_json, o.digest_sha256, o.evidence_signature_alg,
           o.evidence_signing_key_id, o.evidence_signature, o.evidence_sealed_at,
           o.finalized_payload, o.fabric_tx_id, o.fabric_record_id, o.fabric_prepared_tx, o.fabric_commit_status_request`, predicate, attemptUpdate)
 	var work OutboxWork
 	err := r.pool.QueryRow(ctx, query, workerID, seconds).Scan(
 		&work.OutboxID, &work.EventKey, &work.SourceEventKey, &work.ObservedAt,
-		&work.EventType, &work.SchemaVersion, &work.Attempts,
+		&work.EventType, &work.SchemaVersion, &work.Attempts, &work.LeaseGeneration,
 		&work.CanonicalJSON, &work.DigestSHA256, &work.EvidenceSignatureAlg,
 		&work.EvidenceSigningKeyID, &work.EvidenceSignature, &work.EvidenceSealedAt,
 		&work.FinalizedPayload, &work.FabricTxID, &work.FabricRecordID, &work.FabricPreparedTx, &work.FabricCommitRequest,
@@ -131,14 +132,14 @@ func (r *PostgresRepository) LoadOutboxReadOnly(ctx context.Context, outboxID in
 	var work OutboxWork
 	err := r.pool.QueryRow(ctx, `
 SELECT outbox_id, event_key, source_event_key, observed_at,
-       event_type, schema_version, attempts,
+       event_type, schema_version, attempts, lease_generation,
        canonical_json, digest_sha256, evidence_signature_alg,
        evidence_signing_key_id, evidence_signature, evidence_sealed_at,
        finalized_payload, fabric_tx_id, fabric_record_id, fabric_prepared_tx, fabric_commit_status_request
 FROM telemetry.fabric_outbox
 WHERE outbox_id = $1`, outboxID).Scan(
 		&work.OutboxID, &work.EventKey, &work.SourceEventKey, &work.ObservedAt,
-		&work.EventType, &work.SchemaVersion, &work.Attempts,
+		&work.EventType, &work.SchemaVersion, &work.Attempts, &work.LeaseGeneration,
 		&work.CanonicalJSON, &work.DigestSHA256, &work.EvidenceSignatureAlg,
 		&work.EvidenceSigningKeyID, &work.EvidenceSignature, &work.EvidenceSealedAt,
 		&work.FinalizedPayload, &work.FabricTxID, &work.FabricRecordID, &work.FabricPreparedTx, &work.FabricCommitRequest,
@@ -204,25 +205,26 @@ WHERE source_event_key = $1
 	return row, nil
 }
 
-func (r *PostgresRepository) PersistSeal(ctx context.Context, outboxID int64, workerID string, input CanonicalSealInput, signature, signingKeyID string) (Seal, error) {
+func (r *PostgresRepository) PersistSeal(ctx context.Context, outboxID int64, workerID string, leaseGeneration int64, input CanonicalSealInput, signature, signingKeyID string) (Seal, error) {
 	var seal Seal
 	err := r.pool.QueryRow(ctx, `
 UPDATE telemetry.fabric_outbox
-SET canonical_json = $3,
-    digest_sha256 = $4,
-    evidence_signature_alg = $5,
-    evidence_signing_key_id = $6,
-    evidence_signature = $7,
+SET canonical_json = $4,
+    digest_sha256 = $5,
+    evidence_signature_alg = $6,
+    evidence_signing_key_id = $7,
+    evidence_signature = $8,
     evidence_sealed_at = now(),
     updated_at = now()
 WHERE outbox_id = $1
   AND status = 'processing'
   AND worker_id = $2
+  AND lease_generation = $3
   AND lease_expires_at > now()
   AND canonical_json IS NULL
 RETURNING canonical_json, digest_sha256, evidence_signature_alg,
           evidence_signing_key_id, evidence_signature, evidence_sealed_at`,
-		outboxID, workerID, string(input.CanonicalJSON), input.DigestSHA256,
+		outboxID, workerID, leaseGeneration, string(input.CanonicalJSON), input.DigestSHA256,
 		EvidenceSignatureAlgorithm, signingKeyID, signature,
 	).Scan(&seal.CanonicalJSON, &seal.DigestSHA256, &seal.Algorithm,
 		&seal.SigningKeyID, &seal.Signature, &seal.SealedAt)
@@ -255,22 +257,23 @@ WHERE outbox_id = $1
 	return seal, nil
 }
 
-func (r *PostgresRepository) PersistPreparedSubmission(ctx context.Context, outboxID int64, workerID, txID, recordID string, preparedTx, commitRequest []byte) error {
+func (r *PostgresRepository) PersistPreparedSubmission(ctx context.Context, outboxID int64, workerID string, leaseGeneration int64, txID, recordID string, preparedTx, commitRequest []byte) error {
 	if txID == "" || recordID == "" || len(preparedTx) == 0 || len(commitRequest) == 0 {
 		return errors.New("durable Fabric prepared submission is incomplete")
 	}
 	tag, err := r.pool.Exec(ctx, `
 UPDATE telemetry.fabric_outbox
-SET fabric_tx_id = $3,
-    fabric_record_id = $4,
-    fabric_prepared_tx = $5,
-    fabric_commit_status_request = $6,
+SET fabric_tx_id = $4,
+    fabric_record_id = $5,
+    fabric_prepared_tx = $6,
+    fabric_commit_status_request = $7,
     updated_at = now()
 WHERE outbox_id = $1
   AND status = 'processing'
   AND worker_id = $2
+  AND lease_generation = $3
   AND lease_expires_at > now()
-  AND fabric_tx_id IS NULL`, outboxID, workerID, txID, recordID, preparedTx, commitRequest)
+  AND fabric_tx_id IS NULL`, outboxID, workerID, leaseGeneration, txID, recordID, preparedTx, commitRequest)
 	if err != nil {
 		return fmt.Errorf("persist prepared Fabric submission: %w", err)
 	}
@@ -280,19 +283,20 @@ WHERE outbox_id = $1
 	return nil
 }
 
-func (r *PostgresRepository) RenewLease(ctx context.Context, outboxID int64, workerID string, lease time.Duration) error {
+func (r *PostgresRepository) RenewLease(ctx context.Context, outboxID int64, workerID string, leaseGeneration int64, lease time.Duration) error {
 	seconds := int64(lease / time.Second)
 	if seconds < 10 || seconds > 3600 {
 		return errors.New("Fabric adapter processing lease must be 10 seconds through 1 hour")
 	}
 	tag, err := r.pool.Exec(ctx, `
 UPDATE telemetry.fabric_outbox
-SET lease_expires_at = now() + make_interval(secs => $3::double precision),
+SET lease_expires_at = now() + make_interval(secs => $4::double precision),
     updated_at = now()
 WHERE outbox_id = $1
   AND status = 'processing'
   AND worker_id = $2
-  AND lease_expires_at > now()`, outboxID, workerID, seconds)
+  AND lease_generation = $3
+  AND lease_expires_at > now()`, outboxID, workerID, leaseGeneration, seconds)
 	if err != nil {
 		return fmt.Errorf("renew Fabric adapter processing lease: %w", err)
 	}
@@ -302,35 +306,35 @@ WHERE outbox_id = $1
 	return nil
 }
 
-func (r *PostgresRepository) MarkConfirmed(ctx context.Context, outboxID int64, workerID, txID string) error {
-	return r.finish(ctx, outboxID, workerID, `
+func (r *PostgresRepository) MarkConfirmed(ctx context.Context, outboxID int64, workerID string, leaseGeneration int64, txID string) error {
+	return r.finish(ctx, outboxID, workerID, leaseGeneration, `
 status = 'confirmed', fabric_tx_id = $3,
 submitted_at = COALESCE(submitted_at, now()), committed_at = now(),
 last_error_category = NULL, last_error = NULL`, txID, 0, "", "")
 }
 
-func (r *PostgresRepository) MarkSubmittedUnknown(ctx context.Context, outboxID int64, workerID, txID string, retryAfter time.Duration, detail string) error {
-	return r.finish(ctx, outboxID, workerID, `
+func (r *PostgresRepository) MarkSubmittedUnknown(ctx context.Context, outboxID int64, workerID string, leaseGeneration int64, txID string, retryAfter time.Duration, detail string) error {
+	return r.finish(ctx, outboxID, workerID, leaseGeneration, `
 status = 'submitted_unknown', fabric_tx_id = $3,
 submitted_at = COALESCE(submitted_at, now()), committed_at = NULL,
 next_attempt_at = now() + make_interval(secs => $4::double precision),
 last_error_category = 'fabric_submission_unknown', last_error = $5`, txID, retryAfter, detail, "")
 }
 
-func (r *PostgresRepository) MarkFailed(ctx context.Context, outboxID int64, workerID string, retryAfter time.Duration, category, detail string) error {
-	return r.finish(ctx, outboxID, workerID, `
+func (r *PostgresRepository) MarkFailed(ctx context.Context, outboxID int64, workerID string, leaseGeneration int64, retryAfter time.Duration, category, detail string) error {
+	return r.finish(ctx, outboxID, workerID, leaseGeneration, `
 status = 'failed',
 next_attempt_at = now() + make_interval(secs => $4::double precision),
 last_error_category = $6, last_error = $5`, "", retryAfter, detail, category)
 }
 
-func (r *PostgresRepository) MarkDeadLetter(ctx context.Context, outboxID int64, workerID, category, detail string) error {
-	return r.finish(ctx, outboxID, workerID, `
+func (r *PostgresRepository) MarkDeadLetter(ctx context.Context, outboxID int64, workerID string, leaseGeneration int64, category, detail string) error {
+	return r.finish(ctx, outboxID, workerID, leaseGeneration, `
 status = 'dead_letter', next_attempt_at = now(),
 last_error_category = $6, last_error = $5`, "", 0, detail, category)
 }
 
-func (r *PostgresRepository) finish(ctx context.Context, outboxID int64, workerID, setClause, txID string, retryAfter time.Duration, detail, category string) error {
+func (r *PostgresRepository) finish(ctx context.Context, outboxID int64, workerID string, leaseGeneration int64, setClause, txID string, retryAfter time.Duration, detail, category string) error {
 	seconds := int64(retryAfter / time.Second)
 	if seconds < 0 || seconds > 86400 {
 		return errors.New("Fabric adapter retry delay must not exceed 24 hours")
@@ -347,8 +351,9 @@ updated_at = now()
 WHERE outbox_id = $1
   AND status = 'processing'
   AND worker_id = $2
+  AND lease_generation = $7
   AND lease_expires_at > now()`
-	tag, err := r.pool.Exec(ctx, query, outboxID, workerID, txID, seconds, detail, category)
+	tag, err := r.pool.Exec(ctx, query, outboxID, workerID, txID, seconds, detail, category, leaseGeneration)
 	if err != nil {
 		return fmt.Errorf("finish Fabric outbox work: %w", err)
 	}

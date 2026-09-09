@@ -26,6 +26,8 @@ type fakeRepository struct {
 	persistCalls         int
 	persistPreparedCalls int
 	renewLeaseCalls      int
+	renewLeaseErrors     []error
+	lastLeaseGeneration  int64
 	preparedTxID         string
 	preparedRecordID     string
 	preparedTx           []byte
@@ -68,7 +70,8 @@ func (r *fakeRepository) LoadVerification(context.Context, OutboxWork) (Verifica
 	}
 	return r.verification, nil
 }
-func (r *fakeRepository) PersistSeal(_ context.Context, _ int64, _ string, input CanonicalSealInput, signature, keyID string) (Seal, error) {
+func (r *fakeRepository) PersistSeal(_ context.Context, _ int64, _ string, leaseGeneration int64, input CanonicalSealInput, signature, keyID string) (Seal, error) {
+	r.lastLeaseGeneration = leaseGeneration
 	r.persistCalls++
 	r.seal = Seal{
 		CanonicalJSON: string(input.CanonicalJSON),
@@ -86,8 +89,9 @@ func (r *fakeRepository) LoadSeal(context.Context, int64) (Seal, error) {
 	}
 	return r.seal, nil
 }
-func (r *fakeRepository) PersistPreparedSubmission(_ context.Context, _ int64, _ string, txID, recordID string, preparedTx, commitRequest []byte) error {
+func (r *fakeRepository) PersistPreparedSubmission(_ context.Context, _ int64, _ string, leaseGeneration int64, txID, recordID string, preparedTx, commitRequest []byte) error {
 	r.persistPreparedCalls++
+	r.lastLeaseGeneration = leaseGeneration
 	r.preparedTxID = txID
 	r.preparedRecordID = recordID
 	r.preparedTx = append([]byte(nil), preparedTx...)
@@ -97,23 +101,31 @@ func (r *fakeRepository) PersistPreparedSubmission(_ context.Context, _ int64, _
 	}
 	return nil
 }
-func (r *fakeRepository) RenewLease(context.Context, int64, string, time.Duration) error {
+func (r *fakeRepository) RenewLease(_ context.Context, _ int64, _ string, leaseGeneration int64, _ time.Duration) error {
 	r.renewLeaseCalls++
+	r.lastLeaseGeneration = leaseGeneration
+	if r.renewLeaseCalls <= len(r.renewLeaseErrors) {
+		return r.renewLeaseErrors[r.renewLeaseCalls-1]
+	}
 	return nil
 }
-func (r *fakeRepository) MarkConfirmed(_ context.Context, _ int64, _ string, txID string) error {
+func (r *fakeRepository) MarkConfirmed(_ context.Context, _ int64, _ string, leaseGeneration int64, txID string) error {
+	r.lastLeaseGeneration = leaseGeneration
 	r.confirmedTxID = txID
 	return nil
 }
-func (r *fakeRepository) MarkSubmittedUnknown(_ context.Context, _ int64, _ string, txID string, _ time.Duration, _ string) error {
+func (r *fakeRepository) MarkSubmittedUnknown(_ context.Context, _ int64, _ string, leaseGeneration int64, txID string, _ time.Duration, _ string) error {
+	r.lastLeaseGeneration = leaseGeneration
 	r.unknownTxID = txID
 	return nil
 }
-func (r *fakeRepository) MarkFailed(_ context.Context, _ int64, _ string, _ time.Duration, category, _ string) error {
+func (r *fakeRepository) MarkFailed(_ context.Context, _ int64, _ string, leaseGeneration int64, _ time.Duration, category, _ string) error {
+	r.lastLeaseGeneration = leaseGeneration
 	r.failedCategory = category
 	return nil
 }
-func (r *fakeRepository) MarkDeadLetter(_ context.Context, _ int64, _ string, category, _ string) error {
+func (r *fakeRepository) MarkDeadLetter(_ context.Context, _ int64, _ string, leaseGeneration int64, category, _ string) error {
+	r.lastLeaseGeneration = leaseGeneration
 	r.deadCategory = category
 	return nil
 }
@@ -281,6 +293,61 @@ func TestWorkerPersistsDurableTransactionBeforeSubmitAndKeepsUnknown(t *testing.
 	}
 	if repo.unknownTxID != "tx-crash-window" || repo.confirmedTxID != "" || ledger.prepareCalls != 1 || ledger.submitCalls != 1 {
 		t.Fatalf("unknown=%q confirmed=%q prepare=%d submit=%d", repo.unknownTxID, repo.confirmedTxID, ledger.prepareCalls, ledger.submitCalls)
+	}
+}
+
+func TestWorkerLeaseFenceBlocksStaleClaimBeforePrepare(t *testing.T) {
+	repo := &fakeRepository{
+		work:             fixtureWorkV2(),
+		source:           fixtureSource(),
+		verification:     fixtureVerification(),
+		renewLeaseErrors: []error{ErrLeaseLost},
+	}
+	ledger := &fakeLedger{autoQuery: true}
+	worker := fixtureWorker(t, repo, &fakeSigner{}, ledger)
+
+	processed, err := worker.RunOnce(context.Background())
+	if !processed || !errors.Is(err, ErrLeaseLost) {
+		t.Fatalf("RunOnce processed=%v err=%v, expected lease loss", processed, err)
+	}
+	if ledger.prepareCalls != 0 || ledger.submitCalls != 0 {
+		t.Fatalf("stale claim reached Fabric: prepare=%d submit=%d", ledger.prepareCalls, ledger.submitCalls)
+	}
+	if repo.renewLeaseCalls != 1 || repo.lastLeaseGeneration != 1 {
+		t.Fatalf("renewCalls=%d generation=%d", repo.renewLeaseCalls, repo.lastLeaseGeneration)
+	}
+}
+
+func TestWorkerLeaseFenceBlocksSubmitAfterDurablePrepare(t *testing.T) {
+	repo := &fakeRepository{
+		work:             fixtureWorkV2(),
+		source:           fixtureSource(),
+		verification:     fixtureVerification(),
+		renewLeaseErrors: []error{nil, ErrLeaseLost},
+	}
+	ledger := &fakeLedger{
+		prepare: FabricPreparedSubmission{
+			TransactionID:       "tx-fenced-before-submit",
+			PreparedTransaction: []byte("prepared"),
+			CommitStatusRequest: []byte("status"),
+			CreateOutcome:       "CREATE",
+			RecordID:            "hrc-fenced-before-submit",
+		},
+	}
+	worker := fixtureWorker(t, repo, &fakeSigner{}, ledger)
+
+	processed, err := worker.RunOnce(context.Background())
+	if !processed || !errors.Is(err, ErrLeaseLost) {
+		t.Fatalf("RunOnce processed=%v err=%v, expected lease loss", processed, err)
+	}
+	if ledger.prepareCalls != 1 || repo.persistPreparedCalls != 1 {
+		t.Fatalf("prepare=%d persistPrepared=%d", ledger.prepareCalls, repo.persistPreparedCalls)
+	}
+	if ledger.submitCalls != 0 {
+		t.Fatalf("stale claim submitted prepared transaction: submit=%d", ledger.submitCalls)
+	}
+	if repo.preparedTxID != "tx-fenced-before-submit" || repo.lastLeaseGeneration != 1 {
+		t.Fatalf("preparedTxID=%q generation=%d", repo.preparedTxID, repo.lastLeaseGeneration)
 	}
 }
 
@@ -679,7 +746,7 @@ func fixtureWorkV2() *OutboxWork {
 	return &OutboxWork{
 		OutboxID: 1, EventKey: "uplink:test-v2", SourceEventKey: "test-v2",
 		ObservedAt: time.Date(2026, 8, 31, 1, 2, 3, 456789000, time.UTC),
-		EventType:  EventTypeUplink, SchemaVersion: SchemaVersionV2, Attempts: 1, FinalizedPayload: fixtureExactPayload(),
+		EventType:  EventTypeUplink, SchemaVersion: SchemaVersionV2, Attempts: 1, LeaseGeneration: 1, FinalizedPayload: fixtureExactPayload(),
 	}
 }
 

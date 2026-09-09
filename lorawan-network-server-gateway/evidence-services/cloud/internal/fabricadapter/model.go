@@ -12,6 +12,7 @@ type OutboxWork struct {
 	EventType            string
 	SchemaVersion        string
 	Attempts             int
+	LeaseGeneration      int64
 	CanonicalJSON        *string
 	DigestSHA256         *string
 	EvidenceSignatureAlg *string
