@@ -335,7 +335,13 @@ func (r *PostgresRepository) finish(ctx context.Context, outboxID int64, workerI
 	if seconds < 0 || seconds > 86400 {
 		return errors.New("Fabric adapter retry delay must not exceed 24 hours")
 	}
-	query := `UPDATE telemetry.fabric_outbox SET ` + setClause + `,
+	query := `WITH _finish_params AS (
+SELECT $3::text AS tx_id,
+       $4::double precision AS retry_seconds,
+       $5::text AS detail,
+       $6::text AS category
+)
+UPDATE telemetry.fabric_outbox SET ` + setClause + `,
 worker_id = NULL, processing_started_at = NULL, lease_expires_at = NULL,
 updated_at = now()
 WHERE outbox_id = $1

@@ -1,6 +1,6 @@
 # Reproducible Cloud Evidence Deployment Bundle
 
-This directory is the tracked and **commissioned** server-side deployment bundle for the four Go evidence/attestation services: ingest, MQTT collector, verifier, and Fabric adapter. The base profile is live on the three cloud hosts; the Fabric adapter is intentionally activated only as disabled standby. Rebuilding a server should require the repository plus protected credentials/PKI and the selected durable S3-compatible service; it should not require reconstructing Compose commands from chat history.
+This directory is the tracked and **commissioned** server-side deployment bundle for the four Go evidence/attestation services: ingest, MQTT collector, verifier, and Fabric adapter. The base profile is live on the three cloud hosts. After the governed ULC-01 qualification, ULC-01 now runs the explicit enabled overlay as the continuous Fabric writer; ULC-02 remains intentionally disabled standby until the HA fencing gate passes. Rebuilding a server should require the repository plus protected credentials/PKI and the selected durable S3-compatible service; it should not require reconstructing Compose commands from chat history.
 
 The Fabric adapter has two deliberately separate deployment states. The base `compose.yml` runs adapter-1/2 with `FABRIC_ADAPTER_ENABLED=false`, so they expose only local health/readiness and do not open PostgreSQL, read an OpenBao SecretID, or contact Fabric. Actual ledger submission requires the explicit `compose.fabric-adapter-enabled.yml` overlay and must pass `fabric-adapter-enable-preflight.sh` first.
 
@@ -10,12 +10,12 @@ The Fabric adapter has two deliberately separate deployment states. The base `co
 ulc-01 / 10.104.0.2
   ingest-1
   collector-1
-  fabric-adapter-1 standby -> enabled only after Fabric handoff
+  fabric-adapter-1 enabled continuous writer -> HRC Fabric through the governed private Gateway
 
 ulc-02 / 10.104.0.4
   ingest-2
   verifier-1
-  fabric-adapter-2 standby -> enabled only after Fabric handoff
+  fabric-adapter-2 disabled standby -> do not enable before HA fencing acceptance
 
 ulc-03 / 10.104.0.8
   collector-2
@@ -62,7 +62,7 @@ A real base deployment must supply:
 6. dedicated read-only MQTT collector broker identities;
 7. free private/loopback host ports confirmed on the live server.
 
-Enabling either Fabric adapter additionally requires the real external Fabric Gateway endpoint/TLS identity, MSP ID, Fabric client certificate/private key, channel/chaincode/contract functions, and a deliberately issued OpenBao AppRole SecretID. None of those values is invented by this repository.
+Enabling either Fabric adapter additionally requires the final HRC Task 37 handoff. The adapter contract is `CreateSourceBoundAnchor(SourceRecordID, sourceType, producer, producedAt, schemaVersion)` with the exact accepted payload supplied only as transient `hrc.exact_payload`, followed by `QuerySourceBoundAnchor(SourceRecordID)` and `VerifySourceBoundDigest(SourceRecordID, observedDigest)`. The agreed LoRaWAN source identity is `FABRIC_AUTHENTICATED_SOURCE_SYSTEM_ID=lorawan-gateway-evidence`; it is bound by the Fabric team into separate non-admin ULC-01 and ULC-02 Adapter certificates. Still external are the restricted TCP/7051 Gateway endpoint reachable from both ULC hosts, its TLS server name/root CA confirmation, and the two dedicated certificate/private-key pairs. The old `10.43.25.198:7051` K3s ClusterIP and the legacy `CreateAnchor`, `QueryAnchor`, `QueryAnchorByRecordID`, and `VerifyDigest` APIs must not be used. The OpenBao AppRole identities are already commissioned.
 
 The repository does not guess image digests, secrets, or unused evidence-service host ports. The raw-store endpoint itself is now frozen to `https://evidence-objects.internal.lorawan.com:18443`; each evidence container resolves that name to its local host VPC IP, while SeaweedFS's raw S3 listener remains loopback-only.
 
@@ -275,8 +275,8 @@ EVIDENCE_ADAPTER_IMAGE=ghcr.io/jervis-umtc/lorawan/gateway-fabric-adapter@sha256
 
 All three authoritative `preflight.sh` runs passed. Live placement is `ulc-01=ingest-1+collector-1+adapter-1-disabled`, `ulc-02=ingest-2+verifier-1+adapter-2-disabled`, `ulc-03=collector-2+verifier-2`. Every runtime uses numeric `65532:65532`, read-only rootfs, `cap_drop: ALL`, `no-new-privileges`, `pids_limit: 128`, `192 MiB`, `0.20 CPU`, bounded logs, and `restart: unless-stopped`.
 
-SeaweedFS S9, Evidence PKI, four distinct read-only collector mTLS identities/ACLs, the dual-broker collector readiness gate, replicated ingest/verifier readiness, and the private/shared-443 normal path are PASS. Adapter containers are healthy only in `FABRIC_ADAPTER_ENABLED=false` standby and must stay that way until the external Fabric activation gate.
+SeaweedFS S9, Evidence PKI, four distinct read-only collector mTLS identities/ACLs, the dual-broker collector readiness gate, replicated ingest/verifier readiness, and the private/shared-443 normal path are PASS. ULC-01 Adapter-1 is the governed continuous Fabric writer with `FABRIC_ADAPTER_ENABLED=true`; ULC-02 Adapter-2 remains healthy `FABRIC_ADAPTER_ENABLED=false` standby until the HA fencing gate passes.
 
 ## What is still not claimed
 
-Do not call the complete v2 lineage or public-ingress HA finished yet. The public ChirpStack/Evidence/MQTT normal path is already PASS. Remaining claims are deliberately narrower: Reserved-IP reassignment/failover authority and controlled acceptance; the Gateway OS/OpenWrt target package and physical Concentratord/MQTT/journal/uploader lineage; and a real external Fabric transaction after the handoff. Do not redo the already-passed cloud evidence commissioning without a relevant state change.
+The real Gateway-01 / assembled EMU-01 v2 physical evidence lineage is PASS through Concentratord, MQTT, journal/uploader, Evidence ingest, checkpoints/segments, and trusted-decoder verification. On the final 2026-09-02 shutdown check, Gateway-01 had closed and receipted segment 28, its open journal was empty, and the cloud held 492 verified v2 events with 0 pending, 0 unseen, and 0 `evidence_gap` / `integrity_failure` rows. Both verifier replicas run the corrected continuous-discovery build that excludes already-seen v2 keys before applying the 100-row batch limit, preventing the old first-100 starvation condition. Public ChirpStack/Evidence/MQTT normal paths are also PASS. Remaining external claims are deliberately narrower: Reserved-IP reassignment/failover authority and controlled acceptance, plus the separate ULC-02 Fabric HA fencing/dual-worker acceptance gate. Do not redo the already-passed cloud evidence commissioning without a relevant state change.

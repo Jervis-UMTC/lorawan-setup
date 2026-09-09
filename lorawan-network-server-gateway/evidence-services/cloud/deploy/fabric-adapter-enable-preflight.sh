@@ -83,6 +83,7 @@ printf '%s' "$EVIDENCE_ADAPTER_IMAGE" | grep -Eq '^.+@sha256:[0-9a-f]{64}$' || f
 for name in \
   FABRIC_ADAPTER_ENV_FILE \
   OPENBAO_CA_HOST_PATH \
+  OPENBAO_APPROLE_DIR_HOST_PATH \
   OPENBAO_APPROLE_ROLE_ID_HOST_PATH \
   OPENBAO_APPROLE_SECRET_ID_HOST_PATH \
   FABRIC_TLS_ROOT_CERT_HOST_PATH \
@@ -126,6 +127,10 @@ check_runtime_public_file() {
 check_secret_env "$FABRIC_ADAPTER_ENV_FILE" 'fabric-adapter.env'
 check_runtime_public_file "$EVIDENCE_POSTGRES_CA_HOST_PATH" 'PostgreSQL CA'
 check_runtime_public_file "$OPENBAO_CA_HOST_PATH" 'OpenBao CA'
+[ -d "$OPENBAO_APPROLE_DIR_HOST_PATH" ] || fail "OpenBao AppRole directory missing: $OPENBAO_APPROLE_DIR_HOST_PATH"
+[ "$(stat -c '%u:%g:%a' "$OPENBAO_APPROLE_DIR_HOST_PATH")" = '0:65532:750' ] || fail 'OpenBao AppRole directory must be root:GID-65532 mode 0750'
+[ "${OPENBAO_APPROLE_ROLE_ID_HOST_PATH%/*}" = "$OPENBAO_APPROLE_DIR_HOST_PATH" ] || fail 'OpenBao RoleID file must be inside OPENBAO_APPROLE_DIR_HOST_PATH'
+[ "${OPENBAO_APPROLE_SECRET_ID_HOST_PATH%/*}" = "$OPENBAO_APPROLE_DIR_HOST_PATH" ] || fail 'OpenBao SecretID file must be inside OPENBAO_APPROLE_DIR_HOST_PATH'
 check_runtime_key "$OPENBAO_APPROLE_ROLE_ID_HOST_PATH" 'OpenBao AppRole RoleID file'
 check_runtime_key "$OPENBAO_APPROLE_SECRET_ID_HOST_PATH" 'OpenBao AppRole SecretID file'
 check_runtime_public_file "$FABRIC_TLS_ROOT_CERT_HOST_PATH" 'Fabric TLS root certificate'
