@@ -2,7 +2,7 @@
 
 This manual owns the developer/build-host setup for the Go evidence services under this directory. It is deliberately self-contained: a fresh Windows build host does **not** need a global Go installation, administrator changes, a PowerShell profile edit, or `go env -w` state.
 
-This build manual is not itself the deployment procedure, but the cloud services built from it are now commissioned. The live PostgreSQL migration/HBA/CONNECT/six-login boundary, three-node PgBouncer evidence auth, SeaweedFS S0-S9, immutable GHCR image refs, PKI/MQTT identities, replicated services, shared-443 and evidence observability are PASS. The remaining end-to-end gate is the Gateway OS target package/physical lineage, plus separate provider/Fabric external inputs.
+This build manual is not itself the deployment procedure, but the cloud services built from it are commissioned. The live PostgreSQL migration/HBA/CONNECT/six-login boundary, three-node PgBouncer evidence auth, SeaweedFS S0-S9, PKI/MQTT identities, replicated services, shared-443, evidence observability, real Gateway-01 / EMU-01 physical v2 lineage, Task 37 Fabric qualification, and the ULC-01 continuous Fabric writer are PASS. Remaining independent gates include provider Reserved-IP failover acceptance and the separate ULC-02 Fabric HA fencing/dual-worker gate.
 
 ## Pinned build inputs
 
@@ -125,7 +125,31 @@ gateway-fabric-adapter
   sha256: ac2180e96e31a8e66ea8a5a3ef41c51c458865f550b3ef94159f4bbc5c256afd
 ```
 
-`packaging/binaries.lock` is authoritative for this four-binary set, and `build-images.ps1 -Offline -ValidateOnly` rebuilt the set and matched every locked size/hash while also passing the minimal scratch-Dockerfile checks. The ingest binary also carries the production `objectstore-contract-write` and read-only `objectstore-contract-verify` commissioning commands used to prove the selected SeaweedFS S3 endpoint rather than trusting compatibility claims. The verifier build still computes and injects the trusted-decoder source-package digest. The `-Offline -ResetToolchain` mechanism was proven earlier on the same pinned Go archive/build path; do not convert that older recovery proof into a claim that the current four-binary tree completed another reset replay unless such a run is recorded separately.
+`packaging/binaries.lock` is authoritative for the original commissioned four-binary release. Its Fabric-adapter entry (`ac2180e9...`) is historical and predates the Task 37 exact-payload/durable-transaction repair; do not use that older adapter binary for Fabric production. The ingest binary also carries the production `objectstore-contract-write` and read-only `objectstore-contract-verify` commissioning commands used to prove the selected SeaweedFS S3 endpoint rather than trusting compatibility claims. The verifier build still computes and injects the trusted-decoder source-package digest. The `-Offline -ResetToolchain` mechanism was proven earlier on the same pinned Go archive/build path; do not convert that older recovery proof into a claim that the current four-binary tree completed another reset replay unless such a run is recorded separately.
+
+## Production Fabric adapter build evidence — 2026-09-08
+
+After the Task 37 repair and the production SQL parameter-typing correction, the Fabric adapter was rebuilt on the isolated `cloud-sim` builder with `golang:1.25.0-bookworm`, `GOENV=off`, `GOOS=linux`, `GOARCH=amd64`, `CGO_ENABLED=0`, `-trimpath`, `-buildvcs=false`, and `-mod=readonly`. Targeted `go test` for `./internal/fabricadapter` and `./cmd/fabric-adapter` passed.
+
+Two independent binary builds, with the build cache cleared between them, were byte-identical:
+
+```text
+gateway-fabric-adapter
+  size:   25609711
+  sha256: a53990277d9032e60a9f0bfb52619a21e8c999a3573477dbfb3efe6ca6fb9591
+  reproducible binary build: PASS
+```
+
+That locked binary was then packaged twice with no-cache Buildx, provenance/SBOM disabled, fixed `SOURCE_DATE_EPOCH=1788825600`, numeric runtime user `65532:65532`, and `/service` entrypoint. Both image builds produced the same OCI image ID:
+
+```text
+image tag:      task37-gateway-fabric-adapter:prod-a53990277d9032e6
+image id:       sha256:d12e73ae24f7823730b6632fe8209e844c0d6125bd6a9c13e9d75cc330664f74
+binary label:   a53990277d9032e60a9f0bfb52619a21e8c999a3573477dbfb3efe6ca6fb9591
+OCI reproducible build: PASS
+```
+
+The saved deployment archive was `12238336` bytes with SHA-256 `335a8e920b4eba5b7cbf73a0cac4edfeac15d99017a0b832c0b20d887df65f4c`. The live ULC-01 continuous writer runs this exact image ID with `FABRIC_ADAPTER_ENABLED=true`. ULC-02 intentionally remains write-disabled until the HA ownership/fencing gate is commissioned.
 
 ## What is and is not reproducible here
 
