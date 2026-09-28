@@ -20,6 +20,19 @@ start_service() {
 	chown gateway-evidence:gateway-evidence "$state_dir"
 	chmod 2750 "$state_dir"
 
+	# Concentratord creates its IPC socket as root:root 0755. Linux Unix-domain
+	# clients need write permission on the socket path, so the unprivileged
+	# journal subscriber otherwise stays alive but never establishes a ZMQ link.
+	case "$event_url" in
+		ipc://*)
+			event_path="${event_url#ipc://}"
+			if [ -S "$event_path" ]; then
+				chgrp gateway-evidence "$event_path"
+				chmod 0770 "$event_path"
+			fi
+			;;
+	esac
+
 	procd_open_instance
 	procd_set_param command /usr/bin/gateway-evidence-writer
 	procd_set_param user gateway-evidence

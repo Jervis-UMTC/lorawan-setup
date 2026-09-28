@@ -1,0 +1,17 @@
+#!/bin/sh
+uci set network.wwan.metric='50'
+uci set network.lte='interface'
+uci set network.lte.proto='qmi'
+uci set network.lte.device='/dev/cdc-wdm0'
+uci set network.lte.apn='internet.dito.ph'
+uci set network.lte.auth='none'
+uci set network.lte.pdptype='IP'
+# DITO supplies IPv4/gateway/DNS in QMI WDS current-settings.  Do not create
+# the netifd lte_4 DHCP child: the carrier does not reliably send a DHCP offer.
+uci set network.lte.dhcp='0'
+uci set network.lte.defaultroute='0'
+uci set network.lte.peerdns='1'
+uci commit network
+chmod 0755 /usr/sbin/lte-route-health /etc/init.d/lte-route-health
+/etc/init.d/lte-route-health enable
+exit 0

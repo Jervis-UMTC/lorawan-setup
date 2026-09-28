@@ -1,0 +1,18 @@
+{
+  "generated_utc": "2026-09-21T08:26:53+00:00",
+  "scope": "Markdown bash/sh/PowerShell blocks; syntax only, no command execution",
+  "total_blocks": 184,
+  "bash": {
+    "total": 150,
+    "parsed": 0,
+    "failed": [],
+    "tool_unavailable": true
+  },
+  "powershell": {
+    "total": 34,
+    "parsed": 34,
+    "failed": [],
+    "tool_unavailable": false,
+    "method": "host PowerShell AST Parser.ParseInput direct -Command; no block execution"
+  }
+}

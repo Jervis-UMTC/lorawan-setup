@@ -1,0 +1,8 @@
+﻿{
+    "method":  "PowerShell AST syntax parse only; Markdown block bodies not executed",
+    "parsed":  34,
+    "total":  34,
+    "failed":  [
+
+               ]
+}

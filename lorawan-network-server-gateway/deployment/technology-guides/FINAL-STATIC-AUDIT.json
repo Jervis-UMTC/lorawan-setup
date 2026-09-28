@@ -1,0 +1,45 @@
+{
+  "generated_utc": "2026-09-21T08:36:10Z",
+  "scope": "deployment/technology-guides/*.md only; excludes protected env, deployment binaries and research raw results",
+  "stats": {
+    "files": 51,
+    "numbered_guides": 21,
+    "code_blocks": 344,
+    "executable_blocks": 208,
+    "template_lines": 21,
+    "link_targets": 263,
+    "files_with_fences": 45,
+    "secret_candidates": 0
+  },
+  "categories": {
+    "dated-current-language": 4
+  },
+  "findings": [
+    {
+      "category": "dated-current-language",
+      "file": "00-README.md",
+      "line": 7,
+      "detail": "Dated operational claim; verify or label checkpoint"
+    },
+    {
+      "category": "dated-current-language",
+      "file": "19-research-recorder-and-test-automation.md",
+      "line": 110,
+      "detail": "Dated operational claim; verify or label checkpoint"
+    },
+    {
+      "category": "dated-current-language",
+      "file": "FABRIC-EXACT-PAYLOAD-FENCING-RECOVERY.md",
+      "line": 142,
+      "detail": "Dated operational claim; verify or label checkpoint"
+    },
+    {
+      "category": "dated-current-language",
+      "file": "FINAL-CROSS-TECHNOLOGY-AUDIT-2026-09-21.md",
+      "line": 23,
+      "detail": "Dated operational claim; verify or label checkpoint"
+    }
+  ],
+  "command_validation": "static parsing/heuristics only; no executable command was run against production",
+  "secret_handling": "Potential secret values never included in this report"
+}

@@ -4,6 +4,6 @@ config global
 config mqtt
 	option topic_prefix 'as923'
 	option server 'tcp://127.0.0.1:1883'
-	option qos '0'
+	option qos '1'
 
 config filters

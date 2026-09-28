@@ -74,6 +74,19 @@ Confirm that:
 
 Fix network or time problems before testing TLS. An incorrect clock can make a valid certificate appear expired or not yet valid.
 
+For the commissioned Gateway-01 field topology, the normal production backhaul is the SIM7600 QMI interface `wwan0`; RJ45/`br-lan` at `192.168.20.11` is management-only and must not become the Internet default. After boot, allow the modem and one `lte-route-health` cycle to converge, then verify that the service is running, QMI has a current address/gateway, the metric-10 default is on `wwan0`, the production broker route resolves through `wwan0`, and UTC has synchronized. The controller intentionally retains a valid LTE default during a temporary broker/TLS failure so DNS/NTP and autonomous recovery remain possible.
+
+```sh
+ubus call network.interface.lte status
+ubus call service list '{"name":"lte-route-health"}'
+ip route show default
+ip route get 129.212.208.168
+date -u
+logread | grep 'lte-route-health' | tail -n 20
+```
+
+On the 2026-09-15 reboot acceptance, DITO assigned a fresh PDP address, `lte-route-health` restored the metric-10 `wwan0` default automatically on its next cycle, the production MQTT mTLS probe passed, NTP corrected the clock, and the formal research-recorder preflight subsequently exited `0`. Treat a very early post-boot snapshot taken before the first successful health cycle as a startup observation, not as a routing failure; the route must appear automatically within the bounded controller cycle without a manual route command. The 2026-09-16 controller revision also distinguishes broker failure from LTE dataplane failure and performs staged autonomous recovery: bounded logical-interface restart first, then a cooldown-protected SIM7600 `AT+CFUN=1,1` reset only if the dataplane remains unavailable. Both stages were live-proven before the reboot-persistence check. The reboot-persistence check also passed: the daemon started from `S95lte-route-health`, retained the repository script hash, used the 60-second boot grace instead of resetting the modem during QMI startup, then restored a fresh DITO PDP session, metric-10 default, and production mTLS without operator intervention.
+
 ## Step 2: Verify the effective gateway configuration
 
 Run:
@@ -549,3 +562,26 @@ Pre-flash acceptance already proved generated checksums, gzip/partition integrit
 After flashing, validate only the hardware/runtime boundary: boot and writable overlay; RAK5146 Concentratord on AS923; SIM7600 tty/QMI enumeration; Mosquitto on `127.0.0.1:1883` with writable `/etc/mosquitto/data`; normal MQTT Forwarder enabled while UDP/mesh paths remain disabled; evidence writer running; uploader still disabled until mTLS provisioning; and one real uplink producing a journal record and reaching the telemetry path after protected bridge credentials are restored/provisioned.
 
 Production MQTT bridge private keys/certificates and evidence-uploader mTLS material are intentionally not firmware contents. Keep them in the protected provisioning/recovery path.
+
+### Clean-overlay physical acceptance - 2026-09-02
+
+Production Gateway-01 has now passed the post-flash hardware/runtime boundary after deliberately clearing stale writable OverlayFS state on the reused microSD. Independent extraction reconfirmed that the accepted SquashFS itself did not contain the stale MQTT/Evidence identities or commissioning `/etc/hosts` overrides. The gateway was reprovisioned from protected off-device credentials, rebooted, and reverified with:
+
+```text
+Gateway EUI                 0016c001f139a1cb
+SX1302 model                rak_5146
+region / channel plan       AS923 / as923
+MQTT Forwarder              enabled, tcp://127.0.0.1:1883, qos=1
+maintenance Ethernet        192.168.20.11/24, no default route
+normal backhaul             Wi-Fi DHCP, default route via Wi-Fi
+public MQTT                 two established mTLS bridge sockets
+Evidence                    writer + uploader running, mTLS /readyz ready
+commissioning host override absent
+ChirpStack last_seen_at     2026-09-02 01:30:01.955894+00 after reboot
+```
+
+Use `../automation/commission-clean-overlay.sh preflight` before provisioning a future newly flashed/reused card. If production keys/bridge state appear before provisioning, stop and investigate/reset stale writable overlay rather than assuming the immutable image contains secrets.
+
+The accepted 2026-09-01 SquashFS was also found to contain MQTT Forwarder QoS 0. Runtime commissioning corrected Gateway-01 to QoS 1 and the tracked image overlay is corrected for a future rebuild. The current gateway does not require a rebuild because its clean persisted runtime has already passed reboot and cloud verification.
+
+Real post-reset assembled EMU-01 LoRaWAN traffic has created and uploaded gateway-evidence segments/checkpoints successfully. The gateway writer/uploader, public mTLS ingest path, checkpoint/segment receipts, and cloud trusted-decoder verification are physically proven. At the 2026-09-02 powered-off acceptance boundary, the last EMU-01 application uplink was frame counter 666 at `05:31:45.795 UTC`; Gateway-01 subsequently closed and receipted segment 28, `journal/open` was empty, and the cloud verifier reported all 492 selected v2 events verified with no evidence failures. This closes the Gateway OS physical evidence-lineage boundary; later sensor work should re-check it only if the gateway/evidence configuration changes.

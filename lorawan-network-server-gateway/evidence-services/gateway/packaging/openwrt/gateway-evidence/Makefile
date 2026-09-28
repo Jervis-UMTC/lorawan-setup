@@ -2,7 +2,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=gateway-evidence
 PKG_VERSION:=0.1.0
-PKG_RELEASE:=2
+PKG_RELEASE:=3
 
 include $(INCLUDE_DIR)/package.mk
 
@@ -32,10 +32,14 @@ define Package/gateway-evidence/install
 	$(INSTALL_BIN) ./files/usr/bin/gateway-evidence-writer $(1)/usr/bin/gateway-evidence-writer
 	$(INSTALL_BIN) ./files/usr/bin/gateway-evidence-uploader $(1)/usr/bin/gateway-evidence-uploader
 
+	$(INSTALL_DIR) $(1)/usr/libexec
+	$(INSTALL_BIN) ./files/usr/libexec/gateway-evidence-ipc-guard $(1)/usr/libexec/gateway-evidence-ipc-guard
+
 	$(INSTALL_DIR) $(1)/etc/config
 	$(INSTALL_CONF) ./files/etc/config/gateway-evidence $(1)/etc/config/gateway-evidence
 
 	$(INSTALL_DIR) $(1)/etc/init.d
+	$(INSTALL_BIN) ./files/etc/init.d/gateway-evidence-ipc-guard $(1)/etc/init.d/gateway-evidence-ipc-guard
 	$(INSTALL_BIN) ./files/etc/init.d/gateway-evidence-writer $(1)/etc/init.d/gateway-evidence-writer
 	$(INSTALL_BIN) ./files/etc/init.d/gateway-evidence-uploader $(1)/etc/init.d/gateway-evidence-uploader
 endef

@@ -1,0 +1,515 @@
+{
+  "generated_at_utc": "2026-09-21T06:03:44.357278+00:00",
+  "canonical": "Markdown in deployment/technology-guides",
+  "browser": "chrome.exe",
+  "publications": [
+    {
+      "source": "00-README.md",
+      "source_sha256": "f9790017097c0589f74796c737021be65392788a9beffd93940637e150e225cc",
+      "included_runbooks": [],
+      "pdf": "00-README.pdf",
+      "pdf_sha256": "64c6d01f19bb14eba00431d8fa3b9ace22ecbca3344cad3c49fdef87516967c5",
+      "pages": 4,
+      "bytes": 158269
+    },
+    {
+      "source": "01-gateway-os-openwrt.md",
+      "source_sha256": "8cddf788e2a7ce56245a34a480f00dc13c36af21c02f42fce964c0dc787da7bf",
+      "included_runbooks": [
+        {
+          "source": "deployment\\gateway\\operations\\02-backup-and-recovery.md",
+          "sha256": "54eb080d50fa921a41076e41d68c8ce04c7f9bb9f4daa39e71c80fff853d0b52"
+        },
+        {
+          "source": "deployment\\gateway\\setup\\02-install-chirpstack-gateway-os.md",
+          "sha256": "55aa80087d334e4a000d368da06059fb64970224b851a68e6ee8b3d9a9bf60b3"
+        },
+        {
+          "source": "deployment\\gateway\\setup\\02a-build-sim7600-capable-gateway-os.md",
+          "sha256": "7ed4502c0504174777cc91f3591f5f1e3059ebca5d9b245033531eeef077bd42"
+        },
+        {
+          "source": "deployment\\gateway\\setup\\06-verify-gateway-os.md",
+          "sha256": "fd46205fd4f2bda7f9cbc7f6af7df58ed6f26a9edf0706649d0f1d3cd78f5f34"
+        },
+        {
+          "source": "deployment\\gateway\\operations\\05-troubleshooting.md",
+          "sha256": "dd7ea2224117d438270c7497005f77d042908e1eb73281fd9c23bd7420aebbb3"
+        }
+      ],
+      "pdf": "01-gateway-os-openwrt.pdf",
+      "pdf_sha256": "26e24c5e5e2d750274ab5716766551b8d9f6b550286f58710558e7d2d2b7efa9",
+      "pages": 55,
+      "bytes": 903386
+    },
+    {
+      "source": "02-rak5146-concentratord-as923.md",
+      "source_sha256": "5de107c74d373fd8d9baca78755a6bf3c735533ccfc485046f65492ed2552ef6",
+      "included_runbooks": [
+        {
+          "source": "deployment\\gateway\\setup\\01-hardware-assembly.md",
+          "sha256": "8dece7194ff99b665cdae629c944ceab5022d5a48fd1464ac39dca15ad31f5ef"
+        },
+        {
+          "source": "deployment\\gateway\\setup\\03-configure-concentratord.md",
+          "sha256": "4dd38f9e24fcd0f4f111d3be25e74112459acdd9b9ca62d4222c1af3f27e17fc"
+        },
+        {
+          "source": "deployment\\gateway\\setup\\05-configure-mqtt-forwarder.md",
+          "sha256": "576a2dd5bc077a70cb9fc07ae2981cf5d9637d8ab0d4033025d7cfa14159bcee"
+        },
+        {
+          "source": "deployment\\gateway\\setup\\06-verify-gateway-os.md",
+          "sha256": "fd46205fd4f2bda7f9cbc7f6af7df58ed6f26a9edf0706649d0f1d3cd78f5f34"
+        },
+        {
+          "source": "deployment\\gateway\\operations\\06-rf-planning-and-site-survey.md",
+          "sha256": "4964f208e6c29b007d08e962991ef1e00e0b2731c454cdc8e0ba94aaf5001330"
+        }
+      ],
+      "pdf": "02-rak5146-concentratord-as923.pdf",
+      "pdf_sha256": "654ce28ef218c130153bbdc0592fe8293c55355c633fce7fabe62fb636c08338",
+      "pages": 38,
+      "bytes": 650502
+    },
+    {
+      "source": "03-sim7600-lte-backhaul.md",
+      "source_sha256": "371492b809102bbe22e6713c3e9a29b9e7be40b0069186ab9fac5c0a8fad71d9",
+      "included_runbooks": [
+        {
+          "source": "deployment\\server\\cloud-production\\11-raspberry-pi-4g-backhaul.md",
+          "sha256": "950d4fc8e893ffbd1e768b178246a8ab93dfef92a1c58132248840c9276f34c0"
+        },
+        {
+          "source": "deployment\\gateway\\setup\\02a-build-sim7600-capable-gateway-os.md",
+          "sha256": "7ed4502c0504174777cc91f3591f5f1e3059ebca5d9b245033531eeef077bd42"
+        },
+        {
+          "source": "deployment\\gateway\\setup\\06-verify-gateway-os.md",
+          "sha256": "fd46205fd4f2bda7f9cbc7f6af7df58ed6f26a9edf0706649d0f1d3cd78f5f34"
+        },
+        {
+          "source": "deployment\\gateway\\operations\\03-availability-tests.md",
+          "sha256": "7852226c4d4ec97fb6d366cd68a80636ba0a4672db6e7ec636474721c48364f9"
+        }
+      ],
+      "pdf": "03-sim7600-lte-backhaul.pdf",
+      "pdf_sha256": "3b100dc8de751abd949c4622983f8e43eff73ca7d8653d0d434282dafa5e2b66",
+      "pages": 59,
+      "bytes": 1068581
+    },
+    {
+      "source": "04-mosquitto-mqtt.md",
+      "source_sha256": "ea18e491ad90573d1e4e649c0c13491f505ddc827b82bfc4ce4375769aa549e3",
+      "included_runbooks": [
+        {
+          "source": "deployment\\gateway\\setup\\04-configure-local-mqtt-buffer.md",
+          "sha256": "0aff6a03fb87411045a5940241a411ab5381c006d8402e452d2a08326f2d45f1"
+        },
+        {
+          "source": "deployment\\gateway\\setup\\05-configure-mqtt-forwarder.md",
+          "sha256": "576a2dd5bc077a70cb9fc07ae2981cf5d9637d8ab0d4033025d7cfa14159bcee"
+        },
+        {
+          "source": "deployment\\server\\cloud-production\\08-mqtt-and-valkey.md",
+          "sha256": "50e407beded4b1039733ee41716d190cb711f5c84d9038f7283147949ca7c817"
+        },
+        {
+          "source": "deployment\\server\\cloud-production\\14-observability-alerting-and-logging.md",
+          "sha256": "e2b8a2434f20ed0553aa84653da74421b706fb7b2898f296d79dcd99e007dce0"
+        },
+        {
+          "source": "deployment\\gateway\\operations\\05-troubleshooting.md",
+          "sha256": "dd7ea2224117d438270c7497005f77d042908e1eb73281fd9c23bd7420aebbb3"
+        }
+      ],
+      "pdf": "04-mosquitto-mqtt.pdf",
+      "pdf_sha256": "f3935109d4546926bd06abf68f09746f13ba80ed45185dd5189043bbb00e9eb3",
+      "pages": 82,
+      "bytes": 1094152
+    },
+    {
+      "source": "05-chirpstack.md",
+      "source_sha256": "a4213c9c448b3138091e0a4b26705b07286f5cf70d582226073e7dbc44dbd33c",
+      "included_runbooks": [
+        {
+          "source": "deployment\\server\\cloud-production\\09-chirpstack-cloud-cluster.md",
+          "sha256": "fc4a5379e686eaa7da6366ab2bbd3509a1834e24ae53bf714119aa387d1a0b4f"
+        },
+        {
+          "source": "deployment\\server\\cloud-production\\12-gateway-and-device-migration.md",
+          "sha256": "2f2cc3eeacd7995ae26301d564cd7ca742154f416973a1c7c2673653300e5aec"
+        },
+        {
+          "source": "deployment\\server\\cloud-production\\17-troubleshooting.md",
+          "sha256": "adbf0a49261adb115000e5ae4a7227409f383a241a4e14cc9a2f732306652d2a"
+        }
+      ],
+      "pdf": "05-chirpstack.pdf",
+      "pdf_sha256": "3427f6475f1d21897c019c00ca56647c74ef8fde7c1cd769890164fa5509ae6a",
+      "pages": 61,
+      "bytes": 1209058
+    },
+    {
+      "source": "06-etcd.md",
+      "source_sha256": "0ee144878445b06fefaf82c8e6c92be61f7613ca4f7c26b9b3f38c10bcbbfb90",
+      "included_runbooks": [
+        {
+          "source": "deployment\\server\\cloud-production\\13-backup-restore-and-disaster-recovery.md",
+          "sha256": "96cbbaa452b3c8e59e2b434b1c480239a89a65fc9a720665e452416b96dba435"
+        },
+        {
+          "source": "deployment\\server\\cloud-production\\05-etcd-cluster.md",
+          "sha256": "142567219ee6306dc13263ccdfea6f28e3ea26ef18f3cbb66b995e3e6b5a5ee8"
+        }
+      ],
+      "pdf": "06-etcd.pdf",
+      "pdf_sha256": "330f5269ce7d30c3f4f5e25ce796d48f8819dca0fdfa68cccd80b45555ac6631",
+      "pages": 26,
+      "bytes": 503762
+    },
+    {
+      "source": "07-postgresql-patroni-timescaledb.md",
+      "source_sha256": "aa7f210749221178b09a40844a8581cfee650c5076162db8af7b635a7b10c0a6",
+      "included_runbooks": [
+        {
+          "source": "deployment\\server\\cloud-production\\06-spilo-patroni-postgresql-cluster.md",
+          "sha256": "ff5e36a622a97c0ff97833cc9d576b6461516bbac20a9616c36d4114bc9c5965"
+        },
+        {
+          "source": "deployment\\server\\cloud-production\\07-haproxy-and-pgbouncer.md",
+          "sha256": "b7396e241a73474f8e566c68752343865dbc87c703cba1afaa895b44687e5c87"
+        },
+        {
+          "source": "deployment\\server\\cloud-production\\13-backup-restore-and-disaster-recovery.md",
+          "sha256": "96cbbaa452b3c8e59e2b434b1c480239a89a65fc9a720665e452416b96dba435"
+        },
+        {
+          "source": "deployment\\server\\integrations\\timescaledb\\00-README.md",
+          "sha256": "961908bedc5c38980257b11315d4f3d1930553051a6cc1db547d42c1f92e1654"
+        }
+      ],
+      "pdf": "07-postgresql-patroni-timescaledb.pdf",
+      "pdf_sha256": "687ae3eda131d2cd45fd3259564ddc2b6d92f4005fd5042237b16aff0b8d014a",
+      "pages": 77,
+      "bytes": 1639023
+    },
+    {
+      "source": "08-haproxy-pgbouncer.md",
+      "source_sha256": "5a5c6b81a602e468d589fb525e21c76f6d4cefaac8124edc86ff1e0ac6d7fcb6",
+      "included_runbooks": [
+        {
+          "source": "deployment\\server\\cloud-production\\07-haproxy-and-pgbouncer.md",
+          "sha256": "b7396e241a73474f8e566c68752343865dbc87c703cba1afaa895b44687e5c87"
+        }
+      ],
+      "pdf": "08-haproxy-pgbouncer.pdf",
+      "pdf_sha256": "704b6176726406841ec0c471eb7d0c08dba98deb2d3abf57e9b8d0d9a627116f",
+      "pages": 27,
+      "bytes": 520192
+    },
+    {
+      "source": "09-valkey-sentinel.md",
+      "source_sha256": "d0bc97f1998941e059520b82df360099da5e0cb624e56bd3830f080dedacec4e",
+      "included_runbooks": [
+        {
+          "source": "deployment\\server\\cloud-production\\08-mqtt-and-valkey.md",
+          "sha256": "50e407beded4b1039733ee41716d190cb711f5c84d9038f7283147949ca7c817"
+        },
+        {
+          "source": "deployment\\server\\cloud-production\\15-failover-chaos-and-acceptance-testing.md",
+          "sha256": "d3fb441556cff25e331fa9aad9114dda66677476b7b88d5b3a466ead27d41339"
+        }
+      ],
+      "pdf": "09-valkey-sentinel.pdf",
+      "pdf_sha256": "50e14e4e270ac7048d8f64bf623477a2d66441dadadfb5dd7c8e1e80f333f938",
+      "pages": 54,
+      "bytes": 741032
+    },
+    {
+      "source": "10-node-red.md",
+      "source_sha256": "61f305cb838553844cc3c86470e19935154b3cc17631bdabaffd6c0f740497b9",
+      "included_runbooks": [
+        {
+          "source": "deployment\\server\\integrations\\node-red\\00-README.md",
+          "sha256": "c1d8ae7c930cfb559fae9032daf82139e9960a73ab4ffa480855d8e2c4ab6d1e"
+        },
+        {
+          "source": "deployment\\server\\integrations\\node-red\\06-active-passive-ha.md",
+          "sha256": "51229d3cad04435d7674dafa36ab64ab835f6a6e8d2039332b6a7c9d26f79a6a"
+        },
+        {
+          "source": "deployment\\server\\cloud-production\\12a-node-red-timescale-telemetry.md",
+          "sha256": "44c66e57def9d47b56e018de506d68bf571284ae73d5ae80e8fcc2bd8637ef51"
+        }
+      ],
+      "pdf": "10-node-red.pdf",
+      "pdf_sha256": "4f87cfa0b4252dd81b7e413668c65100cc91b503fcefa4f159e1af3fd3fa29f2",
+      "pages": 38,
+      "bytes": 854361
+    },
+    {
+      "source": "11-grafana.md",
+      "source_sha256": "3595eff8489be98e7c112b6f38f5949945a70193dbc21fa191e58b6d33db7923",
+      "included_runbooks": [
+        {
+          "source": "deployment\\server\\integrations\\grafana\\00-README.md",
+          "sha256": "125495a4637d336a925e5cac98897b5331ad99d03124e8122fcc9e5a144051c3"
+        },
+        {
+          "source": "deployment\\server\\cloud-production\\14a-grafana-cloud-deployment.md",
+          "sha256": "ff56b365b54d3fc428ae0843bad8661fe430c929ad2065ce1ebfbeab198c84bf"
+        },
+        {
+          "source": "deployment\\server\\cloud-production\\14-observability-alerting-and-logging.md",
+          "sha256": "e2b8a2434f20ed0553aa84653da74421b706fb7b2898f296d79dcd99e007dce0"
+        }
+      ],
+      "pdf": "11-grafana.pdf",
+      "pdf_sha256": "ee14e0ee5123eb7793ef4c041f4f9b3a161668f0ad1701c6e94b678be64e4078",
+      "pages": 27,
+      "bytes": 469181
+    },
+    {
+      "source": "12-openbao.md",
+      "source_sha256": "d603514cd6a0eebc6bf99a0a7a6a3227757c8e566b166208404685907a2fc054",
+      "included_runbooks": [
+        {
+          "source": "deployment\\server\\cloud-production\\20a-openbao-three-node-ha-deployment.md",
+          "sha256": "53a047eeb60dcc767008e4daab16e83dc9a21d896ac5795487523e5870e63d40"
+        },
+        {
+          "source": "deployment\\server\\cloud-production\\20-openbao-and-fabric-adapter.md",
+          "sha256": "2abc7161d0ec50a43fcd02096a262575d605b9f2d91a1d4060c17580b5f8d0a1"
+        }
+      ],
+      "pdf": "12-openbao.pdf",
+      "pdf_sha256": "b55a01f93d9c5109a9ce3d7d7eea59e982c8a01f2865d30ad11593bd4d83a129",
+      "pages": 42,
+      "bytes": 795882
+    },
+    {
+      "source": "13-seaweedfs.md",
+      "source_sha256": "79b37a3ddd01a7577d1b7b861f1072acded798fac4c47ec2643280cc39f725f1",
+      "included_runbooks": [
+        {
+          "source": "evidence-services\\cloud\\deploy\\seaweedfs\\README.md",
+          "sha256": "af4d1479f2ac6bd0a41d6a2b7946e9ca0b8156337ebd45769ff792abe0ab937f"
+        },
+        {
+          "source": "evidence-services\\cloud\\deploy\\seaweedfs\\01-live-commissioning.md",
+          "sha256": "6ebefd39b5aad1bddabe3bf10ee4bc5526d44b28768ae1075c9fb45e6b04d1d3"
+        },
+        {
+          "source": "deployment\\server\\integrations\\gateway-integrity\\06-replicated-ha-deployment-journey.md",
+          "sha256": "8447f5cd49230d64d8e8c9be53d8e6a0dad23c3d8e1b8686c44be19969aa51ec"
+        }
+      ],
+      "pdf": "13-seaweedfs.pdf",
+      "pdf_sha256": "b54fba8afc16814081af7fb69b7f0ac2a1ba4d31b10778ef0a5513ebe8d74412",
+      "pages": 24,
+      "bytes": 354887
+    },
+    {
+      "source": "14-gateway-evidence-services.md",
+      "source_sha256": "fb7c4f6013fe16f181a7177f727be86adfebfa3cfd836550727eba5062a76052",
+      "included_runbooks": [
+        {
+          "source": "evidence-services\\README.md",
+          "sha256": "276ea661cc9669956886566b529ec8c884868d7a8d18bf02dd5eb4eca1a7c772"
+        },
+        {
+          "source": "evidence-services\\cloud\\deploy\\README.md",
+          "sha256": "dd5e7df80b666a7ab5683ac486c74dca43697d36bc0bdfcb2f4b0d2af66415b8"
+        },
+        {
+          "source": "deployment\\server\\integrations\\gateway-integrity\\04-service-architecture-and-runtime-contract.md",
+          "sha256": "d3dc1612508b99ae4efcd7bc9e4ab70c13b5f2383dbcd92d2c714d551f887629"
+        },
+        {
+          "source": "deployment\\server\\integrations\\gateway-integrity\\06-replicated-ha-deployment-journey.md",
+          "sha256": "8447f5cd49230d64d8e8c9be53d8e6a0dad23c3d8e1b8686c44be19969aa51ec"
+        }
+      ],
+      "pdf": "14-gateway-evidence-services.pdf",
+      "pdf_sha256": "a58026c1438753c65386d0fad0755876d5b1759fa91dfdc34959faf3826ce3bf",
+      "pages": 42,
+      "bytes": 638558
+    },
+    {
+      "source": "15-hyperledger-fabric-adapter.md",
+      "source_sha256": "5ec1cdb83c2adfb45f2777754d26e2eca6621439fcf3ee67084c90629104b58b",
+      "included_runbooks": [
+        {
+          "source": "deployment\\server\\integrations\\hyperledger-fabric\\02-fabric-network-handoff.md",
+          "sha256": "cbc14c82775f2f0f1eacb27e906e04df12638a17d9b9e98009d931ebdf349c8d"
+        },
+        {
+          "source": "deployment\\server\\cloud-production\\20-openbao-and-fabric-adapter.md",
+          "sha256": "2abc7161d0ec50a43fcd02096a262575d605b9f2d91a1d4060c17580b5f8d0a1"
+        },
+        {
+          "source": "evidence-services\\cloud\\deploy\\README.md",
+          "sha256": "dd5e7df80b666a7ab5683ac486c74dca43697d36bc0bdfcb2f4b0d2af66415b8"
+        },
+        {
+          "source": "evidence-services\\cloud\\packaging\\FABRIC-HA-FENCING.md",
+          "sha256": "108a07243dafb5112e90b695da37120afd0be708c3f88a53645c2fb300d8331e"
+        }
+      ],
+      "pdf": "15-hyperledger-fabric-adapter.pdf",
+      "pdf_sha256": "32dadf9653ad362dfa2f1d943be2077e104136bd52bfb6b736c60707da355c23",
+      "pages": 30,
+      "bytes": 514608
+    },
+    {
+      "source": "16-runtime-and-cloud-platform.md",
+      "source_sha256": "2b3c1ad9fb03b9d50b40e3a0970be40e2e119efaee77120567499d79bcbb2293",
+      "included_runbooks": [
+        {
+          "source": "deployment\\server\\cloud-production\\01-architecture-decisions-and-scope.md",
+          "sha256": "5b26475d1824f4d039a05400a0d5ebf4ffcb42585887048a6f6d184c20362d3c"
+        },
+        {
+          "source": "deployment\\server\\cloud-production\\02a-digitalocean-machine-layout-and-specs.md",
+          "sha256": "a2354577b1e74075c58fef086804ca47fb88a3acc12b23f1058a5a08d39a9884"
+        },
+        {
+          "source": "deployment\\server\\cloud-production\\03-digitalocean-vpc-droplets-and-firewalls.md",
+          "sha256": "f30f436b2df4048059aced0fb6909ee82021787aaa20fdab3a597daebea27b1f"
+        },
+        {
+          "source": "deployment\\server\\cloud-production\\04-host-hardening-dns-pki-and-secrets.md",
+          "sha256": "3cb2f77e3ec1ae71c8b50de06ce8de68caea11cd2577ce90af9eea399fe5e366"
+        }
+      ],
+      "pdf": "16-runtime-and-cloud-platform.pdf",
+      "pdf_sha256": "5cf23196a51a75ce2f589a00da17ca66e1a037e9e79ea91eec1aaa1d24c9418b",
+      "pages": 34,
+      "bytes": 487695
+    },
+    {
+      "source": "17-pki-tls-and-service-identity.md",
+      "source_sha256": "2f1a88d8c6cd8f6ef1b110b2495efe99fbf2ec2c8da9bfa3dfb65a70e254ec4b",
+      "included_runbooks": [
+        {
+          "source": "deployment\\server\\cloud-production\\04-host-hardening-dns-pki-and-secrets.md",
+          "sha256": "3cb2f77e3ec1ae71c8b50de06ce8de68caea11cd2577ce90af9eea399fe5e366"
+        },
+        {
+          "source": "deployment\\server\\cloud-production\\08-mqtt-and-valkey.md",
+          "sha256": "50e407beded4b1039733ee41716d190cb711f5c84d9038f7283147949ca7c817"
+        },
+        {
+          "source": "evidence-services\\cloud\\deploy\\README.md",
+          "sha256": "dd5e7df80b666a7ab5683ac486c74dca43697d36bc0bdfcb2f4b0d2af66415b8"
+        },
+        {
+          "source": "deployment\\server\\integrations\\hyperledger-fabric\\02-fabric-network-handoff.md",
+          "sha256": "cbc14c82775f2f0f1eacb27e906e04df12638a17d9b9e98009d931ebdf349c8d"
+        }
+      ],
+      "pdf": "17-pki-tls-and-service-identity.pdf",
+      "pdf_sha256": "987b76831e07ac47da8694f08d1dbac3319480767e2badbc99fc8534e9f1a11d",
+      "pages": 69,
+      "bytes": 999382
+    },
+    {
+      "source": "18-rak4631-wisblock-sensor-firmware.md",
+      "source_sha256": "4efde5828ef54130102f6ff71c1d0b1e4e21e7b217394f43c798031775bff6ec",
+      "included_runbooks": [
+        {
+          "source": "firmware\\EMU01_Agriculture_Node\\README.md",
+          "sha256": "49e9be2ae17e5038f0b0536368df58239802a792996219fa5ba742a618f38f51"
+        },
+        {
+          "source": "test\\preparation\\sensor\\01-configure-rak4631-emulators.md",
+          "sha256": "4d55ce953ed002afddba38f1dea6bdf8734b60e58353fcbb7d0754ac3c3758c8"
+        },
+        {
+          "source": "test\\preparation\\sensor\\assembly\\04a-first-time-arduino-operator-walkthrough.md",
+          "sha256": "dc841b906ed0d1d2dc2660af494b18f81cc9c07e8a33e9adc937d20262665492"
+        },
+        {
+          "source": "test\\execution\\00-README.md",
+          "sha256": "efe816955457a500af1c6e8974684a542f4118fb16b83173e7253fa8b31ae60a"
+        }
+      ],
+      "pdf": "18-rak4631-wisblock-sensor-firmware.pdf",
+      "pdf_sha256": "a14b4f7190093f2db4630cf00899144a7f95dbe47ae834ea38ff72506a90552b",
+      "pages": 76,
+      "bytes": 825605
+    },
+    {
+      "source": "19-research-recorder-and-test-automation.md",
+      "source_sha256": "3ea21db7504ad2691553f6a7157d043aa78674ed584d8d49c37ec62579057b77",
+      "included_runbooks": [
+        {
+          "source": "test\\automation\\research-recorder\\README.md",
+          "sha256": "f585a0a3605d4919fb907be9bd005bc39ec4c681c4500ee73da5e97ec3d41330"
+        },
+        {
+          "source": "test\\automation\\research-manual\\README.md",
+          "sha256": "cf92d1c8fb2d978d6bc0dd6bcf7d821f8c0fdcb7714ad2fe04795fad2d331cc2"
+        },
+        {
+          "source": "test\\automation\\research-manual\\CONTINUATION.md",
+          "sha256": "cfe7be235f7af3b4df97a230c62b98e20416175414ef92af92dade36432fe236"
+        },
+        {
+          "source": "test\\ZACARIAS-CHAPTER3-TEST-METRICS-SOURCE-OF-TRUTH.md",
+          "sha256": "f416260d12f523f8cf3650d6c184486d8434487aa856c6a8d7f0f32e77ca9d45"
+        }
+      ],
+      "pdf": "19-research-recorder-and-test-automation.pdf",
+      "pdf_sha256": "5ccdf0ed34c01892030a2e68adb80062c63c2dd75ee909eacb2e4f18acdd33a5",
+      "pages": 43,
+      "bytes": 794541
+    },
+    {
+      "source": "20-rui3-security-node.md",
+      "source_sha256": "cf322697534be84396eecdb6ec1cbc134464b8e33d9875b17ad0ba6b0d04d755",
+      "included_runbooks": [
+        {
+          "source": "test\\preparation\\sensor\\01-configure-rak4631-emulators.md",
+          "sha256": "4d55ce953ed002afddba38f1dea6bdf8734b60e58353fcbb7d0754ac3c3758c8"
+        },
+        {
+          "source": "test\\execution\\04-replay-spoofing.md",
+          "sha256": "8c2a0f710d46dc6427f019219fa68226673ef79c0d8bf6d2e3560334479d2305"
+        },
+        {
+          "source": "test\\automation\\research-recorder\\README.md",
+          "sha256": "f585a0a3605d4919fb907be9bd005bc39ec4c681c4500ee73da5e97ec3d41330"
+        }
+      ],
+      "pdf": "20-rui3-security-node.pdf",
+      "pdf_sha256": "2587a7376d55a9a26bf76ffe8e756e1f04206f44f897df9412e670b438aa07b0",
+      "pages": 40,
+      "bytes": 550909
+    },
+    {
+      "source": "21-end-to-end-integration-and-data-lineage.md",
+      "source_sha256": "847bc6f1797a4296e5f18f8987aec66f281d3e039641e213ed1316b902303116",
+      "included_runbooks": [
+        {
+          "source": "deployment\\server\\cloud-production\\00-current-server-continuation-checkpoint.md",
+          "sha256": "976d9a425fe5340185ea19d1a38a3c3ba6e24edfb870dfa452c4991865bfde58"
+        },
+        {
+          "source": "test\\automation\\research-recorder\\README.md",
+          "sha256": "f585a0a3605d4919fb907be9bd005bc39ec4c681c4500ee73da5e97ec3d41330"
+        },
+        {
+          "source": "test\\00-README.md",
+          "sha256": "b4e956c7d49d1fddb586242b04ecc9012656f4c811347de3130b7b0bd64c29ec"
+        }
+      ],
+      "pdf": "21-end-to-end-integration-and-data-lineage.pdf",
+      "pdf_sha256": "fefb113c9e14fdee6c63563d21b67c017007b03b4133a6a4d7c6b33c67fb2f65",
+      "pages": 24,
+      "bytes": 517032
+    }
+  ],
+  "errors": []
+}

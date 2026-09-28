@@ -1,0 +1,96 @@
+{
+  "generated_utc": "2026-09-21T08:11:07+00:00",
+  "method": "restricted SSH forced-command read-only; no admin SSH, no live mutation; values are sanitized",
+  "hosts": {
+    "ulc01": {
+      "restricted_ssh": true,
+      "wrapper_version": "research-recorder-server-v10",
+      "snapshot_status": "PASS",
+      "timestamp_utc": "2026-09-21T08:09:43Z",
+      "observed_hostname": "ulc-01",
+      "docker_container_names": [
+        "chirpstack",
+        "etcd",
+        "lorawan-gateway-evidence-collector-1",
+        "lorawan-gateway-evidence-fabric-adapter-1",
+        "lorawan-gateway-evidence-ingest-1",
+        "openbao",
+        "seaweedfs",
+        "seaweedfs-metadata-etcd",
+        "spilo"
+      ],
+      "docker_containers_reported": 9,
+      "db_role": "leader",
+      "evidence_ready_status": "PASS",
+      "evidence_ready_services": [
+        "collector-1"
+      ]
+    },
+    "ulc02": {
+      "restricted_ssh": true,
+      "wrapper_version": "research-recorder-server-v8",
+      "snapshot_status": "PASS",
+      "timestamp_utc": "2026-09-21T08:09:48Z",
+      "observed_hostname": "ulc-02",
+      "docker_container_names": [
+        "chirpstack",
+        "etcd",
+        "lorawan-gateway-evidence-fabric-adapter-1",
+        "lorawan-gateway-evidence-ingest-1",
+        "lorawan-gateway-evidence-verifier-1",
+        "openbao",
+        "seaweedfs",
+        "seaweedfs-metadata-etcd",
+        "spilo"
+      ],
+      "docker_containers_reported": 9,
+      "db_role": "replica",
+      "evidence_ready_status": "PASS",
+      "evidence_ready_services": [
+        "verifier-1"
+      ]
+    },
+    "ulc03": {
+      "restricted_ssh": true,
+      "wrapper_version": "research-recorder-server-v8",
+      "snapshot_status": "PASS",
+      "timestamp_utc": "2026-09-21T08:09:53Z",
+      "observed_hostname": "ulc-03",
+      "docker_container_names": [
+        "etcd",
+        "grafana",
+        "lorawan-gateway-evidence-collector-1",
+        "lorawan-gateway-evidence-verifier-1",
+        "node-red-node-red-1",
+        "openbao",
+        "seaweedfs",
+        "seaweedfs-metadata-etcd",
+        "spilo"
+      ],
+      "docker_containers_reported": 9,
+      "db_role": "replica",
+      "evidence_ready_status": "PASS",
+      "evidence_ready_services": [
+        "collector-2",
+        "verifier-2"
+      ]
+    },
+    "gateway": {
+      "restricted_ssh": true,
+      "wrapper_version": "research-recorder-gateway-v3",
+      "snapshot_status": "PASS",
+      "timestamp_utc": "2026-09-21T08:09:57Z",
+      "observed_hostname": "chirpstack-0abee3",
+      "cloud_tcp_probe": "NOT_REPORTED",
+      "established_cloud_bridge_sockets": 2,
+      "lte_route": true,
+      "lte_interface_present": true
+    }
+  },
+  "grafana": {
+    "local_tunnel_api_health_http": 200,
+    "database": "ok",
+    "version": "13.2.0",
+    "dashboard_uid_and_panel_count": "NOT_VERIFIED_WITH_AUTHENTICATED_API"
+  }
+}

@@ -1,0 +1,14 @@
+#!/bin/sh
+set -u
+
+EVENT_SOCKET="${GATEWAY_EVIDENCE_EVENT_SOCKET:-/tmp/concentratord_event}"
+
+while :; do
+	if [ -S "$EVENT_SOCKET" ]; then
+		# Keep the socket readable/writable only by root and the evidence group.
+		# This also repairs permissions after a Concentratord restart recreates it.
+		chgrp gateway-evidence "$EVENT_SOCKET" 2>/dev/null || true
+		chmod 0770 "$EVENT_SOCKET" 2>/dev/null || true
+	fi
+	sleep 1
+done

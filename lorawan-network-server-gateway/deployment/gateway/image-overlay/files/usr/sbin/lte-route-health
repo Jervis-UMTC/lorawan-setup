@@ -1,0 +1,336 @@
+#!/bin/sh
+BROKER_HOST="smartagri-mqtt.duckdns.org"
+BROKER_IP="129.212.208.168"
+BROKER_PORT="8883"
+LTE_DEV="wwan0"
+LTE_IFACE="lte"
+LTE_METRIC="10"
+QMI_DEV="/dev/cdc-wdm0"
+AT_DEV="/dev/ttyUSB2"
+PROBE_TABLE="100"
+PROBE_RULE_PRIORITY="100"
+PROBE_TIMEOUT="6"
+QMI_TIMEOUT="5"
+INTERVAL="30"
+FAILURES_BEFORE_RECOVERY="2"
+BOOT_GRACE_SECONDS="60"
+IF_RESTART_COOLDOWN_SECONDS="120"
+ESCALATE_AFTER_IF_RESTART_SECONDS="180"
+MODEM_RESET_COOLDOWN_SECONDS="900"
+IF_ACTION_TIMEOUT="20"
+MODEM_REENUMERATE_TIMEOUT="60"
+STATE_DIR="/tmp/lte-route-health"
+FAIL_FILE="$STATE_DIR/fail-count"
+LAST_IF_RESTART_FILE="$STATE_DIR/last-if-restart-uptime"
+LAST_MODEM_RESET_FILE="$STATE_DIR/last-modem-reset-uptime"
+MQTT_CA="/etc/mosquitto/certs/ca.crt"
+MQTT_CERT="/etc/mosquitto/certs/0016c001f139a1cb.crt"
+MQTT_KEY="/etc/mosquitto/certs/0016c001f139a1cb.key"
+DATAPLANE_HEALTH=0
+
+mkdir -p "$STATE_DIR"
+
+uptime_seconds() {
+  awk '{print int($1)}' /proc/uptime 2>/dev/null
+}
+
+read_state_num() {
+  FILE="$1"
+  [ -r "$FILE" ] || { echo 0; return; }
+  VALUE="$(cat "$FILE" 2>/dev/null)"
+  case "$VALUE" in
+    ''|*[!0-9]*) echo 0 ;;
+    *) echo "$VALUE" ;;
+  esac
+}
+
+write_state_num() {
+  printf '%s\n' "$2" >"$1"
+}
+
+bounded_command() {
+  LIMIT="$1"
+  shift
+  "$@" >/tmp/lte-route-health-command.out 2>/tmp/lte-route-health-command.err &
+  PID=$!
+  N=0
+  while kill -0 "$PID" 2>/dev/null && [ "$N" -lt "$LIMIT" ]; do
+    sleep 1
+    N=$((N + 1))
+  done
+  if kill -0 "$PID" 2>/dev/null; then
+    kill "$PID" 2>/dev/null || true
+    wait "$PID" 2>/dev/null || true
+    return 124
+  fi
+  wait "$PID"
+}
+
+qmi_current_settings() {
+  TMP="/tmp/lte-qmi-settings.$$"
+  rm -f "$TMP"
+  uqmi -d "$QMI_DEV" --get-current-settings >"$TMP" 2>/dev/null &
+  PID=$!
+  N=0
+  while kill -0 "$PID" 2>/dev/null && [ "$N" -lt "$QMI_TIMEOUT" ]; do
+    sleep 1
+    N=$((N + 1))
+  done
+  if kill -0 "$PID" 2>/dev/null; then
+    kill "$PID" 2>/dev/null || true
+    wait "$PID" 2>/dev/null || true
+    rm -f "$TMP"
+    return 1
+  fi
+  wait "$PID" 2>/dev/null || {
+    rm -f "$TMP"
+    return 1
+  }
+  cat "$TMP"
+  rm -f "$TMP"
+}
+
+lte_gateway() {
+  qmi_current_settings | jsonfilter -e '@.ipv4.gateway' 2>/dev/null | head -n1
+}
+
+lte_ip() {
+  ubus call network.interface."$LTE_IFACE" status 2>/dev/null | jsonfilter -e '@["ipv4-address"][0].address' 2>/dev/null | head -n1
+}
+
+lte_default_active() {
+  ip route show default dev "$LTE_DEV" 2>/dev/null | grep -q "metric $LTE_METRIC"
+}
+
+remove_lte_default() {
+  ip route del default dev "$LTE_DEV" metric "$LTE_METRIC" 2>/dev/null || true
+}
+
+prepare_probe_policy() {
+  GW="$1"
+  IP="$2"
+  while ip rule del priority "$PROBE_RULE_PRIORITY" 2>/dev/null; do :; done
+  ip route flush table "$PROBE_TABLE" 2>/dev/null || true
+  ip route replace table "$PROBE_TABLE" default via "$GW" dev "$LTE_DEV" src "$IP" || return 1
+  ip rule add priority "$PROBE_RULE_PRIORITY" from "$IP/32" lookup "$PROBE_TABLE" || return 1
+}
+
+probe_dataplane() {
+  IP="$1"
+  # Two independent public anycast addresses are used only as IP-layer liveness
+  # probes.  Passing either one is enough; broker reachability is checked
+  # separately and never causes a modem reset by itself.
+  ping -I "$IP" -c 1 -W 3 1.1.1.1 >/dev/null 2>&1 && return 0
+  ping -I "$IP" -c 1 -W 3 8.8.8.8 >/dev/null 2>&1 && return 0
+  return 1
+}
+
+probe_mqtt_tls() {
+  IP="$1"
+  openssl s_client \
+    -connect "$BROKER_IP:$BROKER_PORT" \
+    -bind "$IP:0" \
+    -servername "$BROKER_HOST" \
+    -verify_hostname "$BROKER_HOST" \
+    -verify_return_error \
+    -CAfile "$MQTT_CA" \
+    -cert "$MQTT_CERT" \
+    -key "$MQTT_KEY" \
+    -brief </dev/null >/dev/null 2>&1 &
+  PID=$!
+  N=0
+  while kill -0 "$PID" 2>/dev/null && [ "$N" -lt "$PROBE_TIMEOUT" ]; do
+    sleep 1
+    N=$((N + 1))
+  done
+  if kill -0 "$PID" 2>/dev/null; then
+    kill "$PID" 2>/dev/null || true
+    wait "$PID" 2>/dev/null || true
+    return 1
+  fi
+  wait "$PID" 2>/dev/null
+}
+
+reset_failure_state() {
+  write_state_num "$FAIL_FILE" 0
+}
+
+record_failure() {
+  N="$(read_state_num "$FAIL_FILE")"
+  N=$((N + 1))
+  write_state_num "$FAIL_FILE" "$N"
+  echo "$N"
+}
+
+interface_restart() {
+  NOW="$(uptime_seconds)"
+  logger -t lte-route-health "dataplane recovery stage 1: restarting network.$LTE_IFACE"
+  bounded_command "$IF_ACTION_TIMEOUT" ifdown "$LTE_IFACE" || true
+  sleep 3
+  bounded_command "$IF_ACTION_TIMEOUT" ifup "$LTE_IFACE"
+  RC=$?
+  if [ "$RC" -ne 0 ]; then
+    pkill -f "uqmi.*$QMI_DEV" 2>/dev/null || true
+    logger -t lte-route-health "network.$LTE_IFACE ifup did not complete cleanly rc=$RC; escalation remains available"
+  fi
+  write_state_num "$LAST_IF_RESTART_FILE" "$NOW"
+  reset_failure_state
+}
+
+wait_for_modem_reenumeration() {
+  # AT+CFUN=1,1 resets the modem firmware and the USB functions disappear, then
+  # enumerate again.  Do not mistake the old device nodes for successful reset.
+  N=0
+  SEEN_GONE=0
+  while [ "$N" -lt 20 ]; do
+    if [ ! -c "$QMI_DEV" ] || [ ! -c "$AT_DEV" ]; then
+      SEEN_GONE=1
+      break
+    fi
+    sleep 1
+    N=$((N + 1))
+  done
+  if [ "$SEEN_GONE" -ne 1 ]; then
+    logger -t lte-route-health "SIM7600 reset command sent but USB disappearance was not observed within 20s; continuing bounded re-enumeration wait"
+  fi
+
+  N=0
+  while [ "$N" -lt "$MODEM_REENUMERATE_TIMEOUT" ]; do
+    if [ -c "$QMI_DEV" ] && [ -c "$AT_DEV" ]; then
+      sleep 3
+      [ -c "$QMI_DEV" ] && [ -c "$AT_DEV" ] && return 0
+    fi
+    sleep 1
+    N=$((N + 1))
+  done
+  return 1
+}
+
+modem_firmware_reset() {
+  NOW="$(uptime_seconds)"
+  logger -t lte-route-health "dataplane recovery stage 2: resetting SIM7600 firmware with AT+CFUN=1,1"
+  bounded_command "$IF_ACTION_TIMEOUT" ifdown "$LTE_IFACE" || true
+  pkill -f "uqmi.*$QMI_DEV" 2>/dev/null || true
+  sleep 2
+  if [ ! -c "$AT_DEV" ]; then
+    logger -t lte-route-health "SIM7600 AT control device $AT_DEV unavailable; firmware reset skipped"
+    write_state_num "$LAST_MODEM_RESET_FILE" "$NOW"
+    reset_failure_state
+    return 1
+  fi
+  if ! printf 'AT+CFUN=1,1\r' >"$AT_DEV"; then
+    logger -t lte-route-health "failed to write SIM7600 firmware-reset command to $AT_DEV"
+    write_state_num "$LAST_MODEM_RESET_FILE" "$NOW"
+    reset_failure_state
+    return 1
+  fi
+  if ! wait_for_modem_reenumeration; then
+    logger -t lte-route-health "SIM7600 did not re-enumerate within ${MODEM_REENUMERATE_TIMEOUT}s"
+    write_state_num "$LAST_MODEM_RESET_FILE" "$NOW"
+    reset_failure_state
+    return 1
+  fi
+  sleep 5
+  bounded_command "$IF_ACTION_TIMEOUT" ifup "$LTE_IFACE"
+  RC=$?
+  if [ "$RC" -ne 0 ]; then
+    pkill -f "uqmi.*$QMI_DEV" 2>/dev/null || true
+    logger -t lte-route-health "network.$LTE_IFACE ifup after SIM7600 reset did not complete cleanly rc=$RC; daemon will retry"
+  fi
+  write_state_num "$LAST_MODEM_RESET_FILE" "$NOW"
+  write_state_num "$LAST_IF_RESTART_FILE" "$NOW"
+  reset_failure_state
+}
+
+maybe_recover_dataplane() {
+  FAILS="$(record_failure)"
+  NOW="$(uptime_seconds)"
+  [ -n "$NOW" ] || NOW=0
+
+  if [ "$NOW" -lt "$BOOT_GRACE_SECONDS" ]; then
+    logger -t lte-route-health "LTE dataplane unavailable during boot grace (${NOW}s uptime); failure $FAILS/$FAILURES_BEFORE_RECOVERY"
+    return
+  fi
+  if [ "$FAILS" -lt "$FAILURES_BEFORE_RECOVERY" ]; then
+    logger -t lte-route-health "LTE dataplane unavailable; failure $FAILS/$FAILURES_BEFORE_RECOVERY before recovery"
+    return
+  fi
+
+  LAST_IF="$(read_state_num "$LAST_IF_RESTART_FILE")"
+  LAST_RESET="$(read_state_num "$LAST_MODEM_RESET_FILE")"
+  IF_AGE=$((NOW - LAST_IF))
+  RESET_AGE=$((NOW - LAST_RESET))
+
+  if [ "$LAST_IF" -gt 0 ] && [ "$IF_AGE" -le "$ESCALATE_AFTER_IF_RESTART_SECONDS" ]; then
+    if [ "$LAST_RESET" -eq 0 ] || [ "$RESET_AGE" -ge "$MODEM_RESET_COOLDOWN_SECONDS" ]; then
+      modem_firmware_reset || true
+      return
+    fi
+    logger -t lte-route-health "LTE dataplane still down after interface restart; SIM7600 reset cooldown active (${RESET_AGE}s/${MODEM_RESET_COOLDOWN_SECONDS}s)"
+    return
+  fi
+
+  if [ "$LAST_IF" -eq 0 ] || [ "$IF_AGE" -ge "$IF_RESTART_COOLDOWN_SECONDS" ]; then
+    interface_restart
+    return
+  fi
+  logger -t lte-route-health "LTE dataplane recovery cooldown active (${IF_AGE}s/${IF_RESTART_COOLDOWN_SECONDS}s)"
+}
+
+check_once() {
+  DATAPLANE_HEALTH=0
+  GW="$(lte_gateway)"
+  IP="$(lte_ip)"
+  if [ -z "$GW" ] || [ -z "$IP" ]; then
+    if lte_default_active; then
+      logger -t lte-route-health "LTE address/gateway unavailable; removing stale LTE default"
+    fi
+    remove_lte_default
+    return 2
+  fi
+
+  # Direct-QMI mode intentionally has network.lte.defaultroute=0.  This daemon
+  # owns the field LTE default route; Ethernet remains management-only.
+  if ! ip route replace default via "$GW" dev "$LTE_DEV" src "$IP" metric "$LTE_METRIC"; then
+    logger -t lte-route-health "failed to install LTE default via $GW dev $LTE_DEV src $IP"
+    return 2
+  fi
+
+  if ! prepare_probe_policy "$GW" "$IP"; then
+    logger -t lte-route-health "LTE default active but probe policy setup failed; retaining LTE for recovery"
+    return 2
+  fi
+
+  if ! probe_dataplane "$IP"; then
+    logger -t lte-route-health "LTE QMI session has $IP via $GW but public IP dataplane probe failed"
+    return 2
+  fi
+
+  DATAPLANE_HEALTH=1
+  reset_failure_state
+
+  if probe_mqtt_tls "$IP"; then
+    logger -t lte-route-health "LTE dataplane PASS and production MQTT mTLS PASS via $LTE_DEV $IP; LTE primary metric $LTE_METRIC"
+    return 0
+  fi
+
+  # Broker/TLS availability is an application-path signal, not a modem-health
+  # signal.  Never reset the SIM7600 merely because the production broker is
+  # unavailable while general LTE IP connectivity is healthy.
+  logger -t lte-route-health "LTE dataplane PASS but production MQTT mTLS FAIL via $LTE_DEV $IP; retaining LTE without modem recovery"
+  return 1
+}
+
+if [ "${1:-}" = "daemon" ]; then
+  while true; do
+    DATAPLANE_HEALTH=0
+    check_once
+    RC=$?
+    if [ "$DATAPLANE_HEALTH" -ne 1 ]; then
+      maybe_recover_dataplane
+    fi
+    sleep "$INTERVAL"
+  done
+else
+  check_once
+fi
