@@ -1,0 +1,15 @@
+﻿# Environment and sensitive credential overrides
+.env
+.env.*
+!.env.example
+
+# Local process logs, inspection status, and scratch test files
+*.log
+*.status
+*.err
+pdc-*
+runas-child-test.txt
+x.clientHeight*
+
+# Scratch CSV query dumps
+.*.csv
