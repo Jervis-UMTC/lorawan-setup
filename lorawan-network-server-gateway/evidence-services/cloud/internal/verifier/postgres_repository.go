@@ -36,11 +36,17 @@ func (r *PostgresRepository) Discover(ctx context.Context, limit int) (int64, er
 INSERT INTO gateway_evidence.event_verification (source_event_key, observed_at)
 SELECT source_event_key, observed_at
 FROM (
-    SELECT source_event_key, observed_at, min(outbox_id) AS first_outbox_id
-    FROM telemetry.fabric_outbox
-    WHERE schema_version = 'telemetry-attestation-v2'
-    GROUP BY source_event_key, observed_at
-    ORDER BY min(outbox_id)
+    SELECT o.source_event_key, o.observed_at, min(o.outbox_id) AS first_outbox_id
+    FROM telemetry.fabric_outbox AS o
+    WHERE o.schema_version = 'telemetry-attestation-v2'
+      AND NOT EXISTS (
+          SELECT 1
+          FROM gateway_evidence.event_verification AS v
+          WHERE v.source_event_key = o.source_event_key
+            AND v.observed_at = o.observed_at
+      )
+    GROUP BY o.source_event_key, o.observed_at
+    ORDER BY min(o.outbox_id)
     LIMIT $1
 ) AS source
 ON CONFLICT (source_event_key, observed_at) DO NOTHING`, limit)
@@ -338,7 +344,7 @@ func checkpointEvidenceDigest(item CheckpointEvidence) string {
 		strconv.FormatInt(item.LastSequence, 10),
 		item.LastRecordHash,
 		item.SegmentHash,
-		item.GatewayCreatedAt.UTC().Format(time.RFC3339Nano),
+		item.GatewayCreatedAt.UTC().Format("2006-01-02T15:04:05.000Z"),
 	}
 	digest := sha256.Sum256([]byte(strings.Join(parts, "\x00")))
 	return hex.EncodeToString(digest[:])

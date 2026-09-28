@@ -62,7 +62,7 @@ A real base deployment must supply:
 6. dedicated read-only MQTT collector broker identities;
 7. free private/loopback host ports confirmed on the live server.
 
-Enabling either Fabric adapter additionally requires the final HRC Task 37 handoff. The adapter contract is `CreateSourceBoundAnchor(SourceRecordID, sourceType, producer, producedAt, schemaVersion)` with the exact accepted payload supplied only as transient `hrc.exact_payload`, followed by `QuerySourceBoundAnchor(SourceRecordID)` and `VerifySourceBoundDigest(SourceRecordID, observedDigest)`. The agreed LoRaWAN source identity is `FABRIC_AUTHENTICATED_SOURCE_SYSTEM_ID=lorawan-gateway-evidence`; it is bound by the Fabric team into separate non-admin ULC-01 and ULC-02 Adapter certificates. Still external are the restricted TCP/7051 Gateway endpoint reachable from both ULC hosts, its TLS server name/root CA confirmation, and the two dedicated certificate/private-key pairs. The old `10.43.25.198:7051` K3s ClusterIP and the legacy `CreateAnchor`, `QueryAnchor`, `QueryAnchorByRecordID`, and `VerifyDigest` APIs must not be used. The OpenBao AppRole identities are already commissioned.
+Fabric activation uses the commissioned HRC Task 37 handoff. The adapter contract is `CreateSourceBoundAnchor(SourceRecordID, sourceType, producer, producedAt, schemaVersion)` with the exact immutable `finalized_payload` bytes supplied only as transient `hrc.exact_payload`, followed by `QuerySourceBoundAnchor(SourceRecordID)` and `VerifySourceBoundDigest(SourceRecordID, observedDigest)`. The frozen LoRaWAN source identity is `FABRIC_AUTHENTICATED_SOURCE_SYSTEM_ID=lorawan-gateway-evidence`; the private Gateway is `10.104.0.7:7051` with TLS name `peer1.hrc.local`, and ULC-01 has the commissioned dedicated non-admin adapter identity. ULC-02 remains a protected write-disabled standby until its HA fencing/ownership gate is accepted. The old `10.43.25.198:7051` K3s ClusterIP and legacy `CreateAnchor`, `QueryAnchor`, `QueryAnchorByRecordID`, and `VerifyDigest` APIs must not be used.
 
 The repository does not guess image digests, secrets, or unused evidence-service host ports. The raw-store endpoint itself is now frozen to `https://evidence-objects.internal.lorawan.com:18443`; each evidence container resolves that name to its local host VPC IP, while SeaweedFS's raw S3 listener remains loopback-only.
 
@@ -78,7 +78,7 @@ Use these directories on every server:
   ingest.env          # only on ingest hosts
   collector.env       # only on collector hosts
   verifier.env        # only on verifier hosts
-  fabric-adapter.env  # ulc-01/02 only, and only after external Fabric handoff
+  fabric-adapter.env  # ulc-01 active writer / ulc-02 protected disabled standby
 
 /etc/lorawan-pki/gateway-evidence/
   postgres-ca.crt
@@ -273,7 +273,7 @@ EVIDENCE_VERIFIER_IMAGE=ghcr.io/jervis-umtc/lorawan/gateway-evidence-verifier@sh
 EVIDENCE_ADAPTER_IMAGE=ghcr.io/jervis-umtc/lorawan/gateway-fabric-adapter@sha256:cd4308e8985d74ea7fab957a2a4adadd1831b776a8f9af2fdd6291179df83e7a
 ```
 
-All three authoritative `preflight.sh` runs passed. Live placement is `ulc-01=ingest-1+collector-1+adapter-1-disabled`, `ulc-02=ingest-2+verifier-1+adapter-2-disabled`, `ulc-03=collector-2+verifier-2`. Every runtime uses numeric `65532:65532`, read-only rootfs, `cap_drop: ALL`, `no-new-privileges`, `pids_limit: 128`, `192 MiB`, `0.20 CPU`, bounded logs, and `restart: unless-stopped`.
+All three authoritative base `preflight.sh` runs passed. Current placement is `ulc-01=ingest-1+collector-1+adapter-1-enabled`, `ulc-02=ingest-2+verifier-1+adapter-2-disabled`, `ulc-03=collector-2+verifier-2`. The base Compose remains deliberately fail-closed; ULC-01 reaches the enabled state only through the governed activation overlay and preflight. Every runtime uses numeric `65532:65532`, read-only rootfs, `cap_drop: ALL`, `no-new-privileges`, `pids_limit: 128`, `192 MiB`, `0.20 CPU`, bounded logs, and `restart: unless-stopped`.
 
 SeaweedFS S9, Evidence PKI, four distinct read-only collector mTLS identities/ACLs, the dual-broker collector readiness gate, replicated ingest/verifier readiness, and the private/shared-443 normal path are PASS. ULC-01 Adapter-1 is the governed continuous Fabric writer with `FABRIC_ADAPTER_ENABLED=true`; ULC-02 Adapter-2 remains healthy `FABRIC_ADAPTER_ENABLED=false` standby until the HA fencing gate passes.
 

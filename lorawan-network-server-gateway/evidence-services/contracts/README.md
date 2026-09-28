@@ -15,12 +15,13 @@ Frozen/current source contracts:
 - `evidence-ingest-receipt-v1`: stable accepted identity/hash + original server-time acknowledgement bytes, exact retry behavior, independent receipt vectors, and the no-retirement safety boundary are frozen in `evidence-ingest-receipt-v1/README.md`; Go emits the receipt and Rust independently validates it.
 - `verifier-runtime-v1`: v2 outbox discovery, `SKIP LOCKED` lease semantics, exact ChirpStack first-reception provenance, raw MQTT reopen/redecode, `concentratord-uplink-correlation-v1` matching, exact closed-journal parsing, full predecessor-object chain verification, checkpoint-digest recomputation, lineage persistence, stable reason codes, build-time decoder digest requirement, and the lease-fenced verifier-owned `verified` transition are frozen in `verifier-runtime-v1/README.md` and implemented by Go `internal/verifier`.
 
-Still intentionally unresolved rather than guessed:
+Current commissioned/open boundary:
 
-- one real captured Concentratord 4.7.1 `gw.Event` plus the corresponding MQTT Forwarder 4.6.0 `event/up` witness to prove the frozen synthetic correlation contract against physical runtime bytes;
-- the Gateway OS/OpenWrt target build/package/service installation for the implemented Rust writer/uploader, including target-native `concentratord-zmq` and physical filesystem/IPC behavior. `evidence-ingest-receipt-v1` is frozen and deletion/retirement remains intentionally absent;
-- one live verifier-owned `status='verified'` row. The cloud replicas and authority path are commissioned, but a real verified row still waits for one complete physical-gateway journal/MQTT/application lineage;
+- the physical Gateway-01 journal/MQTT/application correlation and verifier-owned `verified` lineage have been commissioned; preserve the frozen contracts rather than reopening the synthetic-design phase;
+- the Gateway OS/OpenWrt writer/uploader package, target-native interface, and physical filesystem/IPC behavior are commissioned. `evidence-ingest-receipt-v1` remains frozen and deletion/retirement remains intentionally absent;
+- real verifier-owned `status='verified'` lineage is commissioned; current research rows must still satisfy the same verifier gate before Fabric eligibility;
 - the public ChirpStack/Evidence/MQTT normal path is commissioned; the remaining provider-owned item is Reserved-IP reassignment/failover authority and controlled acceptance;
-- one real external Fabric handoff/transaction. The immutable disabled adapter standbys and v1/v2 RFC 8785 canonicalization vectors are already commissioned/frozen.
+- the HRC Task 37 handoff, real qualification transaction, and ULC-01 continuous writer are commissioned. ULC-02 remains write-disabled until its ownership/fencing failover gate is accepted;
+- current research outbox rows must have immutable `finalized_payload` and, for v2, verifier-owned `verified` state before the Fabric worker can claim them; this is an application eligibility boundary, not an unresolved Fabric contract.
 
 A version identifier must never be retained if its byte-level or security contract changes.

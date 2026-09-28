@@ -109,12 +109,16 @@ func (r *fakeRepository) RenewLease(_ context.Context, _ int64, _ string, leaseG
 	}
 	return nil
 }
+func (r *fakeRepository) RecoverTimedOutWork(_ context.Context, _ int64, _ string, leaseGeneration int64, _ time.Duration, _ string) error {
+	r.lastLeaseGeneration = leaseGeneration
+	return nil
+}
 func (r *fakeRepository) MarkConfirmed(_ context.Context, _ int64, _ string, leaseGeneration int64, txID string) error {
 	r.lastLeaseGeneration = leaseGeneration
 	r.confirmedTxID = txID
 	return nil
 }
-func (r *fakeRepository) MarkSubmittedUnknown(_ context.Context, _ int64, _ string, leaseGeneration int64, txID string, _ time.Duration, _ string) error {
+func (r *fakeRepository) MarkReconciling(_ context.Context, _ int64, _ string, leaseGeneration int64, txID string, _ time.Duration, _ string) error {
 	r.lastLeaseGeneration = leaseGeneration
 	r.unknownTxID = txID
 	return nil
@@ -124,7 +128,7 @@ func (r *fakeRepository) MarkFailed(_ context.Context, _ int64, _ string, leaseG
 	r.failedCategory = category
 	return nil
 }
-func (r *fakeRepository) MarkDeadLetter(_ context.Context, _ int64, _ string, leaseGeneration int64, category, _ string) error {
+func (r *fakeRepository) MarkNeedsAttention(_ context.Context, _ int64, _ string, leaseGeneration int64, category, _ string) error {
 	r.lastLeaseGeneration = leaseGeneration
 	r.deadCategory = category
 	return nil
@@ -275,7 +279,7 @@ func TestWorkerPersistsDurableTransactionBeforeSubmitAndKeepsUnknown(t *testing.
 	repo := &fakeRepository{work: fixtureWorkV2(), source: fixtureSource(), verification: fixtureVerification()}
 	ledger := &fakeLedger{
 		prepare:   FabricPreparedSubmission{TransactionID: "tx-crash-window", PreparedTransaction: []byte("prepared"), CommitStatusRequest: []byte("status"), CreateOutcome: "CREATE", RecordID: "hrc-crash-window"},
-		submit:    FabricSubmitResult{TransactionID: "tx-crash-window", Unknown: true},
+		submit:    FabricSubmitResult{TransactionID: "tx-crash-window", Unresolved: true},
 		submitErr: errors.New("connection lost after orderer submit"),
 	}
 	persistedBeforeSubmit := false
@@ -413,9 +417,9 @@ func TestTXIDDurabilityFaultInjectionProcessKillAndRestart(t *testing.T) {
 	}
 	ledger := &fakeLedger{
 		query:           FabricQueryResult{Found: false},
-		commitStatus:    FabricSubmitResult{TransactionID: state.TransactionID, Unknown: true},
+		commitStatus:    FabricSubmitResult{TransactionID: state.TransactionID, Unresolved: true},
 		commitStatusErr: errors.New("injected commit-status uncertainty after restart"),
-		submit:          FabricSubmitResult{TransactionID: state.TransactionID, Unknown: true},
+		submit:          FabricSubmitResult{TransactionID: state.TransactionID, Unresolved: true},
 		submitErr:       errors.New("injected same-tx resubmit uncertainty"),
 	}
 	worker := fixtureWorker(t, repo, &fakeSigner{}, ledger)
@@ -491,6 +495,45 @@ func TestWorkerSubmittedUnknownReconcilesWithoutResubmit(t *testing.T) {
 	}
 }
 
+func TestWorkerReconciliationCannotStarveFreshSubmission(t *testing.T) {
+	seal := fixtureSeal(`{"frozen":true}`)
+	txID := "tx-old-unresolved"
+	recordID := "hrc-old-unresolved"
+	repo := &fakeRepository{
+		reconciliation: &OutboxWork{OutboxID: 10, EventKey: "uplink:old", SourceEventKey: "old", ObservedAt: time.Date(2026, 8, 31, 1, 2, 3, 0, time.UTC), EventType: EventTypeUplink, SchemaVersion: SchemaVersionV1, Attempts: 2, FinalizedPayload: fixtureExactPayload(), FabricTxID: &txID, FabricRecordID: &recordID},
+		work:           fixtureWorkV2(),
+		seal:           seal,
+		source:         fixtureSource(),
+		verification:   fixtureVerification(),
+	}
+	digest := fixtureExactDigest()
+	ledger := &fakeLedger{
+		query:  FabricQueryResult{Found: true, RecordID: recordID, AuthenticatedSourceSystemID: "lorawan-test", SourceRecordID: "old", DigestAlgorithm: "sha256", Digest: digest, PayloadLength: len(fixtureExactPayload()), SourceType: EventTypeUplink, Producer: "0000000000000001", ProducedAt: "2026-08-31T01:02:03Z", SchemaVersion: SchemaVersionV1},
+		verify: FabricVerifyResult{Outcome: "MATCH", RecordID: recordID, ExpectedDigest: digest, ObservedDigest: digest},
+	}
+	worker := fixtureWorker(t, repo, &fakeSigner{}, ledger)
+
+	processed, err := worker.RunOnce(context.Background())
+	if err != nil || !processed {
+		t.Fatalf("reconciliation RunOnce processed=%v err=%v", processed, err)
+	}
+	if repo.work == nil || repo.confirmedTxID != txID {
+		t.Fatalf("first iteration did not preserve fresh work while reconciling: work=%v confirmed=%q", repo.work != nil, repo.confirmedTxID)
+	}
+
+	ledger.autoQuery = true
+	ledger.query = FabricQueryResult{}
+	ledger.verify = FabricVerifyResult{}
+	ledger.submit = FabricSubmitResult{TransactionID: "tx-default", Committed: true}
+	processed, err = worker.RunOnce(context.Background())
+	if err != nil || !processed {
+		t.Fatalf("submission RunOnce processed=%v err=%v", processed, err)
+	}
+	if repo.work != nil || repo.persistPreparedCalls != 1 || repo.confirmedTxID != "tx-default" {
+		t.Fatalf("fresh work was starved: work=%v persistPrepared=%d confirmed=%q", repo.work != nil, repo.persistPreparedCalls, repo.confirmedTxID)
+	}
+}
+
 func TestWorkerUnknownReconcileUsesPersistedCommitStatusWithoutResubmit(t *testing.T) {
 	seal := fixtureSeal(`{"frozen":true}`)
 	txID := "tx-status"
@@ -517,7 +560,7 @@ func TestWorkerUnknownReconcileUsesPersistedCommitStatusWithoutResubmit(t *testi
 	ledger.lastAnchor = FabricAnchor{AuthenticatedSourceSystemID: "lorawan-test", SourceRecordID: "status", Digest: digest, PayloadLength: len(fixtureExactPayload()), SourceType: EventTypeUplink, Producer: "0000000000000001", ProducedAt: "2026-08-31T01:02:03Z", SchemaVersion: SchemaVersionV1}
 	ledger.prepare.RecordID = recordID
 	// This test focuses on the no-resubmit/status path. A query that stays unavailable
-	// after VALID correctly remains unknown, so count status and assert no submit.
+	// after VALID correctly remains unresolved, so count status and assert no submit.
 	processed, err := worker.RunOnce(context.Background())
 	calls = ledger.queryCalls
 	if err != nil || !processed {
@@ -545,9 +588,9 @@ func TestWorkerUnknownReconcileResubmitsOnlySamePreparedTransaction(t *testing.T
 	}
 	ledger := &fakeLedger{
 		queryErr:        errors.New("anchor not yet visible"),
-		commitStatus:    FabricSubmitResult{TransactionID: txID, Unknown: true},
+		commitStatus:    FabricSubmitResult{TransactionID: txID, Unresolved: true},
 		commitStatusErr: errors.New("commit status timed out"),
-		submit:          FabricSubmitResult{TransactionID: txID, Unknown: true},
+		submit:          FabricSubmitResult{TransactionID: txID, Unresolved: true},
 		submitErr:       errors.New("same transaction resubmit still uncertain"),
 	}
 	worker := fixtureWorker(t, repo, &fakeSigner{}, ledger)
@@ -733,7 +776,7 @@ func TestHRCResponseValidation(t *testing.T) {
 func fixtureWorker(t *testing.T, repo Repository, signer EvidenceSigner, ledger LedgerClient) *Worker {
 	t.Helper()
 	worker, err := NewWorker(repo, signer, ledger, Config{
-		WorkerID: "fabric-test", FabricSourceSystemID: "lorawan-test", ProcessingLease: 90 * time.Second,
+		WorkerID: "fabric-test", FabricSourceSystemID: "lorawan-test", ProcessingLease: 90 * time.Second, OperationTimeout: 2 * time.Minute,
 		MaxAttempts: 5, RetryBase: time.Second, RetryMax: 30 * time.Second, RetryJitter: 0,
 	})
 	if err != nil {

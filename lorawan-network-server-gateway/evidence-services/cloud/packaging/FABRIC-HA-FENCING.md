@@ -1,6 +1,6 @@
 # Fabric Adapter HA Fencing Commissioning
 
-Status date: 2026-09-09
+Status date: 2026-09-18
 
 This note records the generation-fencing repair and the exact deployment boundary for commissioning the second Fabric adapter worker. It is intentionally separate from older Task 37 qualification/build evidence.
 
@@ -87,6 +87,34 @@ filename: gateway-fabric-adapter-ha-91873499220db54a.tar
 sha256:   0e863742cf6bfd8701ce9c5f370d5ec14f47470a637730ebdd82c8a1f3209007
 size:     12231168
 ```
+
+## Live preflight — 2026-09-18
+
+Fresh read-only checks through the restricted research-recorder boundary established the current production posture without changing either adapter:
+
+```text
+ULC-01 wrapper              research-recorder-server-v7
+ULC-01 database role         leader
+ULC-01 Fabric adapter        HTTP ready 200 / enabled=true / status=ready
+ULC-01 startup worker_id     fabric-adapter-ulc-01
+ULC-01 canonical self-test   pass
+ULC-01 live image reference  gateway-fabric-adapter:fairness-20260915
+
+ULC-02 wrapper              research-recorder-server-v7
+ULC-02 database role         replica
+ULC-02 Fabric adapter        HTTP ready 200 / enabled=false / status=standby
+ULC-02 canonical self-test   pass
+ULC-02 live image reference  9e08e25fe5dd
+
+telemetry.fabric_outbox      2094 total / 2094 confirmed
+gateway evidence             2094 verifications / 2094 verified
+```
+
+The historical unclaimed/pending backlog is therefore **not current** at this checkpoint. The normal ULC-01 writer path is draining eligible work successfully.
+
+The HA takeover test was deliberately **not** started. Runtime image parity is not proven: ULC-01 is on the newer `fairness-20260915` production image while ULC-02 reports a different image reference/ID. The tracked fairness build artifact records image ID `sha256:1641377ae3ed13fbfcbbba663117b4df1cf31bf76087bdc8334390533b1277a9`; ULC-02's live `9e08e25fe5dd` does not establish parity with it. A disabled standby self-test proves canonicalization/startup behavior, not generation-aware external-side-effect fencing.
+
+**Current hard stop:** keep ULC-02 `FABRIC_ADAPTER_ENABLED=false`. Before step 6 below, load and verify the same accepted current adapter build on ULC-02 while it remains disabled, prove the expected distinct `FABRIC_ADAPTER_WORKER_ID`, re-verify migration `003_fabric_adapter_ha_fencing.sql` on the live database, and then execute the controlled failover gate. Never use outbox `1960` for that test.
 
 ## Production commissioning order
 

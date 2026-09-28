@@ -144,7 +144,7 @@ func TestCheckpointExactOldRetryAfterNewerRemainsIdempotent(t *testing.T) {
 }
 
 func TestSegmentCreateRetryAndConflict(t *testing.T) {
-	h, _ := newTestHandler(t)
+	h, repo := newTestHandler(t)
 	object := []byte("closed-segment-fixture")
 	digest := sha256.Sum256(object)
 	body := map[string]any{
@@ -168,6 +168,11 @@ func TestSegmentCreateRetryAndConflict(t *testing.T) {
 	firstReceipt := decodeReceipt(t, first)
 	if !firstReceipt.Created || firstReceipt.ArtifactType != "segment" || firstReceipt.GatewayID != testGatewayID || firstReceipt.SegmentID != 53 || firstReceipt.LastSequence != 53000 || firstReceipt.SegmentHash != hex64("3") || firstReceipt.ObjectSHA256 != hex.EncodeToString(digest[:]) || firstReceipt.ReceiptID == "" || firstReceipt.ServerReceivedAt == "" {
 		t.Fatalf("first segment receipt = %+v", firstReceipt)
+	}
+	expectedRef := "segments/" + testGatewayID + "/53-" + hex64("3") + ".segment"
+	accepted := repo.segments[testGatewayID+"/53"].Record
+	if accepted.ObjectRef != expectedRef {
+		t.Fatalf("segment immutable object ref = %q, want %q", accepted.ObjectRef, expectedRef)
 	}
 	second := requestJSON(t, h, http.MethodPut, "/v1/gateways/"+testGatewayID+"/segments/53", body)
 	if second.Code != http.StatusOK {
@@ -355,9 +360,29 @@ func TestCheckpointDigestIgnoresJSONFormatting(t *testing.T) {
 	if a.CheckpointDigest != b.CheckpointDigest {
 		t.Fatalf("semantic checkpoint digest changed: %s != %s", a.CheckpointDigest, b.CheckpointDigest)
 	}
-	const expected = "fde615a8eb264090d324fe5642e0992748de9cc4f2d73cbd8f43459e12792903"
+	const expected = "abbc19ec4fb939048f33b211a318526be711106e60fee88a3dae2f82b2d266ac"
 	if a.CheckpointDigest != expected {
 		t.Fatalf("checkpoint digest = %s, want fixed vector %s", a.CheckpointDigest, expected)
+	}
+}
+
+func TestCheckpointDigestPreservesFixedMillisecondZeros(t *testing.T) {
+	request := CheckpointRequest{
+		CheckpointVersion: CheckpointVersion,
+		GatewayID:         testGatewayID,
+		SegmentID:         2,
+		LastSequence:      42,
+		LastRecordHash:    "df04228d3c8695564281f1b64c6072a30dce5027b02123e4dac090eeff858403",
+		SegmentHash:       "f8ac36ebb397eda3033f4465d04a16c264273ffa9ca2b8ff6157ba7edc8496f2",
+		CreatedAt:         "2026-09-02T03:19:16.450Z",
+	}
+	actual, err := validateCheckpoint(request, testGatewayID, "physical-segment-2")
+	if err != nil {
+		t.Fatal(err)
+	}
+	const expected = "86046df140df61b467f3b60331d3d1b4b1767fb30e57609ae060e9ce4746ad1b"
+	if actual.CheckpointDigest != expected {
+		t.Fatalf("checkpoint digest=%s want=%s", actual.CheckpointDigest, expected)
 	}
 }
 

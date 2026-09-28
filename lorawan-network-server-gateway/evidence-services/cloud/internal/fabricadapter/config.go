@@ -21,6 +21,7 @@ type Config struct {
 	DatabaseMaxConns     int32
 	WorkerID             string
 	ProcessingLease      time.Duration
+	OperationTimeout     time.Duration
 	PollInterval         time.Duration
 	MaxAttempts          int
 	RetryBase            time.Duration
@@ -56,6 +57,7 @@ func LoadConfig() (Config, error) {
 		DatabaseExpectedName: envDefault("FABRIC_ADAPTER_DATABASE_EXPECTED_NAME", "lorawan_telemetry"),
 		DatabaseMaxConns:     4,
 		ProcessingLease:      90 * time.Second,
+		OperationTimeout:     4 * time.Minute,
 		PollInterval:         2 * time.Second,
 		MaxAttempts:          10,
 		RetryBase:            5 * time.Second,
@@ -95,6 +97,9 @@ func LoadConfig() (Config, error) {
 		return Config{}, err
 	}
 	if cfg.ProcessingLease, err = envDuration("FABRIC_ADAPTER_PROCESSING_LEASE_SECONDS", cfg.ProcessingLease, 10, 3600); err != nil {
+		return Config{}, err
+	}
+	if cfg.OperationTimeout, err = envDuration("FABRIC_ADAPTER_OPERATION_TIMEOUT_SECONDS", cfg.OperationTimeout, 30, 3600); err != nil {
 		return Config{}, err
 	}
 	if cfg.PollInterval, err = envDuration("FABRIC_ADAPTER_POLL_SECONDS", cfg.PollInterval, 1, 60); err != nil {

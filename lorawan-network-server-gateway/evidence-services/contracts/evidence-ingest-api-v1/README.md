@@ -106,7 +106,7 @@ The ingest service:
 1. validates identity/path/basic metadata;
 2. base64-decodes the exact object bytes;
 3. recomputes and requires `object_sha256` equality;
-4. writes raw bytes create-if-absent at stable logical ref `segments/<gateway_id>/<segment_id>.segment`;
+4. writes raw bytes create-if-absent at stable content-bound logical ref `segments/<gateway_id>/<segment_id>-<segment_hash>.segment`; the segment hash prevents a deliberate fresh GENESIS lineage from colliding with immutable objects retained from an earlier research epoch that reused the same lineage-local segment number;
 5. only after raw-store acceptance attempts metadata acceptance;
 6. returns success only after both raw storage and metadata acceptance succeed.
 

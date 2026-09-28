@@ -27,7 +27,7 @@ const maxFabricExactPayloadBytes = 1_048_576
 type FabricSubmitResult struct {
 	TransactionID string
 	Committed     bool
-	Unknown       bool
+	Unresolved    bool
 }
 
 type LedgerClient interface {
@@ -276,13 +276,13 @@ func (c *GatewayClient) SubmitPrepared(ctx context.Context, prepared FabricPrepa
 	}
 	transaction, err := c.gateway.NewTransaction(prepared.PreparedTransaction)
 	if err != nil {
-		return FabricSubmitResult{TransactionID: txID, Unknown: true}, fmt.Errorf("restore prepared Fabric transaction: %w", err)
+		return FabricSubmitResult{TransactionID: txID, Unresolved: true}, fmt.Errorf("restore prepared Fabric transaction: %w", err)
 	}
 	if transaction.TransactionID() != txID {
-		return FabricSubmitResult{TransactionID: txID, Unknown: true}, errors.New("persisted Fabric prepared transaction ID does not match durable transaction ID")
+		return FabricSubmitResult{TransactionID: txID, Unresolved: true}, errors.New("persisted Fabric prepared transaction ID does not match durable transaction ID")
 	}
 	if _, err := transaction.SubmitWithContext(ctx); err != nil {
-		return FabricSubmitResult{TransactionID: txID, Unknown: true}, err
+		return FabricSubmitResult{TransactionID: txID, Unresolved: true}, err
 	}
 	return c.CommitStatus(ctx, txID, prepared.CommitStatusRequest)
 }
@@ -293,21 +293,21 @@ func (c *GatewayClient) CommitStatus(ctx context.Context, transactionID string, 
 	txID := strings.TrimSpace(transactionID)
 	result := FabricSubmitResult{TransactionID: txID}
 	if txID == "" || len(requestBytes) == 0 {
-		result.Unknown = true
+		result.Unresolved = true
 		return result, errors.New("durable Fabric commit-status material is incomplete")
 	}
 	commit, err := c.gateway.NewCommit(requestBytes)
 	if err != nil {
-		result.Unknown = true
+		result.Unresolved = true
 		return result, fmt.Errorf("restore Fabric commit-status request: %w", err)
 	}
 	if commit.TransactionID() != txID {
-		result.Unknown = true
+		result.Unresolved = true
 		return result, errors.New("persisted Fabric commit-status transaction ID does not match durable transaction ID")
 	}
 	commitStatus, err := commit.StatusWithContext(ctx)
 	if err != nil {
-		result.Unknown = true
+		result.Unresolved = true
 		return result, err
 	}
 	if !commitStatus.Successful || int32(commitStatus.Code) != 0 {

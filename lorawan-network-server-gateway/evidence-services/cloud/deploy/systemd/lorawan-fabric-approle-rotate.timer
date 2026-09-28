@@ -1,0 +1,13 @@
+[Unit]
+Description=Schedule LoRaWAN Fabric adapter AppRole SecretID rotation
+
+[Timer]
+OnBootSec=10min
+OnUnitActiveSec=12h
+RandomizedDelaySec=15min
+AccuracySec=1min
+Persistent=true
+Unit=lorawan-fabric-approle-rotate.service
+
+[Install]
+WantedBy=timers.target

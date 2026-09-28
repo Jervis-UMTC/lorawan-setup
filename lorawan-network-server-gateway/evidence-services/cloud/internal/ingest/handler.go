@@ -263,7 +263,11 @@ func validateSegment(req SegmentRequest, pathGatewayID string, pathSegmentID int
 		return SegmentRecord{}, nil, fmt.Errorf("object SHA-256 mismatch")
 	}
 
-	ref := fmt.Sprintf("segments/%s/%d.segment", gatewayID, req.SegmentID)
+	// Segment IDs are local to one journal lineage and can legitimately restart
+	// at 1 for a fresh GENESIS research epoch while immutable evidence objects from
+	// older epochs remain retained. Include the cryptographic segment identity in
+	// the object ref so fresh lineages cannot collide with preserved evidence.
+	ref := fmt.Sprintf("segments/%s/%d-%s.segment", gatewayID, req.SegmentID, segmentHash)
 	return SegmentRecord{
 		GatewayID: gatewayID, SegmentID: req.SegmentID, FirstSequence: req.FirstSequence,
 		LastSequence: req.LastSequence, RecordCount: req.RecordCount,
@@ -309,8 +313,12 @@ func receiptID(artifactType, gatewayID string, segmentID, lastSequence int64, pr
 	return hex.EncodeToString(digest[:])
 }
 
-func formatReceiptTime(value time.Time) string {
+func formatContractMillis(value time.Time) string {
 	return value.UTC().Format("2006-01-02T15:04:05.000Z")
+}
+
+func formatReceiptTime(value time.Time) string {
+	return formatContractMillis(value)
 }
 
 func checkpointDigest(gatewayID string, segmentID, lastSequence int64, lastRecordHash, segmentHash string, createdAt time.Time) string {
@@ -321,7 +329,7 @@ func checkpointDigest(gatewayID string, segmentID, lastSequence int64, lastRecor
 		strconv.FormatInt(lastSequence, 10),
 		lastRecordHash,
 		segmentHash,
-		createdAt.UTC().Format(time.RFC3339Nano),
+		formatContractMillis(createdAt),
 	}
 	digest := sha256.Sum256([]byte(strings.Join(parts, "\x00")))
 	return hex.EncodeToString(digest[:])

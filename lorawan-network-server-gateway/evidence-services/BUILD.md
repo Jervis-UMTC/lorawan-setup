@@ -10,7 +10,7 @@ The cloud evidence services are commissioned. For current work, inspect the Gate
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\evidence-services\gateway\scripts\dev-build.ps1
 ```
 
-The current Rust source implements the writer/uploader runtime and passes 28 tests plus format/Clippy/locked build, but this workstation command does not create or validate the final OpenWrt `concentratord-zmq` binary/package. The target build/package and physical lineage are the current gateway gates.
+The Rust source implements the writer/uploader runtime and its source gate remains the reproducible developer check. The target OpenWrt evidence package/runtime has now also been installed and exercised on Gateway-01: the unprivileged writer connects through the package-owned IPC permission guard, segments/checkpoints upload successfully, and real assembled EMU-01 lineage verifies in the cloud. Rebuild only after a relevant source/package change.
 
 ## One command
 

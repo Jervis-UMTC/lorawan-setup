@@ -29,10 +29,11 @@ type Repository interface {
 	LoadSeal(context.Context, int64) (Seal, error)
 	PersistPreparedSubmission(context.Context, int64, string, int64, string, string, []byte, []byte) error
 	RenewLease(context.Context, int64, string, int64, time.Duration) error
+	RecoverTimedOutWork(context.Context, int64, string, int64, time.Duration, string) error
 	MarkConfirmed(context.Context, int64, string, int64, string) error
-	MarkSubmittedUnknown(context.Context, int64, string, int64, string, time.Duration, string) error
+	MarkReconciling(context.Context, int64, string, int64, string, time.Duration, string) error
 	MarkFailed(context.Context, int64, string, int64, time.Duration, string, string) error
-	MarkDeadLetter(context.Context, int64, string, int64, string, string) error
+	MarkNeedsAttention(context.Context, int64, string, int64, string, string) error
 }
 
 type PostgresRepository struct {
@@ -81,7 +82,7 @@ AND (
 	if reconciliation {
 		predicate = `
 (
-  (o.status = 'submitted_unknown' AND o.next_attempt_at <= now())
+  (o.status = 'reconciling' AND o.next_attempt_at <= now())
   OR (o.status = 'processing' AND o.lease_expires_at <= now() AND o.fabric_tx_id IS NOT NULL)
 )
 AND o.finalized_payload IS NOT NULL`
@@ -306,6 +307,33 @@ WHERE outbox_id = $1
 	return nil
 }
 
+func (r *PostgresRepository) RecoverTimedOutWork(ctx context.Context, outboxID int64, workerID string, leaseGeneration int64, retryAfter time.Duration, detail string) error {
+	seconds := int64(retryAfter / time.Second)
+	if seconds < 0 || seconds > 86400 {
+		return errors.New("Fabric adapter retry delay must not exceed 24 hours")
+	}
+	tag, err := r.pool.Exec(ctx, `
+UPDATE telemetry.fabric_outbox
+SET status = CASE WHEN fabric_tx_id IS NULL THEN 'failed' ELSE 'reconciling' END,
+    next_attempt_at = now() + make_interval(secs => $4::double precision),
+    last_error_category = CASE WHEN fabric_tx_id IS NULL THEN 'adapter_operation_timeout' ELSE 'fabric_reconciliation_timeout' END,
+    last_error = $5,
+    worker_id = NULL, processing_started_at = NULL, lease_expires_at = NULL,
+    updated_at = now()
+WHERE outbox_id = $1
+  AND status = 'processing'
+  AND worker_id = $2
+  AND lease_generation = $3
+  AND lease_expires_at > now()`, outboxID, workerID, leaseGeneration, seconds, detail)
+	if err != nil {
+		return fmt.Errorf("recover timed-out Fabric adapter work: %w", err)
+	}
+	if tag.RowsAffected() != 1 {
+		return ErrLeaseLost
+	}
+	return nil
+}
+
 func (r *PostgresRepository) MarkConfirmed(ctx context.Context, outboxID int64, workerID string, leaseGeneration int64, txID string) error {
 	return r.finish(ctx, outboxID, workerID, leaseGeneration, `
 status = 'confirmed', fabric_tx_id = $3,
@@ -313,12 +341,12 @@ submitted_at = COALESCE(submitted_at, now()), committed_at = now(),
 last_error_category = NULL, last_error = NULL`, txID, 0, "", "")
 }
 
-func (r *PostgresRepository) MarkSubmittedUnknown(ctx context.Context, outboxID int64, workerID string, leaseGeneration int64, txID string, retryAfter time.Duration, detail string) error {
+func (r *PostgresRepository) MarkReconciling(ctx context.Context, outboxID int64, workerID string, leaseGeneration int64, txID string, retryAfter time.Duration, detail string) error {
 	return r.finish(ctx, outboxID, workerID, leaseGeneration, `
-status = 'submitted_unknown', fabric_tx_id = $3,
+status = 'reconciling', fabric_tx_id = $3,
 submitted_at = COALESCE(submitted_at, now()), committed_at = NULL,
 next_attempt_at = now() + make_interval(secs => $4::double precision),
-last_error_category = 'fabric_submission_unknown', last_error = $5`, txID, retryAfter, detail, "")
+last_error_category = 'fabric_commit_unresolved', last_error = $5`, txID, retryAfter, detail, "")
 }
 
 func (r *PostgresRepository) MarkFailed(ctx context.Context, outboxID int64, workerID string, leaseGeneration int64, retryAfter time.Duration, category, detail string) error {
@@ -328,9 +356,9 @@ next_attempt_at = now() + make_interval(secs => $4::double precision),
 last_error_category = $6, last_error = $5`, "", retryAfter, detail, category)
 }
 
-func (r *PostgresRepository) MarkDeadLetter(ctx context.Context, outboxID int64, workerID string, leaseGeneration int64, category, detail string) error {
+func (r *PostgresRepository) MarkNeedsAttention(ctx context.Context, outboxID int64, workerID string, leaseGeneration int64, category, detail string) error {
 	return r.finish(ctx, outboxID, workerID, leaseGeneration, `
-status = 'dead_letter', next_attempt_at = now(),
+status = 'needs_attention', next_attempt_at = now(),
 last_error_category = $6, last_error = $5`, "", 0, detail, category)
 }
 

@@ -1,0 +1,29 @@
+[Unit]
+Description=Rotate LoRaWAN Fabric adapter OpenBao AppRole SecretID
+Documentation=file:/opt/lorawan-cloud/gateway-evidence-deploy/README.md
+After=network-online.target
+Wants=network-online.target
+ConditionPathExists=/root/lorawan-openbao-bootstrap/init.json
+ConditionPathExists=/etc/lorawan-cloud/gateway-evidence/openbao-approle/role_id
+ConditionPathExists=/etc/lorawan-cloud/gateway-evidence/openbao-approle/secret_id
+
+[Service]
+Type=oneshot
+User=root
+Group=root
+ExecStart=/usr/local/sbin/lorawan-fabric-approle-rotate
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/etc/lorawan-cloud/gateway-evidence/openbao-approle /run/lock
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectKernelLogs=true
+ProtectControlGroups=true
+LockPersonality=true
+RestrictSUIDSGID=true
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+SystemCallArchitectures=native

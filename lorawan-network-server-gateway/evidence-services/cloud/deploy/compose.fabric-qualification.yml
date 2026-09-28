@@ -1,0 +1,38 @@
+services:
+  fabric-qualification:
+    profiles: ["fabric-qualification"]
+    image: "${FABRIC_QUALIFICATION_IMAGE:?set exact reviewed Task 37 qualification image reference}"
+    user: "65532:65532"
+    read_only: true
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 128
+    mem_limit: 192m
+    cpus: "0.20"
+    restart: "no"
+    stop_grace_period: 15s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks: [evidence]
+    env_file:
+      - "${FABRIC_ADAPTER_ENV_FILE:?set protected Fabric adapter env file}"
+    environment:
+      FABRIC_ADAPTER_ENABLED: "false"
+      FABRIC_ADAPTER_WORKER_ID: "task37-qualification-ulc01-1960"
+      FABRIC_ADAPTER_LISTEN_ADDR: "127.0.0.1:8080"
+      FABRIC_ADAPTER_LOG_LEVEL: "info"
+    extra_hosts:
+      - "pgbouncer.internal.lorawan.com:${EVIDENCE_PGBOUNCER_HOST_IP:?set local PgBouncer host IP}"
+      - "openbao-kms.internal.lorawan.com:${EVIDENCE_PRIVATE_BIND_IP:?set private host IP}"
+    volumes:
+      - "${EVIDENCE_POSTGRES_CA_HOST_PATH:?set PostgreSQL CA host path}:/run/evidence/postgres/ca.crt:ro"
+      - "${OPENBAO_CA_HOST_PATH:?set OpenBao CA host path}:/run/openbao/ca.crt:ro"
+      - "${OPENBAO_APPROLE_ROLE_ID_HOST_PATH:?set OpenBao AppRole RoleID host path}:/run/openbao-approle/role_id:ro"
+      - "${OPENBAO_APPROLE_SECRET_ID_HOST_PATH:?set OpenBao AppRole SecretID host path}:/run/openbao-approle/secret_id:ro"
+      - "${FABRIC_TLS_ROOT_CERT_HOST_PATH:?set Fabric TLS root certificate host path}:/run/fabric/tls/ca.crt:ro"
+      - "${FABRIC_CERT_HOST_PATH:?set Fabric client certificate host path}:/run/fabric/identity/client.crt:ro"
+      - "${FABRIC_KEY_HOST_PATH:?set Fabric client private key host path}:/run/fabric/identity/client.key:ro"
