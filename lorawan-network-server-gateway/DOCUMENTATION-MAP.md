@@ -1,5 +1,11 @@
 # Documentation Map
 
+## Technology-by-technology architecture guides
+
+For a concise explanation of each technology in the currently commissioned system, start with [`deployment/technology-guides/00-README.md`](deployment/technology-guides/00-README.md). It separates the edge OS/radio, LTE, MQTT, ChirpStack, etcd, PostgreSQL/Patroni/TimescaleDB, HAProxy/PgBouncer, Valkey/Sentinel, Node-RED, Grafana, OpenBao, SeaweedFS, gateway-evidence services, Hyperledger Fabric adapter, cloud/container runtime, and PKI/TLS service identity into individual guides while linking back to the detailed operational runbooks.
+
+For any new documentation work, also read [`deployment/technology-guides/CURRENT-DOCUMENTATION-BASELINE.md`](deployment/technology-guides/CURRENT-DOCUMENTATION-BASELINE.md) first so historical commissioning states are not reintroduced as current instructions.
+
 Use this page only to choose a path. The normal workflow is either `test/` or `deployment/`; do not mix their setup instructions.
 
 ---
@@ -14,26 +20,28 @@ The current testing track is split into **preparation** and **counted execution*
 
 ```text
 test/
-├── 00-README.md
-├── preparation/
-│   ├── 00-README.md
-│   ├── gateway/      # Raspberry Pi 4B + RAK5146; hardware -> AS923 -> secure MQTT transport
-│   ├── server/       # Ubuntu Server VM + minimum seven-service test stack
-│   ├── sensor/       # EMU-01 legitimate physical sensor + SEC-02 security fixture
-│   │   ├── assembly/ # physical Agriculture Kit bring-up and code reference
-│   │   └── preflight/# final uncounted sensor -> ChirpStack -> DB/Fabric GO/NO-GO
-│   └── tools/        # separate test laptop, generators, captures, resource logging
-└── execution/
-    ├── 00-README.md
-    ├── 01-common-run-preparation.md
-    ├── 02-normal-operation.md
-    ├── 03-authentication-access-control.md
-    ├── 04-replay-spoofing.md
-    ├── 05-data-integrity.md
-    ├── 06-traceability.md
-    ├── 07-dos-flooding.md
-    ├── 08-resilience-recovery.md
-    └── 09-results-and-completion.md
+â”œâ”€â”€ 00-README.md
+â”œâ”€â”€ automation/
+â”‚   â””â”€â”€ research-recorder/ # supervised preflight, capture, sealing, recovery, and summaries
+â”œâ”€â”€ preparation/
+â”‚   â”œâ”€â”€ 00-README.md
+â”‚   â”œâ”€â”€ gateway/      # Raspberry Pi 4B + RAK5146; hardware -> AS923 -> secure MQTT transport
+â”‚   â”œâ”€â”€ server/       # Ubuntu Server VM + minimum seven-service test stack
+â”‚   â”œâ”€â”€ sensor/       # EMU-01 legitimate physical sensor + SEC-02 security fixture
+â”‚   â”‚   â”œâ”€â”€ assembly/ # physical Agriculture Kit bring-up and code reference
+â”‚   â”‚   â””â”€â”€ preflight/# final uncounted sensor -> ChirpStack -> DB/Fabric GO/NO-GO
+â”‚   â””â”€â”€ tools/        # separate test laptop, generators, captures, resource logging
+â””â”€â”€ execution/
+    â”œâ”€â”€ 00-README.md
+    â”œâ”€â”€ 01-common-run-preparation.md
+    â”œâ”€â”€ 02-normal-operation.md
+    â”œâ”€â”€ 03-authentication-access-control.md
+    â”œâ”€â”€ 04-replay-spoofing.md
+    â”œâ”€â”€ 05-data-integrity.md
+    â”œâ”€â”€ 06-traceability.md
+    â”œâ”€â”€ 07-dos-flooding.md
+    â”œâ”€â”€ 08-resilience-recovery.md
+    â””â”€â”€ 09-results-and-completion.md
 ```
 
 The frozen dissertation test-lab radio identity is **plain AS923** with MQTT region prefix **`as923`**. Do not change only one radio layer to AS923-3. Any future regional migration must be validated end to end across sensor firmware, RAK5146/Concentratord, MQTT topic prefix, ChirpStack region, and device profiles.
@@ -64,33 +72,51 @@ PgBouncer evidence SCRAM expansion                                    THREE-NODE
 Cloud evidence replicas / Evidence PKI / shared :443                  PASS
 Public ChirpStack/Evidence/MQTT normal path                            PASS
 Reserved-IP reassignment/failover authority                           EXTERNAL AUTH PENDING
-Gateway writer/uploader + flash-ready AS923/SIM7600/journal image     BUILD/PACKAGE PASS; physical lineage pending
-Phase 11/12 + real EMU-01/gateway lineage                             HARDWARE ACCEPTANCE PENDING
-Fabric adapter ledger activation                                      EXTERNAL HANDOFF DEPENDENT
-Phase 14B / Phase 15                                                   BLOCKED until required gates close
+Gateway-01 + RAK5146 + SIM7600 LTE + journal lineage                  PHYSICAL/LIVE PASS
+EMU-01 AS923 OTAA + application path through TimescaleDB               LIVE PASS
+Automated research recorder + hardware-aware preflight                 PASS
+Scoped LoRaWAN Chapter 4 gate                                          LORAWAN_TRACK_STATUS=GO
+Fabric / HRC Task 37 qualification                                     PASS
+Fabric adapter ULC-01 production writes                               PASS; enabled and verified
+Fabric adapter ULC-02                                                  WRITE-DISABLED; HA fencing/ownership gate remains
+Research experiment gates                                              FOLLOW CURRENT test/ GO/NO-GO FILES
 ```
 
-For the next physical session, start with [TOMORROW-SENSOR-GATEWAY-BRINGUP.md](TOMORROW-SENSOR-GATEWAY-BRINGUP.md), then use the concise [current state board](deployment/server/cloud-production/00-current-server-continuation-checkpoint.md) when broader server context is needed. The cloud/public normal paths and flash-ready Gateway OS package are commissioned; the remaining normal-path work is real gateway + EMU-01 hardware acceptance. Use `00-build-execution-log.md` only for historical detail.
+For current research work, start with [test/00-README.md](test/00-README.md), use the [automated research recorder](test/automation/research-recorder/README.md), then follow the selected [counted execution manual](test/execution/00-README.md). Use the concise [current state board](deployment/server/cloud-production/00-current-server-continuation-checkpoint.md) for broader cloud/server context. Real Gateway-01, LTE, EMU-01, and evidence-lineage acceptance are complete. [docs/archive/2026-09-02-sensor-gateway-bringup-handoff.md](docs/archive/2026-09-02-sensor-gateway-bringup-handoff.md) is retained only as the historical 2026-09-02 bring-up handoff, and `00-build-execution-log.md` remains detailed historical evidence.
 
 [19-cloud-ha-grafana-deployment-day-runbook.md](deployment/server/cloud-production/19-cloud-ha-grafana-deployment-day-runbook.md) remains the full target-sequence reference; it is not evidence that later technologies are already commissioned.
 
 ```text
 deployment/
-├── gateway/         # full Gateway OS setup, operations, and hardware references
-│   ├── setup/       # delivery path + integrity journal when implementation exists
-│   ├── operations/  # registration, backup/recovery, outage tests, migration, troubleshooting, RF, security
-│   └── references/  # vendor/hardware references
-└── server/
-    ├── ha-cluster/  # reusable HA deployment manuals
-    ├── data-layer/  # TimescaleDB, Node-RED, Grafana
-    ├── fabric-attestation/ # Fabric handoff, OpenBao Transit, outbox/adapter, reconciliation
-    ├── cloud-production/   # current three-Droplet HA build and live evidence log
-    └── integrations/       # reusable technology and gateway-evidence contracts; gateway-integrity/04 is canonical topology, /07 is the implementation + HA placement blueprint
+â”œâ”€â”€ gateway/         # full Gateway OS setup, operations, and hardware references
+â”‚   â”œâ”€â”€ setup/       # delivery path + integrity journal when implementation exists
+â”‚   â”œâ”€â”€ operations/  # registration, backup/recovery, outage tests, migration, troubleshooting, RF, security
+â”‚   â””â”€â”€ references/  # vendor/hardware references
+â””â”€â”€ server/
+    â”œâ”€â”€ ha-cluster/  # reusable HA deployment manuals
+    â”œâ”€â”€ data-layer/  # TimescaleDB, Node-RED, Grafana
+    â”œâ”€â”€ fabric-attestation/ # Fabric handoff, OpenBao Transit, outbox/adapter, reconciliation
+    â”œâ”€â”€ cloud-production/   # current three-Droplet HA build and live evidence log
+    â””â”€â”€ integrations/       # reusable technology and gateway-evidence contracts; gateway-integrity/04 is canonical topology, /07 is the implementation + HA placement blueprint
 ```
 
 ---
 
-## 3. Presentations
+## 3. Implementation, Evidence, Firmware, and History
+
+These are supporting roots rather than alternate deployment tracks:
+
+- [evidence-services/README.md](evidence-services/README.md) â€” gateway/cloud evidence-service implementation boundary and current commissioned state.
+- [evidence-services/BUILD.md](evidence-services/BUILD.md) â€” reproducible Go/Rust build and cache/toolchain rules.
+- [firmware/EMU01_Agriculture_Node/README.md](firmware/EMU01_Agriculture_Node/README.md) â€” tracked EMU-01 firmware source/profile contract.
+- [chapter4-results/README.md](chapter4-results/README.md) â€” retained research-evidence layout and immutability rules.
+- [docs/README.md](docs/README.md) â€” dated plans and preserved historical artifacts; not current runtime truth.
+
+Repository hygiene rule: generated compiler/toolchain/cache trees under `evidence-services/` and Python `__pycache__/` directories are reproducible and disposable. `chapter4-results/` is the opposite: it contains research evidence and must never be included in generic cleanup. The identical gateway hardware-assembly guide present in both deployment and dissertation preparation paths is intentionally retained as a workflow-local mirror rather than deduplicated at the cost of navigation clarity.
+
+---
+
+## 4. Presentations
 
 Start here:
 
@@ -116,3 +142,5 @@ TimescaleDB backup path & SHA-256 checksums
 
 > [!CAUTION]
 > Never place private keys, OTAA AppKeys, passwords, tokens, or OpenBao recovery shares in Markdown files or public repositories.
+
+

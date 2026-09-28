@@ -14,7 +14,7 @@ Make the repository safe to operate tomorrow without reconstructing state from h
 4. Correct stale status prose in live gateway/sensor manuals where later evidence already proves PASS.
 5. Add a single tomorrow bring-up runbook covering flashed gateway -> service checks -> EMU-01 -> OTAA -> payload-v2 -> telemetry/evidence -> sensor preflight.
 6. Add the final EMU-01 Arduino source tree. Keep OTAA AppKey local in ignored `secrets.h`; commit only a template.
-7. Preserve the frozen 46-byte payload-v2 contract, plain AS923, Class A, unconfirmed telemetry, 15-second monotonic schedule, seven validity bits, and deterministic `SENSOR_TX` output.
+7. Preserve the frozen 46-byte payload-v2 contract, plain AS923, Class A, unconfirmed telemetry, seven validity bits, and deterministic `SENSOR_TX` output. Historical bring-up used a 15-second monotonic cadence; the later production fleet policy supersedes only that timing behavior with 60-second local sampling, a nominal 5-minute DevEUI-staggered uplink interval, ±15-second jitter, and rate-limited randomized rain-event uplinks.
 8. Do not claim hardware PASS from static repository checks. Hardware-dependent gates remain explicit tomorrow checks.
 9. Keep Reserved-IP failover and external Fabric activation separate from normal sensor/gateway bring-up; they must not block basic RF/telemetry acceptance.
 

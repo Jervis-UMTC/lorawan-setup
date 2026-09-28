@@ -1,11 +1,15 @@
-# LoRaWAN Gateway and Server Documentation
+﻿# LoRaWAN Gateway and Server Documentation
 
 Choose one path and stay in that path while working:
 
 ```text
-test/          -> minimum dissertation testbed and Chapter III/IV procedures
-deployment/    -> complete deployment, HA, security, operations, and cloud manuals
-presentations/ -> presentation material
+test/              -> dissertation preparation, automated capture, and counted Chapter III/IV procedures
+deployment/        -> complete deployment, HA, security, operations, and cloud manuals
+evidence-services/ -> reproducible gateway/cloud evidence-service source and build/deploy material
+firmware/          -> tracked sensor firmware source
+chapter4-results/  -> retained research evidence and derived run outputs
+docs/              -> planning/history index; not the live operator entry point
+presentations/     -> presentation material
 ```
 
 Choose your objective first:
@@ -18,7 +22,11 @@ Choose your objective first:
 
 For complete documentation layout and research alignment, see [DOCUMENTATION-MAP.md](DOCUMENTATION-MAP.md).
 
-**Next physical session:** use [TOMORROW-SENSOR-GATEWAY-BRINGUP.md](TOMORROW-SENSOR-GATEWAY-BRINGUP.md) as the single sensor + flashed-gateway execution path. Historical continuation notes are not operator entry points.
+**Current research entry point:** use [test/00-README.md](test/00-README.md), then the [automated research recorder](test/automation/research-recorder/README.md) and the experiment-specific [counted execution manual](test/execution/00-README.md). Fabric is no longer an external activation blocker: ULC-01 production writes are enabled and verified; ULC-02 remains deliberately write-disabled until its HA fencing/ownership gate. Follow each current test manual's own GO/NO-GO status.
+
+**Research truth boundary:** Chapter 3/4 PDFs and dissertation drafts are requirements references, not descriptions of current runtime state and not result truth. For a formal trial, the sealed capture under `chapter4-results/` is authoritative. Fresh read-only monitoring is authoritative only for the apparatus state at the time observed, while current deployment/configuration material is the reproducibility reference. Setup, smoke, recovery and preflight traffic must not be counted as formal trial data unless it falls inside an explicitly started recorder run and that run is classified accordingly.
+
+The former next-day bring-up document is preserved only as historical provenance at [docs/archive/2026-09-02-sensor-gateway-bringup-handoff.md](docs/archive/2026-09-02-sensor-gateway-bringup-handoff.md).
 
 ---
 
@@ -48,3 +56,5 @@ Server evidence path
 - Bridge connection to server uses mutual TLS on `ssl://<BROKER_FQDN>:8883` with client certificate CN equal to `<GATEWAY_EUI>`.
 - Treat buffered delivery as at-least-once; downstream integrations must remain idempotent.
 - Do not place private keys, OTAA root keys, passwords, or OpenBao recovery shares in Markdown files.
+
+

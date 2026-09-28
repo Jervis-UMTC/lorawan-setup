@@ -1,0 +1,27 @@
+SSH_OK
+sudo_nopass=no
+SSHD_EFFECTIVE
+FIREWALL
+FAIL2BAN
+enabled
+active
+UNATTENDED
+enabled
+active
+APT::Periodic::Unattended-Upgrade "1";
+APPARMOR
+active
+AUDITD
+not-found
+inactive
+LISTEN_PUBLIC
+SYSCTL
+kernel.kptr_restrict = 1
+kernel.dmesg_restrict = 1
+kernel.unprivileged_bpf_disabled = 2
+fs.protected_hardlinks = 1
+fs.protected_symlinks = 1
+net.ipv4.conf.all.rp_filter = 2
+net.ipv4.conf.default.rp_filter = 2
+net.ipv4.tcp_syncookies = 1
+USERS
