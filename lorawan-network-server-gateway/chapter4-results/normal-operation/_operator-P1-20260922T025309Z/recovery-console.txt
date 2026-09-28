@@ -1,0 +1,10 @@
+RECORDER_STOPPED=P1-1-20260922-105310
+END_UTC=2026-09-22T03:23:04.570Z
+RUN_STATUS=RECORDED_WITH_ERRORS
+SUMMARY=C:\Users\smartagriintern\Documents\projects\lorawan-setup\lorawan-network-server-gateway\chapter4-results\normal-operation\P1-1-20260922-105310\derived\run-summary.json
+HASH_MANIFEST=C:\Users\smartagriintern\Documents\projects\lorawan-setup\lorawan-network-server-gateway\chapter4-results\normal-operation\P1-1-20260922-105310\metadata\SHA256SUMS.csv
+STOP_ERRORS=11
+RECOVERY_START_UTC=2026-09-22T04:11:56.468964+00:00
+
+RECOVERY_EXIT=2
+RECOVERY_END_UTC=2026-09-22T04:12:31.219055+00:00

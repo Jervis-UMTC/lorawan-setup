@@ -1,0 +1,754 @@
+{
+  "chirpstack_acceptance": {
+    "accepted_deduplication_ids": [
+      "56babfbc-72f8-4d04-96b7-6c5b0efce60a",
+      "56cef8ef-bf9d-45db-8354-a80cf6603045",
+      "5c1e54fe-f606-4eb1-80c1-c7b0e09cebc1",
+      "5e105746-40ff-4213-8fed-0c2ed0ee3a18"
+    ],
+    "accepted_uplink_ids_all_devices": 4,
+    "accepted_without_target_device_evidence": 0,
+    "dedup_ids_with_target_device_evidence": 4,
+    "files_present": 2,
+    "lines_in_window": 168,
+    "target_dev_eui": "ac1f09fffe296d29",
+    "timestamp_parse_failures": 0,
+    "unique_accepted_target_uplinks": 4,
+    "window_filter_status": "MEASURED_DOCKER_TIMESTAMP_WINDOW"
+  },
+  "correlation": {
+    "clock_offset_db_minus_source_seconds": {
+      "count": 4,
+      "max": -85.885475,
+      "mean": -85.999978,
+      "min": -86.059452,
+      "sd_sample": 0.07886161713195067
+    },
+    "clock_offset_median_seconds": -86.0274925,
+    "db_payloads_total": 4,
+    "db_payloads_unmatched_to_source": 0,
+    "eligible_exact_payload_matches": 4,
+    "eligible_source_attempts_in_db_export_window": 4,
+    "exact_payload_matches": 4,
+    "measurement_clock_calibration_status": "PASS",
+    "measurement_clock_drift_seconds": 0.003136000000012018,
+    "measurement_clock_end_server_minus_workstation_seconds": -86.463281,
+    "measurement_clock_start_server_minus_workstation_seconds": -86.466417,
+    "source_payloads_total": 5,
+    "source_payloads_unmatched_to_db": 0
+  },
+  "docker_resources": {
+    "ulc01": {
+      "chirpstack": {
+        "cpu_percent": {
+          "count": 11,
+          "max": 0.4,
+          "mean": 0.33636363636363636,
+          "min": 0.29,
+          "sd_sample": 0.038541595004028394
+        },
+        "memory_percent": {
+          "count": 11,
+          "max": 2.35,
+          "mean": 2.35,
+          "min": 2.35,
+          "sd_sample": 0.0
+        },
+        "samples": 11
+      },
+      "etcd": {
+        "cpu_percent": {
+          "count": 11,
+          "max": 1.59,
+          "mean": 1.1272727272727272,
+          "min": 0.83,
+          "sd_sample": 0.308968959900211
+        },
+        "memory_percent": {
+          "count": 11,
+          "max": 3.82,
+          "mean": 3.82,
+          "min": 3.82,
+          "sd_sample": 0.0
+        },
+        "samples": 11
+      },
+      "lorawan-gateway-evidence-collector-1": {
+        "cpu_percent": {
+          "count": 11,
+          "max": 0.47,
+          "mean": 0.3409090909090909,
+          "min": 0.28,
+          "sd_sample": 0.05940615211483494
+        },
+        "memory_percent": {
+          "count": 11,
+          "max": 8.24,
+          "mean": 8.24,
+          "min": 8.24,
+          "sd_sample": 0.0
+        },
+        "samples": 11
+      },
+      "lorawan-gateway-evidence-fabric-adapter-1": {
+        "cpu_percent": {
+          "count": 11,
+          "max": 1.22,
+          "mean": 0.2672727272727273,
+          "min": 0.0,
+          "sd_sample": 0.4439164540561863
+        },
+        "memory_percent": {
+          "count": 11,
+          "max": 9.07,
+          "mean": 9.056363636363637,
+          "min": 9.0,
+          "sd_sample": 0.019632996344280947
+        },
+        "samples": 11
+      },
+      "lorawan-gateway-evidence-ingest-1": {
+        "cpu_percent": {
+          "count": 11,
+          "max": 0.0,
+          "mean": 0.0,
+          "min": 0.0,
+          "sd_sample": 0.0
+        },
+        "memory_percent": {
+          "count": 11,
+          "max": 9.15,
+          "mean": 9.15,
+          "min": 9.15,
+          "sd_sample": 0.0
+        },
+        "samples": 11
+      },
+      "openbao": {
+        "cpu_percent": {
+          "count": 11,
+          "max": 1.82,
+          "mean": 1.3781818181818182,
+          "min": 1.15,
+          "sd_sample": 0.1919801126063938
+        },
+        "memory_percent": {
+          "count": 11,
+          "max": 7.79,
+          "mean": 7.79,
+          "min": 7.79,
+          "sd_sample": 0.0
+        },
+        "samples": 11
+      },
+      "seaweedfs": {
+        "cpu_percent": {
+          "count": 11,
+          "max": 10.53,
+          "mean": 8.539090909090909,
+          "min": 7.2,
+          "sd_sample": 0.997300902891946
+        },
+        "memory_percent": {
+          "count": 11,
+          "max": 75.64,
+          "mean": 73.50272727272727,
+          "min": 72.38,
+          "sd_sample": 1.0975890935053152
+        },
+        "samples": 11
+      },
+      "seaweedfs-metadata-etcd": {
+        "cpu_percent": {
+          "count": 11,
+          "max": 16.25,
+          "mean": 13.65,
+          "min": 11.79,
+          "sd_sample": 1.5270101505883975
+        },
+        "memory_percent": {
+          "count": 11,
+          "max": 79.44,
+          "mean": 79.42818181818183,
+          "min": 79.42,
+          "sd_sample": 0.006030226891555572
+        },
+        "samples": 11
+      },
+      "spilo": {
+        "cpu_percent": {
+          "count": 11,
+          "max": 7.8,
+          "mean": 5.707272727272727,
+          "min": 4.1,
+          "sd_sample": 1.2093228759027996
+        },
+        "memory_percent": {
+          "count": 11,
+          "max": 17.2,
+          "mean": 17.2,
+          "min": 17.2,
+          "sd_sample": 0.0
+        },
+        "samples": 11
+      }
+    },
+    "ulc02": {
+      "chirpstack": {
+        "cpu_percent": {
+          "count": 11,
+          "max": 0.38,
+          "mean": 0.3109090909090909,
+          "min": 0.25,
+          "sd_sample": 0.03618136134933163
+        },
+        "memory_percent": {
+          "count": 11,
+          "max": 1.86,
+          "mean": 1.86,
+          "min": 1.86,
+          "sd_sample": 0.0
+        },
+        "samples": 11
+      },
+      "etcd": {
+        "cpu_percent": {
+          "count": 11,
+          "max": 1.21,
+          "mean": 0.9090909090909091,
+          "min": 0.74,
+          "sd_sample": 0.13996103353823486
+        },
+        "memory_percent": {
+          "count": 11,
+          "max": 3.76,
+          "mean": 3.76,
+          "min": 3.76,
+          "sd_sample": 0.0
+        },
+        "samples": 11
+      },
+      "lorawan-gateway-evidence-fabric-adapter-1": {
+        "cpu_percent": {
+          "count": 11,
+          "max": 0.01,
+          "mean": 0.0009090909090909091,
+          "min": 0.0,
+          "sd_sample": 0.0030151134457776364
+        },
+        "memory_percent": {
+          "count": 11,
+          "max": 2.03,
+          "mean": 2.03,
+          "min": 2.03,
+          "sd_sample": 0.0
+        },
+        "samples": 11
+      },
+      "lorawan-gateway-evidence-ingest-1": {
+        "cpu_percent": {
+          "count": 11,
+          "max": 0.0,
+          "mean": 0.0,
+          "min": 0.0,
+          "sd_sample": 0.0
+        },
+        "memory_percent": {
+          "count": 11,
+          "max": 1.87,
+          "mean": 1.87,
+          "min": 1.87,
+          "sd_sample": 0.0
+        },
+        "samples": 11
+      },
+      "lorawan-gateway-evidence-verifier-1": {
+        "cpu_percent": {
+          "count": 11,
+          "max": 20.75,
+          "mean": 14.937272727272727,
+          "min": 12.23,
+          "sd_sample": 2.521951985701119
+        },
+        "memory_percent": {
+          "count": 11,
+          "max": 6.11,
+          "mean": 5.999090909090909,
+          "min": 5.78,
+          "sd_sample": 0.10231857558181162
+        },
+        "samples": 11
+      },
+      "openbao": {
+        "cpu_percent": {
+          "count": 11,
+          "max": 4.51,
+          "mean": 2.728181818181818,
+          "min": 1.92,
+          "sd_sample": 0.7079522325950838
+        },
+        "memory_percent": {
+          "count": 11,
+          "max": 8.43,
+          "mean": 8.42090909090909,
+          "min": 8.41,
+          "sd_sample": 0.010444659357341648
+        },
+        "samples": 11
+      },
+      "seaweedfs": {
+        "cpu_percent": {
+          "count": 11,
+          "max": 25.23,
+          "mean": 20.08090909090909,
+          "min": 14.46,
+          "sd_sample": 3.861171984114291
+        },
+        "memory_percent": {
+          "count": 11,
+          "max": 56.42,
+          "mean": 56.03727272727272,
+          "min": 55.45,
+          "sd_sample": 0.2758655799149615
+        },
+        "samples": 11
+      },
+      "seaweedfs-metadata-etcd": {
+        "cpu_percent": {
+          "count": 11,
+          "max": 11.15,
+          "mean": 9.292727272727273,
+          "min": 7.32,
+          "sd_sample": 1.2003673680094016
+        },
+        "memory_percent": {
+          "count": 11,
+          "max": 79.88,
+          "mean": 79.87272727272727,
+          "min": 79.87,
+          "sd_sample": 0.00467099366496489
+        },
+        "samples": 11
+      },
+      "spilo": {
+        "cpu_percent": {
+          "count": 11,
+          "max": 2.66,
+          "mean": 1.6245454545454547,
+          "min": 0.89,
+          "sd_sample": 0.5842150911498887
+        },
+        "memory_percent": {
+          "count": 11,
+          "max": 13.08,
+          "mean": 13.07090909090909,
+          "min": 13.06,
+          "sd_sample": 0.008312094145936158
+        },
+        "samples": 11
+      }
+    },
+    "ulc03": {
+      "etcd": {
+        "cpu_percent": {
+          "count": 11,
+          "max": 4.25,
+          "mean": 1.7072727272727273,
+          "min": 0.79,
+          "sd_sample": 1.0483042584010704
+        },
+        "memory_percent": {
+          "count": 11,
+          "max": 4.02,
+          "mean": 4.02,
+          "min": 4.02,
+          "sd_sample": 0.0
+        },
+        "samples": 11
+      },
+      "grafana": {
+        "cpu_percent": {
+          "count": 11,
+          "max": 2.63,
+          "mean": 1.3981818181818182,
+          "min": 1.06,
+          "sd_sample": 0.5289199973874722
+        },
+        "memory_percent": {
+          "count": 11,
+          "max": 45.16,
+          "mean": 44.23818181818182,
+          "min": 43.47,
+          "sd_sample": 0.8825737156953869
+        },
+        "samples": 11
+      },
+      "lorawan-gateway-evidence-collector-1": {
+        "cpu_percent": {
+          "count": 11,
+          "max": 0.84,
+          "mean": 0.42636363636363633,
+          "min": 0.25,
+          "sd_sample": 0.22451159111603688
+        },
+        "memory_percent": {
+          "count": 11,
+          "max": 6.12,
+          "mean": 6.120000000000001,
+          "min": 6.12,
+          "sd_sample": 0.0
+        },
+        "samples": 11
+      },
+      "lorawan-gateway-evidence-verifier-1": {
+        "cpu_percent": {
+          "count": 11,
+          "max": 20.15,
+          "mean": 13.760909090909092,
+          "min": 10.62,
+          "sd_sample": 2.5471845419814185
+        },
+        "memory_percent": {
+          "count": 11,
+          "max": 6.47,
+          "mean": 6.3536363636363635,
+          "min": 6.0,
+          "sd_sample": 0.15743396884235164
+        },
+        "samples": 11
+      },
+      "node-red-node-red-1": {
+        "cpu_percent": {
+          "count": 11,
+          "max": 0.07,
+          "mean": 0.011818181818181818,
+          "min": 0.0,
+          "sd_sample": 0.021362669223756577
+        },
+        "memory_percent": {
+          "count": 11,
+          "max": 3.46,
+          "mean": 3.4127272727272726,
+          "min": 3.36,
+          "sd_sample": 0.04880387465988934
+        },
+        "samples": 11
+      },
+      "openbao": {
+        "cpu_percent": {
+          "count": 11,
+          "max": 2.15,
+          "mean": 1.5972727272727274,
+          "min": 0.96,
+          "sd_sample": 0.36992136756588984
+        },
+        "memory_percent": {
+          "count": 11,
+          "max": 7.17,
+          "mean": 7.170000000000001,
+          "min": 7.17,
+          "sd_sample": 0.0
+        },
+        "samples": 11
+      },
+      "seaweedfs": {
+        "cpu_percent": {
+          "count": 11,
+          "max": 32.29,
+          "mean": 25.914545454545454,
+          "min": 20.29,
+          "sd_sample": 3.54861483859932
+        },
+        "memory_percent": {
+          "count": 11,
+          "max": 55.06,
+          "mean": 54.75181818181818,
+          "min": 54.47,
+          "sd_sample": 0.20227793660299215
+        },
+        "samples": 11
+      },
+      "seaweedfs-metadata-etcd": {
+        "cpu_percent": {
+          "count": 11,
+          "max": 15.44,
+          "mean": 12.246363636363638,
+          "min": 10.21,
+          "sd_sample": 1.7025173874429165
+        },
+        "memory_percent": {
+          "count": 11,
+          "max": 77.02,
+          "mean": 76.83272727272728,
+          "min": 76.61,
+          "sd_sample": 0.20562543174864872
+        },
+        "samples": 11
+      },
+      "spilo": {
+        "cpu_percent": {
+          "count": 11,
+          "max": 3.78,
+          "mean": 1.7663636363636364,
+          "min": 0.75,
+          "sd_sample": 0.8207590721676212
+        },
+        "memory_percent": {
+          "count": 11,
+          "max": 12.1,
+          "mean": 12.092727272727274,
+          "min": 12.08,
+          "sd_sample": 0.007862453931068797
+        },
+        "samples": 11
+      }
+    }
+  },
+  "fabric_outbox": {
+    "committed_with_tx_id": 0,
+    "rows": 4,
+    "status_counts": {
+      "pending": 4
+    }
+  },
+  "gateway_mqtt_evidence": {
+    "evidence_note": "Gateway MQTT evidence is captured before ChirpStack application acceptance and can prove RF/gateway reception of rejected frames by PHYPayload digest and radio metadata.",
+    "exact_phy_payload_repeat_events": 0,
+    "exact_phy_payload_repeat_groups": 0,
+    "first_broker_received_at": "2026-09-21T06:21:47.076600+00:00",
+    "frequency_hz_counts": {
+      "923200000": 4
+    },
+    "gateway_frames_with_application_match": 4,
+    "gateway_frames_without_application_match": 0,
+    "last_broker_received_at": "2026-09-21T06:22:31.929479+00:00",
+    "mqtt_topic_counts": {
+      "as923/gateway/0016c001f139a1cb/event/stats": 2,
+      "as923/gateway/0016c001f139a1cb/event/up": 4
+    },
+    "projected_uplink_frames": 4,
+    "repeated_phy_payloads": {},
+    "rows": 6,
+    "rssi_dbm": {
+      "count": 4,
+      "max": -45.0,
+      "mean": -45.0,
+      "min": -45.0,
+      "sd_sample": 0.0
+    },
+    "same_phy_distinct_uplink_id_events": 0,
+    "same_phy_distinct_uplink_id_groups": 0,
+    "same_uplink_id_duplicate_events": 0,
+    "snr_db": {
+      "count": 4,
+      "max": 14.5,
+      "mean": 13.9375,
+      "min": 13.5,
+      "sd_sample": 0.42695628191498325
+    },
+    "unique_phy_payload_sha256": 4
+  },
+  "measurements": {
+    "events": 4,
+    "events_with_13_measurements": 4,
+    "per_event_count": {
+      "count": 4,
+      "max": 13.0,
+      "mean": 13.0,
+      "min": 13.0,
+      "sd_sample": 0.0
+    },
+    "rows": 52
+  },
+  "resources": {
+    "gateway": {
+      "cpu_percent": {
+        "count": 16,
+        "max": 5.83,
+        "mean": 4.484625,
+        "min": 2.61,
+        "sd_sample": 0.8692259295871625
+      },
+      "load1": {
+        "count": 16,
+        "max": 0.21,
+        "mean": 0.145,
+        "min": 0.09,
+        "sd_sample": 0.03183289703016886
+      },
+      "memory_percent": {
+        "count": 16,
+        "max": 3.468,
+        "mean": 3.4488125,
+        "min": 3.428,
+        "sd_sample": 0.010245120789917522
+      },
+      "samples": 16
+    },
+    "ulc01": {
+      "cpu_percent": {
+        "count": 16,
+        "max": 67.78,
+        "mean": 44.4651875,
+        "min": 36.701,
+        "sd_sample": 7.855811948010212
+      },
+      "load1": {
+        "count": 16,
+        "max": 1.14,
+        "mean": 0.923125,
+        "min": 0.69,
+        "sd_sample": 0.13031852004479896
+      },
+      "memory_percent": {
+        "count": 16,
+        "max": 64.882,
+        "mean": 64.45925,
+        "min": 63.909,
+        "sd_sample": 0.27102287726315627
+      },
+      "samples": 16
+    },
+    "ulc02": {
+      "cpu_percent": {
+        "count": 15,
+        "max": 68.836,
+        "mean": 65.91373333333333,
+        "min": 60.279,
+        "sd_sample": 2.6514078326877764
+      },
+      "load1": {
+        "count": 15,
+        "max": 2.62,
+        "mean": 2.3033333333333332,
+        "min": 1.93,
+        "sd_sample": 0.20773151169810747
+      },
+      "memory_percent": {
+        "count": 15,
+        "max": 56.847,
+        "mean": 56.67333333333333,
+        "min": 56.263,
+        "sd_sample": 0.1928569664902194
+      },
+      "samples": 15
+    },
+    "ulc03": {
+      "cpu_percent": {
+        "count": 15,
+        "max": 84.462,
+        "mean": 74.49966666666667,
+        "min": 64.764,
+        "sd_sample": 4.540483496385863
+      },
+      "load1": {
+        "count": 15,
+        "max": 2.51,
+        "mean": 1.9793333333333334,
+        "min": 1.44,
+        "sd_sample": 0.27280203881377496
+      },
+      "memory_percent": {
+        "count": 15,
+        "max": 68.23,
+        "mean": 67.87899999999999,
+        "min": 67.416,
+        "sd_sample": 0.2578947736688627
+      },
+      "samples": 15
+    }
+  },
+  "run_dir": "C:\\Users\\smartagriintern\\Documents\\projects\\lorawan-setup\\lorawan-network-server-gateway\\chapter4-results\\dos-flooding\\F1-rehearsal-r10-n1-20260921-141932",
+  "source": {
+    "attempts": 4,
+    "capture_present": true,
+    "captured_attempts_total": 5,
+    "clock_calibration_status": "PASS",
+    "formal_window_end_server_minus_workstation_seconds": -86.463281,
+    "formal_window_filter_status": "MEASURED_START_END_CALIBRATED_OFFSET",
+    "formal_window_server_minus_workstation_seconds": -86.466417,
+    "out_of_window_attempts": 1,
+    "reasons": {
+      "normal": 4
+    },
+    "send_ok": 4,
+    "sequences": {
+      "count": 4,
+      "gaps": [],
+      "max": 26,
+      "min": 23
+    }
+  },
+  "telemetry": {
+    "application_event_to_db_ms": {
+      "count": 4,
+      "max": 53.756,
+      "mean": 30.728,
+      "min": 15.229,
+      "sd_sample": 18.437588146681946
+    },
+    "database_delivery_note": "Database-delivery correlation uses byte-exact payload matches. Source timestamps are shifted by the median DB-minus-source clock offset estimated from exact matches; only projected source attempts inside the DB export window are eligible. This is NOT the formal Chapter 3 PDR, whose numerator is unique legitimate uplinks accepted by ChirpStack.",
+    "database_delivery_percent_exact_payload_clock_aligned": 100.0,
+    "duplicate_event_rows": 0,
+    "duplicate_frame_counter_values": {},
+    "duplicate_test_sequence_values": {},
+    "formal_chapter3_pdr_denominator_sensor_transmission_attempts": 4,
+    "formal_chapter3_pdr_note": "Chapter 3 PDR uses unique accepted EMU-01 ChirpStack deduplication IDs from the exact formal server-UTC window divided by scheduled SENSOR_TX attempts projected into that same window with the recorded ULC-01/workstation clock offset. Warm-up source lines are excluded; a scheduled source-side send failure inside the window remains in the denominator. Database storage is not the numerator.",
+    "formal_chapter3_pdr_numerator_unique_chirpstack_accepted": 4,
+    "formal_chapter3_pdr_percent": 100.0,
+    "formal_chapter3_pdr_status": "MEASURED_CHIRPSTACK_ACCEPTANCE_BOUNDARY",
+    "frame_counter": {
+      "count": 4,
+      "gaps": [],
+      "max": 25,
+      "min": 22
+    },
+    "gateway_frequency_hz_counts": {
+      "923200000": 4
+    },
+    "latency_note": "sensor_to_database_ms is received_at minus the independently calibrated SENSOR_TX workstation timestamp; application_event_to_db_ms remains received_at - application event time",
+    "pdr_note": "DEPRECATED LABEL: this legacy field is source-to-database delivery correlation, not formal Chapter 3 PDR. Database-delivery correlation uses byte-exact payload matches. Source timestamps are shifted by the median DB-minus-source clock offset estimated from exact matches; only projected source attempts inside the DB export window are eligible. This is NOT the formal Chapter 3 PDR, whose numerator is unique legitimate uplinks accepted by ChirpStack.",
+    "pdr_percent_exact_payload_clock_aligned": 100.0,
+    "rows": 4,
+    "rssi_dbm": {
+      "count": 4,
+      "max": -45.0,
+      "mean": -45.0,
+      "min": -45.0,
+      "sd_sample": 0.0
+    },
+    "sensor_to_database_ms": {
+      "count": 4,
+      "max": 617.875,
+      "mean": 495.536,
+      "min": 420.697,
+      "sd_sample": 89.8088996703556
+    },
+    "sensor_to_database_status": "MEASURED_CALIBRATED_SENSOR_TO_DATABASE",
+    "snr_db": {
+      "count": 4,
+      "max": 14.5,
+      "mean": 13.9375,
+      "min": 13.5,
+      "sd_sample": 0.42695628191498325
+    },
+    "test_sequence": {
+      "count": 4,
+      "gaps": [],
+      "max": 26,
+      "min": 23
+    },
+    "unique_event_keys": 4
+  },
+  "trials": {
+    "condition_counts": {},
+    "counted_attempts": 0,
+    "decision_time_seconds": null,
+    "duration_seconds": null,
+    "false_acceptance": 0,
+    "false_rejection": 0,
+    "gateway_received_counts": {},
+    "rows": 0,
+    "status_counts": {}
+  }
+}

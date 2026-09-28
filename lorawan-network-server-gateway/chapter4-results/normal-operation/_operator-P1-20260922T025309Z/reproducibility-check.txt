@@ -1,0 +1,13 @@
+COMMAND=py -3 test/automation/research-recorder/verify-run-reproducibility.py chapter4-results/normal-operation/P1-1-20260922-105310
+EXIT_CODE=0
+{
+  "status": "PASS",
+  "run": "P1-1-20260922-105310",
+  "sealed_files_checked": 63,
+  "summary_regenerations": 2,
+  "python_version": "3.14.7",
+  "json_comparison": "all fields except relocated run_dir",
+  "csv_comparison": "byte-exact",
+  "summarizer_sha256": "dcd8cb2d5636d163e7e996ee6554e3b40b6d2b2d9138111d6b437a04bce69930"
+}
+

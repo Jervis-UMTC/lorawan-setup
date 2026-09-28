@@ -1,0 +1,4 @@
+period,runs,required_runs,duration_minutes_across_runs,expected_readings,db_stored,db_stored_percent,missing,duplicate,local_services_available,fabric_queued,fabric_confirmed_after_recovery,mean_latency_ms,sd_latency_ms,mean_recovery_seconds,sd_recovery_seconds,status
+normal,0,3,,,,,,,,,,,,,,NOT_MEASURED
+Fabric outage,0,3,,,,,,,,,,,,,,NOT_MEASURED
+recovery,0,3,,,,,,,,,,,,,,NOT_MEASURED

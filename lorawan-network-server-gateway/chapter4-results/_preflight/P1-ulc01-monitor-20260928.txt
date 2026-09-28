@@ -1,0 +1,16 @@
+HOST|2026-09-28T00:24:53.080Z|ulc-01|3350150
+DBROLE|2026-09-28T00:24:53.080Z|leader
+DBMETRIC|2026-09-28T00:24:53.080Z|evidence.checkpoints|335
+DBMETRIC|2026-09-28T00:24:53.080Z|evidence.segments|335
+DBMETRIC|2026-09-28T00:24:53.080Z|evidence.verifications|5299
+DBMETRIC|2026-09-28T00:24:53.080Z|fabric.outbox|5299
+DBMETRIC|2026-09-28T00:24:53.080Z|telemetry.uplinks|5299
+DBMETRIC|2026-09-28T00:24:53.080Z|evidence.mqtt_events|12831
+DBMETRIC|2026-09-28T00:24:53.080Z|telemetry.measurements|68887
+DBMETRIC|2026-09-28T00:24:53.080Z|fabric.status.confirmed|5278
+DBMETRIC|2026-09-28T00:24:53.080Z|fabric.status.pending|21
+DBMETRIC|2026-09-28T00:24:53.080Z|evidence.verification_status.pending|21
+DBMETRIC|2026-09-28T00:24:53.080Z|evidence.verification_status.verified|5278
+READY|2026-09-28T00:24:53.080Z|collector-1|ready|200|{"broker_1":{"captures":13148,"connected":true,"errors":0,"fatal":false,"label":"broker-1","last_error":"","subscribed":true},"broker_2":{"captures":0,"connected":true,"errors":0,"fatal":false,"label":"broker-2","last_error":"","subscribed":true},"status":"ready"}
+READY|2026-09-28T00:24:53.080Z|fabric-adapter-1|ready|200|{"enabled":true,"status":"ready"}
+STDERR

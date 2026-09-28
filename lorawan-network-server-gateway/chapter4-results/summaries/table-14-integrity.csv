@@ -1,0 +1,5 @@
+test_area,condition,trials,required_trials,expected,hash_match,hash_mismatch,correct_decisions,correct_percent,false_positive,false_negative,unauthorized_storage,mean_verification_seconds,sd_verification_seconds,status
+application,unchanged,0,10,NOT_MEASURED,,,0,,0,0,,,,NOT_MEASURED
+application,altered,0,10,NOT_MEASURED,,,0,,0,0,,,,NOT_MEASURED
+stored,unchanged,0,10,NOT_MEASURED,,,0,,0,0,,,,NOT_MEASURED
+stored,tampered,0,10,NOT_MEASURED,,,0,,0,0,,,,NOT_MEASURED

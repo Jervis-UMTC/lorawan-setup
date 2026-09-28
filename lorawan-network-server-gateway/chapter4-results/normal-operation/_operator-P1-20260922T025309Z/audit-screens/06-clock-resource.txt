@@ -1,0 +1,7 @@
+EXCERPT OF chapter4-results\normal-operation\P1-1-20260922-105310\derived\run-summary.json
+measurement_clock_calibration_status=PASS
+measurement_clock_drift_seconds=0.06954600000000255
+Gateway CPU avg/max = 4.903 / 9.895 percent; RAM avg/max = 3.407 / 3.585 percent
+ULC-01 CPU avg/max = 40.045 / 68.350 percent; RAM avg/max = 62.919 / 64.538 percent
+ULC-02 CPU avg/max = 60.201 / 84.232 percent; RAM avg/max = 55.631 / 56.223 percent
+ULC-03 CPU avg/max = 60.738 / 91.124 percent; RAM avg/max = 67.542 / 70.252 percent

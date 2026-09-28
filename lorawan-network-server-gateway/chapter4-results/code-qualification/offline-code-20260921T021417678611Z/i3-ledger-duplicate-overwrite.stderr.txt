@@ -1,0 +1,37 @@
+test_baseline_outbox_query_missing_invalid (test_i3_ledger_evidence.I3OfflineTests.test_baseline_outbox_query_missing_invalid) ... ok
+test_baseline_preexisting_anchor_not_recreated (test_i3_ledger_evidence.I3OfflineTests.test_baseline_preexisting_anchor_not_recreated) ... ok
+test_baseline_without_commit_fails (test_i3_ledger_evidence.I3OfflineTests.test_baseline_without_commit_fails) ... ok
+test_cli_does_not_overwrite_source (test_i3_ledger_evidence.I3OfflineTests.test_cli_does_not_overwrite_source) ... ok
+test_cli_refuses_same_source_and_output (test_i3_ledger_evidence.I3OfflineTests.test_cli_refuses_same_source_and_output) ... ok
+test_conflict_condition_with_same_bytes_invalid (test_i3_ledger_evidence.I3OfflineTests.test_conflict_condition_with_same_bytes_invalid) ... ok
+test_conflicting_anchor_committed_is_failure (test_i3_ledger_evidence.I3OfflineTests.test_conflicting_anchor_committed_is_failure) ... ok
+test_conflicting_deleted_anchor_is_failure (test_i3_ledger_evidence.I3OfflineTests.test_conflicting_deleted_anchor_is_failure) ... ok
+test_conflicting_rejected_but_state_changed_is_failure (test_i3_ledger_evidence.I3OfflineTests.test_conflicting_rejected_but_state_changed_is_failure) ... ok
+test_conflicting_unrelated_fabric_outage_invalid (test_i3_ledger_evidence.I3OfflineTests.test_conflicting_unrelated_fabric_outage_invalid) ... ok
+test_conflicting_unrelated_rejection_invalid (test_i3_ledger_evidence.I3OfflineTests.test_conflicting_unrelated_rejection_invalid) ... ok
+test_corrupted_exact_base64_invalid (test_i3_ledger_evidence.I3OfflineTests.test_corrupted_exact_base64_invalid) ... ok
+test_duplicate_baseline_source_key_invalid (test_i3_ledger_evidence.I3OfflineTests.test_duplicate_baseline_source_key_invalid) ... ok
+test_duplicate_changes_original_anchor_is_failure (test_i3_ledger_evidence.I3OfflineTests.test_duplicate_changes_original_anchor_is_failure) ... ok
+test_duplicate_create_is_failure (test_i3_ledger_evidence.I3OfflineTests.test_duplicate_create_is_failure) ... ok
+test_duplicate_multiplicity_increases_is_failure (test_i3_ledger_evidence.I3OfflineTests.test_duplicate_multiplicity_increases_is_failure) ... ok
+test_duplicate_trial_id_invalid (test_i3_ledger_evidence.I3OfflineTests.test_duplicate_trial_id_invalid) ... ok
+test_explicit_duplicate_reject_is_allowed_if_state_unchanged (test_i3_ledger_evidence.I3OfflineTests.test_explicit_duplicate_reject_is_allowed_if_state_unchanged) ... ok
+test_fabric_query_source_identity_mismatch_invalid (test_i3_ledger_evidence.I3OfflineTests.test_fabric_query_source_identity_mismatch_invalid) ... ok
+test_formal_shape_short_is_invalid (test_i3_ledger_evidence.I3OfflineTests.test_formal_shape_short_is_invalid) ... ok
+test_formal_ten_ten_ten_remains_uncounted (test_i3_ledger_evidence.I3OfflineTests.test_formal_ten_ten_ten_remains_uncounted) ... ok
+test_idempotent_retry_is_not_false_duplicate_acceptance (test_i3_ledger_evidence.I3OfflineTests.test_idempotent_retry_is_not_false_duplicate_acceptance) ... ok
+test_missing_duplicate_result_invalid (test_i3_ledger_evidence.I3OfflineTests.test_missing_duplicate_result_invalid) ... ok
+test_missing_original_record_id_invalid (test_i3_ledger_evidence.I3OfflineTests.test_missing_original_record_id_invalid) ... ok
+test_missing_post_query_invalid (test_i3_ledger_evidence.I3OfflineTests.test_missing_post_query_invalid) ... ok
+test_negative_latency_invalid (test_i3_ledger_evidence.I3OfflineTests.test_negative_latency_invalid) ... ok
+test_post_query_missing_anchor_fields_invalid (test_i3_ledger_evidence.I3OfflineTests.test_post_query_missing_anchor_fields_invalid) ... ok
+test_rejected_duplicate_without_chaincode_proof_is_invalid (test_i3_ledger_evidence.I3OfflineTests.test_rejected_duplicate_without_chaincode_proof_is_invalid) ... ok
+test_same_digest_but_different_bytes_not_same_payload (test_i3_ledger_evidence.I3OfflineTests.test_same_digest_but_different_bytes_not_same_payload) ... ok
+test_single_fixture_three_phases (test_i3_ledger_evidence.I3OfflineTests.test_single_fixture_three_phases) ... ok
+test_wrong_original_payload_sha_invalid (test_i3_ledger_evidence.I3OfflineTests.test_wrong_original_payload_sha_invalid) ... ok
+test_wrong_trace_id_invalid (test_i3_ledger_evidence.I3OfflineTests.test_wrong_trace_id_invalid) ... ok
+
+----------------------------------------------------------------------
+Ran 32 tests in 0.325s
+
+OK

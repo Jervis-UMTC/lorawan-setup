@@ -1,0 +1,8 @@
+SERIAL_RC=0
+SERIAL_STDERR=
+SENSOR_TX_COUNT=2
+2026-09-28T00:13:46.050234+00:00|SENSOR_TX,seq=12,reason=normal,uptime_ms=257708,soil_pct=5.00,soil_temp_c=29.80,uv_index=0.00,baro_pa=101708,baro_temp_c=25.43,light_veml_lux=160.65,light_opt_lux=170.08,env_temp_c=28.47,env_humidity_pct=61.63,env_pressure_pa=101358,env_gas_ohm=13783,rain_wet=0,battery_mv=0,valid=0x7F,join=1,send_status=0
+2026-09-28T00:14:01.055794+00:00|SENSOR_TX,seq=13,reason=normal,uptime_ms=272713,soil_pct=4.00,soil_temp_c=29.80,uv_index=0.00,baro_pa=101707,baro_temp_c=25.40,light_veml_lux=160.75,light_opt_lux=170.08,env_temp_c=28.44,env_humidity_pct=61.61,env_pressure_pa=101358,env_gas_ohm=14449,rain_wet=0,battery_mv=0,valid=0x7F,join=1,send_status=0
+GATEWAY_RC=255
+
+GATEWAY_STDERR=ssh: connect to host home-gw-11 port 22: Connection timed out

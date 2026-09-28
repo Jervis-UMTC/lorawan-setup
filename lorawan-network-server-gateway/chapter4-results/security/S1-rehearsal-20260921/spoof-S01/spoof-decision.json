@@ -1,0 +1,50 @@
+{
+  "calibrated_end_utc": "2026-09-21T07:26:38.327483+00:00",
+  "calibrated_start_utc": "2026-09-21T07:26:31.632483+00:00",
+  "clock_offset_seconds": -86.403517,
+  "clock_proof": "research_recorder.py PRE 2026-09-21T07:22:46.227Z CLOCK_GATE=PASS",
+  "condition": "FRESH_FCNT_INVALID_MIC_DEVADDR_SPOOF",
+  "counted_research": false,
+  "counter_state_inference": "A later genuine uplink with the spoofed FCnt was accepted; spoof had not advanced application state to consume that FCnt.",
+  "errors": [],
+  "explicit_chirpstack_mic_error_log": "NOT_OBSERVED",
+  "forgery": "unchanged DevAddr and MType; fresh FCnt16; last MIC byte XOR 01; no MIC recomputation",
+  "formal": false,
+  "later_genuine_same_devaddr": "0199DDF0",
+  "later_genuine_same_fcnt_accepted": {
+    "broker_received_at": "2026-09-21 07:33:03.395792+00",
+    "dev_eui": "ac1f09fffe296d29",
+    "event_key": "2f15b9ee-286f-4ed7-ab7d-8bd2fcc4a05f",
+    "f_cnt": "307",
+    "phy_payload_sha256": "da3392fcb4597b18a3875678cd1d76d515b8b06c9a53ed3cac52255d37b1dc89",
+    "test_sequence": "308",
+    "uplink_id": "3824359582"
+  },
+  "latest_accepted_fcnt_at_forge": 275,
+  "sec_restored_state": "VERIFIED",
+  "sec_txp2p_done": true,
+  "source_control_event_key": "2f3d728d-1897-4eed-a3cb-af8f144161f9",
+  "source_control_phy_payload_sha256": "ee93f1299e77f9371c65c8a2d15f3ffd0e93b538727362dc5377f7d236dc7ad0",
+  "source_fcnt": 212,
+  "spoof": {
+    "broker_received_at": "2026-09-21 07:26:34.821387+00",
+    "database_received_at": "",
+    "event_key": "",
+    "fabric_tx_id": "",
+    "gateway_event_id": "20909",
+    "gateway_journal": [
+      {
+        "captured_at": "2026-09-21T07:26:34.807Z",
+        "record_hash": "a107ca482937bee9c3fe70b14d46a7b486ef22a1132023b4afdcd31ff523a577",
+        "sequence": 4315
+      }
+    ],
+    "outbox_status": "",
+    "rak5146_frame_received": "Mon Sep 21 07:26:34 2026 user.info chirpstack-concentratord-sx1302[2351]: Frame received, uplink_id: 3113324003, count_us: 3115125941, freq: 923400000, bw: 125000, mod: LoRa, dr: SF7, ftime_received: false, ftime_ns: 0",
+    "uplink_id": "3113324003"
+  },
+  "spoof_fcnt": 307,
+  "spoof_phy_payload_sha256": "e3add7a8ec4de6cb06212548409ae23afde71d8c4252e4a71de3aff9de35a9f1",
+  "status": "PASS_RECEIVED_AND_NOT_ACCEPTED",
+  "test": "S1"
+}

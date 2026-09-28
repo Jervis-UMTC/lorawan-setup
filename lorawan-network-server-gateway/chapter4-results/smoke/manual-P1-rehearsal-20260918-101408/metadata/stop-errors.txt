@@ -1,0 +1,12 @@
+pre-stop recorder check: collector process not alive: emu01-serial pid=16948
+pre-stop recorder check: collector process not alive: gateway-resource pid=18128
+pre-stop recorder check: collector process not alive: gateway-log pid=1248
+pre-stop recorder check: collector process not alive: ulc01-host-resource pid=18984
+pre-stop recorder check: collector process not alive: ulc01-docker-resource pid=19744
+pre-stop recorder check: collector process not alive: ulc02-host-resource pid=2608
+pre-stop recorder check: collector process not alive: ulc02-docker-resource pid=13124
+pre-stop recorder check: collector process not alive: ulc03-host-resource pid=19872
+pre-stop recorder check: collector process not alive: ulc03-docker-resource pid=10772
+pre-stop recorder check: collector process not alive: ulc01-chirpstack-stream pid=6932
+pre-stop recorder check: collector process not alive: ulc02-chirpstack-stream pid=20816
+failed to release recorder ownership lock: Recorder ownership lock is missing while an active run state exists

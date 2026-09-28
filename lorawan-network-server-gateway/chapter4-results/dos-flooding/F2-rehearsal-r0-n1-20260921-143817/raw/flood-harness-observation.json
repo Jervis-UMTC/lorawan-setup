@@ -1,0 +1,35 @@
+{
+  "db_guard": {
+    "EMU_LAST_2M": "7",
+    "FAKE_OUTBOX_TOTAL": "0",
+    "FAKE_UPLINKS_TOTAL": "0"
+  },
+  "duration_seconds": 30,
+  "flood_end_utc": "2026-09-21T06:39:09.382Z",
+  "flood_start_utc": "2026-09-21T06:38:34.921Z",
+  "formal": false,
+  "load": {
+    "accepted": 0,
+    "generated": 0,
+    "generator_achieved_rate_per_second": 0.0,
+    "planned": 0,
+    "planned_rate_per_second": 0,
+    "published": 0,
+    "raw": "normal 0/s",
+    "received": 0,
+    "rejected": 0,
+    "target_observed": 0,
+    "target_observed_rate_per_second": 0.0
+  },
+  "measurement_clock_server_minus_workstation_seconds": -86.45122,
+  "rate_per_second": 0,
+  "recovery_seconds": 30,
+  "repetition": 1,
+  "run_id": "F2-rehearsal-r0-n1-20260921-143817",
+  "window": {
+    "MEAN_LATENCY_MS": "13.325",
+    "UNAUTHORIZED_OUTBOX": "0",
+    "UNAUTHORIZED_UPLINKS": "0",
+    "VALID_DELIVERED": "1"
+  }
+}

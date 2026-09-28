@@ -1,0 +1,75 @@
+timestamp_utc=2026-09-17T06:24:02Z
+hostname=ulc-01
+kernel=6.8.0-138-generic
+uptime_seconds=2421300
+--- memory ---
+               total        used        free      shared  buff/cache   available
+Mem:      2063577088  1250791424   234029056   124891136   891002880   812785664
+Swap:              0           0           0
+--- load ---
+1.13 0.82 0.72 7/436 3609953
+--- docker ---
+lorawan-gateway-evidence-fabric-adapter-1|gateway-fabric-adapter:fairness-20260915|Up 5 hours
+lorawan-gateway-evidence-ingest-1|cff6b2814555|Up 6 days
+lorawan-gateway-evidence-collector-1|0aaf34779331|Up 7 days
+seaweedfs|chrislusf/seaweedfs:4.41|Up 2 weeks
+seaweedfs-metadata-etcd|quay.io/coreos/etcd:v3.5.15|Up 2 weeks
+openbao|11fd73a2102c|Up 2 weeks
+chirpstack|9e0105f1dd73|Up 7 days
+spilo|6bf45913616f|Up 3 weeks
+etcd|quay.io/coreos/etcd:v3.5.15|Up 3 weeks
+--- listeners ---
+State  Recv-Q Send-Q Local Address:Port  Peer Address:PortProcess
+LISTEN 0      4096   127.0.0.53%lo:53         0.0.0.0:*          
+LISTEN 0      4096      10.104.0.2:18888      0.0.0.0:*          
+LISTEN 0      4096      10.104.0.2:18889      0.0.0.0:*          
+LISTEN 0      4096       127.0.0.1:2379       0.0.0.0:*          
+LISTEN 0      128       10.104.0.2:18883      0.0.0.0:*          
+LISTEN 0      80        10.104.0.2:5432       0.0.0.0:*          
+LISTEN 0      128       10.104.0.2:6432       0.0.0.0:*          
+LISTEN 0      4096      10.104.0.2:2379       0.0.0.0:*          
+LISTEN 0      4096       127.0.0.1:18888      0.0.0.0:*          
+LISTEN 0      4096       127.0.0.1:18889      0.0.0.0:*          
+LISTEN 0      4096      10.104.0.2:2380       0.0.0.0:*          
+LISTEN 0      4096         0.0.0.0:22         0.0.0.0:*          
+LISTEN 0      128        10.15.0.5:443        0.0.0.0:*          
+LISTEN 0      4096       127.0.0.1:12379      0.0.0.0:*          
+LISTEN 0      511       10.104.0.2:6379       0.0.0.0:*          
+LISTEN 0      128        127.0.0.1:14443      0.0.0.0:*          
+LISTEN 0      128       10.104.0.2:18443      0.0.0.0:*          
+LISTEN 0      4096      10.104.0.2:8200       0.0.0.0:*          
+LISTEN 0      4096      10.104.0.2:8201       0.0.0.0:*          
+LISTEN 0      4096      10.104.0.2:12379      0.0.0.0:*          
+LISTEN 0      4096      10.104.0.2:12380      0.0.0.0:*          
+LISTEN 0      128       10.104.0.2:15432      0.0.0.0:*          
+LISTEN 0      128       10.104.0.2:15433      0.0.0.0:*          
+LISTEN 0      511        127.0.0.1:6379       0.0.0.0:*          
+LISTEN 0      511        127.0.0.1:26379      0.0.0.0:*          
+LISTEN 0      4096      10.104.0.2:19334      0.0.0.0:*          
+LISTEN 0      4096      10.104.0.2:19333      0.0.0.0:*          
+LISTEN 0      128        10.15.0.5:8883       0.0.0.0:*          
+LISTEN 0      100        127.0.0.1:1885       0.0.0.0:*          
+LISTEN 0      100          0.0.0.0:8884       0.0.0.0:*          
+LISTEN 0      128       10.104.0.2:16379      0.0.0.0:*          
+LISTEN 0      4096       127.0.0.1:19301      0.0.0.0:*          
+LISTEN 0      4096       127.0.0.1:18333      0.0.0.0:*          
+LISTEN 0      128       10.104.0.2:18200      0.0.0.0:*          
+LISTEN 0      4096       127.0.0.1:18334      0.0.0.0:*          
+LISTEN 0      511       10.104.0.2:26379      0.0.0.0:*          
+LISTEN 0      4096       127.0.0.1:19333      0.0.0.0:*          
+LISTEN 0      4096       127.0.0.1:19334      0.0.0.0:*          
+LISTEN 0      100       10.104.0.2:1887       0.0.0.0:*          
+LISTEN 0      5         10.104.0.2:8008       0.0.0.0:*          
+LISTEN 0      128       10.104.0.2:8883       0.0.0.0:*          
+LISTEN 0      4096      127.0.0.54:53         0.0.0.0:*          
+LISTEN 0      100       10.104.0.2:8886       0.0.0.0:*          
+LISTEN 0      4096      10.104.0.2:18100      0.0.0.0:*          
+LISTEN 0      100       10.104.0.2:8885       0.0.0.0:*          
+LISTEN 0      4096      10.104.0.2:18082      0.0.0.0:*          
+LISTEN 0      4096      10.104.0.2:18083      0.0.0.0:*          
+LISTEN 0      4096      10.104.0.2:18080      0.0.0.0:*          
+LISTEN 0      5         10.104.0.2:18081      0.0.0.0:*          
+LISTEN 0      4096       127.0.0.1:19101      0.0.0.0:*          
+LISTEN 0      4096            [::]:22            [::]:*          
+LISTEN 0      100             [::]:8884          [::]:*          
+LISTEN 0      128                *:8080             *:*          

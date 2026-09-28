@@ -1,0 +1,24 @@
+test_cli_writes_without_overwriting_source (test_i2_evidence.I2OfflineTests.test_cli_writes_without_overwriting_source) ... ok
+test_convenience_column_payload_mismatch_invalid (test_i2_evidence.I2OfflineTests.test_convenience_column_payload_mismatch_invalid) ... ok
+test_duplicate_source_event_keys_invalid (test_i2_evidence.I2OfflineTests.test_duplicate_source_event_keys_invalid) ... ok
+test_fabric_anchor_changed_invalid (test_i2_evidence.I2OfflineTests.test_fabric_anchor_changed_invalid) ... ok
+test_formal_shape_remains_uncounted (test_i2_evidence.I2OfflineTests.test_formal_shape_remains_uncounted) ... ok
+test_incomplete_formal_shape_invalid (test_i2_evidence.I2OfflineTests.test_incomplete_formal_shape_invalid) ... ok
+test_independent_fabric_query_mandatory (test_i2_evidence.I2OfflineTests.test_independent_fabric_query_mandatory) ... ok
+test_missing_read_only_recompute_invalid (test_i2_evidence.I2OfflineTests.test_missing_read_only_recompute_invalid) ... ok
+test_mutated_current_canonical_without_digest_invalid (test_i2_evidence.I2OfflineTests.test_mutated_current_canonical_without_digest_invalid) ... ok
+test_new_fabric_commit_is_fail_not_invalid (test_i2_evidence.I2OfflineTests.test_new_fabric_commit_is_fail_not_invalid) ... ok
+test_outbox_seal_mutation_invalid (test_i2_evidence.I2OfflineTests.test_outbox_seal_mutation_invalid) ... ok
+test_production_v1_vector_exact_digest (test_i2_evidence.I2OfflineTests.test_production_v1_vector_exact_digest) ... ok
+test_restoration_mismatch_is_failure_not_success (test_i2_evidence.I2OfflineTests.test_restoration_mismatch_is_failure_not_success) ... ok
+test_same_value_not_a_tamper_invalid (test_i2_evidence.I2OfflineTests.test_same_value_not_a_tamper_invalid) ... ok
+test_source_snapshot_digest_invalid (test_i2_evidence.I2OfflineTests.test_source_snapshot_digest_invalid) ... ok
+test_stale_source_snapshot_cannot_masquerade_current (test_i2_evidence.I2OfflineTests.test_stale_source_snapshot_cannot_masquerade_current) ... ok
+test_synthetic_unchanged_and_tampered (test_i2_evidence.I2OfflineTests.test_synthetic_unchanged_and_tampered) ... ok
+test_unrelated_payload_mutation_invalid (test_i2_evidence.I2OfflineTests.test_unrelated_payload_mutation_invalid) ... ok
+test_wrong_original_canonical_digest_invalid (test_i2_evidence.I2OfflineTests.test_wrong_original_canonical_digest_invalid) ... ok
+
+----------------------------------------------------------------------
+Ran 19 tests in 0.260s
+
+OK

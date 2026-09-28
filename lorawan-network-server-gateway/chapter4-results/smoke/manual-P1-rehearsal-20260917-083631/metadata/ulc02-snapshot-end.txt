@@ -1,0 +1,20 @@
+timestamp_utc=2026-09-17T00:40:15Z
+hostname=ulc-02
+kernel=6.8.0-138-generic
+uptime_seconds=2400267
+--- memory ---
+               total        used        free      shared  buff/cache   available
+Mem:      2063577088  1065070592   151298048   111685632  1136553984   998506496
+Swap:              0           0           0
+--- load ---
+1.03 0.61 0.37 8/391 2930866
+--- docker ---
+lorawan-gateway-evidence-ingest-1|cff6b2814555|Up 5 days
+lorawan-gateway-evidence-fabric-adapter-1|9e08e25fe5dd|Up 6 days
+lorawan-gateway-evidence-verifier-1|300a1c5322d0|Up 6 days
+seaweedfs|chrislusf/seaweedfs:4.41|Up 2 weeks
+seaweedfs-metadata-etcd|quay.io/coreos/etcd:v3.5.15|Up 2 weeks
+openbao|11fd73a2102c|Up 2 weeks
+chirpstack|9e0105f1dd73|Up 6 days
+spilo|6bf45913616f|Up 3 weeks
+etcd|quay.io/coreos/etcd:v3.5.15|Up 3 weeks

@@ -1,0 +1,49 @@
+{
+  "errors": [],
+  "finished_at_utc": "2026-09-18T07:05:12Z",
+  "formal": false,
+  "runs": [
+    {
+      "elapsed_wall_seconds": 15.024756300030276,
+      "pair_id": "P2-control-commissioning-20260918-30s-r0p0667-rep1",
+      "phase": "control",
+      "planned_records": 2,
+      "resumed": false,
+      "status": "PASS",
+      "summary": "C:\\Users\\smartagriintern\\Documents\\projects\\lorawan-setup\\lorawan-network-server-gateway\\chapter4-results\\joint-fabric\\P2-control-commissioning-20260918-30s\\P2-control-commissioning-20260918-30s-r0p0667-rep1\\benchmark-control\\summary.json"
+    },
+    {
+      "elapsed_wall_seconds": 29.022821599966846,
+      "pair_id": "P2-control-commissioning-20260918-30s-r1-rep1",
+      "phase": "control",
+      "planned_records": 30,
+      "resumed": false,
+      "status": "PASS",
+      "summary": "C:\\Users\\smartagriintern\\Documents\\projects\\lorawan-setup\\lorawan-network-server-gateway\\chapter4-results\\joint-fabric\\P2-control-commissioning-20260918-30s\\P2-control-commissioning-20260918-30s-r1-rep1\\benchmark-control\\summary.json"
+    },
+    {
+      "elapsed_wall_seconds": 29.829910700093023,
+      "pair_id": "P2-control-commissioning-20260918-30s-r5-rep1",
+      "phase": "control",
+      "planned_records": 150,
+      "resumed": false,
+      "status": "PASS",
+      "summary": "C:\\Users\\smartagriintern\\Documents\\projects\\lorawan-setup\\lorawan-network-server-gateway\\chapter4-results\\joint-fabric\\P2-control-commissioning-20260918-30s\\P2-control-commissioning-20260918-30s-r5-rep1\\benchmark-control\\summary.json"
+    },
+    {
+      "elapsed_wall_seconds": 29.931801700033247,
+      "pair_id": "P2-control-commissioning-20260918-30s-r10-rep1",
+      "phase": "control",
+      "planned_records": 300,
+      "resumed": false,
+      "status": "PASS",
+      "summary": "C:\\Users\\smartagriintern\\Documents\\projects\\lorawan-setup\\lorawan-network-server-gateway\\chapter4-results\\joint-fabric\\P2-control-commissioning-20260918-30s\\P2-control-commissioning-20260918-30s-r10-rep1\\benchmark-control\\summary.json"
+    }
+  ],
+  "scope": "control-only",
+  "session_id": "P2-control-commissioning-20260918-30s",
+  "session_sha256": "dda00c5683bf6dcd3dee815176e76cadf395c9b29534fe302788b06fdb91b4f4",
+  "started_at_utc": "2026-09-18T07:03:28Z",
+  "status": "PASS",
+  "test": "P2"
+}

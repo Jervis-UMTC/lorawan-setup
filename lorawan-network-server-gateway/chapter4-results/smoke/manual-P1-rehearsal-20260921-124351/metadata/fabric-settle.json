@@ -1,0 +1,16 @@
+{
+  "confirmed_source_events": 4,
+  "elapsed_seconds": 163.972,
+  "enabled": true,
+  "finished_utc": "2026-09-21T04:47:43.828Z",
+  "last_poll_utc": "2026-09-21T04:47:42.922Z",
+  "missing_source_events": [],
+  "outbox_rows": 4,
+  "poll_interval_seconds": 5,
+  "started_utc": "2026-09-21T04:44:59.856Z",
+  "status": "CONFIRMED",
+  "timeout_seconds": 420,
+  "uplink_rows": 4,
+  "window_end_utc": "2026-09-21T04:44:43.857Z",
+  "window_start_utc": "2026-09-21T04:43:38.857Z"
+}

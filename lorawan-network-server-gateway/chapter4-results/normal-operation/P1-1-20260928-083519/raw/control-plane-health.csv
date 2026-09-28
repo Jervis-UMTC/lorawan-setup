@@ -1,0 +1,14 @@
+authoritative_timestamp_utc,workstation_midpoint_utc,server_minus_workstation_seconds,clock_probe_round_trip_ms,status,detail
+2026-09-28T00:35:19.694Z,2026-09-28T00:36:49.466Z,-89.772573,6.737,PASS,all collectors and evidence services healthy
+2026-09-28T00:35:34.966Z,2026-09-28T00:37:04.482Z,-89.516298,7.260,PASS,all collectors and evidence services healthy
+2026-09-28T00:35:50.109Z,2026-09-28T00:37:19.498Z,-89.389510,7.814,PASS,all collectors and evidence services healthy
+2026-09-28T00:36:05.409Z,2026-09-28T00:37:34.514Z,-89.105140,8.603,PASS,all collectors and evidence services healthy
+2026-09-28T00:36:20.521Z,2026-09-28T00:37:49.531Z,-89.010938,7.371,PASS,all collectors and evidence services healthy
+2026-09-28T00:36:30.646Z,2026-09-28T00:38:04.548Z,-93.902706,10.575,PASS,all collectors and evidence services healthy
+2026-09-28T00:36:45.781Z,2026-09-28T00:38:19.566Z,-93.785810,9.987,PASS,all collectors and evidence services healthy
+2026-09-28T00:37:01.001Z,2026-09-28T00:38:34.586Z,-93.585549,9.839,PASS,all collectors and evidence services healthy
+2026-09-28T00:37:16.143Z,2026-09-28T00:38:49.614Z,-93.471495,16.976,PASS,all collectors and evidence services healthy
+2026-09-28T00:37:31.292Z,2026-09-28T00:39:04.638Z,-93.346113,11.720,PASS,all collectors and evidence services healthy
+2026-09-28T00:37:46.447Z,2026-09-28T00:39:19.655Z,-93.208412,7.112,PASS,all collectors and evidence services healthy
+2026-09-28T00:38:01.587Z,2026-09-28T00:39:34.670Z,-93.083948,8.643,PASS,all collectors and evidence services healthy
+2026-09-28T00:38:16.712Z,2026-09-28T00:39:49.688Z,-92.976583,8.936,PASS,all collectors and evidence services healthy

@@ -1,0 +1,37 @@
+HOST=ulc-01
+MOSQUITTO_ACTIVE=active
+MainPID=1497232
+NRestarts=0
+ActiveEnterTimestampMonotonic=1903637117070
+MOSQUITTO_PROCESSES_BEGIN
+1497232 /usr/sbin/mosquitto -c /etc/mosquitto/mosquitto.conf
+MOSQUITTO_PROCESSES_END
+MOSQUITTO_CONFIG_SHA_BEGIN
+dea34f98b5b2d1eb72c566c691b7e70ab1683df5ae37230613cb6d1af52ecbed  /etc/mosquitto/aclfile.example
+9817034f6fc16b96721b51687a010883fe6bd4f920d3e56d7d57529e6312254d  /etc/mosquitto/ca_certificates/README
+107814dcfd6c79003ca7f379f25ba882c70fb719ec5a7716cc1971f9768fc925  /etc/mosquitto/certs/README
+46a1283b2ab57e85756290442008bb22fba4e7658af67c05bd10f992fd10a7e1  /etc/mosquitto/chirpstack.acl
+2cbecf5627815164de5f8b0897cc4d225f60f239129000a6b1ca2254a0f06899  /etc/mosquitto/chirpstack.passwd
+e65ad9ec6b2b414dca46bbeb91ae1671814f4f2accb384a4b107d744ccd94516  /etc/mosquitto/conf.d/00-auth-scope.conf
+f977924d2581a8cc1244ccc2ddfdd725737cf767b56f3df7dcfff711137ddd51  /etc/mosquitto/conf.d/README
+03012a94cd1a90feca04dfa3b11baf7de052057de2aa20d5cb05cbcac1c08e00  /etc/mosquitto/conf.d/chirpstack.conf
+9e2e94b57621070a51237ed37560ae8164117d05cb1d72141bd8c7bfe7d5de0d  /etc/mosquitto/conf.d/node-red.conf
+b545cc0ca1dfc69702b97356361474cbe08c94684a95555644c852c212943ba2  /etc/mosquitto/conf.d/tls.conf
+bac0d9e1df35f8574e32f1fac7c3bfbbb25385f3823737148f4273248f23e64d  /etc/mosquitto/conf.d/tls.conf.phase8b-before-20260824-081949
+da6a60384b49885859e40cf14a66323401238f50fcc1e296582ef8b93ce3d588  /etc/mosquitto/conf.d/tls.conf.phase9-before-chirpstack-20260825-064756
+0b06971f2426e4d817d6d098a8d7ab80b1899321d73b9cc30af4fa16679800a4  /etc/mosquitto/gateway-mtls-20260828T015613Z/tls.conf.before
+dcc447cd2833c96e9920ede721b7278406fe85f2599920720ed41b731b5a1512  /etc/mosquitto/gateway.acl
+56605f15692929ef6b39b51ebd070bd7d999319ba6f165f3809e0b37a5341e16  /etc/mosquitto/gateway.acl.pre-evidence-20260901
+bb4e12f161133cbae868a20dd196b5fb544d947b088308d340d7565c93511258  /etc/mosquitto/mosquitto.conf
+bb4e12f161133cbae868a20dd196b5fb544d947b088308d340d7565c93511258  /etc/mosquitto/mosquitto.conf.phase8-before-20260824-075727
+bb4e12f161133cbae868a20dd196b5fb544d947b088308d340d7565c93511258  /etc/mosquitto/mosquitto.conf.phase9-before-chirpstack-20260825-064756
+22109e41e7a0d6fee17b524393af5794d2833a36c617316afa046bfd88a268dd  /etc/mosquitto/node-red.acl
+bfb6718411b104857a02060b1078c61197a2085abd6b5cdcbbcd9d46b1b133c1  /etc/mosquitto/node-red.acl.before-standby-20260828T045709Z
+f8e6c377ada750e97cbd354f56410d5d0e2bbf1a14dd77403e289d9a42970c5c  /etc/mosquitto/pskfile.example
+c6d5f6ed55ce07a25a437921f16ed0f2bfab347e61bbe3f74f046ff18eb1bc77  /etc/mosquitto/pwfile.example
+MOSQUITTO_CONFIG_SHA_END
+MQTT_LISTENERS_BEGIN
+State  Recv-Q Send-Q Local Address:Port  Peer Address:PortProcess
+LISTEN 0      128        10.15.0.5:8883       0.0.0.0:*          
+LISTEN 0      128       10.104.0.2:8883       0.0.0.0:*          
+MQTT_LISTENERS_END

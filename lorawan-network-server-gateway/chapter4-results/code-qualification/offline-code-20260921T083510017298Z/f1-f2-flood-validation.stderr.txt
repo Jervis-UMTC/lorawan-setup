@@ -1,0 +1,19 @@
+test_completed_rehearsal_recovery_and_tamper_rejection (test_flood_harness.FloodOfflineTests.test_completed_rehearsal_recovery_and_tamper_rejection) ... ok
+test_completed_session_written_only_after_cleanup (test_flood_harness.FloodOfflineTests.test_completed_session_written_only_after_cleanup) ... ok
+test_f1_accepted_invalid_or_local_errors_rejected (test_flood_harness.FloodOfflineTests.test_f1_accepted_invalid_or_local_errors_rejected) ... ok
+test_f1_positive_workload_counts (test_flood_harness.FloodOfflineTests.test_f1_positive_workload_counts) ... ok
+test_f1_unobserved_broker_connections_rejected (test_flood_harness.FloodOfflineTests.test_f1_unobserved_broker_connections_rejected) ... ok
+test_f1_zero_rate_baseline (test_flood_harness.FloodOfflineTests.test_f1_zero_rate_baseline) ... ok
+test_f2_missing_generator_or_target_records_rejected (test_flood_harness.FloodOfflineTests.test_f2_missing_generator_or_target_records_rejected) ... ok
+test_f2_positive_workload_counts (test_flood_harness.FloodOfflineTests.test_f2_positive_workload_counts) ... ok
+test_f2_zero_rate_baseline (test_flood_harness.FloodOfflineTests.test_f2_zero_rate_baseline) ... ok
+test_missing_guard_evidence_fails_closed (test_flood_harness.FloodOfflineTests.test_missing_guard_evidence_fails_closed) ... ok
+test_no_legitimate_telemetry_fails_both_tests (test_flood_harness.FloodOfflineTests.test_no_legitimate_telemetry_fails_both_tests) ... ok
+test_recovery_missing_rate_fails_closed (test_flood_harness.FloodOfflineTests.test_recovery_missing_rate_fails_closed) ... ok
+test_session_checkpoints_first_rate_if_next_window_fails (test_flood_harness.FloodOfflineTests.test_session_checkpoints_first_rate_if_next_window_fails) ... ok
+test_unapproved_db_rows_rejected_for_both_tests (test_flood_harness.FloodOfflineTests.test_unapproved_db_rows_rejected_for_both_tests) ... ok
+
+----------------------------------------------------------------------
+Ran 14 tests in 0.227s
+
+OK

@@ -1,0 +1,128 @@
+{
+  "requirements": {
+    "normal-operation": {
+      "unit": "runs",
+      "required": 3,
+      "records": "~120 scheduled uplinks/run",
+      "method": "3 x 30 min"
+    },
+    "authentication": {
+      "unit": "trials",
+      "required": 90,
+      "records": "3 layers x 3 conditions x 10",
+      "method": "90 decisions"
+    },
+    "replay-spoofing": {
+      "unit": "trials",
+      "required": 40,
+      "records": "10 legitimate + 10 replay + 10 genuine + 10 invalid-MIC",
+      "method": "40 decisions"
+    },
+    "integrity": {
+      "unit": "trials",
+      "required": 40,
+      "records": "10 unchanged app + 10 altered app + 10 unchanged stored + 10 tampered stored",
+      "method": "40 verifications"
+    },
+    "traceability": {
+      "unit": "trials",
+      "required": 20,
+      "records": "20 trials / 60 records",
+      "method": "10 individual + 10 histories x 5"
+    },
+    "flooding": {
+      "unit": "runs",
+      "required": 18,
+      "records": "2 attack types x 3 levels x 3 repetitions",
+      "method": "18 x (5 min load + 5 min recovery)"
+    },
+    "resilience": {
+      "unit": "runs",
+      "required": 3,
+      "records": "~480 uplinks/run",
+      "method": "3 x (30m normal + 60m outage + 30m recovery)"
+    }
+  },
+  "counted": {
+    "normal-operation": 0,
+    "authentication": 0,
+    "replay-spoofing": 0,
+    "integrity": 0,
+    "traceability": 0,
+    "flooding": 0,
+    "resilience": 0
+  },
+  "readiness": [
+    {
+      "test_area": "normal-operation",
+      "count_unit": "runs",
+      "required": 3,
+      "countable_completed": 0,
+      "remaining": 3,
+      "status": "INCOMPLETE",
+      "methodology": "3 x 30 min",
+      "record_basis": "~120 scheduled uplinks/run"
+    },
+    {
+      "test_area": "authentication",
+      "count_unit": "trials",
+      "required": 90,
+      "countable_completed": 0,
+      "remaining": 90,
+      "status": "INCOMPLETE",
+      "methodology": "90 decisions",
+      "record_basis": "3 layers x 3 conditions x 10"
+    },
+    {
+      "test_area": "replay-spoofing",
+      "count_unit": "trials",
+      "required": 40,
+      "countable_completed": 0,
+      "remaining": 40,
+      "status": "INCOMPLETE",
+      "methodology": "40 decisions",
+      "record_basis": "10 legitimate + 10 replay + 10 genuine + 10 invalid-MIC"
+    },
+    {
+      "test_area": "integrity",
+      "count_unit": "trials",
+      "required": 40,
+      "countable_completed": 0,
+      "remaining": 40,
+      "status": "INCOMPLETE",
+      "methodology": "40 verifications",
+      "record_basis": "10 unchanged app + 10 altered app + 10 unchanged stored + 10 tampered stored"
+    },
+    {
+      "test_area": "traceability",
+      "count_unit": "trials",
+      "required": 20,
+      "countable_completed": 0,
+      "remaining": 20,
+      "status": "INCOMPLETE",
+      "methodology": "10 individual + 10 histories x 5",
+      "record_basis": "20 trials / 60 records"
+    },
+    {
+      "test_area": "flooding",
+      "count_unit": "runs",
+      "required": 18,
+      "countable_completed": 0,
+      "remaining": 18,
+      "status": "INCOMPLETE",
+      "methodology": "18 x (5 min load + 5 min recovery)",
+      "record_basis": "2 attack types x 3 levels x 3 repetitions"
+    },
+    {
+      "test_area": "resilience",
+      "count_unit": "runs",
+      "required": 3,
+      "countable_completed": 0,
+      "remaining": 3,
+      "status": "INCOMPLETE",
+      "methodology": "3 x (30m normal + 60m outage + 30m recovery)",
+      "record_basis": "~480 uplinks/run"
+    }
+  ],
+  "normal_runs": []
+}

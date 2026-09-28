@@ -1,0 +1,239 @@
+{
+  "raw": [
+    [
+      "control-plane-health.csv",
+      14438
+    ],
+    [
+      "emu-01-source.log",
+      42034
+    ],
+    [
+      "emu-01-source.log.stderr",
+      0
+    ],
+    [
+      "fabric-outbox.csv",
+      50463
+    ],
+    [
+      "fabric-outbox.csv.stderr",
+      261
+    ],
+    [
+      "gateway-mqtt-events.csv",
+      82385
+    ],
+    [
+      "gateway-mqtt-events.csv.stderr",
+      261
+    ],
+    [
+      "gateway-resource.csv",
+      26829
+    ],
+    [
+      "gateway-resource.csv.stderr",
+      0
+    ],
+    [
+      "gateway.log",
+      192326
+    ],
+    [
+      "gateway.log.stderr",
+      0
+    ],
+    [
+      "markers.csv",
+      28
+    ],
+    [
+      "measurements.csv",
+      231122
+    ],
+    [
+      "measurements.csv.stderr",
+      261
+    ],
+    [
+      "ulc01-chirpstack.log",
+      678243
+    ],
+    [
+      "ulc01-chirpstack.log.stderr",
+      0
+    ],
+    [
+      "ulc01-docker-resource.csv",
+      167908
+    ],
+    [
+      "ulc01-docker-resource.csv.stderr",
+      0
+    ],
+    [
+      "ulc01-host-resource.csv",
+      32338
+    ],
+    [
+      "ulc01-host-resource.csv.stderr",
+      0
+    ],
+    [
+      "ulc02-chirpstack.log",
+      682882
+    ],
+    [
+      "ulc02-chirpstack.log.stderr",
+      0
+    ],
+    [
+      "ulc02-docker-resource.csv",
+      166750
+    ],
+    [
+      "ulc02-docker-resource.csv.stderr",
+      0
+    ],
+    [
+      "ulc02-host-resource.csv",
+      32696
+    ],
+    [
+      "ulc02-host-resource.csv.stderr",
+      0
+    ],
+    [
+      "ulc03-docker-resource.csv",
+      160147
+    ],
+    [
+      "ulc03-docker-resource.csv.stderr",
+      0
+    ],
+    [
+      "ulc03-host-resource.csv",
+      32695
+    ],
+    [
+      "ulc03-host-resource.csv.stderr",
+      0
+    ],
+    [
+      "uplinks.csv",
+      42997
+    ],
+    [
+      "uplinks.csv.stderr",
+      261
+    ]
+  ],
+  "source": {
+    "attempts": 120,
+    "capture_present": true,
+    "captured_attempts_total": 121,
+    "clock_calibration_status": "PASS",
+    "formal_window_end_server_minus_workstation_seconds": -85.177476,
+    "formal_window_filter_status": "MEASURED_START_END_CALIBRATED_OFFSET",
+    "formal_window_server_minus_workstation_seconds": -85.247022,
+    "out_of_window_attempts": 1,
+    "reasons": {
+      "normal": 120
+    },
+    "send_ok": 120,
+    "sequences": {
+      "count": 120,
+      "gaps": [],
+      "max": 134,
+      "min": 15
+    }
+  },
+  "telemetry": {
+    "application_event_to_db_ms": {
+      "count": 119,
+      "max": 184.37,
+      "mean": 34.33600840336135,
+      "min": 8.111,
+      "sd_sample": 21.72362424872813
+    },
+    "database_delivery_note": "Database-delivery correlation uses byte-exact payload matches. Source timestamps are shifted by the median DB-minus-source clock offset estimated from exact matches; only projected source attempts inside the DB export window are eligible. This is NOT the formal Chapter 3 PDR, whose numerator is unique legitimate uplinks accepted by ChirpStack.",
+    "database_delivery_percent_exact_payload_clock_aligned": 99.16666666666667,
+    "duplicate_event_rows": 0,
+    "duplicate_frame_counter_values": {},
+    "duplicate_test_sequence_values": {},
+    "formal_chapter3_pdr_denominator_sensor_transmission_attempts": 120,
+    "formal_chapter3_pdr_note": "Chapter 3 PDR uses unique accepted EMU-01 ChirpStack deduplication IDs from the exact formal server-UTC window divided by scheduled SENSOR_TX attempts projected into that same window with the recorded ULC-01/workstation clock offset. Warm-up source lines are excluded; a scheduled source-side send failure inside the window remains in the denominator. Database storage is not the numerator.",
+    "formal_chapter3_pdr_numerator_unique_chirpstack_accepted": 119,
+    "formal_chapter3_pdr_percent": 99.16666666666667,
+    "formal_chapter3_pdr_status": "MEASURED_CHIRPSTACK_ACCEPTANCE_BOUNDARY",
+    "frame_counter": {
+      "count": 119,
+      "gaps": [
+        122
+      ],
+      "max": 133,
+      "min": 14
+    },
+    "gateway_frequency_hz_counts": {
+      "923200000": 59,
+      "923400000": 60
+    },
+    "latency_note": "sensor_to_database_ms is received_at minus the independently calibrated SENSOR_TX workstation timestamp; application_event_to_db_ms remains received_at - application event time",
+    "pdr_note": "DEPRECATED LABEL: this legacy field is source-to-database delivery correlation, not formal Chapter 3 PDR. Database-delivery correlation uses byte-exact payload matches. Source timestamps are shifted by the median DB-minus-source clock offset estimated from exact matches; only projected source attempts inside the DB export window are eligible. This is NOT the formal Chapter 3 PDR, whose numerator is unique legitimate uplinks accepted by ChirpStack.",
+    "pdr_percent_exact_payload_clock_aligned": 99.16666666666667,
+    "rows": 119,
+    "rssi_dbm": {
+      "count": 119,
+      "max": -30.0,
+      "mean": -37.47899159663866,
+      "min": -48.0,
+      "sd_sample": 7.706313435820998
+    },
+    "sensor_to_database_ms": {
+      "count": 119,
+      "max": 1144.097,
+      "mean": 628.6309915966386,
+      "min": 386.081,
+      "sd_sample": 165.6336304855447
+    },
+    "sensor_to_database_status": "MEASURED_CALIBRATED_SENSOR_TO_DATABASE",
+    "snr_db": {
+      "count": 119,
+      "max": 14.5,
+      "mean": 13.850840336134453,
+      "min": 13.25,
+      "sd_sample": 0.30760027945131996
+    },
+    "test_sequence": {
+      "count": 119,
+      "gaps": [
+        123
+      ],
+      "max": 134,
+      "min": 15
+    },
+    "unique_event_keys": 119
+  },
+  "correlation": {
+    "clock_offset_db_minus_source_seconds": {
+      "count": 119,
+      "max": -84.203503,
+      "mean": -84.61798306722689,
+      "min": -84.873795,
+      "sd_sample": 0.15885287051432084
+    },
+    "clock_offset_median_seconds": -84.633418,
+    "db_payloads_total": 119,
+    "db_payloads_unmatched_to_source": 0,
+    "eligible_exact_payload_matches": 119,
+    "eligible_source_attempts_in_db_export_window": 120,
+    "exact_payload_matches": 119,
+    "measurement_clock_calibration_status": "PASS",
+    "measurement_clock_drift_seconds": 0.06954600000000255,
+    "measurement_clock_end_server_minus_workstation_seconds": -85.177476,
+    "measurement_clock_start_server_minus_workstation_seconds": -85.247022,
+    "source_payloads_total": 121,
+    "source_payloads_unmatched_to_db": 1
+  }
+}

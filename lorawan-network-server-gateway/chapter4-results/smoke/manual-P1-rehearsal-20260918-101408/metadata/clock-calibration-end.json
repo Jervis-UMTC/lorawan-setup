@@ -1,0 +1,59 @@
+{
+  "cloud_spread_limit_seconds": 0.25,
+  "cloud_spread_seconds": 0.0024349999999913052,
+  "errors": [],
+  "gateway_cloud_skew_limit_seconds": 1.5,
+  "gateway_minus_cloud_seconds": -0.8191699999999997,
+  "probes": {
+    "gateway": {
+      "measurement": "established SSH command-channel request/response midpoint",
+      "node": "gateway",
+      "offset_max_seconds": -91.763376,
+      "offset_min_seconds": -92.013036,
+      "resolution_note": "Gateway clock probe has whole-second timestamp resolution",
+      "rtt_max_ms": 26.442,
+      "rtt_median_ms": 7.5760000000000005,
+      "samples": 5,
+      "server_minus_workstation_seconds": -91.887085,
+      "server_timestamp_utc": "2026-09-18T02:15:44Z"
+    },
+    "ulc01": {
+      "measurement": "established SSH command-channel request/response midpoint",
+      "node": "ulc01",
+      "offset_max_seconds": -91.060196,
+      "offset_min_seconds": -91.072005,
+      "rtt_max_ms": 83.823,
+      "rtt_median_ms": 75.942,
+      "samples": 5,
+      "server_minus_workstation_seconds": -91.067915,
+      "server_timestamp_utc": "2026-09-18T02:15:41.108Z"
+    },
+    "ulc02": {
+      "measurement": "established SSH command-channel request/response midpoint",
+      "node": "ulc02",
+      "offset_max_seconds": -91.058616,
+      "offset_min_seconds": -91.075186,
+      "rtt_max_ms": 79.383,
+      "rtt_median_ms": 70.588,
+      "samples": 5,
+      "server_minus_workstation_seconds": -91.068001,
+      "server_timestamp_utc": "2026-09-18T02:15:42.996Z"
+    },
+    "ulc03": {
+      "measurement": "established SSH command-channel request/response midpoint",
+      "node": "ulc03",
+      "offset_max_seconds": -91.061277,
+      "offset_min_seconds": -91.067555,
+      "rtt_max_ms": 72.82900000000001,
+      "rtt_median_ms": 64.451,
+      "samples": 5,
+      "server_minus_workstation_seconds": -91.065566,
+      "server_timestamp_utc": "2026-09-18T02:15:44.424Z"
+    }
+  },
+  "ready": true,
+  "reference": "median of midpoint-corrected ulc01/ulc02/ulc03 utc-now probes",
+  "server_minus_workstation_seconds": -91.067915,
+  "workstation_calibration_limit_seconds": 300.0,
+  "workstation_drift_limit_seconds": 0.1
+}

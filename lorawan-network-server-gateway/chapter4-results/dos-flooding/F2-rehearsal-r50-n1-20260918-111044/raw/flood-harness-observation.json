@@ -1,0 +1,31 @@
+{
+  "db_guard": {
+    "EMU_LAST_2M": "8",
+    "FAKE_OUTBOX_TOTAL": "0",
+    "FAKE_UPLINKS_TOTAL": "0"
+  },
+  "duration_seconds": 20,
+  "flood_end_utc": "2026-09-18T03:15:34.128Z",
+  "flood_start_utc": "2026-09-18T03:15:09.332Z",
+  "formal": false,
+  "load": {
+    "accepted": 0,
+    "generated": 1000,
+    "planned": 1000,
+    "published": 1000,
+    "raw": "planned_messages=1000\ngenerated_messages=1000\n\npublished_messages=1000",
+    "received": 1000,
+    "rejected": 1000
+  },
+  "measurement_clock_server_minus_workstation_seconds": -91.000997,
+  "rate_per_second": 50,
+  "recovery_seconds": 20,
+  "repetition": 1,
+  "run_id": "F2-rehearsal-r50-n1-20260918-111044",
+  "window": {
+    "MEAN_LATENCY_MS": "25.266",
+    "UNAUTHORIZED_OUTBOX": "0",
+    "UNAUTHORIZED_UPLINKS": "0",
+    "VALID_DELIVERED": "1"
+  }
+}

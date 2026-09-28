@@ -1,0 +1,44 @@
+{
+  "accepted_attack_application_events": 0,
+  "attack_attempts": 2,
+  "attack_created_database_rows": 0,
+  "attack_created_fabric_outbox": 0,
+  "counted_research": false,
+  "evidence_paths": [
+    "replay-R01/fixture.json",
+    "replay-R01/baseline.json",
+    "replay-R01/send.json",
+    "replay-R01/replay-decision.json",
+    "spoof-S01/fixture.json",
+    "spoof-S01/send.json",
+    "spoof-S01/spoof-decision.json"
+  ],
+  "formal": false,
+  "formal_release": "NOT_READY",
+  "gateway_received_attempts": 2,
+  "methodology": "one genuine accepted control reused for one replay and one spoof; Chapter 3 requires 10 distinct controls/replays and 10 distinct controls/spoofs with full orchestration",
+  "qualification": "LIVE_NON_COUNTED_REHEARSAL",
+  "replay": {
+    "control_event_key": "2f3d728d-1897-4eed-a3cb-af8f144161f9",
+    "control_fabric_txid": "ba620cc66b27f3d549f687449523893b595eaaed908cbd490d2e15d6ef2ea4f7",
+    "control_fcnt": 212,
+    "gateway_journal_sequence": 4280,
+    "gateway_uplink_id": "1391523988",
+    "sha256": "ee93f1299e77f9371c65c8a2d15f3ffd0e93b538727362dc5377f7d236dc7ad0",
+    "status": "PASS"
+  },
+  "reported_at_utc": "2026-09-21T07:36:41.815380+00:00",
+  "sec_final_park": "VERIFIED NWM=1,BAND=8,NJM=1,CLASS=A,NJS=0,DEVEUI=0000000000000000",
+  "session_status": "TWO_REAL_ATTACK_RECEIVED_REJECTED_REHEARSALS_PASS",
+  "spoof": {
+    "gateway_journal_sequence": 4315,
+    "gateway_uplink_id": "3113324003",
+    "later_genuine_same_fcnt_event_key": "2f15b9ee-286f-4ed7-ab7d-8bd2fcc4a05f",
+    "latest_before_forge": 275,
+    "mic_specific_chirpstack_log": "NOT_OBSERVED",
+    "sha256": "e3add7a8ec4de6cb06212548409ae23afde71d8c4252e4a71de3aff9de35a9f1",
+    "status": "PASS_RECEIVED_AND_NOT_ACCEPTED",
+    "unaccepted_fcnt": 307
+  },
+  "test": "S1"
+}

@@ -1,0 +1,19 @@
+timestamp_utc,container,cpu_percent,memory_usage,memory_percent
+2026-09-18T01:26:26.743Z,lorawan-gateway-evidence-ingest-1,0.00,"3.352MiB / 192MiB",1.75
+2026-09-18T01:26:26.743Z,lorawan-gateway-evidence-fabric-adapter-1,0.00,"3.84MiB / 192MiB",2.00
+2026-09-18T01:26:26.743Z,lorawan-gateway-evidence-verifier-1,0.00,"9.004MiB / 192MiB",4.69
+2026-09-18T01:26:26.743Z,seaweedfs,0.49,"157.7MiB / 256MiB",61.61
+2026-09-18T01:26:26.743Z,seaweedfs-metadata-etcd,1.17,"50.29MiB / 96MiB",52.38
+2026-09-18T01:26:26.743Z,openbao,2.81,"52.45MiB / 512MiB",10.24
+2026-09-18T01:26:26.743Z,chirpstack,0.32,"42.74MiB / 1.922GiB",2.17
+2026-09-18T01:26:26.743Z,spilo,1.25,"202.4MiB / 1.922GiB",10.28
+2026-09-18T01:26:26.743Z,etcd,1.49,"70.29MiB / 1.922GiB",3.57
+2026-09-18T01:26:33.933Z,lorawan-gateway-evidence-ingest-1,0.00,"3.352MiB / 192MiB",1.75
+2026-09-18T01:26:33.933Z,lorawan-gateway-evidence-fabric-adapter-1,0.00,"3.84MiB / 192MiB",2.00
+2026-09-18T01:26:33.933Z,lorawan-gateway-evidence-verifier-1,0.11,"9.004MiB / 192MiB",4.69
+2026-09-18T01:26:33.933Z,seaweedfs,0.54,"157.7MiB / 256MiB",61.61
+2026-09-18T01:26:33.933Z,seaweedfs-metadata-etcd,1.09,"50.29MiB / 96MiB",52.38
+2026-09-18T01:26:33.933Z,openbao,4.51,"52.45MiB / 512MiB",10.24
+2026-09-18T01:26:33.933Z,chirpstack,0.38,"42.74MiB / 1.922GiB",2.17
+2026-09-18T01:26:33.933Z,spilo,0.68,"202.4MiB / 1.922GiB",10.28
+2026-09-18T01:26:33.933Z,etcd,0.94,"70.29MiB / 1.922GiB",3.57

@@ -1,0 +1,14 @@
+test_confirmed_requires_tx_and_timestamp (test_r2_fabric_reconciliation.R2OfflineTests.test_confirmed_requires_tx_and_timestamp) ... ok
+test_duplicate_keys_rejected (test_r2_fabric_reconciliation.R2OfflineTests.test_duplicate_keys_rejected) ... ok
+test_exact_two_rehearsal_records_are_frozen (test_r2_fabric_reconciliation.R2OfflineTests.test_exact_two_rehearsal_records_are_frozen) ... ok
+test_missing_and_invalid_digest_rejected (test_r2_fabric_reconciliation.R2OfflineTests.test_missing_and_invalid_digest_rejected) ... ok
+test_missing_record_rejected (test_r2_fabric_reconciliation.R2OfflineTests.test_missing_record_rejected) ... ok
+test_nonconfirmed_committed_timestamp_rejected (test_r2_fabric_reconciliation.R2OfflineTests.test_nonconfirmed_committed_timestamp_rejected) ... ok
+test_pending_and_reconciliation_states_are_not_false_verifications (test_r2_fabric_reconciliation.R2OfflineTests.test_pending_and_reconciliation_states_are_not_false_verifications) ... ok
+test_source_reconciliation_order_guard (test_r2_fabric_reconciliation.R2OfflineTests.test_source_reconciliation_order_guard) ... ok
+test_unrecoverable_statuses_rejected (test_r2_fabric_reconciliation.R2OfflineTests.test_unrecoverable_statuses_rejected) ... ok
+
+----------------------------------------------------------------------
+Ran 9 tests in 0.016s
+
+OK

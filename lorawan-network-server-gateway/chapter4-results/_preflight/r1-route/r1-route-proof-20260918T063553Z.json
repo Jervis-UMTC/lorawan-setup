@@ -1,0 +1,27 @@
+{
+  "alternate_default_routes": [],
+  "cloud_route": "129.212.208.168 via 100.64.247.118 dev wwan0 src 100.64.247.117 uid 0 \n    cache",
+  "contract": {
+    "alternate_wan_forbidden": true,
+    "lte_route_required": true
+  },
+  "default_routes": [
+    "default via 100.64.247.118 dev wwan0 src 100.64.247.117 metric 10"
+  ],
+  "errors": [],
+  "established_mqtt_8883_sockets": [
+    "tcp        0      0 100.64.247.117:51008    129.212.208.168:8883    ESTABLISHED ",
+    "tcp        0      0 100.64.247.117:51004    129.212.208.168:8883    ESTABLISHED "
+  ],
+  "generated_utc": "2026-09-18T06:35:53Z",
+  "lte_ipv4": "100.64.247.117",
+  "lte_l3_device": "wwan0",
+  "lte_up": true,
+  "management_lan_routes": [
+    "192.168.20.0/24 dev br-lan proto kernel scope link src 192.168.20.11"
+  ],
+  "schema_version": "1.0",
+  "snapshot_sha256": "f0ebeea2036145e5f9b4fb22acabdc4c8f8b78366ab92fd8a8c7556e34d3a3a9",
+  "status": "PASS",
+  "test_id": "R1"
+}

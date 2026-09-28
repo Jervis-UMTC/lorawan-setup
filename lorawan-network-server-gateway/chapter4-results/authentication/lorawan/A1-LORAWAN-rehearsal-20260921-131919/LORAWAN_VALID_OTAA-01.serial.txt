@@ -1,0 +1,2 @@
+EMU01_OTAA_JOIN=PASS,initial_tx_offset_ms=5919
+SENSOR_TX,seq=1,reason=normal,uptime_ms=18402,soil_pct=4.00,soil_temp_c=30.70,uv_index=0.00,baro_pa=101196,baro_temp_c=26.32,light_veml_lux=176.82,light_opt_lux=156.52,env_temp_c=30.10,env_humidity_pct=52.32,env_pressure_pa=100857,env_gas_ohm=43482,rain_wet=0,battery_mv=0,valid=0x7F,join=1,send_status=0

@@ -1,0 +1,27 @@
+RUN manual-P1-rehearsal-20260922-132449
+ raw/ulc01-chirpstack.log: bytes=24253 dedup=0 errors=0 tail=
+ raw/ulc02-chirpstack.log: bytes=26731 dedup=0 errors=0 tail=
+RUN manual-P1-rehearsal-20260921-124351
+ derived/run-summary.json: bytes=20343 dedup=0 errors=0 tail=
+ derived/run-status.txt: bytes=22 dedup=0 errors=0 tail=RECORDED_UNCLASSIFIED
+
+ raw/ulc01-chirpstack.log: bytes=27624 dedup=0 errors=0 tail=
+ raw/ulc02-chirpstack.log: bytes=28589 dedup=0 errors=0 tail=
+RUN manual-P1-rehearsal-20260918-112426
+ derived/run-summary.json: bytes=20503 dedup=0 errors=0 tail=
+ derived/run-status.txt: bytes=22 dedup=0 errors=0 tail=RECORDED_UNCLASSIFIED
+
+ raw/ulc01-chirpstack.log: bytes=23732 dedup=0 errors=0 tail=
+ raw/ulc02-chirpstack.log: bytes=26193 dedup=0 errors=0 tail=
+RUN manual-P1-rehearsal-20260918-103501
+ derived/run-summary.json: bytes=20600 dedup=0 errors=0 tail=
+ derived/run-status.txt: bytes=22 dedup=0 errors=0 tail=RECORDED_UNCLASSIFIED
+
+ raw/ulc01-chirpstack.log: bytes=24263 dedup=0 errors=0 tail=
+ raw/ulc02-chirpstack.log: bytes=26473 dedup=0 errors=0 tail=
+RUN manual-P1-rehearsal-20260918-102800
+ derived/run-summary.json: bytes=20280 dedup=0 errors=0 tail=
+ derived/run-status.txt: bytes=22 dedup=0 errors=0 tail=RECORDED_UNCLASSIFIED
+
+ raw/ulc01-chirpstack.log: bytes=25056 dedup=0 errors=0 tail=
+ raw/ulc02-chirpstack.log: bytes=27531 dedup=0 errors=0 tail=

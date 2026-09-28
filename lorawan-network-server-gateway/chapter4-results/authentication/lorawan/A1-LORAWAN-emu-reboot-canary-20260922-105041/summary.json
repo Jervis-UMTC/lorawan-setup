@@ -1,0 +1,19 @@
+{
+  "application_port_after": "COM11",
+  "application_port_before": "COM11",
+  "counted_research": false,
+  "dfu_exit_code": 0,
+  "dfu_port": "COM12",
+  "expected_package_sha256": "c1f09de8eb6d8e00bbdd432765db90c66eaa87a530f490e54d04558e81bbd6b1",
+  "finished_at_utc": "2026-09-22T02:51:42Z",
+  "join_boot_banner_seen": true,
+  "join_proof_method": "join_callback",
+  "otaa_join_pass": true,
+  "package_sha256": "c1f09de8eb6d8e00bbdd432765db90c66eaa87a530f490e54d04558e81bbd6b1",
+  "profile_15s_cadence_observed": true,
+  "profile_boot_banner_seen": false,
+  "profile_ok": true,
+  "profile_proof_method": "verified_dfu_and_15s_cadence",
+  "status": "PASS",
+  "successful_uplink": true
+}

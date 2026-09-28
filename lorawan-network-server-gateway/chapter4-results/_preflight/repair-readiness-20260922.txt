@@ -1,0 +1,5 @@
+RECORDER_STATUS_EXIT=1
+
+ERROR: No active research-recorder run.
+
+PORTS=COM11:USB Serial Device (COM11),COM16:USB Serial Device (COM16)

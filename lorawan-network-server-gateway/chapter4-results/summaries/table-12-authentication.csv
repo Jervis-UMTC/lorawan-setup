@@ -1,0 +1,10 @@
+test_layer,condition,trials,required_trials,expected,allowed,rejected,correct_decisions,correct_percent,false_acceptance,false_rejection,unauthorized_state_change,mean_response_seconds,sd_response_seconds,status
+LoRaWAN,correct OTAA,0,10,NOT_MEASURED,0,0,0,,0,0,,,,NOT_MEASURED
+LoRaWAN,wrong AppKey,0,10,NOT_MEASURED,0,0,0,,0,0,,,,NOT_MEASURED
+LoRaWAN,unregistered DevEUI,0,10,NOT_MEASURED,0,0,0,,0,0,,,,NOT_MEASURED
+MQTT,allowed,0,10,NOT_MEASURED,0,0,0,,0,0,,,,NOT_MEASURED
+MQTT,wrong password,0,10,NOT_MEASURED,0,0,0,,0,0,,,,NOT_MEASURED
+MQTT,prohibited topic,0,10,NOT_MEASURED,0,0,0,,0,0,,,,NOT_MEASURED
+Fabric,authorized,0,10,NOT_MEASURED,0,0,0,,0,0,,,,NOT_MEASURED
+Fabric,non-writer,0,10,NOT_MEASURED,0,0,0,,0,0,,,,NOT_MEASURED
+Fabric,invalid identity,0,10,NOT_MEASURED,0,0,0,,0,0,,,,NOT_MEASURED

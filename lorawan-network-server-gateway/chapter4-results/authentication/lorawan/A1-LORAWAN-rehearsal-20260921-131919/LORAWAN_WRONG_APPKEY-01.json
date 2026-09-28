@@ -1,0 +1,41 @@
+{
+  "actual_decision": "REJECT",
+  "chirpstack_state_unchanged": true,
+  "chirpstack_state_verified": true,
+  "condition": "LORAWAN_WRONG_APPKEY",
+  "correct_decision": true,
+  "ended_at_utc": "2026-09-21T05:19:30.250Z",
+  "expected_decision": "REJECT",
+  "false_acceptance": false,
+  "gateway_join_request_observed": true,
+  "join_observation_ms": 7834.716,
+  "join_request_count": 1,
+  "join_requests": [
+    {
+      "dev_eui": "ac1f09fffe296d29",
+      "join_eui": "0000000000000000",
+      "phy_sha256": "a707fe7de2e33547c12e93ee69206929e090799d6f9310d4a05aa556e33aa053",
+      "sequence": 3864
+    }
+  ],
+  "post_state": {
+    "dev_addr": "01b09da5",
+    "dev_eui": "ac1f09fffe296d29",
+    "f_cnt_up": "220",
+    "last_seen_at": "2026-09-21T05:17:52.400Z",
+    "raw": "REGISTERED|1\nSTATE|ac1f09fffe296d29|2026-09-21T05:17:52.400Z|01b09da5|786210d8a1dac93c77eeff925dd856bf|220",
+    "registered": "1",
+    "session_fingerprint": "786210d8a1dac93c77eeff925dd856bf"
+  },
+  "pre_state": {
+    "dev_addr": "01b09da5",
+    "dev_eui": "ac1f09fffe296d29",
+    "f_cnt_up": "220",
+    "last_seen_at": "2026-09-21T05:17:52.400Z",
+    "raw": "REGISTERED|1\nSTATE|ac1f09fffe296d29|2026-09-21T05:17:52.400Z|01b09da5|786210d8a1dac93c77eeff925dd856bf|220",
+    "registered": "1",
+    "session_fingerprint": "786210d8a1dac93c77eeff925dd856bf"
+  },
+  "started_at_utc": "2026-09-21T05:19:22.415Z",
+  "trial": 1
+}

@@ -1,0 +1,14 @@
+{
+  "confirmed_source_events": 0,
+  "enabled": false,
+  "finished_utc": "2026-09-21T06:45:02.235Z",
+  "missing_source_events": [],
+  "outbox_rows": 0,
+  "poll_interval_seconds": 5,
+  "started_utc": "2026-09-21T06:45:02.235Z",
+  "status": "DISABLED",
+  "timeout_seconds": 0,
+  "uplink_rows": 0,
+  "window_end_utc": "2026-09-21T06:44:44.915Z",
+  "window_start_utc": "2026-09-21T06:43:34.850Z"
+}

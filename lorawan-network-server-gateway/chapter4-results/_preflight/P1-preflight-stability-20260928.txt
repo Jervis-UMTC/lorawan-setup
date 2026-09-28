@@ -1,0 +1,128 @@
+SNAPSHOT_RC=0
+timestamp_utc=2026-09-28T00:18:03Z
+hostname=chirpstack-0abee3
+--- uptime ---
+663.66 2497.28
+--- lte ---
+{
+	"up": true,
+	"pending": false,
+	"available": true,
+	"autostart": true,
+	"dynamic": false,
+	"uptime": 617,
+	"l3_device": "wwan0",
+	"proto": "qmi",
+	"updated": [
+		"addresses"
+	],
+	"metric": 0,
+	"dns_metric": 0,
+	"delegation": true,
+	"ipv4-address": [
+		{
+			"address": "100.73.166.229",
+			"mask": 30
+		}
+	],
+	"ipv6-address": [
+		
+	],
+	"ipv6-prefix": [
+		
+	],
+	"ipv6-prefix-assignment": [
+		
+	],
+	"route": [
+		
+	],
+	"dns-server": [
+		"131.226.72.19",
+		"131.226.73.19"
+	],
+	"dns-search": [
+		
+	],
+	"neighbors": [
+		
+	],
+	"inactive": {
+		"ipv4-address": [
+			
+		],
+		"ipv6-address": [
+			
+		],
+		"route": [
+			
+		],
+		"dns-server": [
+			
+		],
+		"dns-search": [
+			
+		],
+		"neighbors": [
+			
+		]
+	},
+	"data": {
+		"cid_4": "18",
+		"pdh_4": "-2030754528"
+	}
+}
+--- lte_4 ---
+--- wwan0 ---
+3: wwan0: <POINTOPOINT,MULTICAST,NOARP,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UNKNOWN group default qlen 1000
+    link/none 
+    inet 100.73.166.229/30 brd 100.73.166.231 scope global wwan0
+       valid_lft forever preferred_lft forever
+    inet6 fe80::6758:9f21:518:a76c/64 scope link stable-privacy proto kernel_ll 
+       valid_lft forever preferred_lft forever
+--- routes ---
+default via 100.73.166.230 dev wwan0 src 100.73.166.229 metric 10 
+100.73.166.228/30 dev wwan0 proto kernel scope link src 100.73.166.229 
+192.168.20.0/24 dev br-lan proto kernel scope link src 192.168.20.11 
+--- cloud-route ---
+129.212.208.168 via 100.73.166.230 dev wwan0 src 100.73.166.229 uid 0 
+    cache 
+--- mqtt-sockets ---
+tcp        0      0 100.73.166.229:54468    129.212.208.168:8883    ESTABLISHED 
+tcp        0      0 100.73.166.229:46599    129.212.208.168:8883    TIME_WAIT   
+tcp        0      0 100.73.166.229:41077    129.212.208.168:8883    TIME_WAIT   
+tcp        0      0 100.73.166.229:50726    129.212.208.168:8883    ESTABLISHED 
+--- serving-system ---
+{
+	"registration": "registered",
+	"radio_interface": [
+		"lte"
+	],
+	"plmn_mcc": 515,
+	"plmn_mnc": 66,
+	"plmn_description": "515 66",
+	"roaming": false
+}
+--- signal ---
+{
+	"type": "lte",
+	"rssi": -70,
+	"rsrq": -13,
+	"rsrp": -100,
+	"snr": 0.000000
+}
+
+SERIAL_ERROR=
+SENSOR_TX_COUNT=3
+2026-09-28T00:19:46.160074+00:00|SENSOR_TX,seq=36,reason=normal,uptime_ms=617828,soil_pct=4.00,soil_temp_c=29.70,uv_index=0.00,baro_pa=101704,baro_temp_c=25.09,light_veml_lux=157.74,light_opt_lux=163.28,env_temp_c=28.27,env_humidity_pct=61.44,env_pressure_pa=101358,env_gas_ohm=24441,rain_wet=0,battery_mv=0,valid=0x7F,join=1,send_status=0
+2026-09-28T00:20:01.164895+00:00|SENSOR_TX,seq=37,reason=normal,uptime_ms=632833,soil_pct=5.00,soil_temp_c=29.70,uv_index=0.00,baro_pa=101707,baro_temp_c=25.10,light_veml_lux=157.49,light_opt_lux=166.24,env_temp_c=28.27,env_humidity_pct=61.41,env_pressure_pa=101358,env_gas_ohm=24686,rain_wet=0,battery_mv=0,valid=0x7F,join=1,send_status=0
+2026-09-28T00:20:16.174406+00:00|SENSOR_TX,seq=38,reason=normal,uptime_ms=647839,soil_pct=4.00,soil_temp_c=29.70,uv_index=0.00,baro_pa=101706,baro_temp_c=25.09,light_veml_lux=157.85,light_opt_lux=167.84,env_temp_c=28.27,env_humidity_pct=61.44,env_pressure_pa=101357,env_gas_ohm=25099,rain_wet=0,battery_mv=0,valid=0x7F,join=1,send_status=0
+LOGSTREAM_LINES=53
+USB_DISCONNECT_COUNT=0
+QMI_MINUS71_COUNT=0
+BRIDGE_ERROR_COUNT=0
+LTE_UNAVAILABLE_COUNT=0
+MQTT_MTLS_FAIL_COUNT=0
+LTE_DOWN_COUNT=0
+LTE_HEALTH Mon Sep 28 00:18:27 2026 user.notice lte-route-health: LTE dataplane PASS and production MQTT mTLS PASS via wwan0 100.73.166.229; LTE primary metric 10
+LTE_HEALTH Mon Sep 28 00:18:59 2026 user.notice lte-route-health: LTE dataplane PASS and production MQTT mTLS PASS via wwan0 100.73.166.229; LTE primary metric 10

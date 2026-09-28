@@ -1,0 +1,11 @@
+UTC=2026-09-22T05:40:42.541845+00:00
+DURABLE P1-1-20260922T053257Z {"test": "P1", "repetition": "1", "started_utc": "2026-09-22T05:32:57.094+00:00", "pid": 3896, "finished_utc": "2026-09-22T05:39:53.399+00:00", "exit_code": 2, "status": "NOT_ACCEPTED", "run_dir": "C:\\Users\\smartagriintern\\Documents\\projects\\lorawan-setup\\lorawan-network-server-gateway\\chapter4-results\\normal-operation\\P1-1-20260922-133258", "sealed_status": "RECORDED_WITH_ERRORS"}
+CONSOLE_TAIL RUN_STATUS=RECORDED_WITH_ERRORS
+SUMMARY=C:\Users\smartagriintern\Documents\projects\lorawan-setup\lorawan-network-server-gateway\chapter4-results\normal-operation\P1-1-20260922-133258\derived\run-summary.json
+HASH_MANIFEST=C:\Users\smartagriintern\Documents\projects\lorawan-setup\lorawan-network-server-gateway\chapter4-results\normal-operation\P1-1-20260922-133258\metadata\SHA256SUMS.csv
+OPERATOR_EXIT_CODE=2
+END_UTC=2026-09-22T05:39:53.398+00:00
+
+STATE _recorder-active.json ABSENT
+STATE _recorder-active.lock ABSENT
+GATEWAY_SSH=REACHABLE

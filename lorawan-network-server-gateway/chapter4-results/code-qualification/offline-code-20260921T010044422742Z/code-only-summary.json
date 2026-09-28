@@ -1,0 +1,53 @@
+{
+  "counted_research": false,
+  "finished_at_utc": "2026-09-21T01:00:48.347133+00:00",
+  "hardware_measurements": false,
+  "production_services_touched": false,
+  "python_version": "3.14.7",
+  "qualification": "CODE_ONLY",
+  "started_at_utc": "2026-09-21T01:00:44.423984+00:00",
+  "status": "PASS",
+  "suites": [
+    {
+      "exit_code": 0,
+      "file": "test\\automation\\test_research_contract.py",
+      "source_sha256": "2a6290429a96cb892e5733988f0f463651cad35d074570d2a0efd6b763c67ece",
+      "status": "PASS",
+      "suite": "research-contract",
+      "tests": 6
+    },
+    {
+      "exit_code": 0,
+      "file": "test\\automation\\authentication\\test_a1_mqtt_harness.py",
+      "source_sha256": "fc7916900e12b57643e0b681b62620e7983e0fe7483a9af353e7ed68b040967f",
+      "status": "PASS",
+      "suite": "a1-mqtt",
+      "tests": 6
+    },
+    {
+      "exit_code": 0,
+      "file": "test\\automation\\authentication\\test_a1_lorawan_harness.py",
+      "source_sha256": "8efe4f754e6dc80a37d9566b353e1fbb29532d7814a0259b418c9dd07d7dd21b",
+      "status": "PASS",
+      "suite": "a1-lorawan",
+      "tests": 12
+    },
+    {
+      "exit_code": 0,
+      "file": "test\\automation\\fabric-sync\\test_fabric_sync.py",
+      "source_sha256": "fda6d3090197670a2a0deda499d04638244e6a7b8d939137e73434f811b2aedb",
+      "status": "PASS",
+      "suite": "fabric-sync",
+      "tests": 2
+    },
+    {
+      "exit_code": 0,
+      "file": "test\\automation\\load-tools\\test_mqtt_wire.py",
+      "source_sha256": "8adccf642c564c47bbdfc01c18f4cb6720005fd9b703b6043160accc65c0d275",
+      "status": "PASS",
+      "suite": "mqtt-wire-mock",
+      "tests": 5
+    }
+  ],
+  "total_tests": 31
+}

@@ -1,0 +1,23 @@
+test_actual_alteration_not_quarantined_is_failure (test_i1_evidence.I1OfflineTests.test_actual_alteration_not_quarantined_is_failure) ... ok
+test_cli_writes_without_overwriting_source (test_i1_evidence.I1OfflineTests.test_cli_writes_without_overwriting_source) ... ok
+test_duplicate_source_id_and_sequence_invalid (test_i1_evidence.I1OfflineTests.test_duplicate_source_id_and_sequence_invalid) ... ok
+test_exact_node_red_gate_vm_regressions (test_i1_evidence.I1OfflineTests.test_exact_node_red_gate_vm_regressions) ... ok
+test_formal_10_plus_10_is_code_only (test_i1_evidence.I1OfflineTests.test_formal_10_plus_10_is_code_only) ... ok
+test_formal_count_drift_invalid (test_i1_evidence.I1OfflineTests.test_formal_count_drift_invalid) ... ok
+test_missing_db_readback_invalid (test_i1_evidence.I1OfflineTests.test_missing_db_readback_invalid) ... ok
+test_missing_gate_fails_closed (test_i1_evidence.I1OfflineTests.test_missing_gate_fails_closed) ... ok
+test_missing_quarantine_observation_invalid (test_i1_evidence.I1OfflineTests.test_missing_quarantine_observation_invalid) ... ok
+test_missing_storage_for_control_invalid (test_i1_evidence.I1OfflineTests.test_missing_storage_for_control_invalid) ... ok
+test_modified_json_without_resealing_invalid (test_i1_evidence.I1OfflineTests.test_modified_json_without_resealing_invalid) ... ok
+test_nonfinite_processing_time_invalid (test_i1_evidence.I1OfflineTests.test_nonfinite_processing_time_invalid) ... ok
+test_one_per_condition_rehearsal_scoring (test_i1_evidence.I1OfflineTests.test_one_per_condition_rehearsal_scoring) ... ok
+test_preexisting_event_makes_trial_invalid (test_i1_evidence.I1OfflineTests.test_preexisting_event_makes_trial_invalid) ... ok
+test_unauthorized_storage_is_failure (test_i1_evidence.I1OfflineTests.test_unauthorized_storage_is_failure) ... ok
+test_unexpected_field_mutation_invalid (test_i1_evidence.I1OfflineTests.test_unexpected_field_mutation_invalid) ... ok
+test_wrong_control_value_invalid (test_i1_evidence.I1OfflineTests.test_wrong_control_value_invalid) ... ok
+test_wrong_original_hash_invalid (test_i1_evidence.I1OfflineTests.test_wrong_original_hash_invalid) ... ok
+
+----------------------------------------------------------------------
+Ran 18 tests in 0.458s
+
+OK

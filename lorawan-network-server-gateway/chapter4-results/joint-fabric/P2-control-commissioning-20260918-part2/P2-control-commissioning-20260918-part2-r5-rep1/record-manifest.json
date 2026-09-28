@@ -1,0 +1,129 @@
+{
+  "record_count": 10,
+  "records": [
+    {
+      "authenticated_source_system_id": "lorawan-gateway-evidence",
+      "exact_payload_base64": "eyJraW5kIjoiUDJfRkFCUklDX0JFTkNITUFSSyIsInBhaXJfaWQiOiJQMi1jb250cm9sLWNvbW1pc3Npb25pbmctMjAyNjA5MTgtcGFydDItcjUtcmVwMSIsInJlcGV0aXRpb24iOjEsInNjaGVtYV92ZXJzaW9uIjoiMS4wIiwic2Vuc29yIjp7ImRldmljZV9pZCI6IlAyLVNZTlRIRVRJQyIsInNvaWxfbW9pc3R1cmVfcGN0Ijo0MC4wMSwidGVtcGVyYXR1cmVfYyI6MjUuMDF9LCJzZXF1ZW5jZSI6MSwic2Vzc2lvbl9pZCI6IlAyLWNvbnRyb2wtY29tbWlzc2lvbmluZy0yMDI2MDkxOC1wYXJ0MiIsInRhcmdldF90cHMiOjUuMH0=",
+      "expected_fabric_status": "COMMITTED",
+      "payload_sha256": "c078e438b182100af9982700f8945fc155ea71e48ade699e0c717455dc2b04c7",
+      "produced_at_utc": "2026-09-18T06:43:09.869Z",
+      "producer": "lorawan-research-p2",
+      "schema_version": "1.0",
+      "source_record_id": "research:p2:P2-control-commissioning-20260918-part2-r5-rep1:00001",
+      "source_type": "research-benchmark",
+      "trial_id": "P2-control-commissioning-20260918-part2-r5-rep1-t00001"
+    },
+    {
+      "authenticated_source_system_id": "lorawan-gateway-evidence",
+      "exact_payload_base64": "eyJraW5kIjoiUDJfRkFCUklDX0JFTkNITUFSSyIsInBhaXJfaWQiOiJQMi1jb250cm9sLWNvbW1pc3Npb25pbmctMjAyNjA5MTgtcGFydDItcjUtcmVwMSIsInJlcGV0aXRpb24iOjEsInNjaGVtYV92ZXJzaW9uIjoiMS4wIiwic2Vuc29yIjp7ImRldmljZV9pZCI6IlAyLVNZTlRIRVRJQyIsInNvaWxfbW9pc3R1cmVfcGN0Ijo0MC4wMiwidGVtcGVyYXR1cmVfYyI6MjUuMDJ9LCJzZXF1ZW5jZSI6Miwic2Vzc2lvbl9pZCI6IlAyLWNvbnRyb2wtY29tbWlzc2lvbmluZy0yMDI2MDkxOC1wYXJ0MiIsInRhcmdldF90cHMiOjUuMH0=",
+      "expected_fabric_status": "COMMITTED",
+      "payload_sha256": "bcea848b69265bf0be4986384b8094f426ac682eabc59d9e863226a3c5d2192b",
+      "produced_at_utc": "2026-09-18T06:43:10.069Z",
+      "producer": "lorawan-research-p2",
+      "schema_version": "1.0",
+      "source_record_id": "research:p2:P2-control-commissioning-20260918-part2-r5-rep1:00002",
+      "source_type": "research-benchmark",
+      "trial_id": "P2-control-commissioning-20260918-part2-r5-rep1-t00002"
+    },
+    {
+      "authenticated_source_system_id": "lorawan-gateway-evidence",
+      "exact_payload_base64": "eyJraW5kIjoiUDJfRkFCUklDX0JFTkNITUFSSyIsInBhaXJfaWQiOiJQMi1jb250cm9sLWNvbW1pc3Npb25pbmctMjAyNjA5MTgtcGFydDItcjUtcmVwMSIsInJlcGV0aXRpb24iOjEsInNjaGVtYV92ZXJzaW9uIjoiMS4wIiwic2Vuc29yIjp7ImRldmljZV9pZCI6IlAyLVNZTlRIRVRJQyIsInNvaWxfbW9pc3R1cmVfcGN0Ijo0MC4wMywidGVtcGVyYXR1cmVfYyI6MjUuMDN9LCJzZXF1ZW5jZSI6Mywic2Vzc2lvbl9pZCI6IlAyLWNvbnRyb2wtY29tbWlzc2lvbmluZy0yMDI2MDkxOC1wYXJ0MiIsInRhcmdldF90cHMiOjUuMH0=",
+      "expected_fabric_status": "COMMITTED",
+      "payload_sha256": "b9ca6cb984fe196eb4c6f1f7e29589d3c719661e11484255aa6883b6c242871e",
+      "produced_at_utc": "2026-09-18T06:43:10.269Z",
+      "producer": "lorawan-research-p2",
+      "schema_version": "1.0",
+      "source_record_id": "research:p2:P2-control-commissioning-20260918-part2-r5-rep1:00003",
+      "source_type": "research-benchmark",
+      "trial_id": "P2-control-commissioning-20260918-part2-r5-rep1-t00003"
+    },
+    {
+      "authenticated_source_system_id": "lorawan-gateway-evidence",
+      "exact_payload_base64": "eyJraW5kIjoiUDJfRkFCUklDX0JFTkNITUFSSyIsInBhaXJfaWQiOiJQMi1jb250cm9sLWNvbW1pc3Npb25pbmctMjAyNjA5MTgtcGFydDItcjUtcmVwMSIsInJlcGV0aXRpb24iOjEsInNjaGVtYV92ZXJzaW9uIjoiMS4wIiwic2Vuc29yIjp7ImRldmljZV9pZCI6IlAyLVNZTlRIRVRJQyIsInNvaWxfbW9pc3R1cmVfcGN0Ijo0MC4wNCwidGVtcGVyYXR1cmVfYyI6MjUuMDR9LCJzZXF1ZW5jZSI6NCwic2Vzc2lvbl9pZCI6IlAyLWNvbnRyb2wtY29tbWlzc2lvbmluZy0yMDI2MDkxOC1wYXJ0MiIsInRhcmdldF90cHMiOjUuMH0=",
+      "expected_fabric_status": "COMMITTED",
+      "payload_sha256": "f37d24b900ef47bb2fa36cadad9e55d8b9288c55a95c4203eb991d0913478590",
+      "produced_at_utc": "2026-09-18T06:43:10.469Z",
+      "producer": "lorawan-research-p2",
+      "schema_version": "1.0",
+      "source_record_id": "research:p2:P2-control-commissioning-20260918-part2-r5-rep1:00004",
+      "source_type": "research-benchmark",
+      "trial_id": "P2-control-commissioning-20260918-part2-r5-rep1-t00004"
+    },
+    {
+      "authenticated_source_system_id": "lorawan-gateway-evidence",
+      "exact_payload_base64": "eyJraW5kIjoiUDJfRkFCUklDX0JFTkNITUFSSyIsInBhaXJfaWQiOiJQMi1jb250cm9sLWNvbW1pc3Npb25pbmctMjAyNjA5MTgtcGFydDItcjUtcmVwMSIsInJlcGV0aXRpb24iOjEsInNjaGVtYV92ZXJzaW9uIjoiMS4wIiwic2Vuc29yIjp7ImRldmljZV9pZCI6IlAyLVNZTlRIRVRJQyIsInNvaWxfbW9pc3R1cmVfcGN0Ijo0MC4wNSwidGVtcGVyYXR1cmVfYyI6MjUuMDV9LCJzZXF1ZW5jZSI6NSwic2Vzc2lvbl9pZCI6IlAyLWNvbnRyb2wtY29tbWlzc2lvbmluZy0yMDI2MDkxOC1wYXJ0MiIsInRhcmdldF90cHMiOjUuMH0=",
+      "expected_fabric_status": "COMMITTED",
+      "payload_sha256": "7e0d8a4a2711c857f01735911e268c197480ce5805b99e69c4f291304b91579f",
+      "produced_at_utc": "2026-09-18T06:43:10.669Z",
+      "producer": "lorawan-research-p2",
+      "schema_version": "1.0",
+      "source_record_id": "research:p2:P2-control-commissioning-20260918-part2-r5-rep1:00005",
+      "source_type": "research-benchmark",
+      "trial_id": "P2-control-commissioning-20260918-part2-r5-rep1-t00005"
+    },
+    {
+      "authenticated_source_system_id": "lorawan-gateway-evidence",
+      "exact_payload_base64": "eyJraW5kIjoiUDJfRkFCUklDX0JFTkNITUFSSyIsInBhaXJfaWQiOiJQMi1jb250cm9sLWNvbW1pc3Npb25pbmctMjAyNjA5MTgtcGFydDItcjUtcmVwMSIsInJlcGV0aXRpb24iOjEsInNjaGVtYV92ZXJzaW9uIjoiMS4wIiwic2Vuc29yIjp7ImRldmljZV9pZCI6IlAyLVNZTlRIRVRJQyIsInNvaWxfbW9pc3R1cmVfcGN0Ijo0MC4wNiwidGVtcGVyYXR1cmVfYyI6MjUuMDZ9LCJzZXF1ZW5jZSI6Niwic2Vzc2lvbl9pZCI6IlAyLWNvbnRyb2wtY29tbWlzc2lvbmluZy0yMDI2MDkxOC1wYXJ0MiIsInRhcmdldF90cHMiOjUuMH0=",
+      "expected_fabric_status": "COMMITTED",
+      "payload_sha256": "963d3f720cf4481152397539901dfa60fb3cbd619766eb82157307fc97b5906b",
+      "produced_at_utc": "2026-09-18T06:43:10.869Z",
+      "producer": "lorawan-research-p2",
+      "schema_version": "1.0",
+      "source_record_id": "research:p2:P2-control-commissioning-20260918-part2-r5-rep1:00006",
+      "source_type": "research-benchmark",
+      "trial_id": "P2-control-commissioning-20260918-part2-r5-rep1-t00006"
+    },
+    {
+      "authenticated_source_system_id": "lorawan-gateway-evidence",
+      "exact_payload_base64": "eyJraW5kIjoiUDJfRkFCUklDX0JFTkNITUFSSyIsInBhaXJfaWQiOiJQMi1jb250cm9sLWNvbW1pc3Npb25pbmctMjAyNjA5MTgtcGFydDItcjUtcmVwMSIsInJlcGV0aXRpb24iOjEsInNjaGVtYV92ZXJzaW9uIjoiMS4wIiwic2Vuc29yIjp7ImRldmljZV9pZCI6IlAyLVNZTlRIRVRJQyIsInNvaWxfbW9pc3R1cmVfcGN0Ijo0MC4wNywidGVtcGVyYXR1cmVfYyI6MjUuMDd9LCJzZXF1ZW5jZSI6Nywic2Vzc2lvbl9pZCI6IlAyLWNvbnRyb2wtY29tbWlzc2lvbmluZy0yMDI2MDkxOC1wYXJ0MiIsInRhcmdldF90cHMiOjUuMH0=",
+      "expected_fabric_status": "COMMITTED",
+      "payload_sha256": "3f9821c31756c04a2965ecb666b50650718b7c121f23e877048b01cb2f8660d8",
+      "produced_at_utc": "2026-09-18T06:43:11.069Z",
+      "producer": "lorawan-research-p2",
+      "schema_version": "1.0",
+      "source_record_id": "research:p2:P2-control-commissioning-20260918-part2-r5-rep1:00007",
+      "source_type": "research-benchmark",
+      "trial_id": "P2-control-commissioning-20260918-part2-r5-rep1-t00007"
+    },
+    {
+      "authenticated_source_system_id": "lorawan-gateway-evidence",
+      "exact_payload_base64": "eyJraW5kIjoiUDJfRkFCUklDX0JFTkNITUFSSyIsInBhaXJfaWQiOiJQMi1jb250cm9sLWNvbW1pc3Npb25pbmctMjAyNjA5MTgtcGFydDItcjUtcmVwMSIsInJlcGV0aXRpb24iOjEsInNjaGVtYV92ZXJzaW9uIjoiMS4wIiwic2Vuc29yIjp7ImRldmljZV9pZCI6IlAyLVNZTlRIRVRJQyIsInNvaWxfbW9pc3R1cmVfcGN0Ijo0MC4wOCwidGVtcGVyYXR1cmVfYyI6MjUuMDh9LCJzZXF1ZW5jZSI6OCwic2Vzc2lvbl9pZCI6IlAyLWNvbnRyb2wtY29tbWlzc2lvbmluZy0yMDI2MDkxOC1wYXJ0MiIsInRhcmdldF90cHMiOjUuMH0=",
+      "expected_fabric_status": "COMMITTED",
+      "payload_sha256": "430166c4781cf14adfa0a4c8f35c35bf648511af4ededc3f9fe077fe41a3e612",
+      "produced_at_utc": "2026-09-18T06:43:11.269Z",
+      "producer": "lorawan-research-p2",
+      "schema_version": "1.0",
+      "source_record_id": "research:p2:P2-control-commissioning-20260918-part2-r5-rep1:00008",
+      "source_type": "research-benchmark",
+      "trial_id": "P2-control-commissioning-20260918-part2-r5-rep1-t00008"
+    },
+    {
+      "authenticated_source_system_id": "lorawan-gateway-evidence",
+      "exact_payload_base64": "eyJraW5kIjoiUDJfRkFCUklDX0JFTkNITUFSSyIsInBhaXJfaWQiOiJQMi1jb250cm9sLWNvbW1pc3Npb25pbmctMjAyNjA5MTgtcGFydDItcjUtcmVwMSIsInJlcGV0aXRpb24iOjEsInNjaGVtYV92ZXJzaW9uIjoiMS4wIiwic2Vuc29yIjp7ImRldmljZV9pZCI6IlAyLVNZTlRIRVRJQyIsInNvaWxfbW9pc3R1cmVfcGN0Ijo0MC4wOSwidGVtcGVyYXR1cmVfYyI6MjUuMDl9LCJzZXF1ZW5jZSI6OSwic2Vzc2lvbl9pZCI6IlAyLWNvbnRyb2wtY29tbWlzc2lvbmluZy0yMDI2MDkxOC1wYXJ0MiIsInRhcmdldF90cHMiOjUuMH0=",
+      "expected_fabric_status": "COMMITTED",
+      "payload_sha256": "403191a4d661a4390cd7376a1d0264dde2c781b88a95a0f1ab254826b9d3c41e",
+      "produced_at_utc": "2026-09-18T06:43:11.469Z",
+      "producer": "lorawan-research-p2",
+      "schema_version": "1.0",
+      "source_record_id": "research:p2:P2-control-commissioning-20260918-part2-r5-rep1:00009",
+      "source_type": "research-benchmark",
+      "trial_id": "P2-control-commissioning-20260918-part2-r5-rep1-t00009"
+    },
+    {
+      "authenticated_source_system_id": "lorawan-gateway-evidence",
+      "exact_payload_base64": "eyJraW5kIjoiUDJfRkFCUklDX0JFTkNITUFSSyIsInBhaXJfaWQiOiJQMi1jb250cm9sLWNvbW1pc3Npb25pbmctMjAyNjA5MTgtcGFydDItcjUtcmVwMSIsInJlcGV0aXRpb24iOjEsInNjaGVtYV92ZXJzaW9uIjoiMS4wIiwic2Vuc29yIjp7ImRldmljZV9pZCI6IlAyLVNZTlRIRVRJQyIsInNvaWxfbW9pc3R1cmVfcGN0Ijo0MC4xLCJ0ZW1wZXJhdHVyZV9jIjoyNS4xfSwic2VxdWVuY2UiOjEwLCJzZXNzaW9uX2lkIjoiUDItY29udHJvbC1jb21taXNzaW9uaW5nLTIwMjYwOTE4LXBhcnQyIiwidGFyZ2V0X3RwcyI6NS4wfQ==",
+      "expected_fabric_status": "COMMITTED",
+      "payload_sha256": "fe62c71863d9d60b4ebcab164cafbf039a947f1193a021df65441c403115be05",
+      "produced_at_utc": "2026-09-18T06:43:11.669Z",
+      "producer": "lorawan-research-p2",
+      "schema_version": "1.0",
+      "source_record_id": "research:p2:P2-control-commissioning-20260918-part2-r5-rep1:00010",
+      "source_type": "research-benchmark",
+      "trial_id": "P2-control-commissioning-20260918-part2-r5-rep1-t00010"
+    }
+  ],
+  "run_manifest_sha256": "8b7bf28bcd0bb285f38f6a7c2d45009a7cad110112ed10ca02340b34713c4630",
+  "schema_version": "1.0",
+  "sealed_at_utc": "2026-09-18T06:43:04.873Z",
+  "study_id": "zacharias-lorawan-fabric"
+}

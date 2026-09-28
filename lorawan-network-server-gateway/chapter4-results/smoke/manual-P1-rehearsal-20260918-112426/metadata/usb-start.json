@@ -1,0 +1,52 @@
+[
+  {
+    "description": "USB Serial Device (COM11)",
+    "device": "COM11",
+    "hwid": "USB VID:PID=239A:8029 SER=69D8B0D3239621F1 LOCATION=1-2:x.0"
+  },
+  {
+    "description": "USB Serial Device (COM16)",
+    "device": "COM16",
+    "hwid": "USB VID:PID=1915:521F SER=F0B61D25752E LOCATION=1-1:x.0"
+  },
+  {
+    "description": "Standard Serial over Bluetooth link (COM6)",
+    "device": "COM6",
+    "hwid": "BTHENUM\\{00001101-0000-1000-8000-00805F9B34FB}_LOCALMFG&0002\\7&11130FC3&0&4142AC74F110_C00000000"
+  },
+  {
+    "description": "Standard Serial over Bluetooth link (COM3)",
+    "device": "COM3",
+    "hwid": "BTHENUM\\{00001101-0000-1000-8000-00805F9B34FB}_LOCALMFG&0000\\7&11130FC3&0&000000000000_00000008"
+  },
+  {
+    "description": "Standard Serial over Bluetooth link (COM5)",
+    "device": "COM5",
+    "hwid": "BTHENUM\\{00001101-0000-1000-8000-00805F9B34FB}_LOCALMFG&0000\\7&11130FC3&0&000000000000_0000000D"
+  },
+  {
+    "description": "Standard Serial over Bluetooth link (COM7)",
+    "device": "COM7",
+    "hwid": "BTHENUM\\{00001101-0000-1000-8000-00805F9B34FB}_LOCALMFG&0000\\7&11130FC3&0&000000000000_0000000E"
+  },
+  {
+    "description": "Standard Serial over Bluetooth link (COM9)",
+    "device": "COM9",
+    "hwid": "BTHENUM\\{00001101-0000-1000-8000-00805F9B34FB}_LOCALMFG&0000\\7&11130FC3&0&000000000000_0000000F"
+  },
+  {
+    "description": "Standard Serial over Bluetooth link (COM8)",
+    "device": "COM8",
+    "hwid": "BTHENUM\\{00001101-0000-1000-8000-00805F9B34FB}_VID&000105D6_PID&000A\\7&11130FC3&0&4452D6879AEB_C00000000"
+  },
+  {
+    "description": "Standard Serial over Bluetooth link (COM10)",
+    "device": "COM10",
+    "hwid": "BTHENUM\\{00001101-0000-1000-8000-00805F9B34FB}_VID&00010642_PID&0220\\7&11130FC3&0&4142BC12F5D4_C00000000"
+  },
+  {
+    "description": "Standard Serial over Bluetooth link (COM4)",
+    "device": "COM4",
+    "hwid": "BTHENUM\\{00001101-0000-1000-8000-00805F9B34FB}_LOCALMFG&0002\\7&11130FC3&0&189C2C5F1269_C00000000"
+  }
+]

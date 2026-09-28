@@ -1,0 +1,43 @@
+{
+  "accepted_uplink_observed_at_source": true,
+  "actual_decision": "ALLOW",
+  "chirpstack_session_changed": true,
+  "chirpstack_state_verified": true,
+  "condition": "LORAWAN_VALID_OTAA",
+  "correct_decision": true,
+  "ended_at_utc": "2026-09-21T05:20:17.380Z",
+  "expected_decision": "ALLOW",
+  "false_rejection": false,
+  "gateway_join_request_observed": true,
+  "join_observation_ms": 11275.205,
+  "join_request_count": 1,
+  "join_requests": [
+    {
+      "dev_eui": "ac1f09fffe296d29",
+      "join_eui": "0000000000000000",
+      "phy_sha256": "434909a8e5be0b26e78d70293f8459d175958475569cc92ea0fc2a62ddc2fc58",
+      "sequence": 3866
+    }
+  ],
+  "otaa_join_pass": true,
+  "post_state": {
+    "dev_addr": "01856ceb",
+    "dev_eui": "ac1f09fffe296d29",
+    "f_cnt_up": "1",
+    "last_seen_at": "2026-09-21T05:18:51.938Z",
+    "raw": "REGISTERED|1\nSTATE|ac1f09fffe296d29|2026-09-21T05:18:51.938Z|01856ceb|1fd76f402c3b922eb1d78ffa0dcf8cdf|1",
+    "registered": "1",
+    "session_fingerprint": "1fd76f402c3b922eb1d78ffa0dcf8cdf"
+  },
+  "pre_state": {
+    "dev_addr": "01b09da5",
+    "dev_eui": "ac1f09fffe296d29",
+    "f_cnt_up": "220",
+    "last_seen_at": "2026-09-21T05:17:52.400Z",
+    "raw": "REGISTERED|1\nSTATE|ac1f09fffe296d29|2026-09-21T05:17:52.400Z|01b09da5|786210d8a1dac93c77eeff925dd856bf|220",
+    "registered": "1",
+    "session_fingerprint": "786210d8a1dac93c77eeff925dd856bf"
+  },
+  "started_at_utc": "2026-09-21T05:20:06.104Z",
+  "trial": 1
+}

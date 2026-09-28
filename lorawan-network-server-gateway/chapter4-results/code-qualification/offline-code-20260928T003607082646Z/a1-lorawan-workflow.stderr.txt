@@ -1,0 +1,8 @@
+test_failed_dfu_restore_cannot_be_published_as_pass (test_a1_lorawan_workflow.WorkflowTests.test_failed_dfu_restore_cannot_be_published_as_pass) ... ok
+test_invalid_result_stops_counting_and_still_saves_failure (test_a1_lorawan_workflow.WorkflowTests.test_invalid_result_stops_counting_and_still_saves_failure) ... ok
+test_successful_rehearsal_persists_exactly_three_trials_and_cleanup (test_a1_lorawan_workflow.WorkflowTests.test_successful_rehearsal_persists_exactly_three_trials_and_cleanup) ... ok
+
+----------------------------------------------------------------------
+Ran 3 tests in 0.065s
+
+OK

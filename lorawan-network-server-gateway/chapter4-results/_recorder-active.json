@@ -1,0 +1,82 @@
+{
+  "active_trial": null,
+  "children": [
+    {
+      "label": "emu01-serial",
+      "pause_file": "C:\\Users\\SMARTA~1\\AppData\\Local\\Temp\\lorawan-research-recorder\\P1-1-20260928-083519-emu01.pause",
+      "pid": 3060,
+      "stderr": "C:\\Users\\smartagriintern\\Documents\\projects\\lorawan-setup\\lorawan-network-server-gateway\\chapter4-results\\normal-operation\\P1-1-20260928-083519\\raw\\emu-01-source.log.stderr",
+      "stdout": "C:\\Users\\smartagriintern\\Documents\\projects\\lorawan-setup\\lorawan-network-server-gateway\\chapter4-results\\normal-operation\\P1-1-20260928-083519\\raw\\emu-01-source.log"
+    },
+    {
+      "label": "gateway-resource",
+      "pid": 5216,
+      "stderr": "C:\\Users\\smartagriintern\\Documents\\projects\\lorawan-setup\\lorawan-network-server-gateway\\chapter4-results\\normal-operation\\P1-1-20260928-083519\\raw\\gateway-resource.csv.stderr",
+      "stdout": "C:\\Users\\smartagriintern\\Documents\\projects\\lorawan-setup\\lorawan-network-server-gateway\\chapter4-results\\normal-operation\\P1-1-20260928-083519\\raw\\gateway-resource.csv"
+    },
+    {
+      "label": "gateway-log",
+      "pid": 14156,
+      "stderr": "C:\\Users\\smartagriintern\\Documents\\projects\\lorawan-setup\\lorawan-network-server-gateway\\chapter4-results\\normal-operation\\P1-1-20260928-083519\\raw\\gateway.log.stderr",
+      "stdout": "C:\\Users\\smartagriintern\\Documents\\projects\\lorawan-setup\\lorawan-network-server-gateway\\chapter4-results\\normal-operation\\P1-1-20260928-083519\\raw\\gateway.log"
+    },
+    {
+      "label": "ulc01-host-resource",
+      "pid": 2668,
+      "stderr": "C:\\Users\\smartagriintern\\Documents\\projects\\lorawan-setup\\lorawan-network-server-gateway\\chapter4-results\\normal-operation\\P1-1-20260928-083519\\raw\\ulc01-host-resource.csv.stderr",
+      "stdout": "C:\\Users\\smartagriintern\\Documents\\projects\\lorawan-setup\\lorawan-network-server-gateway\\chapter4-results\\normal-operation\\P1-1-20260928-083519\\raw\\ulc01-host-resource.csv"
+    },
+    {
+      "label": "ulc01-docker-resource",
+      "pid": 14148,
+      "stderr": "C:\\Users\\smartagriintern\\Documents\\projects\\lorawan-setup\\lorawan-network-server-gateway\\chapter4-results\\normal-operation\\P1-1-20260928-083519\\raw\\ulc01-docker-resource.csv.stderr",
+      "stdout": "C:\\Users\\smartagriintern\\Documents\\projects\\lorawan-setup\\lorawan-network-server-gateway\\chapter4-results\\normal-operation\\P1-1-20260928-083519\\raw\\ulc01-docker-resource.csv"
+    },
+    {
+      "label": "ulc02-host-resource",
+      "pid": 9032,
+      "stderr": "C:\\Users\\smartagriintern\\Documents\\projects\\lorawan-setup\\lorawan-network-server-gateway\\chapter4-results\\normal-operation\\P1-1-20260928-083519\\raw\\ulc02-host-resource.csv.stderr",
+      "stdout": "C:\\Users\\smartagriintern\\Documents\\projects\\lorawan-setup\\lorawan-network-server-gateway\\chapter4-results\\normal-operation\\P1-1-20260928-083519\\raw\\ulc02-host-resource.csv"
+    },
+    {
+      "label": "ulc02-docker-resource",
+      "pid": 908,
+      "stderr": "C:\\Users\\smartagriintern\\Documents\\projects\\lorawan-setup\\lorawan-network-server-gateway\\chapter4-results\\normal-operation\\P1-1-20260928-083519\\raw\\ulc02-docker-resource.csv.stderr",
+      "stdout": "C:\\Users\\smartagriintern\\Documents\\projects\\lorawan-setup\\lorawan-network-server-gateway\\chapter4-results\\normal-operation\\P1-1-20260928-083519\\raw\\ulc02-docker-resource.csv"
+    },
+    {
+      "label": "ulc03-host-resource",
+      "pid": 8888,
+      "stderr": "C:\\Users\\smartagriintern\\Documents\\projects\\lorawan-setup\\lorawan-network-server-gateway\\chapter4-results\\normal-operation\\P1-1-20260928-083519\\raw\\ulc03-host-resource.csv.stderr",
+      "stdout": "C:\\Users\\smartagriintern\\Documents\\projects\\lorawan-setup\\lorawan-network-server-gateway\\chapter4-results\\normal-operation\\P1-1-20260928-083519\\raw\\ulc03-host-resource.csv"
+    },
+    {
+      "label": "ulc03-docker-resource",
+      "pid": 16564,
+      "stderr": "C:\\Users\\smartagriintern\\Documents\\projects\\lorawan-setup\\lorawan-network-server-gateway\\chapter4-results\\normal-operation\\P1-1-20260928-083519\\raw\\ulc03-docker-resource.csv.stderr",
+      "stdout": "C:\\Users\\smartagriintern\\Documents\\projects\\lorawan-setup\\lorawan-network-server-gateway\\chapter4-results\\normal-operation\\P1-1-20260928-083519\\raw\\ulc03-docker-resource.csv"
+    },
+    {
+      "label": "ulc01-chirpstack-stream",
+      "pid": 11600,
+      "stderr": "C:\\Users\\smartagriintern\\Documents\\projects\\lorawan-setup\\lorawan-network-server-gateway\\chapter4-results\\normal-operation\\P1-1-20260928-083519\\raw\\ulc01-chirpstack.log.stderr",
+      "stdout": "C:\\Users\\smartagriintern\\Documents\\projects\\lorawan-setup\\lorawan-network-server-gateway\\chapter4-results\\normal-operation\\P1-1-20260928-083519\\raw\\ulc01-chirpstack.log"
+    },
+    {
+      "label": "ulc02-chirpstack-stream",
+      "pid": 6908,
+      "stderr": "C:\\Users\\smartagriintern\\Documents\\projects\\lorawan-setup\\lorawan-network-server-gateway\\chapter4-results\\normal-operation\\P1-1-20260928-083519\\raw\\ulc02-chirpstack.log.stderr",
+      "stdout": "C:\\Users\\smartagriintern\\Documents\\projects\\lorawan-setup\\lorawan-network-server-gateway\\chapter4-results\\normal-operation\\P1-1-20260928-083519\\raw\\ulc02-chirpstack.log"
+    }
+  ],
+  "dev_eui": "ac1f09fffe296d29",
+  "fabric_settle_seconds": 420,
+  "gateway_eui": "0016c001f139a1cb",
+  "group": "normal-operation",
+  "measurement_start_monotonic": 2441.7809706,
+  "owner_token": "675c8e0d8ecc6c7aee9550096df2d1ac50052d19221b7419",
+  "run_dir": "C:\\Users\\smartagriintern\\Documents\\projects\\lorawan-setup\\lorawan-network-server-gateway\\chapter4-results\\normal-operation\\P1-1-20260928-083519",
+  "run_id": "P1-1-20260928-083519",
+  "scope": "full",
+  "start_utc": "2026-09-28T00:35:20.443Z"
+}

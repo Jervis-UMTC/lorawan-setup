@@ -1,0 +1,9 @@
+{
+  "test": "PRE",
+  "command": "py -3 test/automation/research-recorder/research_recorder.py preflight --require-emu --require-sec",
+  "started_utc": "2026-09-22T02:39:43.097585+00:00",
+  "ended_utc": "2026-09-22T02:40:07.838631+00:00",
+  "exit_code": 0,
+  "duration_s": 24.741046,
+  "file_sha256": "7d2118b01706e3da1205180f587cb940527f48130eb09f0180666d4501285f67"
+}

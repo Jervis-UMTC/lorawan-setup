@@ -1,0 +1,29 @@
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+RUN_BEGIN test=F2 rate=0 repetition=1 formal=False
+RUN_END run_id=rate-0 status=PASS
+RUN_BEGIN test=F2 rate=10 repetition=1 formal=False
+RUN_END run_id=rate-10 status=PASS
+RUN_BEGIN test=F2 rate=50 repetition=1 formal=False
+RUN_END run_id=rate-50 status=PASS
+OK
+OK
+FLOOD_HARNESS=PASS test=F2 formal=False runs=3
+SESSION_RESULT=C:\Users\SMARTA~1\AppData\Local\Temp\tmpjlo5fbm6\chapter4-results\dos-flooding\_sessions\F2-20260921-153420.json
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+RUN_BEGIN test=F2 rate=0 repetition=1 formal=False
+RUN_END run_id=first status=PASS
+RUN_BEGIN test=F2 rate=10 repetition=1 formal=False
+OK
+OK

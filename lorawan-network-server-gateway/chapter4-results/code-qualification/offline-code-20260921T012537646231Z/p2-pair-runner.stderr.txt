@@ -1,0 +1,22 @@
+test_control_and_fabric_measurement_summaries (test_p2_pair_runner.P2OfflineTests.test_control_and_fabric_measurement_summaries) ... ok
+test_control_cannot_claim_fabric_commit (test_p2_pair_runner.P2OfflineTests.test_control_cannot_claim_fabric_commit) ... ok
+test_drain_before_measurement_end_rejected (test_p2_pair_runner.P2OfflineTests.test_drain_before_measurement_end_rejected) ... ok
+test_exact_payload_digest_checked_even_when_manifest_is_sealed (test_p2_pair_runner.P2OfflineTests.test_exact_payload_digest_checked_even_when_manifest_is_sealed) ... ok
+test_fabric_missing_commit_and_queue_overrun_rejected (test_p2_pair_runner.P2OfflineTests.test_fabric_missing_commit_and_queue_overrun_rejected) ... ok
+test_formal_duration_drift_rejected (test_p2_pair_runner.P2OfflineTests.test_formal_duration_drift_rejected) ... ok
+test_interval_must_match_target_tps (test_p2_pair_runner.P2OfflineTests.test_interval_must_match_target_tps) ... ok
+test_mislabeled_phase_rejected (test_p2_pair_runner.P2OfflineTests.test_mislabeled_phase_rejected) ... ok
+test_missing_or_falsified_performance_metrics_rejected (test_p2_pair_runner.P2OfflineTests.test_missing_or_falsified_performance_metrics_rejected) ... ok
+test_pair_digest_and_row_mismatch_rejected (test_p2_pair_runner.P2OfflineTests.test_pair_digest_and_row_mismatch_rejected) ... ok
+test_real_generator_produces_consistent_pair_manifest (test_p2_pair_runner.P2OfflineTests.test_real_generator_produces_consistent_pair_manifest) ... ok
+test_repeated_pair_cannot_hide_missing_workload (test_p2_pair_runner.P2OfflineTests.test_repeated_pair_cannot_hide_missing_workload) ... ok
+test_rounded_rehearsal_count_is_not_measurement_duration (test_p2_pair_runner.P2OfflineTests.test_rounded_rehearsal_count_is_not_measurement_duration) ... ok
+test_run_session_formal_identity_mismatch_rejected (test_p2_pair_runner.P2OfflineTests.test_run_session_formal_identity_mismatch_rejected) ... ok
+test_session_missing_pair_or_wrong_count_rejected (test_p2_pair_runner.P2OfflineTests.test_session_missing_pair_or_wrong_count_rejected) ... ok
+test_summary_formal_identity_cannot_be_changed (test_p2_pair_runner.P2OfflineTests.test_summary_formal_identity_cannot_be_changed) ... ok
+test_wrong_end_time_rejected (test_p2_pair_runner.P2OfflineTests.test_wrong_end_time_rejected) ... ok
+
+----------------------------------------------------------------------
+Ran 17 tests in 0.225s
+
+OK

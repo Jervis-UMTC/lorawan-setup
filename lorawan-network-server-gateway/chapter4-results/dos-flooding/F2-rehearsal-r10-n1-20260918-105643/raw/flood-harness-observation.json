@@ -1,0 +1,30 @@
+{
+  "db_guard": {
+    "EMU_LAST_2M": "8",
+    "FAKE_OUTBOX_TOTAL": "0",
+    "FAKE_UPLINKS_TOTAL": "0"
+  },
+  "duration_seconds": 5,
+  "flood_end_utc": "2026-09-18T02:59:48.601Z",
+  "flood_start_utc": "2026-09-18T02:59:39.757Z",
+  "formal": false,
+  "load": {
+    "accepted": 0,
+    "generated": 50,
+    "planned": 50,
+    "published": 50,
+    "raw": "planned_messages=50\ngenerated_messages=50\n\npublished_messages=50",
+    "received": 50,
+    "rejected": 50
+  },
+  "rate_per_second": 10,
+  "recovery_seconds": 5,
+  "repetition": 1,
+  "run_id": "F2-rehearsal-r10-n1-20260918-105643",
+  "window": {
+    "MEAN_LATENCY_MS": "",
+    "UNAUTHORIZED_OUTBOX": "0",
+    "UNAUTHORIZED_UPLINKS": "0",
+    "VALID_DELIVERED": "0"
+  }
+}

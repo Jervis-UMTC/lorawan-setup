@@ -1,0 +1,112 @@
+timestamp_utc=2026-09-17T00:46:50Z
+hostname=chirpstack-0abee3
+--- uptime ---
+1114.85 4336.54
+--- lte ---
+{
+	"up": true,
+	"pending": false,
+	"available": true,
+	"autostart": true,
+	"dynamic": false,
+	"uptime": 1069,
+	"l3_device": "wwan0",
+	"proto": "qmi",
+	"updated": [
+		"addresses"
+	],
+	"metric": 0,
+	"dns_metric": 0,
+	"delegation": true,
+	"ipv4-address": [
+		{
+			"address": "100.82.28.80",
+			"mask": 27
+		}
+	],
+	"ipv6-address": [
+		
+	],
+	"ipv6-prefix": [
+		
+	],
+	"ipv6-prefix-assignment": [
+		
+	],
+	"route": [
+		
+	],
+	"dns-server": [
+		"131.226.72.19",
+		"131.226.73.19"
+	],
+	"dns-search": [
+		
+	],
+	"neighbors": [
+		
+	],
+	"inactive": {
+		"ipv4-address": [
+			
+		],
+		"ipv6-address": [
+			
+		],
+		"route": [
+			
+		],
+		"dns-server": [
+			
+		],
+		"dns-search": [
+			
+		],
+		"neighbors": [
+			
+		]
+	},
+	"data": {
+		"cid_4": "18",
+		"pdh_4": "-2029675728"
+	}
+}
+--- lte_4 ---
+--- wwan0 ---
+3: wwan0: <POINTOPOINT,MULTICAST,NOARP,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UNKNOWN group default qlen 1000
+    link/none 
+    inet 100.82.28.80/27 brd 100.82.28.95 scope global wwan0
+       valid_lft forever preferred_lft forever
+    inet6 fe80::f5a:7b85:769:63a4/64 scope link stable-privacy proto kernel_ll 
+       valid_lft forever preferred_lft forever
+--- routes ---
+default via 100.82.28.81 dev wwan0 src 100.82.28.80 metric 10 
+100.82.28.64/27 dev wwan0 proto kernel scope link src 100.82.28.80 
+192.168.20.0/24 dev br-lan proto kernel scope link src 192.168.20.11 
+--- cloud-route ---
+129.212.208.168 via 100.82.28.81 dev wwan0 src 100.82.28.80 uid 0 
+    cache 
+--- mqtt-sockets ---
+tcp        0      0 100.82.28.80:33885      129.212.208.168:8883    TIME_WAIT   
+tcp        0      0 100.82.28.80:54630      129.212.208.168:8883    ESTABLISHED 
+tcp        0      0 100.82.28.80:54614      129.212.208.168:8883    ESTABLISHED 
+tcp        0      0 100.82.28.80:38687      129.212.208.168:8883    TIME_WAIT   
+--- serving-system ---
+{
+	"registration": "registered",
+	"radio_interface": [
+		"lte"
+	],
+	"plmn_mcc": 515,
+	"plmn_mnc": 66,
+	"plmn_description": "515 66",
+	"roaming": false
+}
+--- signal ---
+{
+	"type": "lte",
+	"rssi": -73,
+	"rsrq": -13,
+	"rsrp": -102,
+	"snr": 0.200000
+}

@@ -1,0 +1,11 @@
+pre-stop recorder check: collector process not alive: emu01-serial pid=1244
+pre-stop recorder check: collector process not alive: gateway-resource pid=15608
+pre-stop recorder check: collector process not alive: gateway-log pid=3348
+pre-stop recorder check: collector process not alive: ulc01-host-resource pid=17340
+pre-stop recorder check: collector process not alive: ulc01-docker-resource pid=17456
+pre-stop recorder check: collector process not alive: ulc02-host-resource pid=20572
+pre-stop recorder check: collector process not alive: ulc02-docker-resource pid=7192
+pre-stop recorder check: collector process not alive: ulc03-host-resource pid=20804
+pre-stop recorder check: collector process not alive: ulc03-docker-resource pid=1616
+ulc01-chirpstack.log: Command '['C:\\Windows\\System32\\OpenSSH\\ssh.exe', '-o', 'BatchMode=yes', '-o', 'ConnectTimeout=5', '-o', 'ConnectionAttempts=1', '-o', 'IdentityFile=C:\\Users\\smartagriintern\\.ssh\\id_ed25519_research_recorder', '-o', 'IdentitiesOnly=yes', '-o', 'StrictHostKeyChecking=yes', 'opsadmin@143.198.205.54', 'docker-log chirpstack 2026-09-17T05:43:41.881Z 2026-09-17T05:44:53.571Z']' timed out after 45 seconds
+ulc02-chirpstack.log: Command '['C:\\Windows\\System32\\OpenSSH\\ssh.exe', '-o', 'BatchMode=yes', '-o', 'ConnectTimeout=5', '-o', 'ConnectionAttempts=1', '-o', 'IdentityFile=C:\\Users\\smartagriintern\\.ssh\\id_ed25519_research_recorder', '-o', 'IdentitiesOnly=yes', '-o', 'StrictHostKeyChecking=yes', 'opsadmin@165.22.253.127', 'docker-log chirpstack 2026-09-17T05:43:41.881Z 2026-09-17T05:44:53.571Z']' timed out after 45 seconds

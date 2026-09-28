@@ -1,0 +1,18 @@
+REPORT={"test": "P1", "repetition": "1", "started_utc": "2026-09-22T05:32:57.094+00:00", "pid": 3896, "finished_utc": null, "exit_code": null, "status": "RUNNING"}
+RECORDER_ACTIVE=True
+RUN=P1-1-20260922-133258 CHILDREN=11
+OPERATOR_RECENT=database correlation, bounded Fabric settlement, sealed evidence, and strict post-run validation.
+Type EXECUTE to start this real test command, or press Enter to stop after validation: TECHNICAL_GATE=PASS
+TOOL_COMPILE=PASS
+DOCUMENTATION_EXECUTABLE_SURFACE=PASS
+MQTT_TOOL_SELFTEST=PASS
+RESEARCH_CONTRACT=PASS
+OVERSIGHT_STATUS=PASS
+COUNTED_FIRMWARE=PASS
+RECORDER_STATE=CLEAN
+GATEWAY_LTE=PASS
+LIVE_PRE=PASS
+TEST=PRE STATUS=READY CODE_BLOCK=PASS
+TEST=P1 STATUS=READY CODE_BLOCK=PASS
+READINESS_JSON=test\automation\research-manual\CURRENT-READINESS.json
+P1 repetition (1-3): 

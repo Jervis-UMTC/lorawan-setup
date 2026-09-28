@@ -1,0 +1,1 @@
+event_key,time,received_at,dev_eui,gateway_id,f_cnt,test_sequence,rssi_dbm,snr_db,gateway_uplink_id,gateway_frequency_hz,raw_data,mqtt_topic,decoder_version,region,f_port,confirmed

@@ -1,0 +1,5 @@
+test,condition,trials,required_trials,expected,received_gateway,accepted_chirpstack,rejected_chirpstack,reached_application,database_created,fabric_tx_created,correct_decisions,correct_percent,false_acceptance,false_rejection,mean_decision_seconds,sd_decision_seconds,status
+replay/spoofing,legitimate,0,10,NOT_MEASURED,0,0,0,0,0,0,0,,0,0,,,NOT_MEASURED
+replay/spoofing,replay,0,10,NOT_MEASURED,0,0,0,0,0,0,0,,0,0,,,NOT_MEASURED
+replay/spoofing,genuine,0,10,NOT_MEASURED,0,0,0,0,0,0,0,,0,0,,,NOT_MEASURED
+replay/spoofing,invalid-MIC,0,10,NOT_MEASURED,0,0,0,0,0,0,0,,0,0,,,NOT_MEASURED

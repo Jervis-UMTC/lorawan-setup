@@ -1,0 +1,74 @@
+metadata/start-utc.txt
+2026-09-22T05:42:53.622Z
+
+
+metadata/end-utc.txt
+2026-09-22T06:12:53.622Z
+
+
+metadata/stop-errors.txt
+Fabric settle did not reach confirmation for every in-window uplink: status=TIMEOUT uplinks=56 confirmed=54 missing=2
+
+
+derived/run-status.txt
+RECORDED_WITH_ERRORS
+
+
+FILE=raw/emu-01-source.log lines=123 tail
+2026-09-22T06:12:31.877Z|EMU01|COM11|SENSOR_TX,seq=806,reason=normal,uptime_ms=12098124,soil_pct=4.00,soil_temp_c=31.50,uv_index=0.00,baro_pa=101115,baro_temp_c=27.04,light_veml_lux=179.99,light_opt_lux=160.68,env_temp_c=30.28,env_humidity_pct=48.79,env_pressure_pa=100823,env_gas_ohm=49961,rain_wet=0,battery_mv=0,valid=0x7F,join=1,send_status=0
+2026-09-22T06:12:46.882Z|EMU01|COM11|SENSOR_TX,seq=807,reason=normal,uptime_ms=12113129,soil_pct=4.00,soil_temp_c=31.50,uv_index=0.00,baro_pa=101113,baro_temp_c=27.02,light_veml_lux=179.58,light_opt_lux=160.68,env_temp_c=30.28,env_humidity_pct=48.80,env_pressure_pa=100822,env_gas_ohm=49665,rain_wet=0,battery_mv=0,valid=0x7F,join=1,send_status=0
+2026-09-22T06:13:01.888Z|EMU01|COM11|SENSOR_TX,seq=808,reason=normal,uptime_ms=12128135,soil_pct=2.00,soil_temp_c=31.50,uv_index=0.00,baro_pa=101114,baro_temp_c=27.01,light_veml_lux=181.20,light_opt_lux=161.00,env_temp_c=30.26,env_humidity_pct=48.79,env_pressure_pa=100821,env_gas_ohm=49695,rain_wet=0,battery_mv=0,valid=0x7F,join=1,send_status=0
+2026-09-22T06:13:16.896Z|EMU01|COM11|SENSOR_TX,seq=809,reason=normal,uptime_ms=12143141,soil_pct=3.00,soil_temp_c=31.50,uv_index=0.00,baro_pa=101116,baro_temp_c=27.01,light_veml_lux=181.44,light_opt_lux=158.12,env_temp_c=30.25,env_humidity_pct=48.84,env_pressure_pa=100822,env_gas_ohm=49783,rain_wet=0,battery_mv=0,valid=0x7F,join=1,send_status=0
+2026-09-22T06:13:31.900Z|EMU01|COM11|SENSOR_TX,seq=810,reason=normal,uptime_ms=12158147,soil_pct=3.00,soil_temp_c=31.50,uv_index=0.00,baro_pa=101113,baro_temp_c=27.00,light_veml_lux=181.30,light_opt_lux=157.16,env_temp_c=30.22,env_humidity_pct=48.90,env_pressure_pa=100820,env_gas_ohm=49518,rain_wet=0,battery_mv=0,valid=0x7F,join=1,send_status=0
+2026-09-22T06:13:46.906Z|EMU01|COM11|SENSOR_TX,seq=811,reason=normal,uptime_ms=12173154,soil_pct=3.00,soil_temp_c=31.40,uv_index=0.00,baro_pa=101113,baro_temp_c=26.98,light_veml_lux=181.70,light_opt_lux=162.28,env_temp_c=30.21,env_humidity_pct=48.95,env_pressure_pa=100818,env_gas_ohm=49724,rain_wet=0,battery_mv=0,valid=0x7F,join=1,send_status=0
+2026-09-22T06:14:01.912Z|EMU01|COM11|SENSOR_TX,seq=812,reason=normal,uptime_ms=12188160,soil_pct=3.00,soil_temp_c=31.50,uv_index=0.00,baro_pa=101114,baro_temp_c=26.97,light_veml_lux=181.72,light_opt_lux=161.96,env_temp_c=30.18,env_humidity_pct=48.84,env_pressure_pa=100819,env_gas_ohm=49695,rain_wet=0,battery_mv=0,val
+
+FILE=raw/gateway.log lines=2149 tail
+Tue Sep 22 06:12:46 2026 daemon.warn wpa_supplicant[942]: phy0-sta0: Failed to initiate sched scan
+Tue Sep 22 06:12:48 2026 daemon.warn wpa_supplicant[942]: phy0-sta0: Failed to initiate sched scan
+Tue Sep 22 06:12:50 2026 daemon.warn wpa_supplicant[942]: phy0-sta0: Failed to initiate sched scan
+Tue Sep 22 06:12:51 2026 user.info chirpstack-concentratord-sx1302[2348]: Frame received, uplink_id: 1278648264, count_us: 1959463376, freq: 923200000, bw: 125000, mod: LoRa, dr: SF7, ftime_received: false, ftime_ns: 0
+Tue Sep 22 06:12:52 2026 user.info chirpstack-mqtt-forwarder[3216]: Received uplink frame, uplink_id: 1278648264
+Tue Sep 22 06:12:52 2026 user.info chirpstack-mqtt-forwarder[3216]: Sending uplink event, uplink_id: 1278648264, topic: as923/gateway/0016c001f139a1cb/event/up
+Tue Sep 22 06:12:52 2026 daemon.warn wpa_supplicant[942]: phy0-sta0: Failed to initiate sched scan
+Tue Sep 22 06:12:53 2026 authpriv.info dropbear[4868]: Exit (root) from <192.168.20.30:55423>: Error reading: Connection reset by peer
+
+FILE=raw/ulc01-chirpstack.log lines=2137 tail
+2026-09-22T06:12:46.984533966Z [2m2026-09-22T06:12:46.984306Z[0m [32m INFO[0m [1mgRPC[0m[1m{[0m[3muri[0m[2m=[0m/[1m}[0m[2m:[0m [2mchirpstack::api[0m[2m:[0m Finished processing request [3mstatus[0m[2m=[0m"200" [3mlatency[0m[2m=[0m64.587Âµs
+2026-09-22T06:12:47.498037043Z [2m2026-09-22T06:12:47.497570Z[0m [32m INFO[0m [1mgRPC[0m[1m{[0m[3muri[0m[2m=[0m/[1m}[0m[2m:[0m [2mchirpstack::api[0m[2m:[0m Finished processing request [3mstatus[0m[2m=[0m"200" [3mlatency[0m[2m=[0m56.722Âµs
+2026-09-22T06:12:48.987912975Z [2m2026-09-22T06:12:48.987376Z[0m [32m INFO[0m [1mgRPC[0m[1m{[0m[3muri[0m[2m=[0m/[1m}[0m[2m:[0m [2mchirpstack::api[0m[2m:[0m Finished processing request [3mstatus[0m[2m=[0m"200" [3mlatency[0m[2m=[0m65.495Âµs
+2026-09-22T06:12:49.501397858Z [2m2026-09-22T06:12:49.500790Z[0m [32m INFO[0m [1mgRPC[0m[1m{[0m[3muri[0m[2m=[0m/[1m}[0m[2m:[0m [2mchirpstack::api[0m[2m:[0m Finished processing request [3mstatus[0m[2m=[0m"200" [3mlatency[0m[2m=[0m64.308Âµs
+2026-09-22T06:12:50.989471417Z [2m2026-09-22T06:12:50.989041Z[0m [32m INFO[0m [1mgRPC[0m[1m{[0m[3muri[0m[2m=[0m/[1m}[0m[2m:[0m [2mchirpstack::api[0m[2m:[0m Finished processing request [3mstatus[0m[2m=[0m"200" [3mlatency[0m[2m=[0m64.527Âµs
+2026-09-22T06:12:51.504891699Z [2m2026-09-22T06:12:51.504260Z[0m [32m INFO[0m [1mgRPC[0m[1m{[0m[3muri[0m[2m=[0m/[1m}[0m[2m:[0m [2mchirpstack::api[0m[2m:[0m Finished processing request [3mstatus[0m[2m=[0m"200" [3mlatency[0m[2m=[0m63.291Âµs
+2026-09-22T06:12:52.991497788Z [2m2026-09-22T06:12:52.990954Z[0m [32m INFO[0m [1mgRPC[0m[1m{[0m[3muri[0m[2m=[0m/[1m}[0m[2m:[0m [2mchirpstack::api[0m[2m:[0m Finished processing request [3mstatus[0m[2m=[0m"200" [3mlatency[0m[2m=[0m60.633Âµs
+2026-09-22T06:12:53.507808148Z [2m2026-09-22T06:12:53.507446Z[0m [32m INFO[0m [1mgRPC[0m[1m{[0m[3muri[0m[2m=[0m/[1m}[0m[2m:[0m [2mchirpstack::api[0m[2m:[0m Finished processing request [3mstatus[0m[2m=[0m"200" [3mlatency[0m[2m=[0m60.349Âµs
+
+FILE=raw/ulc02-chirpstack.log lines=2118 tail
+2026-09-22T06:12:46.635690492Z [2m2026-09-22T06:12:46.634169Z[0m [32m INFO[0m [1mgRPC[0m[1m{[0m[3muri[0m[2m=[0m/[1m}[0m[2m:[0m [2mchirpstack::api[0m[2m:[0m Finished processing request [3mstatus[0m[2m=[0m"200" [3mlatency[0m[2m=[0m61.751Âµs
+2026-09-22T06:12:47.030305073Z [2m2026-09-22T06:12:47.029876Z[0m [32m INFO[0m [1mgRPC[0m[1m{[0m[3muri[0m[2m=[0m/[1m}[0m[2m:[0m [2mchirpstack::api[0m[2m:[0m Finished processing request [3mstatus[0m[2m=[0m"200" [3mlatency[0m[2m=[0m65.723Âµs
+2026-09-22T06:12:48.638673662Z [2m2026-09-22T06:12:48.638193Z[0m [32m INFO[0m [1mgRPC[0m[1m{[0m[3muri[0m[2m=[0m/[1m}[0m[2m:[0m [2mchirpstack::api[0m[2m:[0m Finished processing request [3mstatus[0m[2m=[0m"200" [3mlatency[0m[2m=[0m60.352Âµs
+2026-09-22T06:12:49.033120288Z [2m2026-09-22T06:12:49.032751Z[0m [32m INFO[0m [1mgRPC[0m[1m{[0m[3muri[0m[2m=[0m/[1m}[0m[2m:[0m [2mchirpstack::api[0m[2m:[0m Finished processing request [3mstatus[0m[2m=[0m"200" [3mlatency[0m[2m=[0m63.513Âµs
+2026-09-22T06:12:50.640562204Z [2m2026-09-22T06:12:50.640131Z[0m [32m INFO[0m [1mgRPC[0m[1m{[0m[3muri[0m[2m=[0m/[1m}[0m[2m:[0m [2mchirpstack::api[0m[2m:[0m Finished processing request [3mstatus[0m[2m=[0m"200" [3mlatency[0m[2m=[0m60.591Âµs
+2026-09-22T06:12:51.035950836Z [2m2026-09-22T06:12:51.035387Z[0m [32m INFO[0m [1mgRPC[0m[1m{[0m[3muri[0m[2m=[0m/[1m}[0m[2m:[0m [2mchirpstack::api[0m[2m:[0m Finished processing request [3mstatus[0m[2m=[0m"200" [3mlatency[0m[2m=[0m69.661Âµs
+2026-09-22T06:12:52.643521900Z [2m2026-09-22T06:12:52.642948Z[0m [32m INFO[0m [1mgRPC[0m[1m{[0m[3muri[0m[2m=[0m/[1m}[0m[2m:[0m [2mchirpstack::api[0m[2m:[0m Finished processing request [3mstatus[0m[2m=[0m"200" [3mlatency[0m[2m=[0m77.434Âµs
+2026-09-22T06:12:53.037308033Z [2m2026-09-22T06:12:53.036933Z[0m [32m INFO[0m [1mgRPC[0m[1m{[0m[3muri[0m[2m=[0m/[1m}[0m[2m:[0m [2mchirpstack::api[0m[2m:[0m Finished processing request [3mstatus[0m[2m=[0m"200" [3mlatency[0m[2m=[0m63.1Âµs
+
+FILE=raw/control-plane-health.csv lines=122 tail
+2026-09-22T06:11:07.055Z,2026-09-22T06:12:35.834Z,-88.779112,7.901,PASS,all collectors and evidence services healthy
+2026-09-22T06:11:22.168Z,2026-09-22T06:12:50.850Z,-88.682712,10.328,PASS,all collectors and evidence services healthy
+2026-09-22T06:11:37.305Z,2026-09-22T06:13:05.868Z,-88.563251,10.126,PASS,all collectors and evidence services healthy
+2026-09-22T06:11:52.440Z,2026-09-22T06:13:20.885Z,-88.445344,7.914,PASS,all collectors and evidence services healthy
+2026-09-22T06:12:07.601Z,2026-09-22T06:13:35.901Z,-88.300269,9.738,PASS,all collectors and evidence services healthy
+2026-09-22T06:12:22.724Z,2026-09-22T06:13:50.919Z,-88.195287,9.485,PASS,all collectors and evidence services healthy
+2026-09-22T06:12:37.845Z,2026-09-22T06:14:05.935Z,-88.090473,8.523,PASS,all collectors and evidence services healthy
+2026-09-22T06:12:52.970Z,2026-09-22T06:14:18.755Z,-85.785309,11.060,PASS,all collectors and evidence services healthy
+
+raw/uplinks.csv ROWS 56 FIRST={'event_key': '0aa998ab-9503-44a3-a473-7dc322939b1d', 'time': '2026-09-22 05:43:06.775572+00', 'received_at': '2026-09-22 05:43:06.812+00', 'dev_eui': 'ac1f09fffe296d29', 'gateway_id': '0016c001f139a1cb', 'f_cnt': '693', 'test_sequence': '694', 'rssi_dbm': '-48', 'snr_db': '14.5', 'gateway_uplink_id': '2050809142', 'gateway_freq LAST={'event_key': '0ba2525b-160e-4229-ac5a-09a23886d730', 'time': '2026-09-22 05:58:21.935865+00', 'received_at': '2026-09-22 05:58:21.998+00', 'dev_eui': 'ac1f09fffe296d29', 'gateway_id': '0016c001f139a1cb', 'f_cnt': '754', 'test_sequence': '755', 'rssi_dbm': '-47', 'snr_db': '14.5', 'gateway_uplink_id': '3348508843', 'gateway_frequency_hz': '923200000', 'raw_data': 'AgAAAvMArOzOASwMTgAAAAGLFwqTAABCFQAAOsAL3RMgAAGJ6QAAv2UAAAAAfw=
+
+raw/gateway-mqtt-events.csv ROWS 98 FIRST={'gateway_event_id': '24483', 'gateway_id': '0016c001f139a1cb', 'mqtt_topic': 'as923/gateway/0016c001f139a1cb/event/up', 'broker_received_at': '2026-09-22 05:43:06.565235+00', 'capture_key_sha256': '8d87996f4cdf08179b44e096b572892835b752c61b3bed4e75b6ca7862f3a3ca', 'serialized_event_sha256': 'a44c26529055eac4c78dc5e38a8b28cecb0b LAST={'gateway_event_id': '24679', 'gateway_id': '0016c001f139a1cb', 'mqtt_topic': 'as923/gateway/0016c001f139a1cb/event/up', 'broker_received_at': '2026-09-22 05:58:21.665532+00', 'capture_key_sha256': 'fb632590ea911a215711f9984ea60192d62ede81cf83da17f529eb94a578ad64', 'serialized_event_sha256': '26da9b80f7aa246df870b27508a64cca09757e32da2d0eae60562b5dd076cb7d', 'phy_payload_sha256': '52bf494ffce71f5a38ad58d815433b5c2992d7d2e8250b
+
+raw/fabric-outbox.csv ROWS 56 FIRST={'event_key': 'uplink:0aa998ab-9503-44a3-a473-7dc322939b1d', 'source_event_key': '0aa998ab-9503-44a3-a473-7dc322939b1d', 'observed_at': '2026-09-22 05:43:06.775572+00', 'event_type': 'lorawan_uplink_accepted', 'schema_version': 'telemetry-attestation-v2', 'status': 'confirmed', 'attempts': '1', 'digest_sha256': '140a71206cc35764 LAST={'event_key': 'uplink:0ba2525b-160e-4229-ac5a-09a23886d730', 'source_event_key': '0ba2525b-160e-4229-ac5a-09a23886d730', 'observed_at': '2026-09-22 05:58:21.935865+00', 'event_type': 'lorawan_uplink_accepted', 'schema_version': 'telemetry-attestation-v2', 'status': 'pending', 'attempts': '0', 'digest_sha256': '', 'fabric_tx_id': '', 'submitted_at': '', 'committed_at': '', 'last_error_category': '', 'created_at': '2026-09-22 05
+
+PENDING {'event_key': 'uplink:5d25dd6b-bd4b-4f58-8ac0-bda89661949b', 'source_event_key': '5d25dd6b-bd4b-4f58-8ac0-bda89661949b', 'observed_at': '2026-09-22 05:58:07.05227+00', 'event_type': 'lorawan_uplink_accepted', 'schema_version': 'telemetry-attestation-v2', 'status': 'pending', 'attempts': '0', 'digest_sha256': '', 'fabric_tx_id': '', 'submitted_at': '', 'committed_at': '', 'last_error_category': '', 'created_at': '2026-09-22 05:58:07.154277+00', 'updated_at': '2026-09-22 05:58:07.154277+00'}
+
+PENDING {'event_key': 'uplink:0ba2525b-160e-4229-ac5a-09a23886d730', 'source_event_key': '0ba2525b-160e-4229-ac5a-09a23886d730', 'observed_at': '2026-09-22 05:58:21.935865+00', 'event_type': 'lorawan_uplink_accepted', 'schema_version': 'telemetry-attestation-v2', 'status': 'pending', 'attempts': '0', 'digest_sha256': '', 'fabric_tx_id': '', 'submitted_at': '', 'committed_at': '', 'last_error_category': '', 'created_at': '2026-09-22 05:58:22.050259+00', 'updated_at': '2026-09-22 05:58:22.050259+00'}

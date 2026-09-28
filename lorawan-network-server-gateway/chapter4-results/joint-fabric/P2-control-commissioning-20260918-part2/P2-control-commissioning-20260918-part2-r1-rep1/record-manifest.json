@@ -1,0 +1,33 @@
+{
+  "record_count": 2,
+  "records": [
+    {
+      "authenticated_source_system_id": "lorawan-gateway-evidence",
+      "exact_payload_base64": "eyJraW5kIjoiUDJfRkFCUklDX0JFTkNITUFSSyIsInBhaXJfaWQiOiJQMi1jb250cm9sLWNvbW1pc3Npb25pbmctMjAyNjA5MTgtcGFydDItcjEtcmVwMSIsInJlcGV0aXRpb24iOjEsInNjaGVtYV92ZXJzaW9uIjoiMS4wIiwic2Vuc29yIjp7ImRldmljZV9pZCI6IlAyLVNZTlRIRVRJQyIsInNvaWxfbW9pc3R1cmVfcGN0Ijo0MC4wMSwidGVtcGVyYXR1cmVfYyI6MjUuMDF9LCJzZXF1ZW5jZSI6MSwic2Vzc2lvbl9pZCI6IlAyLWNvbnRyb2wtY29tbWlzc2lvbmluZy0yMDI2MDkxOC1wYXJ0MiIsInRhcmdldF90cHMiOjEuMH0=",
+      "expected_fabric_status": "COMMITTED",
+      "payload_sha256": "855b70cbb007a458afff795efd931dc2ffb85423c947497c0ebae9f71433079a",
+      "produced_at_utc": "2026-09-18T06:43:09.862Z",
+      "producer": "lorawan-research-p2",
+      "schema_version": "1.0",
+      "source_record_id": "research:p2:P2-control-commissioning-20260918-part2-r1-rep1:00001",
+      "source_type": "research-benchmark",
+      "trial_id": "P2-control-commissioning-20260918-part2-r1-rep1-t00001"
+    },
+    {
+      "authenticated_source_system_id": "lorawan-gateway-evidence",
+      "exact_payload_base64": "eyJraW5kIjoiUDJfRkFCUklDX0JFTkNITUFSSyIsInBhaXJfaWQiOiJQMi1jb250cm9sLWNvbW1pc3Npb25pbmctMjAyNjA5MTgtcGFydDItcjEtcmVwMSIsInJlcGV0aXRpb24iOjEsInNjaGVtYV92ZXJzaW9uIjoiMS4wIiwic2Vuc29yIjp7ImRldmljZV9pZCI6IlAyLVNZTlRIRVRJQyIsInNvaWxfbW9pc3R1cmVfcGN0Ijo0MC4wMiwidGVtcGVyYXR1cmVfYyI6MjUuMDJ9LCJzZXF1ZW5jZSI6Miwic2Vzc2lvbl9pZCI6IlAyLWNvbnRyb2wtY29tbWlzc2lvbmluZy0yMDI2MDkxOC1wYXJ0MiIsInRhcmdldF90cHMiOjEuMH0=",
+      "expected_fabric_status": "COMMITTED",
+      "payload_sha256": "dd69ad2d61385d81755c43005a36260bb6427a9d2e3259104d6446d3d21ddd8b",
+      "produced_at_utc": "2026-09-18T06:43:10.862Z",
+      "producer": "lorawan-research-p2",
+      "schema_version": "1.0",
+      "source_record_id": "research:p2:P2-control-commissioning-20260918-part2-r1-rep1:00002",
+      "source_type": "research-benchmark",
+      "trial_id": "P2-control-commissioning-20260918-part2-r1-rep1-t00002"
+    }
+  ],
+  "run_manifest_sha256": "428da8316839b80850b66755de5dd8f6e0e9361b2a497d03e9f0e2687630a8d7",
+  "schema_version": "1.0",
+  "sealed_at_utc": "2026-09-18T06:43:04.866Z",
+  "study_id": "zacharias-lorawan-fabric"
+}

@@ -1,0 +1,20 @@
+COMMAND=py -3 test/automation/research-manual/run_test.py P1
+REPETITION=1
+START_UTC=2026-09-22T02:53:09.547681+00:00
+TEST_ID=P1
+STATUS=READY
+DETAIL=Complete normal-operation orchestration is commissioned: warm-up gating, closed 30-minute measurement window, calibrated source/ChirpStack/database correlation, bounded Fabric settlement, sealed evidence, and strict post-run validation.
+Type EXECUTE to start this real test command, or press Enter to stop after validation: TECHNICAL_GATE=PASS
+TOOL_COMPILE=PASS
+DOCUMENTATION_EXECUTABLE_SURFACE=PASS
+MQTT_TOOL_SELFTEST=PASS
+RESEARCH_CONTRACT=PASS
+OVERSIGHT_STATUS=PASS
+COUNTED_FIRMWARE=PASS
+RECORDER_STATE=CLEAN
+GATEWAY_LTE=PASS
+LIVE_PRE=PASS
+TEST=PRE STATUS=READY CODE_BLOCK=PASS
+TEST=P1 STATUS=READY CODE_BLOCK=PASS
+READINESS_JSON=test\automation\research-manual\CURRENT-READINESS.json
+P1 repetition (1-3): 

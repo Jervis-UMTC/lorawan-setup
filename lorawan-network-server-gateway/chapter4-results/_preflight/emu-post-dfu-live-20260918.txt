@@ -1,0 +1,3 @@
+SENSOR_TX,seq=4,reason=normal,uptime_ms=63417,soil_pct=4.00,soil_temp_c=30.20,uv_index=0.00,baro_pa=101541,baro_temp_c=25.34,light_veml_lux=173.71,light_opt_lux=153.64,env_temp_c=28.61,env_humidity_pct=54.51,env_pressure_pa=101221,env_gas_ohm=34358,rain_wet=0,battery_mv=0,valid=0x7F,join=1,send_status=0
+SENSOR_TX,seq=5,reason=normal,uptime_ms=78423,soil_pct=4.00,soil_temp_c=30.20,uv_index=0.00,baro_pa=101545,baro_temp_c=25.32,light_veml_lux=173.82,light_opt_lux=153.64,env_temp_c=28.54,env_humidity_pct=54.45,env_pressure_pa=101220,env_gas_ohm=35643,rain_wet=0,battery_mv=0,valid=0x7F,join=1,send_status=0
+RESULT boot=False profile=False sensor_tx=True

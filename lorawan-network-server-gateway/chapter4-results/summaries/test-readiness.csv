@@ -1,0 +1,8 @@
+test_area,count_unit,required,countable_completed,remaining,status,methodology,record_basis
+normal-operation,runs,3,0,3,INCOMPLETE,3 x 30 min,~120 scheduled uplinks/run
+authentication,trials,90,0,90,INCOMPLETE,90 decisions,3 layers x 3 conditions x 10
+replay-spoofing,trials,40,0,40,INCOMPLETE,40 decisions,10 legitimate + 10 replay + 10 genuine + 10 invalid-MIC
+integrity,trials,40,0,40,INCOMPLETE,40 verifications,10 unchanged app + 10 altered app + 10 unchanged stored + 10 tampered stored
+traceability,trials,20,0,20,INCOMPLETE,10 individual + 10 histories x 5,20 trials / 60 records
+flooding,runs,18,0,18,INCOMPLETE,18 x (5 min load + 5 min recovery),2 attack types x 3 levels x 3 repetitions
+resilience,runs,3,0,3,INCOMPLETE,3 x (30m normal + 60m outage + 30m recovery),~480 uplinks/run

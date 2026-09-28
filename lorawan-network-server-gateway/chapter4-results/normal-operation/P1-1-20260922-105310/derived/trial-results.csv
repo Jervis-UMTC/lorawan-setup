@@ -1,0 +1,1 @@
+trial_id,test_condition,expected_result,actual_result,status,start_utc,end_utc,duration_seconds,gateway_received,chirpstack_accepted,chirpstack_rejected,application_reached,database_created,outbox_created,decision_time_seconds,observations_json,evidence_reference,notes

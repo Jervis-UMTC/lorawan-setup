@@ -1,0 +1,16 @@
+test_dry_run_never_opens_usb (test_sec02_replay.S1OfflineTests.test_dry_run_never_opens_usb) ... ok
+test_hash_tampering_rejected_pre_usb (test_sec02_replay.S1OfflineTests.test_hash_tampering_rejected_pre_usb) ... ok
+test_no_acceptable_uplink_fails (test_sec02_replay.S1OfflineTests.test_no_acceptable_uplink_fails) ... ok
+test_non_uplink_payload_rejected_pre_usb (test_sec02_replay.S1OfflineTests.test_non_uplink_payload_rejected_pre_usb) ... ok
+test_parking_ack_produces_qualified_mock_result (test_sec02_replay.S1OfflineTests.test_parking_ack_produces_qualified_mock_result) ... ok
+test_parking_failure_cannot_claim_success (test_sec02_replay.S1OfflineTests.test_parking_failure_cannot_claim_success) ... ok
+test_parse_journal_ignores_corrupted_envelopes (test_sec02_replay.S1OfflineTests.test_parse_journal_ignores_corrupted_envelopes) ... ok
+test_radio_parameters_parsed (test_sec02_replay.S1OfflineTests.test_radio_parameters_parsed) ... ok
+test_short_payload_rejected_pre_usb (test_sec02_replay.S1OfflineTests.test_short_payload_rejected_pre_usb) ... ok
+test_unsupported_spreading_factor_rejected (test_sec02_replay.S1OfflineTests.test_unsupported_spreading_factor_rejected) ... ok
+test_valid_data_uplink_only (test_sec02_replay.S1OfflineTests.test_valid_data_uplink_only) ... ok
+
+----------------------------------------------------------------------
+Ran 11 tests in 0.048s
+
+OK

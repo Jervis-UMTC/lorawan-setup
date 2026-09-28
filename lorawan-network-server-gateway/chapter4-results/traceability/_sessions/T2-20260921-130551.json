@@ -1,0 +1,550 @@
+{
+  "chronological_order_accuracy_percent": 100.0,
+  "database_blockchain_linkage_rate_percent": 100.0,
+  "db_reader_node": "ulc01",
+  "duplicate_record_count": 0,
+  "formal": false,
+  "generated_utc": "2026-09-21T05:10:30Z",
+  "known_unavailable_measurement_count": 5,
+  "missing_record_count": 0,
+  "record_completeness_rate_percent": 100.0,
+  "records_complete": 5,
+  "records_expected": 5,
+  "records_fabric_linked": 5,
+  "required_sequences": 1,
+  "run_dir": "C:\\Users\\smartagriintern\\Documents\\projects\\lorawan-setup\\lorawan-network-server-gateway\\chapter4-results\\traceability\\T2-rehearsal-20260921-130551",
+  "run_id": "T2-rehearsal-20260921-130551",
+  "sealed_evidence_manifest": "C:\\Users\\smartagriintern\\Documents\\projects\\lorawan-setup\\lorawan-network-server-gateway\\chapter4-results\\traceability\\T2-rehearsal-20260921-130551\\metadata\\SHA256SUMS.csv",
+  "sequences": [
+    {
+      "chronological_order_correct": true,
+      "duplicate_records": 0,
+      "errors": [],
+      "expected_event_keys": [
+        "4d9157f4-2992-46a9-a165-b0b9c6e418ec",
+        "44b296ea-4ea6-47b9-ab98-cd65a0e38bd5",
+        "0fb71aae-6b41-4863-8da5-8e4b205de550",
+        "f06f64d0-5c84-4e6e-af0b-a52ed214bf06",
+        "a07cbef2-dc7e-4e2d-88ba-aab297dad507"
+      ],
+      "frame_counters": [
+        169,
+        170,
+        171,
+        172,
+        173
+      ],
+      "missing_records": 0,
+      "reconstruction_time_seconds": 4.457665399997495,
+      "records": [
+        {
+          "complete": true,
+          "database_record_identifier": "4d9157f4-2992-46a9-a165-b0b9c6e418ec",
+          "dev_eui": "ac1f09fffe296d29",
+          "event_timestamp": "2026-09-21 05:05:22.313982+00",
+          "fabric_commit_timestamp": "2026-09-21 05:07:28.62464+00",
+          "fabric_linked": true,
+          "fabric_transaction_id": "ce7deda077aaf1c088a84f632d2020b4adb14f5ca05e7edf9328f1d8a806cb7a",
+          "frame_counter": "169",
+          "gateway_identifier": "0016c001f139a1cb",
+          "known_unavailable_measurements": [
+            "battery_v"
+          ],
+          "measurement_count": 13,
+          "measurement_values_available_count": 12,
+          "sensor_measurements": [
+            {
+              "quality": "measured",
+              "type": "soil_moisture_percent",
+              "unit": "%",
+              "value": "3"
+            },
+            {
+              "quality": "measured",
+              "type": "soil_temperature_c",
+              "unit": "Cel",
+              "value": "30.6"
+            },
+            {
+              "quality": "measured",
+              "type": "uv_index",
+              "unit": "1",
+              "value": "0"
+            },
+            {
+              "quality": "measured",
+              "type": "barometer_pressure_pa",
+              "unit": "Pa",
+              "value": "101222"
+            },
+            {
+              "quality": "measured",
+              "type": "barometer_temperature_c",
+              "unit": "Cel",
+              "value": "25.93"
+            },
+            {
+              "quality": "measured",
+              "type": "light_veml7700_lux",
+              "unit": "lx",
+              "value": "175.43"
+            },
+            {
+              "quality": "measured",
+              "type": "light_opt3001_lux",
+              "unit": "lx",
+              "value": "155.56"
+            },
+            {
+              "quality": "measured",
+              "type": "environment_temperature_c",
+              "unit": "Cel",
+              "value": "29.05"
+            },
+            {
+              "quality": "measured",
+              "type": "environment_humidity_percent",
+              "unit": "%",
+              "value": "52.83"
+            },
+            {
+              "quality": "measured",
+              "type": "environment_pressure_pa",
+              "unit": "Pa",
+              "value": "100883"
+            },
+            {
+              "quality": "measured",
+              "type": "environment_gas_resistance_ohm",
+              "unit": "ohm",
+              "value": "43124"
+            },
+            {
+              "quality": "measured",
+              "type": "rain_wet",
+              "unit": "boolean",
+              "value": "f"
+            },
+            {
+              "quality": "invalid",
+              "type": "battery_v",
+              "unit": "V",
+              "value": null
+            }
+          ],
+          "sha256": "8c878bec3af8722cf36afc7d252b5c36b19de42a5f0fd953177cbf1ddb0b0389",
+          "test_sequence": "170",
+          "trace_id": "4d9157f4-2992-46a9-a165-b0b9c6e418ec"
+        },
+        {
+          "complete": true,
+          "database_record_identifier": "44b296ea-4ea6-47b9-ab98-cd65a0e38bd5",
+          "dev_eui": "ac1f09fffe296d29",
+          "event_timestamp": "2026-09-21 05:05:38.619956+00",
+          "fabric_commit_timestamp": "2026-09-21 05:07:44.593743+00",
+          "fabric_linked": true,
+          "fabric_transaction_id": "d363942325d2446ac92728363f7fe2b6bb0b19f49f7b71c4affe7738e4f28789",
+          "frame_counter": "170",
+          "gateway_identifier": "0016c001f139a1cb",
+          "known_unavailable_measurements": [
+            "battery_v"
+          ],
+          "measurement_count": 13,
+          "measurement_values_available_count": 12,
+          "sensor_measurements": [
+            {
+              "quality": "measured",
+              "type": "soil_moisture_percent",
+              "unit": "%",
+              "value": "4"
+            },
+            {
+              "quality": "measured",
+              "type": "soil_temperature_c",
+              "unit": "Cel",
+              "value": "30.6"
+            },
+            {
+              "quality": "measured",
+              "type": "uv_index",
+              "unit": "1",
+              "value": "0"
+            },
+            {
+              "quality": "measured",
+              "type": "barometer_pressure_pa",
+              "unit": "Pa",
+              "value": "101217"
+            },
+            {
+              "quality": "measured",
+              "type": "barometer_temperature_c",
+              "unit": "Cel",
+              "value": "25.94"
+            },
+            {
+              "quality": "measured",
+              "type": "light_veml7700_lux",
+              "unit": "lx",
+              "value": "180.63"
+            },
+            {
+              "quality": "measured",
+              "type": "light_opt3001_lux",
+              "unit": "lx",
+              "value": "159.12"
+            },
+            {
+              "quality": "measured",
+              "type": "environment_temperature_c",
+              "unit": "Cel",
+              "value": "29.06"
+            },
+            {
+              "quality": "measured",
+              "type": "environment_humidity_percent",
+              "unit": "%",
+              "value": "52.84"
+            },
+            {
+              "quality": "measured",
+              "type": "environment_pressure_pa",
+              "unit": "Pa",
+              "value": "100881"
+            },
+            {
+              "quality": "measured",
+              "type": "environment_gas_resistance_ohm",
+              "unit": "ohm",
+              "value": "42859"
+            },
+            {
+              "quality": "measured",
+              "type": "rain_wet",
+              "unit": "boolean",
+              "value": "f"
+            },
+            {
+              "quality": "invalid",
+              "type": "battery_v",
+              "unit": "V",
+              "value": null
+            }
+          ],
+          "sha256": "6fa09a6d67e4b02a85a0870ca829f71e5ab2ab40d34137827401cf203e763172",
+          "test_sequence": "171",
+          "trace_id": "44b296ea-4ea6-47b9-ab98-cd65a0e38bd5"
+        },
+        {
+          "complete": true,
+          "database_record_identifier": "0fb71aae-6b41-4863-8da5-8e4b205de550",
+          "dev_eui": "ac1f09fffe296d29",
+          "event_timestamp": "2026-09-21 05:05:52.450999+00",
+          "fabric_commit_timestamp": "2026-09-21 05:08:20.433085+00",
+          "fabric_linked": true,
+          "fabric_transaction_id": "8d6cea31a8f8ee21504c397e33b65db11727be08e25dd1399c176c0dd3695afc",
+          "frame_counter": "171",
+          "gateway_identifier": "0016c001f139a1cb",
+          "known_unavailable_measurements": [
+            "battery_v"
+          ],
+          "measurement_count": 13,
+          "measurement_values_available_count": 12,
+          "sensor_measurements": [
+            {
+              "quality": "measured",
+              "type": "soil_moisture_percent",
+              "unit": "%",
+              "value": "3"
+            },
+            {
+              "quality": "measured",
+              "type": "soil_temperature_c",
+              "unit": "Cel",
+              "value": "30.6"
+            },
+            {
+              "quality": "measured",
+              "type": "uv_index",
+              "unit": "1",
+              "value": "0"
+            },
+            {
+              "quality": "measured",
+              "type": "barometer_pressure_pa",
+              "unit": "Pa",
+              "value": "101220"
+            },
+            {
+              "quality": "measured",
+              "type": "barometer_temperature_c",
+              "unit": "Cel",
+              "value": "25.95"
+            },
+            {
+              "quality": "measured",
+              "type": "light_veml7700_lux",
+              "unit": "lx",
+              "value": "179.73"
+            },
+            {
+              "quality": "measured",
+              "type": "light_opt3001_lux",
+              "unit": "lx",
+              "value": "159.4"
+            },
+            {
+              "quality": "measured",
+              "type": "environment_temperature_c",
+              "unit": "Cel",
+              "value": "29.07"
+            },
+            {
+              "quality": "measured",
+              "type": "environment_humidity_percent",
+              "unit": "%",
+              "value": "52.88"
+            },
+            {
+              "quality": "measured",
+              "type": "environment_pressure_pa",
+              "unit": "Pa",
+              "value": "100880"
+            },
+            {
+              "quality": "measured",
+              "type": "environment_gas_resistance_ohm",
+              "unit": "ohm",
+              "value": "42947"
+            },
+            {
+              "quality": "measured",
+              "type": "rain_wet",
+              "unit": "boolean",
+              "value": "f"
+            },
+            {
+              "quality": "invalid",
+              "type": "battery_v",
+              "unit": "V",
+              "value": null
+            }
+          ],
+          "sha256": "13c787798c35e4f9f9ee9cffd0f112c76b4e321e5f4e26b22aa30f44fe809266",
+          "test_sequence": "172",
+          "trace_id": "0fb71aae-6b41-4863-8da5-8e4b205de550"
+        },
+        {
+          "complete": true,
+          "database_record_identifier": "f06f64d0-5c84-4e6e-af0b-a52ed214bf06",
+          "dev_eui": "ac1f09fffe296d29",
+          "event_timestamp": "2026-09-21 05:06:07.37187+00",
+          "fabric_commit_timestamp": "2026-09-21 05:07:34.411362+00",
+          "fabric_linked": true,
+          "fabric_transaction_id": "d639b26d5f07d3706321318cc40e39794c12e3f1534da1324c7b99b65cb218f3",
+          "frame_counter": "172",
+          "gateway_identifier": "0016c001f139a1cb",
+          "known_unavailable_measurements": [
+            "battery_v"
+          ],
+          "measurement_count": 13,
+          "measurement_values_available_count": 12,
+          "sensor_measurements": [
+            {
+              "quality": "measured",
+              "type": "soil_moisture_percent",
+              "unit": "%",
+              "value": "3"
+            },
+            {
+              "quality": "measured",
+              "type": "soil_temperature_c",
+              "unit": "Cel",
+              "value": "30.6"
+            },
+            {
+              "quality": "measured",
+              "type": "uv_index",
+              "unit": "1",
+              "value": "0"
+            },
+            {
+              "quality": "measured",
+              "type": "barometer_pressure_pa",
+              "unit": "Pa",
+              "value": "101220"
+            },
+            {
+              "quality": "measured",
+              "type": "barometer_temperature_c",
+              "unit": "Cel",
+              "value": "25.97"
+            },
+            {
+              "quality": "measured",
+              "type": "light_veml7700_lux",
+              "unit": "lx",
+              "value": "174.74"
+            },
+            {
+              "quality": "measured",
+              "type": "light_opt3001_lux",
+              "unit": "lx",
+              "value": "154.88"
+            },
+            {
+              "quality": "measured",
+              "type": "environment_temperature_c",
+              "unit": "Cel",
+              "value": "29.08"
+            },
+            {
+              "quality": "measured",
+              "type": "environment_humidity_percent",
+              "unit": "%",
+              "value": "52.78"
+            },
+            {
+              "quality": "measured",
+              "type": "environment_pressure_pa",
+              "unit": "Pa",
+              "value": "100880"
+            },
+            {
+              "quality": "measured",
+              "type": "environment_gas_resistance_ohm",
+              "unit": "ohm",
+              "value": "42816"
+            },
+            {
+              "quality": "measured",
+              "type": "rain_wet",
+              "unit": "boolean",
+              "value": "f"
+            },
+            {
+              "quality": "invalid",
+              "type": "battery_v",
+              "unit": "V",
+              "value": null
+            }
+          ],
+          "sha256": "146b39df6a4e03f1a8147cfe4676127ea3f3ce640c9436c4d419037f1241e3b4",
+          "test_sequence": "173",
+          "trace_id": "f06f64d0-5c84-4e6e-af0b-a52ed214bf06"
+        },
+        {
+          "complete": true,
+          "database_record_identifier": "a07cbef2-dc7e-4e2d-88ba-aab297dad507",
+          "dev_eui": "ac1f09fffe296d29",
+          "event_timestamp": "2026-09-21 05:06:22.352609+00",
+          "fabric_commit_timestamp": "2026-09-21 05:08:06.600395+00",
+          "fabric_linked": true,
+          "fabric_transaction_id": "969518cb3dd659410bd60411580d5bcf6542b48ff6533b0a60098619e611326a",
+          "frame_counter": "173",
+          "gateway_identifier": "0016c001f139a1cb",
+          "known_unavailable_measurements": [
+            "battery_v"
+          ],
+          "measurement_count": 13,
+          "measurement_values_available_count": 12,
+          "sensor_measurements": [
+            {
+              "quality": "measured",
+              "type": "soil_moisture_percent",
+              "unit": "%",
+              "value": "5"
+            },
+            {
+              "quality": "measured",
+              "type": "soil_temperature_c",
+              "unit": "Cel",
+              "value": "30.6"
+            },
+            {
+              "quality": "measured",
+              "type": "uv_index",
+              "unit": "1",
+              "value": "0"
+            },
+            {
+              "quality": "measured",
+              "type": "barometer_pressure_pa",
+              "unit": "Pa",
+              "value": "101221"
+            },
+            {
+              "quality": "measured",
+              "type": "barometer_temperature_c",
+              "unit": "Cel",
+              "value": "25.98"
+            },
+            {
+              "quality": "measured",
+              "type": "light_veml7700_lux",
+              "unit": "lx",
+              "value": "178.67"
+            },
+            {
+              "quality": "measured",
+              "type": "light_opt3001_lux",
+              "unit": "lx",
+              "value": "157.8"
+            },
+            {
+              "quality": "measured",
+              "type": "environment_temperature_c",
+              "unit": "Cel",
+              "value": "29.1"
+            },
+            {
+              "quality": "measured",
+              "type": "environment_humidity_percent",
+              "unit": "%",
+              "value": "52.84"
+            },
+            {
+              "quality": "measured",
+              "type": "environment_pressure_pa",
+              "unit": "Pa",
+              "value": "100880"
+            },
+            {
+              "quality": "measured",
+              "type": "environment_gas_resistance_ohm",
+              "unit": "ohm",
+              "value": "43168"
+            },
+            {
+              "quality": "measured",
+              "type": "rain_wet",
+              "unit": "boolean",
+              "value": "f"
+            },
+            {
+              "quality": "invalid",
+              "type": "battery_v",
+              "unit": "V",
+              "value": null
+            }
+          ],
+          "sha256": "f6f66f010a73819e5919fa92d378c491dcef3ae426695e19f7f4de5ce2e39338",
+          "test_sequence": "174",
+          "trace_id": "a07cbef2-dc7e-4e2d-88ba-aab297dad507"
+        }
+      ],
+      "sequence": 1,
+      "status": "PASS",
+      "test_sequences": [
+        170,
+        171,
+        172,
+        173,
+        174
+      ]
+    }
+  ],
+  "status": "PASS",
+  "test": "T2",
+  "trace_retrieval_success_rate_percent": 100.0
+}

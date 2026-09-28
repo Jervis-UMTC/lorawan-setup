@@ -1,0 +1,34 @@
+timestamp_utc=2026-09-22T05:37:45Z
+hostname=chirpstack-0abee3
+--- uptime ---
+15.00 47.41
+--- lte ---
+{
+	"up": false,
+	"pending": true,
+	"available": true,
+	"autostart": true,
+	"dynamic": false,
+	"proto": "qmi",
+	"data": {
+		
+	}
+}
+--- lte_4 ---
+--- wwan0 ---
+3: wwan0: <BROADCAST,MULTICAST> mtu 1500 qdisc noop state DOWN group default qlen 1000
+    link/ether e2:1e:41:50:61:28 brd ff:ff:ff:ff:ff:ff
+--- routes ---
+192.168.20.0/24 dev br-lan proto kernel scope link src 192.168.20.11 
+--- cloud-route ---
+--- mqtt-sockets ---
+--- serving-system ---
+"Failed to connect to service"
+--- signal ---
+{
+	"type": "lte",
+	"rssi": -65,
+	"rsrq": -20,
+	"rsrp": -102,
+	"snr": -1.400000
+}

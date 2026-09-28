@@ -1,0 +1,12 @@
+[
+  {
+    "description": "USB Serial Device (COM11)",
+    "device": "COM11",
+    "hwid": "USB VID:PID=239A:8029 SER=69D8B0D3239621F1 LOCATION=1-1:x.0"
+  },
+  {
+    "description": "USB Serial Device (COM16)",
+    "device": "COM16",
+    "hwid": "USB VID:PID=1915:521F SER=F0B61D25752E LOCATION=1-2:x.0"
+  }
+]

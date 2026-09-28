@@ -1,0 +1,14 @@
+{
+  "application_port_after": "COM11",
+  "application_port_before": "COM11",
+  "counted_research": false,
+  "dfu_exit_code": 0,
+  "dfu_port": "COM12",
+  "expected_package_sha256": "c1f09de8eb6d8e00bbdd432765db90c66eaa87a530f490e54d04558e81bbd6b1",
+  "finished_at_utc": "2026-09-21T04:25:11Z",
+  "otaa_join_pass": true,
+  "package_sha256": "c1f09de8eb6d8e00bbdd432765db90c66eaa87a530f490e54d04558e81bbd6b1",
+  "profile_ok": false,
+  "status": "FAIL",
+  "successful_uplink": true
+}

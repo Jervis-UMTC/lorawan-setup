@@ -1,0 +1,11 @@
+test_a1 (test_research_contract.ContractTests.test_a1) ... ok
+test_p1_formal_denominator (test_research_contract.ContractTests.test_p1_formal_denominator) ... ok
+test_p2_counts (test_research_contract.ContractTests.test_p2_counts) ... ok
+test_s2_blocked (test_research_contract.ContractTests.test_s2_blocked) ... ok
+test_static (test_research_contract.ContractTests.test_static) ... ok
+test_traceability (test_research_contract.ContractTests.test_traceability) ... ok
+
+----------------------------------------------------------------------
+Ran 6 tests in 0.000s
+
+OK

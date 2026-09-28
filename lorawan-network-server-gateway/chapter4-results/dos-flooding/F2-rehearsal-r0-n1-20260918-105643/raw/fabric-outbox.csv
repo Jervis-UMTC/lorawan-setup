@@ -1,0 +1,2 @@
+event_key,source_event_key,observed_at,event_type,schema_version,status,attempts,digest_sha256,fabric_tx_id,submitted_at,committed_at,last_error_category,created_at,updated_at
+uplink:61d11a9d-eb3e-4cc9-9009-bd513d969a36,61d11a9d-eb3e-4cc9-9009-bd513d969a36,2026-09-18 02:56:51.38834+00,lorawan_uplink_accepted,telemetry-attestation-v2,pending,0,,,,,,2026-09-18 02:56:51.512958+00,2026-09-18 02:56:51.512958+00

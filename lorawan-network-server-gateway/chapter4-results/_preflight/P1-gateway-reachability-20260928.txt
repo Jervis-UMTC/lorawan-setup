@@ -1,0 +1,26 @@
+HOST 192.168.20.11 IP 192.168.20.11
+PING_RC=0
+
+Pinging 192.168.20.11 with 32 bytes of data:
+Reply from 192.168.20.11: bytes=32 time<1ms TTL=64
+Reply from 192.168.20.11: bytes=32 time<1ms TTL=64
+
+Ping statistics for 192.168.20.11:
+    Packets: Sent = 2, Received = 2, Lost = 0 (0% loss),
+Approximate round trip times in milli-seconds:
+    Minimum = 0ms, Maximum = 0ms, Average = 0ms
+
+SSH_PORT=OPEN
+HOST home-gw-11 IP 76.223.54.146
+PING_RC=0
+
+Pinging home-gw-11.ad.hijo.com [76.223.54.146] with 32 bytes of data:
+Reply from 76.223.54.146: bytes=32 time=28ms TTL=244
+Reply from 76.223.54.146: bytes=32 time=28ms TTL=244
+
+Ping statistics for 76.223.54.146:
+    Packets: Sent = 2, Received = 2, Lost = 0 (0% loss),
+Approximate round trip times in milli-seconds:
+    Minimum = 28ms, Maximum = 28ms, Average = 28ms
+
+SSH_PORT=FAIL TimeoutError('timed out')

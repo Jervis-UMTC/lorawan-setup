@@ -1,0 +1,112 @@
+timestamp_utc=2026-09-22T05:42:33Z
+hostname=chirpstack-0abee3
+--- uptime ---
+274.38 1025.04
+--- lte ---
+{
+	"up": true,
+	"pending": false,
+	"available": true,
+	"autostart": true,
+	"dynamic": false,
+	"uptime": 228,
+	"l3_device": "wwan0",
+	"proto": "qmi",
+	"updated": [
+		"addresses"
+	],
+	"metric": 0,
+	"dns_metric": 0,
+	"delegation": true,
+	"ipv4-address": [
+		{
+			"address": "100.67.22.113",
+			"mask": 30
+		}
+	],
+	"ipv6-address": [
+		
+	],
+	"ipv6-prefix": [
+		
+	],
+	"ipv6-prefix-assignment": [
+		
+	],
+	"route": [
+		
+	],
+	"dns-server": [
+		"131.226.72.19",
+		"131.226.73.19"
+	],
+	"dns-search": [
+		
+	],
+	"neighbors": [
+		
+	],
+	"inactive": {
+		"ipv4-address": [
+			
+		],
+		"ipv6-address": [
+			
+		],
+		"route": [
+			
+		],
+		"dns-server": [
+			
+		],
+		"dns-search": [
+			
+		],
+		"neighbors": [
+			
+		]
+	},
+	"data": {
+		"cid_4": "18",
+		"pdh_4": "-2029850592"
+	}
+}
+--- lte_4 ---
+--- wwan0 ---
+3: wwan0: <POINTOPOINT,MULTICAST,NOARP,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UNKNOWN group default qlen 1000
+    link/none 
+    inet 100.67.22.113/30 brd 100.67.22.115 scope global wwan0
+       valid_lft forever preferred_lft forever
+    inet6 fe80::7162:d501:a023:fb4a/64 scope link stable-privacy proto kernel_ll 
+       valid_lft forever preferred_lft forever
+--- routes ---
+default via 100.67.22.114 dev wwan0 src 100.67.22.113 metric 10 
+100.67.22.112/30 dev wwan0 proto kernel scope link src 100.67.22.113 
+192.168.20.0/24 dev br-lan proto kernel scope link src 192.168.20.11 
+--- cloud-route ---
+129.212.208.168 via 100.67.22.114 dev wwan0 src 100.67.22.113 uid 0 
+    cache 
+--- mqtt-sockets ---
+tcp        0      0 100.67.22.113:58094     129.212.208.168:8883    ESTABLISHED 
+tcp        0      0 100.67.22.113:34163     129.212.208.168:8883    TIME_WAIT   
+tcp        0      0 100.67.22.113:43246     129.212.208.168:8883    ESTABLISHED 
+tcp        0      0 100.67.22.113:45591     129.212.208.168:8883    TIME_WAIT   
+--- serving-system ---
+{
+	"registration": "registered",
+	"radio_interface": [
+		"lte"
+	],
+	"plmn_mcc": 515,
+	"plmn_mnc": 66,
+	"plmn_description": "515 66",
+	"roaming": false
+}
+--- signal ---
+{
+	"type": "lte",
+	"rssi": -72,
+	"rsrq": -19,
+	"rsrp": -108,
+	"snr": -7.000000
+}

@@ -1,0 +1,1 @@
+gateway_event_id,gateway_id,mqtt_topic,broker_received_at,capture_key_sha256,serialized_event_sha256,phy_payload_sha256,uplink_id,frequency_hz,rssi_dbm,snr_db,gateway_context_base64,correlation_digest_sha256,collector_version,object_ref

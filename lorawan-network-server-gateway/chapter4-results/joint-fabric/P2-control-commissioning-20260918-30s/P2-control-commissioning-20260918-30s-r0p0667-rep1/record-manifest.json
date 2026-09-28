@@ -1,0 +1,33 @@
+{
+  "record_count": 2,
+  "records": [
+    {
+      "authenticated_source_system_id": "lorawan-gateway-evidence",
+      "exact_payload_base64": "eyJraW5kIjoiUDJfRkFCUklDX0JFTkNITUFSSyIsInBhaXJfaWQiOiJQMi1jb250cm9sLWNvbW1pc3Npb25pbmctMjAyNjA5MTgtMzBzLXIwcDA2NjctcmVwMSIsInJlcGV0aXRpb24iOjEsInNjaGVtYV92ZXJzaW9uIjoiMS4wIiwic2Vuc29yIjp7ImRldmljZV9pZCI6IlAyLVNZTlRIRVRJQyIsInNvaWxfbW9pc3R1cmVfcGN0Ijo0MC4wMSwidGVtcGVyYXR1cmVfYyI6MjUuMDF9LCJzZXF1ZW5jZSI6MSwic2Vzc2lvbl9pZCI6IlAyLWNvbnRyb2wtY29tbWlzc2lvbmluZy0yMDI2MDkxOC0zMHMiLCJ0YXJnZXRfdHBzIjowLjA2NjY2NjY2NjY2NjY2NjY3fQ==",
+      "expected_fabric_status": "COMMITTED",
+      "payload_sha256": "7fbeaa3138653eec01a50c82cf73114bd79d2c0916ce94db2dee68e815234303",
+      "produced_at_utc": "2026-09-18T07:03:21.928Z",
+      "producer": "lorawan-research-p2",
+      "schema_version": "1.0",
+      "source_record_id": "research:p2:P2-control-commissioning-20260918-30s-r0p0667-rep1:00001",
+      "source_type": "research-benchmark",
+      "trial_id": "P2-control-commissioning-20260918-30s-r0p0667-rep1-t00001"
+    },
+    {
+      "authenticated_source_system_id": "lorawan-gateway-evidence",
+      "exact_payload_base64": "eyJraW5kIjoiUDJfRkFCUklDX0JFTkNITUFSSyIsInBhaXJfaWQiOiJQMi1jb250cm9sLWNvbW1pc3Npb25pbmctMjAyNjA5MTgtMzBzLXIwcDA2NjctcmVwMSIsInJlcGV0aXRpb24iOjEsInNjaGVtYV92ZXJzaW9uIjoiMS4wIiwic2Vuc29yIjp7ImRldmljZV9pZCI6IlAyLVNZTlRIRVRJQyIsInNvaWxfbW9pc3R1cmVfcGN0Ijo0MC4wMiwidGVtcGVyYXR1cmVfYyI6MjUuMDJ9LCJzZXF1ZW5jZSI6Miwic2Vzc2lvbl9pZCI6IlAyLWNvbnRyb2wtY29tbWlzc2lvbmluZy0yMDI2MDkxOC0zMHMiLCJ0YXJnZXRfdHBzIjowLjA2NjY2NjY2NjY2NjY2NjY3fQ==",
+      "expected_fabric_status": "COMMITTED",
+      "payload_sha256": "d5428af7445661432809b52c3b86424ae5f24b7b9944173f59173cc797f9d497",
+      "produced_at_utc": "2026-09-18T07:03:36.928Z",
+      "producer": "lorawan-research-p2",
+      "schema_version": "1.0",
+      "source_record_id": "research:p2:P2-control-commissioning-20260918-30s-r0p0667-rep1:00002",
+      "source_type": "research-benchmark",
+      "trial_id": "P2-control-commissioning-20260918-30s-r0p0667-rep1-t00002"
+    }
+  ],
+  "run_manifest_sha256": "c4ba755a947f28e829463a75226742a146e48a6bf33f43cf6e3590c78dbaf570",
+  "schema_version": "1.0",
+  "sealed_at_utc": "2026-09-18T07:03:16.967Z",
+  "study_id": "zacharias-lorawan-fabric"
+}

@@ -1,0 +1,27 @@
+{
+  "baseline": [],
+  "db_reader_node": "ulc01",
+  "errors": [
+    "timeout waiting for fresh confirmed baseline records: have=0 need=2"
+  ],
+  "fabric_endpoint": "10.104.0.7:7051",
+  "formal": false,
+  "generated_utc": "2026-09-21T08:02:21Z",
+  "outage": [],
+  "reconciled": [],
+  "reconciliation_source_guard": {
+    "digest_verify_before_commit_status": true,
+    "query_before_digest_verify": true,
+    "same_prepared_tx_retry_after_status": true,
+    "status": "PASS",
+    "worker_source_sha256": "9ad50b66689a7be229cc320d0f18d174b86bfa728df55e7f7823daceb3a477b2"
+  },
+  "recorder_returncode": 0,
+  "recorder_tail": "RECORDER_STOPPED=R2-rehearsal-20260921-155652\nEND_UTC=2026-09-21T08:00:25.732Z\nRUN_STATUS=RECORDED_UNCLASSIFIED\nSUMMARY=C:\\Users\\smartagriintern\\Documents\\projects\\lorawan-setup\\lorawan-network-server-gateway\\chapter4-results\\resilience\\R2-rehearsal-20260921-155652\\derived\\run-summary.json\nHASH_MANIFEST=C:\\Users\\smartagriintern\\Documents\\projects\\lorawan-setup\\lorawan-network-server-gateway\\chapter4-results\\resilience\\R2-rehearsal-20260921-155652\\metadata\\SHA256SUMS.csv",
+  "run_dir": "C:\\Users\\smartagriintern\\Documents\\projects\\lorawan-setup\\lorawan-network-server-gateway\\chapter4-results\\resilience\\R2-rehearsal-20260921-155652",
+  "run_id": "R2-rehearsal-20260921-155652",
+  "sealed_evidence_manifest": "C:\\Users\\smartagriintern\\Documents\\projects\\lorawan-setup\\lorawan-network-server-gateway\\chapter4-results\\resilience\\R2-rehearsal-20260921-155652\\metadata\\SHA256SUMS.csv",
+  "status": "FAIL",
+  "target_records_per_phase": 2,
+  "test": "R2"
+}

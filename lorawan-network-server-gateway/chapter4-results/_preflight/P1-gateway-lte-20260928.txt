@@ -1,0 +1,4 @@
+RC=64
+
+STDERR
+research-recorder: command not allowed

@@ -1,0 +1,1 @@
+layer,condition,trial,expected_decision,actual_decision,correct_decision,false_acceptance,false_rejection,unauthorized_state_change,response_time_ms

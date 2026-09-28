@@ -1,0 +1,32 @@
+[
+  [
+    "id_ed25519_home_ops",
+    255,
+    "",
+    "opsadmin@143.198.205.54: Permission denied (publickey).\n"
+  ],
+  [
+    "id_ed25519_research_recorder",
+    64,
+    "",
+    "research-recorder: command not allowed\n"
+  ],
+  [
+    "id_ed25519",
+    255,
+    "",
+    "opsadmin@143.198.205.54: Permission denied (publickey).\n"
+  ],
+  [
+    "id_ed25519_lorawan_research_actions",
+    2,
+    "",
+    "ERROR: command not allowed\n"
+  ],
+  [
+    "id_ed25519_grafana_tunnel_v2",
+    255,
+    "",
+    "opsadmin@143.198.205.54: Permission denied (publickey).\n"
+  ]
+]

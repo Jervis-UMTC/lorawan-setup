@@ -1,0 +1,112 @@
+timestamp_utc=2026-09-18T01:38:52Z
+hostname=chirpstack-0abee3
+--- uptime ---
+4295.05 16544.25
+--- lte ---
+{
+	"up": true,
+	"pending": false,
+	"available": true,
+	"autostart": true,
+	"dynamic": false,
+	"uptime": 4242,
+	"l3_device": "wwan0",
+	"proto": "qmi",
+	"updated": [
+		"addresses"
+	],
+	"metric": 0,
+	"dns_metric": 0,
+	"delegation": true,
+	"ipv4-address": [
+		{
+			"address": "100.64.247.117",
+			"mask": 30
+		}
+	],
+	"ipv6-address": [
+		
+	],
+	"ipv6-prefix": [
+		
+	],
+	"ipv6-prefix-assignment": [
+		
+	],
+	"route": [
+		
+	],
+	"dns-server": [
+		"131.226.72.19",
+		"131.226.73.19"
+	],
+	"dns-search": [
+		
+	],
+	"neighbors": [
+		
+	],
+	"inactive": {
+		"ipv4-address": [
+			
+		],
+		"ipv6-address": [
+			
+		],
+		"route": [
+			
+		],
+		"dns-server": [
+			
+		],
+		"dns-search": [
+			
+		],
+		"neighbors": [
+			
+		]
+	},
+	"data": {
+		"cid_4": "18",
+		"pdh_4": "-2030201664"
+	}
+}
+--- lte_4 ---
+--- wwan0 ---
+3: wwan0: <POINTOPOINT,MULTICAST,NOARP,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UNKNOWN group default qlen 1000
+    link/none 
+    inet 100.64.247.117/30 brd 100.64.247.119 scope global wwan0
+       valid_lft forever preferred_lft forever
+    inet6 fe80::deaf:c23a:bcee:dc38/64 scope link stable-privacy proto kernel_ll 
+       valid_lft forever preferred_lft forever
+--- routes ---
+default via 100.64.247.118 dev wwan0 src 100.64.247.117 metric 10 
+100.64.247.116/30 dev wwan0 proto kernel scope link src 100.64.247.117 
+192.168.20.0/24 dev br-lan proto kernel scope link src 192.168.20.11 
+--- cloud-route ---
+129.212.208.168 via 100.64.247.118 dev wwan0 src 100.64.247.117 uid 0 
+    cache 
+--- mqtt-sockets ---
+tcp        0      0 100.64.247.117:51008    129.212.208.168:8883    ESTABLISHED 
+tcp        0      0 100.64.247.117:41995    129.212.208.168:8883    TIME_WAIT   
+tcp        0      0 100.64.247.117:40089    129.212.208.168:8883    TIME_WAIT   
+tcp        0      0 100.64.247.117:51004    129.212.208.168:8883    ESTABLISHED 
+--- serving-system ---
+{
+	"registration": "registered",
+	"radio_interface": [
+		"lte"
+	],
+	"plmn_mcc": 515,
+	"plmn_mnc": 66,
+	"plmn_description": "515 66",
+	"roaming": false
+}
+--- signal ---
+{
+	"type": "lte",
+	"rssi": -74,
+	"rsrq": -15,
+	"rsrp": -105,
+	"snr": -1.000000
+}

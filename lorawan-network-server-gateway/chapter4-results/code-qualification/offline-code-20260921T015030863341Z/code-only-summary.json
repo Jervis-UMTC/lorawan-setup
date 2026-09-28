@@ -1,0 +1,133 @@
+{
+  "counted_research": false,
+  "finished_at_utc": "2026-09-21T01:50:37.859105+00:00",
+  "hardware_measurements": false,
+  "production_services_touched": false,
+  "python_version": "3.14.7",
+  "qualification": "CODE_ONLY",
+  "started_at_utc": "2026-09-21T01:50:30.863761+00:00",
+  "status": "PASS",
+  "suites": [
+    {
+      "exit_code": 0,
+      "file": "test\\automation\\test_research_contract.py",
+      "source_sha256": "2a6290429a96cb892e5733988f0f463651cad35d074570d2a0efd6b763c67ece",
+      "status": "PASS",
+      "suite": "research-contract",
+      "tests": 6
+    },
+    {
+      "exit_code": 0,
+      "file": "test\\automation\\authentication\\test_a1_mqtt_harness.py",
+      "source_sha256": "fc7916900e12b57643e0b681b62620e7983e0fe7483a9af353e7ed68b040967f",
+      "status": "PASS",
+      "suite": "a1-mqtt",
+      "tests": 6
+    },
+    {
+      "exit_code": 0,
+      "file": "test\\automation\\authentication\\test_a1_lorawan_harness.py",
+      "source_sha256": "fa5a0bb865fab11511042bdc1b2a6f132677379a47bd57405463df47d89cbda7",
+      "status": "PASS",
+      "suite": "a1-lorawan",
+      "tests": 15
+    },
+    {
+      "exit_code": 0,
+      "file": "test\\automation\\authentication\\test_a1_lorawan_workflow.py",
+      "source_sha256": "d612f2a49e11395d0c16994eda2d20e3993263fad344b05365a616e9945025d8",
+      "status": "PASS",
+      "suite": "a1-lorawan-workflow",
+      "tests": 3
+    },
+    {
+      "exit_code": 0,
+      "file": "test\\automation\\authentication\\test_a2_fabric_endorsement_evidence.py",
+      "source_sha256": "0b2c8f9e6be382d258acad0a6f18d50abd5b4b3c5b12528b10582b4fc7d87732",
+      "status": "PASS",
+      "suite": "a2-fabric-evidence",
+      "tests": 18
+    },
+    {
+      "exit_code": 0,
+      "file": "test\\automation\\integrity\\test_i1_evidence.py",
+      "source_sha256": "5db62f88cb961bb063c85e292caf89e7e8f2d1b203c2e2da8bebd150ed728699",
+      "status": "PASS",
+      "suite": "i1-application-integrity",
+      "tests": 18
+    },
+    {
+      "exit_code": 0,
+      "file": "test\\automation\\integrity\\test_i2_evidence.py",
+      "source_sha256": "7545866f79dec73c8bf949e1ef2ad5d849dcf17aa2a17b8ca194d30ba1ab55de",
+      "status": "PASS",
+      "suite": "i2-post-storage-integrity",
+      "tests": 19
+    },
+    {
+      "exit_code": 0,
+      "file": "test\\automation\\fabric-sync\\test_fabric_sync.py",
+      "source_sha256": "fda6d3090197670a2a0deda499d04638244e6a7b8d939137e73434f811b2aedb",
+      "status": "PASS",
+      "suite": "fabric-sync",
+      "tests": 2
+    },
+    {
+      "exit_code": 0,
+      "file": "test\\automation\\fabric-performance\\test_p2_pair_runner.py",
+      "source_sha256": "3ff68f99a880217459fd403f4330e7e94f0ed478ac28495b4f83c11c634453ef",
+      "status": "PASS",
+      "suite": "p2-pair-runner",
+      "tests": 17
+    },
+    {
+      "exit_code": 0,
+      "file": "test\\automation\\resilience\\test_r1_internet_route_gate.py",
+      "source_sha256": "ce22527f4ce249357438b80455903709f2833f0b83fd9c1c2d49bbab404a6087",
+      "status": "PASS",
+      "suite": "r1-lte-route",
+      "tests": 14
+    },
+    {
+      "exit_code": 0,
+      "file": "test\\automation\\resilience\\test_r2_fabric_reconciliation.py",
+      "source_sha256": "13a36aec551a36c7ac5fb91dfd71346962283a2f10133158120e5008fff4381a",
+      "status": "PASS",
+      "suite": "r2-reconciliation",
+      "tests": 9
+    },
+    {
+      "exit_code": 0,
+      "file": "test\\automation\\flooding\\test_flood_harness.py",
+      "source_sha256": "609895302c1efe7a77d71ed43b6a244eac724e70884cf632aba5231b66cebf29",
+      "status": "PASS",
+      "suite": "f1-f2-flood-validation",
+      "tests": 10
+    },
+    {
+      "exit_code": 0,
+      "file": "test\\automation\\traceability\\test_traceability_harness.py",
+      "source_sha256": "64c9723f54dc3aa093f4926a0789f3178f4c6397fcb15b712ec72f19313d3bb6",
+      "status": "PASS",
+      "suite": "t1-t2-traceability",
+      "tests": 9
+    },
+    {
+      "exit_code": 0,
+      "file": "test\\automation\\research-recorder\\test_sec02_replay.py",
+      "source_sha256": "cbc08eaecb53b995f5c43b1444360b46364c5c69888808aef406a6e0b319f04e",
+      "status": "PASS",
+      "suite": "s1-replay-helper",
+      "tests": 11
+    },
+    {
+      "exit_code": 0,
+      "file": "test\\automation\\load-tools\\test_mqtt_wire.py",
+      "source_sha256": "8adccf642c564c47bbdfc01c18f4cb6720005fd9b703b6043160accc65c0d275",
+      "status": "PASS",
+      "suite": "mqtt-wire-mock",
+      "tests": 5
+    }
+  ],
+  "total_tests": 162
+}

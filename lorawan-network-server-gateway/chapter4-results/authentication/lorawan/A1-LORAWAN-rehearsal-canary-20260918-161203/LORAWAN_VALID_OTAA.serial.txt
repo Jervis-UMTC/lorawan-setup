@@ -1,0 +1,3 @@
+EMU01_OTAA_JOIN=PASS,initial_tx_offset_ms=5919
+SENSOR_TX,seq=1,reason=normal,uptime_ms=18403,soil_pct=4.00,soil_temp_c=30.50,uv_index=0.00,baro_pa=101260,baro_temp_c=25.50,light_veml_lux=169.70,light_opt_lux=150.72,env_temp_c=29.53,env_humidity_pct=50.48,env_pressure_pa=100933,env_gas_ohm=52730,rain_wet=0,battery_mv=0,valid=0x7F,join=1,send_status=0
+SENSOR_TX,seq=2,reason=normal,uptime_ms=33409,soil_pct=5.00,soil_temp_c=30.40,uv_index=0.00,baro_pa=101260,baro_temp_c=25.54,light_veml_lux=169.70,light_opt_lux=150.72,env_temp_c=29.23,env_humidity_pct=50.45,env_pressure_pa=100936,env_gas_ohm=50021,rain_wet=0,battery_mv=0,valid=0x7F,join=1,send_status=0

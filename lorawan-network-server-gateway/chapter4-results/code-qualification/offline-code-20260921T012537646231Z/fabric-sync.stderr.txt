@@ -1,0 +1,7 @@
+test_manifest_join (test_fabric_sync.T.test_manifest_join) ... ok
+test_p2_shape (test_fabric_sync.T.test_p2_shape) ... ok
+
+----------------------------------------------------------------------
+Ran 2 tests in 0.971s
+
+OK

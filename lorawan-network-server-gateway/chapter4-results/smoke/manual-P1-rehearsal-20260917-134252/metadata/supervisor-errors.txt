@@ -1,0 +1,9 @@
+collector process not alive: emu01-serial pid=1244
+collector process not alive: gateway-resource pid=15608
+collector process not alive: gateway-log pid=3348
+collector process not alive: ulc01-host-resource pid=17340
+collector process not alive: ulc01-docker-resource pid=17456
+collector process not alive: ulc02-host-resource pid=20572
+collector process not alive: ulc02-docker-resource pid=7192
+collector process not alive: ulc03-host-resource pid=20804
+collector process not alive: ulc03-docker-resource pid=1616

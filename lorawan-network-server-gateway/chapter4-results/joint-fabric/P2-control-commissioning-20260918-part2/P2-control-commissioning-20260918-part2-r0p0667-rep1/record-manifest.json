@@ -1,0 +1,21 @@
+{
+  "record_count": 1,
+  "records": [
+    {
+      "authenticated_source_system_id": "lorawan-gateway-evidence",
+      "exact_payload_base64": "eyJraW5kIjoiUDJfRkFCUklDX0JFTkNITUFSSyIsInBhaXJfaWQiOiJQMi1jb250cm9sLWNvbW1pc3Npb25pbmctMjAyNjA5MTgtcGFydDItcjBwMDY2Ny1yZXAxIiwicmVwZXRpdGlvbiI6MSwic2NoZW1hX3ZlcnNpb24iOiIxLjAiLCJzZW5zb3IiOnsiZGV2aWNlX2lkIjoiUDItU1lOVEhFVElDIiwic29pbF9tb2lzdHVyZV9wY3QiOjQwLjAxLCJ0ZW1wZXJhdHVyZV9jIjoyNS4wMX0sInNlcXVlbmNlIjoxLCJzZXNzaW9uX2lkIjoiUDItY29udHJvbC1jb21taXNzaW9uaW5nLTIwMjYwOTE4LXBhcnQyIiwidGFyZ2V0X3RwcyI6MC4wNjY2NjY2NjY2NjY2NjY2N30=",
+      "expected_fabric_status": "COMMITTED",
+      "payload_sha256": "15c534255302878e8ceb4f9e543935d4a19a6bce1a7a64e77cb38c12719ca480",
+      "produced_at_utc": "2026-09-18T06:43:09.853Z",
+      "producer": "lorawan-research-p2",
+      "schema_version": "1.0",
+      "source_record_id": "research:p2:P2-control-commissioning-20260918-part2-r0p0667-rep1:00001",
+      "source_type": "research-benchmark",
+      "trial_id": "P2-control-commissioning-20260918-part2-r0p0667-rep1-t00001"
+    }
+  ],
+  "run_manifest_sha256": "df0e8c92e4a41c3344c806edf567c2bc38a2ca22050517fe143f67457618eb3d",
+  "schema_version": "1.0",
+  "sealed_at_utc": "2026-09-18T06:43:04.858Z",
+  "study_id": "zacharias-lorawan-fabric"
+}

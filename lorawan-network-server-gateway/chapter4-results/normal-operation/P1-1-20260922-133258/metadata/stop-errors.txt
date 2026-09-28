@@ -1,0 +1,7 @@
+pre-stop recorder check: collector process not alive: gateway-resource pid=15900
+pre-stop recorder check: collector process not alive: gateway-log pid=12844
+end clock calibration failed: 'ulc01'
+ulc01-snapshot-end.txt: ulc01 export failed (255): snapshot; see C:\Users\smartagriintern\Documents\projects\lorawan-setup\lorawan-network-server-gateway\chapter4-results\normal-operation\P1-1-20260922-133258\metadata\ulc01-snapshot-end.txt.stderr
+ulc02-snapshot-end.txt: ulc02 export failed (255): snapshot; see C:\Users\smartagriintern\Documents\projects\lorawan-setup\lorawan-network-server-gateway\chapter4-results\normal-operation\P1-1-20260922-133258\metadata\ulc02-snapshot-end.txt.stderr
+ulc03-snapshot-end.txt: ulc03 export failed (255): snapshot; see C:\Users\smartagriintern\Documents\projects\lorawan-setup\lorawan-network-server-gateway\chapter4-results\normal-operation\P1-1-20260922-133258\metadata\ulc03-snapshot-end.txt.stderr
+expected exactly one database leader; roles={'ulc01': 'ERROR', 'ulc02': 'replica', 'ulc03': 'replica'}

@@ -1,0 +1,2 @@
+collector process not alive: gateway-resource pid=15900
+collector process not alive: gateway-log pid=12844

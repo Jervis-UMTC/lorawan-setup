@@ -1,0 +1,2 @@
+COM11|vid=9114|pid=32809|serial=69D8B0D3239621F1|desc=USB Serial Device (COM11)
+COM16|vid=6421|pid=21023|serial=F0B61D25752E|desc=USB Serial Device (COM16)

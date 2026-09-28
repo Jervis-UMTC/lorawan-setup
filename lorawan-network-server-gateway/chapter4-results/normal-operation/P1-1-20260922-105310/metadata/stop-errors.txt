@@ -1,0 +1,11 @@
+pre-stop recorder check: collector process not alive: emu01-serial pid=3136
+pre-stop recorder check: collector process not alive: gateway-resource pid=14956
+pre-stop recorder check: collector process not alive: gateway-log pid=9900
+pre-stop recorder check: collector process not alive: ulc01-host-resource pid=15252
+pre-stop recorder check: collector process not alive: ulc01-docker-resource pid=2920
+pre-stop recorder check: collector process not alive: ulc02-host-resource pid=12060
+pre-stop recorder check: collector process not alive: ulc02-docker-resource pid=4760
+pre-stop recorder check: collector process not alive: ulc03-host-resource pid=1984
+pre-stop recorder check: collector process not alive: ulc03-docker-resource pid=8380
+pre-stop recorder check: collector process not alive: ulc01-chirpstack-stream pid=14348
+pre-stop recorder check: collector process not alive: ulc02-chirpstack-stream pid=10252

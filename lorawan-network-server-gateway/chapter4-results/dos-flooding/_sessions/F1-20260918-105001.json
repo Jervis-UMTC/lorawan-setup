@@ -1,0 +1,105 @@
+{
+  "cleanup_errors": [],
+  "formal": false,
+  "phase_seconds": 5,
+  "recovery_seconds": 5,
+  "results": [
+    {
+      "db_guard": {
+        "EMU_LAST_2M": "8",
+        "FAKE_OUTBOX_TOTAL": "0",
+        "FAKE_UPLINKS_TOTAL": "0"
+      },
+      "duration_seconds": 5,
+      "errors": [],
+      "flood_end_utc": "2026-09-18T02:50:59.421Z",
+      "flood_start_utc": "2026-09-18T02:50:54.420Z",
+      "formal": false,
+      "load": {
+        "accepted": 0,
+        "launched": 0,
+        "planned": 0,
+        "raw": "normal 0/s",
+        "rejected": 0
+      },
+      "rate_per_second": 0,
+      "recorder_returncode": 0,
+      "recorder_tail": "RECORDER_STOPPED=F1-rehearsal-r0-n1-20260918-105001\nEND_UTC=2026-09-18T02:49:37.837Z\nRUN_STATUS=RECORDED_UNCLASSIFIED\nSUMMARY=C:\\Users\\smartagriintern\\Documents\\projects\\lorawan-setup\\lorawan-network-server-gateway\\chapter4-results\\dos-flooding\\F1-rehearsal-r0-n1-20260918-105001\\derived\\run-summary.json\nHASH_MANIFEST=C:\\Users\\smartagriintern\\Documents\\projects\\lorawan-setup\\lorawan-network-server-gateway\\chapter4-results\\dos-flooding\\F1-rehearsal-r0-n1-20260918-105001\\metadata\\SHA256SUMS.csv",
+      "recovery_seconds": 5,
+      "repetition": 1,
+      "run_id": "F1-rehearsal-r0-n1-20260918-105001",
+      "status": "PASS",
+      "window": {
+        "MEAN_LATENCY_MS": "",
+        "UNAUTHORIZED_OUTBOX": "0",
+        "UNAUTHORIZED_UPLINKS": "0",
+        "VALID_DELIVERED": "0"
+      }
+    },
+    {
+      "db_guard": {
+        "EMU_LAST_2M": "8",
+        "FAKE_OUTBOX_TOTAL": "0",
+        "FAKE_UPLINKS_TOTAL": "0"
+      },
+      "duration_seconds": 5,
+      "errors": [],
+      "flood_end_utc": "2026-09-18T02:52:29.904Z",
+      "flood_start_utc": "2026-09-18T02:52:24.656Z",
+      "formal": false,
+      "load": {
+        "accepted": 0,
+        "launched": 50,
+        "planned": 50,
+        "raw": "planned_attempts=50\nlaunched_attempts=50\nresult_connack_5=50",
+        "rejected": 50
+      },
+      "rate_per_second": 10,
+      "recorder_returncode": 0,
+      "recorder_tail": "RECORDER_STOPPED=F1-rehearsal-r10-n1-20260918-105001\nEND_UTC=2026-09-18T02:51:08.951Z\nRUN_STATUS=RECORDED_UNCLASSIFIED\nSUMMARY=C:\\Users\\smartagriintern\\Documents\\projects\\lorawan-setup\\lorawan-network-server-gateway\\chapter4-results\\dos-flooding\\F1-rehearsal-r10-n1-20260918-105001\\derived\\run-summary.json\nHASH_MANIFEST=C:\\Users\\smartagriintern\\Documents\\projects\\lorawan-setup\\lorawan-network-server-gateway\\chapter4-results\\dos-flooding\\F1-rehearsal-r10-n1-20260918-105001\\metadata\\SHA256SUMS.csv",
+      "recovery_seconds": 5,
+      "repetition": 1,
+      "run_id": "F1-rehearsal-r10-n1-20260918-105001",
+      "status": "PASS",
+      "window": {
+        "MEAN_LATENCY_MS": "",
+        "UNAUTHORIZED_OUTBOX": "0",
+        "UNAUTHORIZED_UPLINKS": "0",
+        "VALID_DELIVERED": "0"
+      }
+    },
+    {
+      "db_guard": {
+        "EMU_LAST_2M": "8",
+        "FAKE_OUTBOX_TOTAL": "0",
+        "FAKE_UPLINKS_TOTAL": "0"
+      },
+      "duration_seconds": 5,
+      "errors": [],
+      "flood_end_utc": "2026-09-18T02:54:01.377Z",
+      "flood_start_utc": "2026-09-18T02:53:56.022Z",
+      "formal": false,
+      "load": {
+        "accepted": 0,
+        "launched": 250,
+        "planned": 250,
+        "raw": "planned_attempts=250\nlaunched_attempts=250\nresult_connack_5=250",
+        "rejected": 250
+      },
+      "rate_per_second": 50,
+      "recorder_returncode": 0,
+      "recorder_tail": "RECORDER_STOPPED=F1-rehearsal-r50-n1-20260918-105001\nEND_UTC=2026-09-18T02:52:39.639Z\nRUN_STATUS=RECORDED_UNCLASSIFIED\nSUMMARY=C:\\Users\\smartagriintern\\Documents\\projects\\lorawan-setup\\lorawan-network-server-gateway\\chapter4-results\\dos-flooding\\F1-rehearsal-r50-n1-20260918-105001\\derived\\run-summary.json\nHASH_MANIFEST=C:\\Users\\smartagriintern\\Documents\\projects\\lorawan-setup\\lorawan-network-server-gateway\\chapter4-results\\dos-flooding\\F1-rehearsal-r50-n1-20260918-105001\\metadata\\SHA256SUMS.csv",
+      "recovery_seconds": 5,
+      "repetition": 1,
+      "run_id": "F1-rehearsal-r50-n1-20260918-105001",
+      "status": "PASS",
+      "window": {
+        "MEAN_LATENCY_MS": "",
+        "UNAUTHORIZED_OUTBOX": "0",
+        "UNAUTHORIZED_UPLINKS": "0",
+        "VALID_DELIVERED": "0"
+      }
+    }
+  ],
+  "test": "F1"
+}

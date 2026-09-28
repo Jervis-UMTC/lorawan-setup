@@ -1,0 +1,4 @@
+group,run_id,countable,reason,trial_rows,path
+normal-operation,P1-1-20260922-105310,NO,RECORDED_WITH_ERRORS,0,normal-operation\P1-1-20260922-105310
+authentication,lorawan,NO,NO_RUN_STATUS,0,authentication\lorawan
+authentication,mqtt,NO,NO_RUN_STATUS,0,authentication\mqtt

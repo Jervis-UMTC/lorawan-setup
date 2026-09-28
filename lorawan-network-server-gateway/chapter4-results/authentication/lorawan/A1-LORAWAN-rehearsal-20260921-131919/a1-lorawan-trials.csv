@@ -1,0 +1,4 @@
+condition,trial,expected_decision,actual_decision,correct_decision,false_acceptance,false_rejection,gateway_join_request_observed,join_request_count,chirpstack_state_verified,chirpstack_state_unchanged,chirpstack_session_changed,otaa_join_pass,accepted_uplink_observed_at_source,started_at_utc,ended_at_utc,join_observation_ms
+LORAWAN_WRONG_APPKEY,1,REJECT,REJECT,True,False,,True,1,True,True,,,,2026-09-21T05:19:22.415Z,2026-09-21T05:19:30.250Z,7834.716
+LORAWAN_UNREGISTERED_DEVEUI,1,REJECT,REJECT,True,False,,True,1,True,True,,,,2026-09-21T05:19:35.829Z,2026-09-21T05:19:43.665Z,7835.748
+LORAWAN_VALID_OTAA,1,ALLOW,ALLOW,True,,False,True,1,True,,True,True,True,2026-09-21T05:20:06.104Z,2026-09-21T05:20:17.380Z,11275.205

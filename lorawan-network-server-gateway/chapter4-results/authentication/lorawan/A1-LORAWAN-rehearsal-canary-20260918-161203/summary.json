@@ -1,0 +1,25 @@
+{
+  "attempts_per_condition": 1,
+  "conditions": [
+    {
+      "actual": "ALLOW",
+      "condition": "LORAWAN_VALID_OTAA",
+      "correct": true,
+      "counted_package_hash_match": true,
+      "expected": "ALLOW",
+      "observed_15s_cadence": true,
+      "otaa_join_pass": true,
+      "successful_uplinks": 2
+    }
+  ],
+  "counted_research": false,
+  "emu_isolation": {
+    "dfu_port": "COM12",
+    "mode": "DFU_BOOTLOADER_NON_COUNTED_CANARY"
+  },
+  "error": "SerialException: WriteFile failed (PermissionError(13, 'The device does not recognize the command.', None, 22))",
+  "finished_at_utc": "2026-09-18T08:12:53.270Z",
+  "formal": false,
+  "started_at_utc": "2026-09-18T08:12:03.857Z",
+  "status": "FAIL"
+}

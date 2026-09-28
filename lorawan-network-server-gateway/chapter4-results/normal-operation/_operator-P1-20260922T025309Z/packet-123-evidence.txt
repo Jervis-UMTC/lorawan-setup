@@ -1,0 +1,12 @@
+P1 PACKET 123 - ORIGINAL LOG EXCERPTS
+Sensor workstation clock:
+  2026-09-22T03:21:42.936Z|EMU01|COM11|SENSOR_TX,seq=123,reason=normal,uptime_ms=1849132,soil_pct=4.00,soil_temp_c=30.30,uv_ind ... send_status=0
+Gateway concentrator and forwarder (UTC server):
+  Tue Sep 22 03:20:17 2026 user.info chirpstack-concentratord-sx1302[2348]: Frame received, uplink_id: 2736020495, count_us: 984280573, freq: 923400000, bw: 125000, mod: LoRa, dr: SF7, ft...
+  Tue Sep 22 03:20:17 2026 user.info chirpstack-mqtt-forwarder[3200]: Received uplink frame, uplink_id: 2736020495
+  Tue Sep 22 03:20:17 2026 user.info chirpstack-mqtt-forwarder[3200]: Sending uplink event, uplink_id: 2736020495, topic: as923/gateway/0016c001f139a1cb/event/up
+ULC-01 ChirpStack (UTC):
+  2026-09-22T03:20:18.211159791Z 2026-09-22T03:20:18.208027Z  INFO chirpstack::gateway::backend::mqtt: Message received from gateway region_id="as923" topic=as923/gateway/0016c001f139a1cb...
+  2026-09-22T03:20:18.892553111Z 2026-09-22T03:20:18.892402Z ERROR chirpstack::uplink: Deduplication error error=Zero items in collect set
+Gateway MQTT event: 22753; uplink_id: 2736020495; 923.4 MHz; -31 dBm; SNR +13.75 dB
+Result: FCnt 122 / test sequence 123 absent from accepted application uplinks.

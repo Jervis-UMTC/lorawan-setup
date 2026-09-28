@@ -1,0 +1,15 @@
+test_control_and_fabric_measurement_summaries (test_p2_pair_runner.P2OfflineTests.test_control_and_fabric_measurement_summaries) ... ok
+test_drain_before_measurement_end_rejected (test_p2_pair_runner.P2OfflineTests.test_drain_before_measurement_end_rejected) ... ok
+test_fabric_missing_commit_and_queue_overrun_rejected (test_p2_pair_runner.P2OfflineTests.test_fabric_missing_commit_and_queue_overrun_rejected) ... ok
+test_formal_duration_drift_rejected (test_p2_pair_runner.P2OfflineTests.test_formal_duration_drift_rejected) ... ok
+test_mislabeled_phase_rejected (test_p2_pair_runner.P2OfflineTests.test_mislabeled_phase_rejected) ... ok
+test_pair_digest_and_row_mismatch_rejected (test_p2_pair_runner.P2OfflineTests.test_pair_digest_and_row_mismatch_rejected) ... ok
+test_real_generator_produces_consistent_pair_manifest (test_p2_pair_runner.P2OfflineTests.test_real_generator_produces_consistent_pair_manifest) ... ok
+test_repeated_pair_cannot_hide_missing_workload (test_p2_pair_runner.P2OfflineTests.test_repeated_pair_cannot_hide_missing_workload) ... ok
+test_session_missing_pair_or_wrong_count_rejected (test_p2_pair_runner.P2OfflineTests.test_session_missing_pair_or_wrong_count_rejected) ... ok
+test_wrong_end_time_rejected (test_p2_pair_runner.P2OfflineTests.test_wrong_end_time_rejected) ... ok
+
+----------------------------------------------------------------------
+Ran 10 tests in 0.234s
+
+OK

@@ -1,0 +1,34 @@
+{
+  "db_guard": {
+    "EMU_LAST_2M": "8",
+    "FAKE_OUTBOX_TOTAL": "0",
+    "FAKE_UPLINKS_TOTAL": "0"
+  },
+  "duration_seconds": 5,
+  "errors": [],
+  "flood_end_utc": "2026-09-18T03:01:19.321Z",
+  "flood_start_utc": "2026-09-18T03:01:10.327Z",
+  "formal": false,
+  "load": {
+    "accepted": 0,
+    "generated": 250,
+    "planned": 250,
+    "published": 250,
+    "raw": "planned_messages=250\ngenerated_messages=250\n\npublished_messages=250",
+    "received": 250,
+    "rejected": 250
+  },
+  "rate_per_second": 50,
+  "recorder_returncode": 0,
+  "recorder_tail": "RECORDER_STOPPED=F2-rehearsal-r50-n1-20260918-105643\nEND_UTC=2026-09-18T02:59:58.589Z\nRUN_STATUS=RECORDED_UNCLASSIFIED\nSUMMARY=C:\\Users\\smartagriintern\\Documents\\projects\\lorawan-setup\\lorawan-network-server-gateway\\chapter4-results\\dos-flooding\\F2-rehearsal-r50-n1-20260918-105643\\derived\\run-summary.json\nHASH_MANIFEST=C:\\Users\\smartagriintern\\Documents\\projects\\lorawan-setup\\lorawan-network-server-gateway\\chapter4-results\\dos-flooding\\F2-rehearsal-r50-n1-20260918-105643\\metadata\\SHA256SUMS.csv",
+  "recovery_seconds": 5,
+  "repetition": 1,
+  "run_id": "F2-rehearsal-r50-n1-20260918-105643",
+  "status": "PASS",
+  "window": {
+    "MEAN_LATENCY_MS": "",
+    "UNAUTHORIZED_OUTBOX": "0",
+    "UNAUTHORIZED_UPLINKS": "0",
+    "VALID_DELIVERED": "0"
+  }
+}

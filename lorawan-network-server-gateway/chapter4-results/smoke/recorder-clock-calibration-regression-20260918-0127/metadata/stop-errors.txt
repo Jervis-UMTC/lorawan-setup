@@ -1,0 +1,14 @@
+pre-stop recorder check: collector process not alive: gateway-resource pid=2700
+pre-stop recorder check: collector process not alive: gateway-log pid=20404
+pre-stop recorder check: collector process not alive: ulc01-host-resource pid=21036
+pre-stop recorder check: collector process not alive: ulc01-docker-resource pid=7484
+pre-stop recorder check: collector process not alive: ulc02-host-resource pid=20700
+pre-stop recorder check: collector process not alive: ulc02-docker-resource pid=8916
+pre-stop recorder check: collector process not alive: ulc03-docker-resource pid=10916
+recorder children still alive after stop: ulc03-host-resource:11748
+uplinks.csv: [Errno 13] Permission denied: 'C:\\Users\\smartagriintern\\Documents\\projects\\lorawan-setup\\lorawan-network-server-gateway\\chapter4-results\\smoke\\recorder-clock-calibration-regression-20260918-0127\\raw\\uplinks.csv'
+measurements.csv: [Errno 13] Permission denied: 'C:\\Users\\smartagriintern\\Documents\\projects\\lorawan-setup\\lorawan-network-server-gateway\\chapter4-results\\smoke\\recorder-clock-calibration-regression-20260918-0127\\raw\\measurements.csv'
+fabric-outbox.csv: [Errno 13] Permission denied: 'C:\\Users\\smartagriintern\\Documents\\projects\\lorawan-setup\\lorawan-network-server-gateway\\chapter4-results\\smoke\\recorder-clock-calibration-regression-20260918-0127\\raw\\fabric-outbox.csv'
+gateway-mqtt-events.csv: [Errno 13] Permission denied: 'C:\\Users\\smartagriintern\\Documents\\projects\\lorawan-setup\\lorawan-network-server-gateway\\chapter4-results\\smoke\\recorder-clock-calibration-regression-20260918-0127\\raw\\gateway-mqtt-events.csv'
+ulc01-chirpstack.log: [Errno 13] Permission denied: 'C:\\Users\\smartagriintern\\Documents\\projects\\lorawan-setup\\lorawan-network-server-gateway\\chapter4-results\\smoke\\recorder-clock-calibration-regression-20260918-0127\\raw\\ulc01-chirpstack.log'
+ulc02-chirpstack.log: [Errno 13] Permission denied: 'C:\\Users\\smartagriintern\\Documents\\projects\\lorawan-setup\\lorawan-network-server-gateway\\chapter4-results\\smoke\\recorder-clock-calibration-regression-20260918-0127\\raw\\ulc02-chirpstack.log'

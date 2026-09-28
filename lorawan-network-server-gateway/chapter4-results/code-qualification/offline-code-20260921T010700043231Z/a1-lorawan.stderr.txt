@@ -1,0 +1,17 @@
+test_different_dev_eui_rejected (test_a1_lorawan_harness.JoinEvidenceTests.test_different_dev_eui_rejected) ... ok
+test_different_join_eui_rejected (test_a1_lorawan_harness.JoinEvidenceTests.test_different_join_eui_rejected) ... ok
+test_exact_join_matches (test_a1_lorawan_harness.JoinEvidenceTests.test_exact_join_matches) ... ok
+test_missing_received_join_is_invalid_not_rejection (test_a1_lorawan_harness.JoinEvidenceTests.test_missing_received_join_is_invalid_not_rejection) ... ok
+test_missing_registration_state_not_falsely_rejected (test_a1_lorawan_harness.JoinEvidenceTests.test_missing_registration_state_not_falsely_rejected) ... ok
+test_no_pre_journal_fails_closed (test_a1_lorawan_harness.JoinEvidenceTests.test_no_pre_journal_fails_closed) ... ok
+test_non_join_mhdr_rejected (test_a1_lorawan_harness.JoinEvidenceTests.test_non_join_mhdr_rejected) ... ok
+test_pre_journal_watermark (test_a1_lorawan_harness.JoinEvidenceTests.test_pre_journal_watermark) ... ok
+test_real_packet_wrong_join_eui_is_invalid (test_a1_lorawan_harness.JoinEvidenceTests.test_real_packet_wrong_join_eui_is_invalid) ... ok
+test_stale_sequence_rejected (test_a1_lorawan_harness.JoinEvidenceTests.test_stale_sequence_rejected) ... ok
+test_truncated_and_appended_frame_rejected (test_a1_lorawan_harness.JoinEvidenceTests.test_truncated_and_appended_frame_rejected) ... ok
+test_wrong_key_rejection_requires_real_packet_and_stable_registered_state (test_a1_lorawan_harness.JoinEvidenceTests.test_wrong_key_rejection_requires_real_packet_and_stable_registered_state) ... ok
+
+----------------------------------------------------------------------
+Ran 12 tests in 0.020s
+
+OK

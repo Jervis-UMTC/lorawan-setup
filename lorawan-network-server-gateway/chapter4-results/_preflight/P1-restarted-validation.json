@@ -1,0 +1,41 @@
+{
+  "manifest_entries": 63,
+  "manifest_mismatches": [],
+  "source_attempts": 120,
+  "accepted": 56,
+  "pdr": 46.666666666666664,
+  "db_rows": 56,
+  "measurement_rows": 728,
+  "fabric": {
+    "committed_with_tx_id": 54,
+    "rows": 56,
+    "status_counts": {
+      "confirmed": 54,
+      "pending": 2
+    }
+  },
+  "sensor_db_ms": {
+    "count": 56,
+    "max": 79329.289,
+    "mean": 3926.987892857143,
+    "min": 427.97,
+    "sd_sample": 11503.475026429609
+  },
+  "app_db_ms": {
+    "count": 56,
+    "max": 242.155,
+    "mean": 40.68732142857142,
+    "min": 10.149000000000001,
+    "sd_sample": 37.45042766601648
+  },
+  "clock_status": "PASS",
+  "clock_drift_s": 0.026362000000005992,
+  "raw/ulc01-chirpstack.log": {
+    "zero_items": 0,
+    "dedup_error_lower": 0
+  },
+  "raw/ulc02-chirpstack.log": {
+    "zero_items": 0,
+    "dedup_error_lower": 0
+  }
+}

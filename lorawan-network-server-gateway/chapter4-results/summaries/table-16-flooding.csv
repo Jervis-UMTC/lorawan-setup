@@ -1,0 +1,7 @@
+test_area,condition,runs,required_runs,valid_messages_delivered,valid_expected,valid_delivery_percent,invalid_traffic_rejected,invalid_generated,invalid_rejection_percent,mean_latency_ms,mean_server_cpu_percent,mean_server_memory_percent,mean_gateway_cpu_percent,mean_gateway_memory_percent,service_available_count,unauthorized_records,mean_recovery_seconds,sd_recovery_seconds,status
+invalid connection flood,normal 0/s,0,3,,,,,,,,,,,,,,,,NOT_MEASURED
+invalid connection flood,moderate 10/s,0,3,,,,,,,,,,,,,,,,NOT_MEASURED
+invalid connection flood,high 50/s,0,3,,,,,,,,,,,,,,,,NOT_MEASURED
+invalid application-message flood,normal 0/s,0,3,,,,,,,,,,,,,,,,NOT_MEASURED
+invalid application-message flood,moderate 10/s,0,3,,,,,,,,,,,,,,,,NOT_MEASURED
+invalid application-message flood,high 50/s,0,3,,,,,,,,,,,,,,,,NOT_MEASURED

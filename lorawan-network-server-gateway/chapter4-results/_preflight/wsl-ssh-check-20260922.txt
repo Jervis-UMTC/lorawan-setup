@@ -1,0 +1,13 @@
+RC=255
+smartagriintern
+total 32
+drwx------ 2 smartagriintern smartagriintern 4096 Sep 17 10:40 .
+drwxr-x--- 7 smartagriintern smartagriintern 4096 Sep 18 10:14 ..
+-rw------- 1 smartagriintern smartagriintern  444 Sep  2 20:27 id_ed25519_home_ops
+-rw------- 1 smartagriintern smartagriintern  419 Sep 17 10:40 id_ed25519_lorawan_flood
+-rw-r--r-- 1 smartagriintern smartagriintern  111 Sep 17 10:40 id_ed25519_lorawan_flood.pub
+-rw------- 1 smartagriintern smartagriintern 7300 Sep  2 20:44 known_hosts
+-rw------- 1 smartagriintern smartagriintern    1 Sep  7 18:56 lorawan-agent.pid
+
+ERR
+opsadmin@143.198.205.54: Permission denied (publickey).

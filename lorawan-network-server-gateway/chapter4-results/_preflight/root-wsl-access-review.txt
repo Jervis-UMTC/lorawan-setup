@@ -1,0 +1,6 @@
+RC=0
+OUT
+ROOT-SSH
+ls: /root/.ssh: No such file or directory
+
+ERR

@@ -1,0 +1,19 @@
+{
+  "confirmed_source_events": 54,
+  "elapsed_seconds": 425.141,
+  "enabled": true,
+  "finished_utc": "2026-09-22T06:20:28.562Z",
+  "last_poll_utc": "2026-09-22T06:20:27.565Z",
+  "missing_source_events": [
+    "0ba2525b-160e-4229-ac5a-09a23886d730",
+    "5d25dd6b-bd4b-4f58-8ac0-bda89661949b"
+  ],
+  "outbox_rows": 56,
+  "poll_interval_seconds": 5,
+  "started_utc": "2026-09-22T06:13:23.421Z",
+  "status": "TIMEOUT",
+  "timeout_seconds": 420,
+  "uplink_rows": 56,
+  "window_end_utc": "2026-09-22T06:12:53.622Z",
+  "window_start_utc": "2026-09-22T05:42:53.622Z"
+}

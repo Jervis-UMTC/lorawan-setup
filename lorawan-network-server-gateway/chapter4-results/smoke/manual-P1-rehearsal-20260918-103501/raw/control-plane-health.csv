@@ -1,0 +1,6 @@
+authoritative_timestamp_utc,workstation_midpoint_utc,server_minus_workstation_seconds,clock_probe_round_trip_ms,status,detail
+2026-09-18T02:34:37.357Z,2026-09-18T02:36:09.131Z,-91.774243,6.565,PASS,all collectors and evidence services healthy
+2026-09-18T02:34:52.509Z,2026-09-18T02:36:24.147Z,-91.638588,11.128,PASS,all collectors and evidence services healthy
+2026-09-18T02:35:07.658Z,2026-09-18T02:36:39.167Z,-91.509211,11.371,PASS,all collectors and evidence services healthy
+2026-09-18T02:35:22.840Z,2026-09-18T02:36:54.184Z,-91.344771,7.998,PASS,all collectors and evidence services healthy
+2026-09-18T02:35:38.026Z,2026-09-18T02:37:09.114Z,-91.088696,7.713,PASS,all collectors and evidence services healthy

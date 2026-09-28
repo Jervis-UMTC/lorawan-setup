@@ -1,0 +1,3 @@
+timestamp_utc,cpu_percent,memory_used_bytes,memory_total_bytes,memory_percent,load1,network_rx_bytes,network_tx_bytes
+2026-09-18T02:25:20Z,2.000,278663168,8288272384,3.362,0.41,336584,425462
+2026-09-18T02:25:25Z,4.539,278732800,8288272384,3.363,0.38,336860,426448

@@ -1,0 +1,31 @@
+{
+  "actual_decision": "REJECT",
+  "chirpstack_state_unchanged": true,
+  "chirpstack_state_verified": true,
+  "condition": "LORAWAN_UNREGISTERED_DEVEUI",
+  "correct_decision": true,
+  "ended_at_utc": "2026-09-21T05:19:43.665Z",
+  "expected_decision": "REJECT",
+  "false_acceptance": false,
+  "gateway_join_request_observed": true,
+  "join_observation_ms": 7835.748,
+  "join_request_count": 1,
+  "join_requests": [
+    {
+      "dev_eui": "000000000000a102",
+      "join_eui": "000000000000a102",
+      "phy_sha256": "e319777809ca95a38c477f04ccd5b46dcbf5a398a0f57896b7305a36f90a18c8",
+      "sequence": 3865
+    }
+  ],
+  "post_state": {
+    "raw": "REGISTERED|0",
+    "registered": "0"
+  },
+  "pre_state": {
+    "raw": "REGISTERED|0",
+    "registered": "0"
+  },
+  "started_at_utc": "2026-09-21T05:19:35.829Z",
+  "trial": 1
+}

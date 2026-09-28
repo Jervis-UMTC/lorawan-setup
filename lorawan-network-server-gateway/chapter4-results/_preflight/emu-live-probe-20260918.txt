@@ -1,0 +1,7 @@
+PORTS=[]
+ERROR=RuntimeError('NO_NORMAL_EMU_PORT')
+Traceback (most recent call last):
+  File "<string>", line 11, in <module>
+    raise RuntimeError("NO_NORMAL_EMU_PORT")
+RuntimeError: NO_NORMAL_EMU_PORT
+

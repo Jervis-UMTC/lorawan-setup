@@ -1,0 +1,22 @@
+authoritative_timestamp_utc,workstation_midpoint_utc,server_minus_workstation_seconds,clock_probe_round_trip_ms,status,detail
+2026-09-22T05:32:52.825Z,2026-09-22T05:34:18.670Z,-85.845391,11.886,PASS,all collectors and evidence services healthy
+2026-09-22T05:33:07.987Z,2026-09-22T05:34:33.688Z,-85.701923,9.096,PASS,all collectors and evidence services healthy
+2026-09-22T05:33:23.149Z,2026-09-22T05:34:48.706Z,-85.557193,7.079,PASS,all collectors and evidence services healthy
+2026-09-22T05:33:38.318Z,2026-09-22T05:35:03.720Z,-85.402350,6.884,PASS,all collectors and evidence services healthy
+2026-09-22T05:33:53.439Z,2026-09-22T05:35:18.739Z,-85.300082,7.597,PASS,all collectors and evidence services healthy
+2026-09-22T05:34:08.644Z,2026-09-22T05:35:33.754Z,-85.110256,7.722,PASS,all collectors and evidence services healthy
+2026-09-22T05:34:18.747Z,2026-09-22T05:35:48.768Z,-90.021166,0.376,PASS,all collectors and evidence services healthy
+2026-09-22T05:34:33.895Z,2026-09-22T05:36:03.783Z,-89.888450,13.016,PASS,all collectors and evidence services healthy
+2026-09-22T05:34:49.044Z,2026-09-22T05:36:18.804Z,-89.760431,10.502,PASS,all collectors and evidence services healthy
+2026-09-22T05:35:04.286Z,2026-09-22T05:36:33.826Z,-89.540694,9.351,PASS,all collectors and evidence services healthy
+2026-09-22T05:35:19.454Z,2026-09-22T05:36:48.844Z,-89.390168,9.545,PASS,all collectors and evidence services healthy
+2026-09-22T05:35:34.620Z,2026-09-22T05:37:03.863Z,-89.243503,13.709,PASS,all collectors and evidence services healthy
+2026-09-22T05:35:49.751Z,2026-09-22T05:37:18.884Z,-89.133470,10.098,PASS,all collectors and evidence services healthy
+2026-09-22T05:36:04.971Z,2026-09-22T05:37:33.904Z,-88.933634,11.088,PASS,all collectors and evidence services healthy
+2026-09-22T05:36:20.139Z,2026-09-22T05:37:48.925Z,-88.786905,11.215,PASS,all collectors and evidence services healthy
+2026-09-22T05:36:35.304Z,2026-09-22T05:38:03.945Z,-88.641875,10.747,PASS,all collectors and evidence services healthy
+2026-09-22T05:36:50.477Z,2026-09-22T05:38:18.963Z,-88.486271,9.896,PASS,all collectors and evidence services healthy
+2026-09-22T05:37:05.627Z,2026-09-22T05:38:33.979Z,-88.352700,8.098,PASS,all collectors and evidence services healthy
+2026-09-22T05:37:20.788Z,2026-09-22T05:38:48.996Z,-88.208773,11.762,PASS,all collectors and evidence services healthy
+2026-09-22T05:37:35.935Z,2026-09-22T05:39:04.015Z,-88.080968,7.460,PASS,all collectors and evidence services healthy
+2026-09-22T05:37:51.079Z,2026-09-22T05:39:19.031Z,-87.952181,7.843,FAIL,collector process not alive: gateway-resource pid=15900; collector process not alive: gateway-log pid=12844

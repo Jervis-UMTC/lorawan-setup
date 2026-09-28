@@ -1,0 +1,243 @@
+Filtered 05:55-06:13 UTC; no stale logs inferred
+COUNT 282
+Tue Sep 22 05:55:01 2026 daemon.notice mosquitto[1521]: 1790056501: Connecting bridge cloud-downlink (smartagri-mqtt.duckdns.org:8883)
+Tue Sep 22 05:55:02 2026 user.notice lte-route-health: LTE dataplane PASS and production MQTT mTLS PASS via wwan0 100.67.22.113; LTE primary metric 10
+Tue Sep 22 05:55:09 2026 daemon.notice mosquitto[1521]: 1790056509: Connecting bridge cloud-uplink (smartagri-mqtt.duckdns.org:8883)
+Tue Sep 22 05:55:13 2026 user.info chirpstack-concentratord-sx1302[2348]: Publishing stats event, rx_received: 2, rx_received_ok: 2, tx_received: 0, tx_emitted: 0
+Tue Sep 22 05:55:13 2026 user.info chirpstack-mqtt-forwarder[3216]: received gateway stats
+Tue Sep 22 05:55:13 2026 user.info chirpstack-mqtt-forwarder[3216]: Sending gateway stats event, topic: as923/gateway/0016c001f139a1cb/event/stats
+Tue Sep 22 05:55:35 2026 user.notice lte-route-health: LTE dataplane PASS and production MQTT mTLS PASS via wwan0 100.67.22.113; LTE primary metric 10
+Tue Sep 22 05:55:43 2026 user.info chirpstack-concentratord-sx1302[2348]: Publishing stats event, rx_received: 2, rx_received_ok: 2, tx_received: 0, tx_emitted: 0
+Tue Sep 22 05:55:43 2026 user.info chirpstack-mqtt-forwarder[3216]: received gateway stats
+Tue Sep 22 05:55:43 2026 user.info chirpstack-mqtt-forwarder[3216]: Sending gateway stats event, topic: as923/gateway/0016c001f139a1cb/event/stats
+Tue Sep 22 05:56:10 2026 user.notice lte-route-health: LTE dataplane PASS and production MQTT mTLS PASS via wwan0 100.67.22.113; LTE primary metric 10
+Tue Sep 22 05:56:13 2026 user.info chirpstack-concentratord-sx1302[2348]: Publishing stats event, rx_received: 2, rx_received_ok: 2, tx_received: 0, tx_emitted: 0
+Tue Sep 22 05:56:13 2026 user.info chirpstack-mqtt-forwarder[3216]: received gateway stats
+Tue Sep 22 05:56:13 2026 user.info chirpstack-mqtt-forwarder[3216]: Sending gateway stats event, topic: as923/gateway/0016c001f139a1cb/event/stats
+Tue Sep 22 05:56:42 2026 user.notice lte-route-health: LTE dataplane PASS and production MQTT mTLS PASS via wwan0 100.67.22.113; LTE primary metric 10
+Tue Sep 22 05:56:43 2026 user.info chirpstack-concentratord-sx1302[2348]: Publishing stats event, rx_received: 2, rx_received_ok: 2, tx_received: 0, tx_emitted: 0
+Tue Sep 22 05:56:43 2026 user.info chirpstack-mqtt-forwarder[3216]: received gateway stats
+Tue Sep 22 05:56:43 2026 user.info chirpstack-mqtt-forwarder[3216]: Sending gateway stats event, topic: as923/gateway/0016c001f139a1cb/event/stats
+Tue Sep 22 05:57:13 2026 user.info chirpstack-concentratord-sx1302[2348]: Publishing stats event, rx_received: 2, rx_received_ok: 2, tx_received: 0, tx_emitted: 0
+Tue Sep 22 05:57:13 2026 user.info chirpstack-mqtt-forwarder[3216]: received gateway stats
+Tue Sep 22 05:57:13 2026 user.info chirpstack-mqtt-forwarder[3216]: Sending gateway stats event, topic: as923/gateway/0016c001f139a1cb/event/stats
+Tue Sep 22 05:57:15 2026 user.notice lte-route-health: LTE dataplane PASS and production MQTT mTLS PASS via wwan0 100.67.22.113; LTE primary metric 10
+Tue Sep 22 05:57:43 2026 user.info chirpstack-concentratord-sx1302[2348]: Publishing stats event, rx_received: 2, rx_received_ok: 2, tx_received: 0, tx_emitted: 0
+Tue Sep 22 05:57:43 2026 user.info chirpstack-mqtt-forwarder[3216]: received gateway stats
+Tue Sep 22 05:57:43 2026 user.info chirpstack-mqtt-forwarder[3216]: Sending gateway stats event, topic: as923/gateway/0016c001f139a1cb/event/stats
+Tue Sep 22 05:57:47 2026 user.notice lte-route-health: LTE dataplane PASS and production MQTT mTLS PASS via wwan0 100.67.22.113; LTE primary metric 10
+Tue Sep 22 05:58:13 2026 user.info chirpstack-concentratord-sx1302[2348]: Publishing stats event, rx_received: 2, rx_received_ok: 2, tx_received: 0, tx_emitted: 0
+Tue Sep 22 05:58:13 2026 user.info chirpstack-mqtt-forwarder[3216]: received gateway stats
+Tue Sep 22 05:58:13 2026 user.info chirpstack-mqtt-forwarder[3216]: Sending gateway stats event, topic: as923/gateway/0016c001f139a1cb/event/stats
+Tue Sep 22 05:58:22 2026 user.notice lte-route-health: LTE dataplane PASS and production MQTT mTLS PASS via wwan0 100.67.22.113; LTE primary metric 10
+Tue Sep 22 05:58:32 2026 kern.info kernel: [ 1234.011149] usb 1-1.3: USB disconnect, device number 9
+Tue Sep 22 05:58:32 2026 kern.info kernel: [ 1234.011635] option1 ttyUSB0: GSM modem (1-port) converter now disconnected from ttyUSB0
+Tue Sep 22 05:58:32 2026 kern.info kernel: [ 1234.011742] option 1-1.3:1.0: device disconnected
+Tue Sep 22 05:58:32 2026 kern.info kernel: [ 1234.012252] option1 ttyUSB1: GSM modem (1-port) converter now disconnected from ttyUSB1
+Tue Sep 22 05:58:32 2026 kern.info kernel: [ 1234.012346] option 1-1.3:1.1: device disconnected
+Tue Sep 22 05:58:32 2026 kern.info kernel: [ 1234.012937] option1 ttyUSB2: GSM modem (1-port) converter now disconnected from ttyUSB2
+Tue Sep 22 05:58:32 2026 kern.info kernel: [ 1234.013068] option 1-1.3:1.2: device disconnected
+Tue Sep 22 05:58:32 2026 kern.info kernel: [ 1234.013575] option1 ttyUSB3: GSM modem (1-port) converter now disconnected from ttyUSB3
+Tue Sep 22 05:58:32 2026 kern.info kernel: [ 1234.013675] option 1-1.3:1.3: device disconnected
+Tue Sep 22 05:58:32 2026 kern.info kernel: [ 1234.014198] option1 ttyUSB4: GSM modem (1-port) converter now disconnected from ttyUSB4
+Tue Sep 22 05:58:32 2026 kern.info kernel: [ 1234.014316] option 1-1.3:1.4: device disconnected
+Tue Sep 22 05:58:32 2026 kern.info kernel: [ 1234.014704] qmi_wwan 1-1.3:1.5 wwan0: unregister 'qmi_wwan' usb-0000:01:00.0-1.3, WWAN/QMI device
+Tue Sep 22 05:58:33 2026 daemon.notice netifd: Network device 'wwan0' link is down
+Tue Sep 22 05:58:33 2026 daemon.notice netifd: lte (13590): Stopping network lte
+Tue Sep 22 05:58:33 2026 daemon.notice netifd: lte (13590): Command failed: ubus call network.interface notify_proto { "action": 0, "link-up": false, "keep": false, "interface": "lte" } (Permission denied)
+Tue Sep 22 05:58:33 2026 daemon.notice netifd: Interface 'lte' is now down
+Tue Sep 22 05:58:33 2026 daemon.warn dnsmasq[1]: no servers found in /tmp/resolv.conf.d/resolv.conf.auto, will retry
+Tue Sep 22 05:58:33 2026 kern.info kernel: [ 1234.622699] option 1-1.3:1.0: GSM modem (1-port) converter detected
+Tue Sep 22 05:58:33 2026 kern.info kernel: [ 1234.622812] usb 1-1.3: GSM modem (1-port) converter now attached to ttyUSB0
+Tue Sep 22 05:58:33 2026 kern.info kernel: [ 1234.622991] option 1-1.3:1.1: GSM modem (1-port) converter detected
+Tue Sep 22 05:58:33 2026 kern.info kernel: [ 1234.623077] usb 1-1.3: GSM modem (1-port) converter now attached to ttyUSB1
+Tue Sep 22 05:58:33 2026 kern.info kernel: [ 1234.623244] option 1-1.3:1.2: GSM modem (1-port) converter detected
+Tue Sep 22 05:58:33 2026 kern.info kernel: [ 1234.623330] usb 1-1.3: GSM modem (1-port) converter now attached to ttyUSB2
+Tue Sep 22 05:58:33 2026 kern.info kernel: [ 1234.623497] option 1-1.3:1.3: GSM modem (1-port) converter detected
+Tue Sep 22 05:58:33 2026 kern.info kernel: [ 1234.623587] usb 1-1.3: GSM modem (1-port) converter now attached to ttyUSB3
+Tue Sep 22 05:58:33 2026 kern.info kernel: [ 1234.623767] option 1-1.3:1.4: GSM modem (1-port) converter detected
+Tue Sep 22 05:58:33 2026 kern.info kernel: [ 1234.623858] usb 1-1.3: GSM modem (1-port) converter now attached to ttyUSB4
+Tue Sep 22 05:58:33 2026 kern.info kernel: [ 1234.627748] qmi_wwan 1-1.3:1.5: cdc-wdm0: USB WDM device
+Tue Sep 22 05:58:33 2026 kern.info kernel: [ 1234.628963] qmi_wwan 1-1.3:1.5 wwan0: register 'qmi_wwan' at usb-0000:01:00.0-1.3, WWAN/QMI device, 86:b0:bf:e7:37:4f
+Tue Sep 22 05:58:33 2026 daemon.notice netifd: Interface 'lte' is setting up now
+Tue Sep 22 05:58:33 2026 daemon.notice netifd: lte (13674): Waiting for SIM initialization
+Tue Sep 22 05:58:34 2026 kern.err kernel: [ 1235.947860] qmi_wwan 1-1.3:1.5: Unexpected error -71
+Tue Sep 22 05:58:36 2026 daemon.notice netifd: lte (13674): Request timed out
+Tue Sep 22 05:58:37 2026 daemon.notice netifd: lte (13674): Failed to parse message data
+Tue Sep 22 05:58:37 2026 daemon.notice netifd: lte (13674): PIN verification is disabled
+Tue Sep 22 05:58:38 2026 daemon.notice netifd: lte (13674): Device does not support 802.3 mode. Informing driver of raw-ip only for wwan0 ..
+Tue Sep 22 05:58:38 2026 daemon.notice netifd: lte (13674): Waiting for network registration
+Tue Sep 22 05:58:43 2026 user.info chirpstack-concentratord-sx1302[2348]: Publishing stats event, rx_received: 2, rx_received_ok: 2, tx_received: 0, tx_emitted: 0
+Tue Sep 22 05:58:43 2026 user.info chirpstack-mqtt-forwarder[3216]: received gateway stats
+Tue Sep 22 05:58:43 2026 user.info chirpstack-mqtt-forwarder[3216]: Sending gateway stats event, topic: as923/gateway/0016c001f139a1cb/event/stats
+Tue Sep 22 05:58:43 2026 daemon.notice netifd: lte (13674): Starting network lte
+Tue Sep 22 05:58:43 2026 daemon.notice netifd: lte (13674): Setting up wwan0
+Tue Sep 22 05:58:43 2026 daemon.notice netifd: Interface 'lte' is now up
+Tue Sep 22 05:58:43 2026 daemon.notice netifd: Network device 'wwan0' link is up
+Tue Sep 22 05:58:54 2026 daemon.notice netifd: Network device 'wwan0' link is down
+Tue Sep 22 05:58:54 2026 kern.info kernel: [ 1255.774192] usb 1-1.3: USB disconnect, device number 10
+Tue Sep 22 05:58:54 2026 kern.info kernel: [ 1255.774781] option1 ttyUSB0: GSM modem (1-port) converter now disconnected from ttyUSB0
+Tue Sep 22 05:58:54 2026 kern.info kernel: [ 1255.774908] option 1-1.3:1.0: device disconnected
+Tue Sep 22 05:58:54 2026 kern.info kernel: [ 1255.775570] option1 ttyUSB1: GSM modem (1-port) converter now disconnected from ttyUSB1
+Tue Sep 22 05:58:54 2026 kern.info kernel: [ 1255.775694] option 1-1.3:1.1: device disconnected
+Tue Sep 22 05:58:54 2026 kern.info kernel: [ 1255.776483] option1 ttyUSB2: GSM modem (1-port) converter now disconnected from ttyUSB2
+Tue Sep 22 05:58:54 2026 kern.info kernel: [ 1255.776630] option 1-1.3:1.2: device disconnected
+Tue Sep 22 05:58:54 2026 kern.info kernel: [ 1255.777274] option1 ttyUSB3: GSM modem (1-port) converter now disconnected from ttyUSB3
+Tue Sep 22 05:58:54 2026 kern.info kernel: [ 1255.777447] option 1-1.3:1.3: device disconnected
+Tue Sep 22 05:58:54 2026 kern.info kernel: [ 1255.778206] option1 ttyUSB4: GSM modem (1-port) converter now disconnected from ttyUSB4
+Tue Sep 22 05:58:54 2026 kern.info kernel: [ 1255.778341] option 1-1.3:1.4: device disconnected
+Tue Sep 22 05:58:54 2026 kern.info kernel: [ 1255.779848] qmi_wwan 1-1.3:1.5 wwan0: unregister 'qmi_wwan' usb-0000:01:00.0-1.3, WWAN/QMI device
+Tue Sep 22 05:58:54 2026 daemon.notice netifd: lte (14170): Stopping network lte
+Tue Sep 22 05:58:54 2026 daemon.notice netifd: lte (14170): Command failed: ubus call network.interface notify_proto { "action": 0, "link-up": false, "keep": false, "interface": "lte" } (Permission denied)
+Tue Sep 22 05:58:54 2026 daemon.notice netifd: Interface 'lte' is now down
+Tue Sep 22 05:58:54 2026 daemon.warn dnsmasq[1]: no servers found in /tmp/resolv.conf.d/resolv.conf.auto, will retry
+Tue Sep 22 05:58:55 2026 kern.info kernel: [ 1256.377406] option 1-1.3:1.0: GSM modem (1-port) converter detected
+Tue Sep 22 05:58:55 2026 kern.info kernel: [ 1256.377667] usb 1-1.3: GSM modem (1-port) converter now attached to ttyUSB0
+Tue Sep 22 05:58:55 2026 kern.info kernel: [ 1256.378083] option 1-1.3:1.1: GSM modem (1-port) converter detected
+Tue Sep 22 05:58:55 2026 kern.info kernel: [ 1256.378327] usb 1-1.3: GSM modem (1-port) converter now attached to ttyUSB1
+Tue Sep 22 05:58:55 2026 kern.info kernel: [ 1256.378747] option 1-1.3:1.2: GSM modem (1-port) converter detected
+Tue Sep 22 05:58:55 2026 kern.info kernel: [ 1256.378967] usb 1-1.3: GSM modem (1-port) converter now attached to ttyUSB2
+Tue Sep 22 05:58:55 2026 kern.info kernel: [ 1256.379356] option 1-1.3:1.3: GSM modem (1-port) converter detected
+Tue Sep 22 05:58:55 2026 kern.info kernel: [ 1256.379510] usb 1-1.3: GSM modem (1-port) converter now attached to ttyUSB3
+Tue Sep 22 05:58:55 2026 kern.info kernel: [ 1256.379828] option 1-1.3:1.4: GSM modem (1-port) converter detected
+Tue Sep 22 05:58:55 2026 kern.info kernel: [ 1256.379967] usb 1-1.3: GSM modem (1-port) converter now attached to ttyUSB4
+Tue Sep 22 05:58:55 2026 kern.info kernel: [ 1256.384293] qmi_wwan 1-1.3:1.5: cdc-wdm0: USB WDM device
+Tue Sep 22 05:58:55 2026 kern.info kernel: [ 1256.385284] qmi_wwan 1-1.3:1.5 wwan0: register 'qmi_wwan' at usb-0000:01:00.0-1.3, WWAN/QMI device, ce:54:43:70:f3:b0
+Tue Sep 22 05:58:55 2026 daemon.notice netifd: Interface 'lte' is setting up now
+Tue Sep 22 05:58:55 2026 daemon.notice netifd: lte (14258): Waiting for SIM initialization
+Tue Sep 22 05:58:57 2026 daemon.notice netifd: lte (14258): Failed to parse message data
+Tue Sep 22 05:58:57 2026 daemon.notice netifd: lte (14258): PIN verification is disabled
+Tue Sep 22 05:58:58 2026 daemon.notice netifd: lte (14258): Device does not support 802.3 mode. Informing driver of raw-ip only for wwan0 ..
+Tue Sep 22 05:58:58 2026 kern.err kernel: [ 1259.480803] qmi_wwan 1-1.3:1.5: Unexpected error -71
+Tue Sep 22 05:58:59 2026 user.notice lte-route-health: LTE dataplane PASS but production MQTT mTLS FAIL via wwan0 100.67.22.113; retaining LTE without modem recovery
+Tue Sep 22 05:59:08 2026 daemon.notice mosquitto[1521]: 1790056748: Connecting bridge cloud-downlink (smartagri-mqtt.duckdns.org:8883)
+Tue Sep 22 05:59:13 2026 daemon.err mosquitto[1521]: 1790056748: Error creating bridge: Try again.
+Tue Sep 22 05:59:13 2026 user.info chirpstack-concentratord-sx1302[2348]: Publishing stats event, rx_received: 2, rx_received_ok: 2, tx_received: 0, tx_emitted: 0
+Tue Sep 22 05:59:13 2026 user.info chirpstack-mqtt-forwarder[3216]: received gateway stats
+Tue Sep 22 05:59:13 2026 user.info chirpstack-mqtt-forwarder[3216]: Sending gateway stats event, topic: as923/gateway/0016c001f139a1cb/event/stats
+Tue Sep 22 05:59:26 2026 daemon.notice mosquitto[1521]: 1790056766: Connecting bridge cloud-uplink (smartagri-mqtt.duckdns.org:8883)
+Tue Sep 22 05:59:31 2026 daemon.err mosquitto[1521]: 1790056766: Error creating bridge: Try again.
+Tue Sep 22 05:59:32 2026 daemon.notice mosquitto[1521]: 1790056772: Connecting bridge cloud-downlink (smartagri-mqtt.duckdns.org:8883)
+Tue Sep 22 05:59:35 2026 user.notice lte-route-health: LTE dataplane unavailable; failure 1/2 before recovery
+Tue Sep 22 05:59:37 2026 daemon.err mosquitto[1521]: 1790056772: Error creating bridge: Try again.
+Tue Sep 22 05:59:39 2026 daemon.notice mosquitto[1521]: 1790056779: Connecting bridge cloud-uplink (smartagri-mqtt.duckdns.org:8883)
+Tue Sep 22 05:59:43 2026 user.info chirpstack-concentratord-sx1302[2348]: Publishing stats event, rx_received: 2, rx_received_ok: 2, tx_received: 0, tx_emitted: 0
+Tue Sep 22 05:59:43 2026 user.info chirpstack-mqtt-forwarder[3216]: received gateway stats
+Tue Sep 22 05:59:43 2026 user.info chirpstack-mqtt-forwarder[3216]: Sending gateway stats event, topic: as923/gateway/0016c001f139a1cb/event/stats
+Tue Sep 22 05:59:44 2026 daemon.err mosquitto[1521]: 1790056779: Error creating bridge: Try again.
+Tue Sep 22 05:59:54 2026 daemon.notice mosquitto[1521]: 1790056794: Connecting bridge cloud-uplink (smartagri-mqtt.duckdns.org:8883)
+Tue Sep 22 05:59:59 2026 daemon.err mosquitto[1521]: 1790056794: Error creating bridge: Try again.
+Tue Sep 22 06:00:05 2026 daemon.notice mosquitto[1521]: 1790056805: Connecting bridge cloud-downlink (smartagri-mqtt.duckdns.org:8883)
+Tue Sep 22 06:00:10 2026 daemon.err mosquitto[1521]: 1790056805: Error creating bridge: Try again.
+Tue Sep 22 06:00:10 2026 user.notice lte-route-health: dataplane recovery stage 1: restarting network.lte
+Tue Sep 22 06:00:10 2026 daemon.notice netifd: lte (14840): Stopping network lte
+Tue Sep 22 06:00:10 2026 daemon.notice netifd: lte (14840): Command failed: ubus call network.interface notify_proto { "action": 0, "link-up": false, "keep": false, "interface": "lte" } (Permission denied)
+Tue Sep 22 06:00:10 2026 daemon.notice netifd: Interface 'lte' is now down
+Tue Sep 22 06:00:13 2026 user.info chirpstack-concentratord-sx1302[2348]: Publishing stats event, rx_received: 2, rx_received_ok: 2, tx_received: 0, tx_emitted: 0
+Tue Sep 22 06:00:13 2026 user.info chirpstack-mqtt-forwarder[3216]: received gateway stats
+Tue Sep 22 06:00:13 2026 user.info chirpstack-mqtt-forwarder[3216]: Sending gateway stats event, topic: as923/gateway/0016c001f139a1cb/event/stats
+Tue Sep 22 06:00:14 2026 daemon.notice netifd: Interface 'lte' is setting up now
+Tue Sep 22 06:00:14 2026 daemon.notice netifd: lte (14953): Waiting for SIM initialization
+Tue Sep 22 06:00:16 2026 daemon.notice mosquitto[1521]: 1790056816: Connecting bridge cloud-uplink (smartagri-mqtt.duckdns.org:8883)
+Tue Sep 22 06:00:18 2026 daemon.notice netifd: lte (14953): Request timed out
+LAST
+Tue Sep 22 06:03:43 2026 user.info chirpstack-mqtt-forwarder[3216]: received gateway stats
+Tue Sep 22 06:03:43 2026 user.info chirpstack-mqtt-forwarder[3216]: Sending gateway stats event, topic: as923/gateway/0016c001f139a1cb/event/stats
+Tue Sep 22 06:03:45 2026 daemon.notice mosquitto[1521]: 1790057025: Connecting bridge cloud-uplink (smartagri-mqtt.duckdns.org:8883)
+Tue Sep 22 06:03:50 2026 daemon.err mosquitto[1521]: 1790057025: Error creating bridge: Try again.
+Tue Sep 22 06:04:08 2026 daemon.err gateway-evidence-uploader[2630]: gateway-evidence-uploader: gateway evidence I/O failed: HTTPS client transport failed with exit status exit status: 6
+Tue Sep 22 06:04:13 2026 user.info chirpstack-concentratord-sx1302[2348]: Publishing stats event, rx_received: 2, rx_received_ok: 2, tx_received: 0, tx_emitted: 0
+Tue Sep 22 06:04:13 2026 user.info chirpstack-mqtt-forwarder[3216]: received gateway stats
+Tue Sep 22 06:04:13 2026 user.info chirpstack-mqtt-forwarder[3216]: Sending gateway stats event, topic: as923/gateway/0016c001f139a1cb/event/stats
+Tue Sep 22 06:04:16 2026 daemon.notice mosquitto[1521]: 1790057056: Connecting bridge cloud-downlink (smartagri-mqtt.duckdns.org:8883)
+Tue Sep 22 06:04:21 2026 daemon.err mosquitto[1521]: 1790057056: Error creating bridge: Try again.
+Tue Sep 22 06:04:43 2026 user.info chirpstack-concentratord-sx1302[2348]: Publishing stats event, rx_received: 2, rx_received_ok: 2, tx_received: 0, tx_emitted: 0
+Tue Sep 22 06:04:43 2026 user.info chirpstack-mqtt-forwarder[3216]: received gateway stats
+Tue Sep 22 06:04:43 2026 user.info chirpstack-mqtt-forwarder[3216]: Sending gateway stats event, topic: as923/gateway/0016c001f139a1cb/event/stats
+Tue Sep 22 06:04:51 2026 daemon.notice mosquitto[1521]: 1790057091: Connecting bridge cloud-uplink (smartagri-mqtt.duckdns.org:8883)
+Tue Sep 22 06:04:54 2026 daemon.err gateway-evidence-uploader[2630]: gateway-evidence-uploader: gateway evidence I/O failed: HTTPS client transport failed with exit status exit status: 6
+Tue Sep 22 06:04:57 2026 daemon.err mosquitto[1521]: 1790057091: Error creating bridge: Try again.
+Tue Sep 22 06:05:13 2026 user.info chirpstack-concentratord-sx1302[2348]: Publishing stats event, rx_received: 2, rx_received_ok: 2, tx_received: 0, tx_emitted: 0
+Tue Sep 22 06:05:13 2026 user.info chirpstack-mqtt-forwarder[3216]: received gateway stats
+Tue Sep 22 06:05:13 2026 user.info chirpstack-mqtt-forwarder[3216]: Sending gateway stats event, topic: as923/gateway/0016c001f139a1cb/event/stats
+Tue Sep 22 06:05:23 2026 daemon.notice mosquitto[1521]: 1790057123: Connecting bridge cloud-downlink (smartagri-mqtt.duckdns.org:8883)
+Tue Sep 22 06:05:28 2026 daemon.err mosquitto[1521]: 1790057123: Error creating bridge: Try again.
+Tue Sep 22 06:05:43 2026 user.info chirpstack-concentratord-sx1302[2348]: Publishing stats event, rx_received: 2, rx_received_ok: 2, tx_received: 0, tx_emitted: 0
+Tue Sep 22 06:05:43 2026 user.info chirpstack-mqtt-forwarder[3216]: received gateway stats
+Tue Sep 22 06:05:43 2026 user.info chirpstack-mqtt-forwarder[3216]: Sending gateway stats event, topic: as923/gateway/0016c001f139a1cb/event/stats
+Tue Sep 22 06:05:57 2026 daemon.notice mosquitto[1521]: 1790057157: Connecting bridge cloud-uplink (smartagri-mqtt.duckdns.org:8883)
+Tue Sep 22 06:06:03 2026 daemon.err mosquitto[1521]: 1790057157: Error creating bridge: Try again.
+Tue Sep 22 06:06:13 2026 user.info chirpstack-concentratord-sx1302[2348]: Publishing stats event, rx_received: 2, rx_received_ok: 2, tx_received: 0, tx_emitted: 0
+Tue Sep 22 06:06:13 2026 user.info chirpstack-mqtt-forwarder[3216]: received gateway stats
+Tue Sep 22 06:06:13 2026 user.info chirpstack-mqtt-forwarder[3216]: Sending gateway stats event, topic: as923/gateway/0016c001f139a1cb/event/stats
+Tue Sep 22 06:06:19 2026 daemon.err gateway-evidence-uploader[2630]: gateway-evidence-uploader: gateway evidence I/O failed: HTTPS client transport failed with exit status exit status: 6
+Tue Sep 22 06:06:29 2026 daemon.notice mosquitto[1521]: 1790057189: Connecting bridge cloud-downlink (smartagri-mqtt.duckdns.org:8883)
+Tue Sep 22 06:06:34 2026 daemon.err mosquitto[1521]: 1790057189: Error creating bridge: Try again.
+Tue Sep 22 06:06:43 2026 user.info chirpstack-concentratord-sx1302[2348]: Publishing stats event, rx_received: 2, rx_received_ok: 2, tx_received: 0, tx_emitted: 0
+Tue Sep 22 06:06:43 2026 user.info chirpstack-mqtt-forwarder[3216]: received gateway stats
+Tue Sep 22 06:06:43 2026 user.info chirpstack-mqtt-forwarder[3216]: Sending gateway stats event, topic: as923/gateway/0016c001f139a1cb/event/stats
+Tue Sep 22 06:07:04 2026 daemon.notice mosquitto[1521]: 1790057224: Connecting bridge cloud-uplink (smartagri-mqtt.duckdns.org:8883)
+Tue Sep 22 06:07:09 2026 daemon.err mosquitto[1521]: 1790057224: Error creating bridge: Try again.
+Tue Sep 22 06:07:13 2026 user.info chirpstack-concentratord-sx1302[2348]: Publishing stats event, rx_received: 2, rx_received_ok: 2, tx_received: 0, tx_emitted: 0
+Tue Sep 22 06:07:13 2026 user.info chirpstack-mqtt-forwarder[3216]: received gateway stats
+Tue Sep 22 06:07:13 2026 user.info chirpstack-mqtt-forwarder[3216]: Sending gateway stats event, topic: as923/gateway/0016c001f139a1cb/event/stats
+Tue Sep 22 06:07:35 2026 daemon.notice mosquitto[1521]: 1790057255: Connecting bridge cloud-downlink (smartagri-mqtt.duckdns.org:8883)
+Tue Sep 22 06:07:40 2026 daemon.err mosquitto[1521]: 1790057255: Error creating bridge: Try again.
+Tue Sep 22 06:07:43 2026 user.info chirpstack-concentratord-sx1302[2348]: Publishing stats event, rx_received: 2, rx_received_ok: 2, tx_received: 0, tx_emitted: 0
+Tue Sep 22 06:07:43 2026 user.info chirpstack-mqtt-forwarder[3216]: received gateway stats
+Tue Sep 22 06:07:43 2026 user.info chirpstack-mqtt-forwarder[3216]: Sending gateway stats event, topic: as923/gateway/0016c001f139a1cb/event/stats
+Tue Sep 22 06:08:09 2026 daemon.notice mosquitto[1521]: 1790057289: Connecting bridge cloud-uplink (smartagri-mqtt.duckdns.org:8883)
+Tue Sep 22 06:08:13 2026 user.info chirpstack-concentratord-sx1302[2348]: Publishing stats event, rx_received: 2, rx_received_ok: 2, tx_received: 0, tx_emitted: 0
+Tue Sep 22 06:08:13 2026 user.info chirpstack-mqtt-forwarder[3216]: received gateway stats
+Tue Sep 22 06:08:13 2026 user.info chirpstack-mqtt-forwarder[3216]: Sending gateway stats event, topic: as923/gateway/0016c001f139a1cb/event/stats
+Tue Sep 22 06:08:14 2026 daemon.err mosquitto[1521]: 1790057289: Error creating bridge: Try again.
+Tue Sep 22 06:08:22 2026 daemon.notice mosquitto[1521]: 1790057302: Connecting bridge cloud-downlink (smartagri-mqtt.duckdns.org:8883)
+Tue Sep 22 06:08:27 2026 daemon.err mosquitto[1521]: 1790057302: Error creating bridge: Try again.
+Tue Sep 22 06:08:43 2026 user.info chirpstack-concentratord-sx1302[2348]: Publishing stats event, rx_received: 2, rx_received_ok: 2, tx_received: 0, tx_emitted: 0
+Tue Sep 22 06:08:43 2026 user.info chirpstack-mqtt-forwarder[3216]: received gateway stats
+Tue Sep 22 06:08:43 2026 user.info chirpstack-mqtt-forwarder[3216]: Sending gateway stats event, topic: as923/gateway/0016c001f139a1cb/event/stats
+Tue Sep 22 06:08:51 2026 daemon.notice mosquitto[1521]: 1790057331: Connecting bridge cloud-uplink (smartagri-mqtt.duckdns.org:8883)
+Tue Sep 22 06:08:57 2026 daemon.err mosquitto[1521]: 1790057331: Error creating bridge: Try again.
+Tue Sep 22 06:09:05 2026 daemon.err gateway-evidence-uploader[2630]: gateway-evidence-uploader: gateway evidence I/O failed: HTTPS client transport failed with exit status exit status: 6
+Tue Sep 22 06:09:13 2026 user.info chirpstack-concentratord-sx1302[2348]: Publishing stats event, rx_received: 2, rx_received_ok: 2, tx_received: 0, tx_emitted: 0
+Tue Sep 22 06:09:13 2026 user.info chirpstack-mqtt-forwarder[3216]: received gateway stats
+Tue Sep 22 06:09:13 2026 user.info chirpstack-mqtt-forwarder[3216]: Sending gateway stats event, topic: as923/gateway/0016c001f139a1cb/event/stats
+Tue Sep 22 06:09:24 2026 daemon.notice mosquitto[1521]: 1790057364: Connecting bridge cloud-downlink (smartagri-mqtt.duckdns.org:8883)
+Tue Sep 22 06:09:29 2026 daemon.err mosquitto[1521]: 1790057364: Error creating bridge: Try again.
+Tue Sep 22 06:09:43 2026 user.info chirpstack-concentratord-sx1302[2348]: Publishing stats event, rx_received: 2, rx_received_ok: 2, tx_received: 0, tx_emitted: 0
+Tue Sep 22 06:09:43 2026 user.info chirpstack-mqtt-forwarder[3216]: received gateway stats
+Tue Sep 22 06:09:43 2026 user.info chirpstack-mqtt-forwarder[3216]: Sending gateway stats event, topic: as923/gateway/0016c001f139a1cb/event/stats
+Tue Sep 22 06:09:58 2026 daemon.notice mosquitto[1521]: 1790057398: Connecting bridge cloud-uplink (smartagri-mqtt.duckdns.org:8883)
+Tue Sep 22 06:10:03 2026 daemon.err mosquitto[1521]: 1790057398: Error creating bridge: Try again.
+Tue Sep 22 06:10:13 2026 user.info chirpstack-concentratord-sx1302[2348]: Publishing stats event, rx_received: 2, rx_received_ok: 2, tx_received: 0, tx_emitted: 0
+Tue Sep 22 06:10:13 2026 user.info chirpstack-mqtt-forwarder[3216]: received gateway stats
+Tue Sep 22 06:10:13 2026 user.info chirpstack-mqtt-forwarder[3216]: Sending gateway stats event, topic: as923/gateway/0016c001f139a1cb/event/stats
+Tue Sep 22 06:10:30 2026 daemon.notice mosquitto[1521]: 1790057430: Connecting bridge cloud-downlink (smartagri-mqtt.duckdns.org:8883)
+Tue Sep 22 06:10:35 2026 daemon.err mosquitto[1521]: 1790057430: Error creating bridge: Try again.
+Tue Sep 22 06:10:43 2026 user.info chirpstack-concentratord-sx1302[2348]: Publishing stats event, rx_received: 2, rx_received_ok: 2, tx_received: 0, tx_emitted: 0
+Tue Sep 22 06:10:43 2026 user.info chirpstack-mqtt-forwarder[3216]: received gateway stats
+Tue Sep 22 06:10:43 2026 user.info chirpstack-mqtt-forwarder[3216]: Sending gateway stats event, topic: as923/gateway/0016c001f139a1cb/event/stats
+Tue Sep 22 06:11:04 2026 daemon.notice mosquitto[1521]: 1790057464: Connecting bridge cloud-uplink (smartagri-mqtt.duckdns.org:8883)
+Tue Sep 22 06:11:09 2026 daemon.err mosquitto[1521]: 1790057464: Error creating bridge: Try again.
+Tue Sep 22 06:11:13 2026 user.info chirpstack-concentratord-sx1302[2348]: Publishing stats event, rx_received: 2, rx_received_ok: 2, tx_received: 0, tx_emitted: 0
+Tue Sep 22 06:11:13 2026 user.info chirpstack-mqtt-forwarder[3216]: received gateway stats
+Tue Sep 22 06:11:13 2026 user.info chirpstack-mqtt-forwarder[3216]: Sending gateway stats event, topic: as923/gateway/0016c001f139a1cb/event/stats
+Tue Sep 22 06:11:25 2026 daemon.notice mosquitto[1521]: 1790057485: Connecting bridge cloud-uplink (smartagri-mqtt.duckdns.org:8883)
+Tue Sep 22 06:11:30 2026 daemon.err mosquitto[1521]: 1790057485: Error creating bridge: Try again.
+Tue Sep 22 06:11:35 2026 daemon.notice mosquitto[1521]: 1790057495: Connecting bridge cloud-downlink (smartagri-mqtt.duckdns.org:8883)
+Tue Sep 22 06:11:40 2026 daemon.err mosquitto[1521]: 1790057495: Error creating bridge: Try again.
+Tue Sep 22 06:11:43 2026 user.info chirpstack-concentratord-sx1302[2348]: Publishing stats event, rx_received: 2, rx_received_ok: 2, tx_received: 0, tx_emitted: 0
+Tue Sep 22 06:11:43 2026 user.info chirpstack-mqtt-forwarder[3216]: received gateway stats
+Tue Sep 22 06:11:43 2026 user.info chirpstack-mqtt-forwarder[3216]: Sending gateway stats event, topic: as923/gateway/0016c001f139a1cb/event/stats
+Tue Sep 22 06:11:52 2026 daemon.notice mosquitto[1521]: 1790057512: Connecting bridge cloud-uplink (smartagri-mqtt.duckdns.org:8883)
+Tue Sep 22 06:11:57 2026 daemon.err mosquitto[1521]: 1790057512: Error creating bridge: Try again.
+Tue Sep 22 06:12:13 2026 user.info chirpstack-concentratord-sx1302[2348]: Publishing stats event, rx_received: 2, rx_received_ok: 2, tx_received: 0, tx_emitted: 0
+Tue Sep 22 06:12:13 2026 user.info chirpstack-mqtt-forwarder[3216]: received gateway stats
+Tue Sep 22 06:12:13 2026 user.info chirpstack-mqtt-forwarder[3216]: Sending gateway stats event, topic: as923/gateway/0016c001f139a1cb/event/stats
+Tue Sep 22 06:12:20 2026 daemon.notice mosquitto[1521]: 1790057540: Connecting bridge cloud-downlink (smartagri-mqtt.duckdns.org:8883)
+Tue Sep 22 06:12:26 2026 daemon.err mosquitto[1521]: 1790057540: Error creating bridge: Try again.
+Tue Sep 22 06:12:26 2026 daemon.notice mosquitto[1521]: 1790057546: Connecting bridge cloud-uplink (smartagri-mqtt.duckdns.org:8883)
+Tue Sep 22 06:12:31 2026 daemon.err mosquitto[1521]: 1790057546: Error creating bridge: Try again.
+Tue Sep 22 06:12:43 2026 user.info chirpstack-concentratord-sx1302[2348]: Publishing stats event, rx_received: 2, rx_received_ok: 2, tx_received: 0, tx_emitted: 0
+Tue Sep 22 06:12:43 2026 user.info chirpstack-mqtt-forwarder[3216]: received gateway stats
+Tue Sep 22 06:12:43 2026 user.info chirpstack-mqtt-forwarder[3216]: Sending gateway stats event, topic: as923/gateway/0016c001f139a1cb/event/stats

@@ -1,0 +1,2 @@
+event_key,time,received_at,dev_eui,gateway_id,f_cnt,test_sequence,rssi_dbm,snr_db,gateway_uplink_id,gateway_frequency_hz,raw_data,mqtt_topic,decoder_version,region,f_port,confirmed
+a104db1c-dbf5-440a-932a-72e12c2bbf41,2026-09-18 02:59:51.627552+00,2026-09-18 02:59:51.668+00,ac1f09fffe296d29,0016c001f139a1cb,201,202,-26,13.75,3979458472,923200000,AgAAAMoALk0+ASwLzAAAAAGMXwnOAABFcgAAPSQLFBSCAAGLHgAAuYgAAAAAfw==,application/cbe059b6-fbaf-4397-9bca-3369fa141cc9/device/ac1f09fffe296d29/event/up,agriculture-kit-payload-v2-node-red-v1,as923,2,f

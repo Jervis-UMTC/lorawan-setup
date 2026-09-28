@@ -1,0 +1,19 @@
+test_cloud_route_must_match_actual_mqtt_peer (test_r1_internet_route_gate.R1OfflineTests.test_cloud_route_must_match_actual_mqtt_peer) ... ok
+test_cloud_route_must_use_real_lte_source (test_r1_internet_route_gate.R1OfflineTests.test_cloud_route_must_use_real_lte_source) ... ok
+test_cloud_route_must_use_wwan (test_r1_internet_route_gate.R1OfflineTests.test_cloud_route_must_use_wwan) ... ok
+test_ethernet_default_route_fails (test_r1_internet_route_gate.R1OfflineTests.test_ethernet_default_route_fails) ... ok
+test_invalid_lte_ipv4_fails (test_r1_internet_route_gate.R1OfflineTests.test_invalid_lte_ipv4_fails) ... ok
+test_malformed_gateway_snapshot_is_sealed_as_failure (test_r1_internet_route_gate.R1OfflineTests.test_malformed_gateway_snapshot_is_sealed_as_failure) ... ok
+test_management_lan_absence_fails (test_r1_internet_route_gate.R1OfflineTests.test_management_lan_absence_fails) ... ok
+test_mqtt_peer_port_not_just_local_port (test_r1_internet_route_gate.R1OfflineTests.test_mqtt_peer_port_not_just_local_port) ... ok
+test_mqtt_socket_exact_lte_source (test_r1_internet_route_gate.R1OfflineTests.test_mqtt_socket_exact_lte_source) ... ok
+test_multiple_defaults_fail (test_r1_internet_route_gate.R1OfflineTests.test_multiple_defaults_fail) ... ok
+test_outage_requires_cloud_unreachable_while_lan_preserved (test_r1_internet_route_gate.R1OfflineTests.test_outage_requires_cloud_unreachable_while_lan_preserved) ... ok
+test_pre_and_recovery_require_lte_socket_and_probe (test_r1_internet_route_gate.R1OfflineTests.test_pre_and_recovery_require_lte_socket_and_probe) ... ok
+test_stale_or_absent_cloud_tcp_probe_fails (test_r1_internet_route_gate.R1OfflineTests.test_stale_or_absent_cloud_tcp_probe_fails) ... ok
+test_unstructured_lte_fails_closed (test_r1_internet_route_gate.R1OfflineTests.test_unstructured_lte_fails_closed) ... ok
+
+----------------------------------------------------------------------
+Ran 14 tests in 0.028s
+
+OK

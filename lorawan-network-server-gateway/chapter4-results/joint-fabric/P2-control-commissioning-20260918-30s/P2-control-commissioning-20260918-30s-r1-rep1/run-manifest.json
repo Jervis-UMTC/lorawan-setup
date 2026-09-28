@@ -1,0 +1,22 @@
+{
+  "authenticated_source_system_id": "lorawan-gateway-evidence",
+  "created_at_utc": "2026-09-18T07:03:16.972Z",
+  "duration_seconds": 30,
+  "fabric_required": true,
+  "repetition": 1,
+  "requested_fabric_action": "P2_MATCHED_CONTROL_AND_FABRIC",
+  "run_id": "P2-control-commissioning-20260918-30s-r1-rep1",
+  "schema_version": "1.0",
+  "study_id": "zacharias-lorawan-fabric",
+  "test_id": "P2",
+  "workload": {
+    "interval_ms": 1000.0,
+    "pair_order": [
+      "control",
+      "fabric"
+    ],
+    "planned_record_count": 30,
+    "schedule_epoch_utc": "2026-09-18T07:03:21.972Z",
+    "target_tps": 1.0
+  }
+}

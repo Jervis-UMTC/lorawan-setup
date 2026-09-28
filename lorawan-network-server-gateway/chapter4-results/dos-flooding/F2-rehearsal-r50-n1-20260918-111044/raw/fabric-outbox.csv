@@ -1,0 +1,4 @@
+event_key,source_event_key,observed_at,event_type,schema_version,status,attempts,digest_sha256,fabric_tx_id,submitted_at,committed_at,last_error_category,created_at,updated_at
+uplink:e10a4836-57c7-4346-b735-616d054fc4d8,e10a4836-57c7-4346-b735-616d054fc4d8,2026-09-18 03:15:21.807734+00,lorawan_uplink_accepted,telemetry-attestation-v2,pending,0,,,,,,2026-09-18 03:15:21.861314+00,2026-09-18 03:15:21.861314+00
+uplink:20f43042-e429-4dab-8234-d4fb2bab37d3,20f43042-e429-4dab-8234-d4fb2bab37d3,2026-09-18 03:15:36.740401+00,lorawan_uplink_accepted,telemetry-attestation-v2,pending,0,,,,,,2026-09-18 03:15:36.787348+00,2026-09-18 03:15:36.787348+00
+uplink:f725583d-a534-4d85-b243-1c41d6936e27,f725583d-a534-4d85-b243-1c41d6936e27,2026-09-18 03:15:51.842492+00,lorawan_uplink_accepted,telemetry-attestation-v2,pending,0,,,,,,2026-09-18 03:15:51.904324+00,2026-09-18 03:15:51.904324+00

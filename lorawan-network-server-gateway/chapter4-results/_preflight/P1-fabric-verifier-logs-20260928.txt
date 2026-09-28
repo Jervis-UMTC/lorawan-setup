@@ -1,0 +1,13 @@
+## ulc01 lorawan-gateway-evidence-fabric-adapter-1 RC=0
+
+STDERR
+
+
+## ulc02 lorawan-gateway-evidence-verifier-1 RC=0
+
+STDERR
+
+
+## ulc03 lorawan-gateway-evidence-verifier-1 RC=0
+
+STDERR

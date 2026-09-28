@@ -1,0 +1,1 @@
+Fabric settle did not reach confirmation for every in-window uplink: status=TIMEOUT uplinks=0 confirmed=0 missing=0

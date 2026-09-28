@@ -1,0 +1,29 @@
+{
+  "cloud_spread_limit_seconds": 0.25,
+  "cloud_spread_seconds": null,
+  "errors": [
+    "ulc01: ulc01 clock-probe handshake failed: ssh: connect to host 143.198.205.54 port 22: Connection timed out",
+    "ulc02: ulc02 clock-probe handshake failed: banner exchange: Connection to UNKNOWN port -1: Connection aborted",
+    "gateway: gateway clock-probe handshake failed: ssh: connect to host 192.168.20.11 port 22: Connection timed out"
+  ],
+  "gateway_cloud_skew_limit_seconds": 1.5,
+  "gateway_minus_cloud_seconds": null,
+  "probes": {
+    "ulc03": {
+      "measurement": "established SSH command-channel request/response midpoint",
+      "node": "ulc03",
+      "offset_max_seconds": -85.081266,
+      "offset_min_seconds": -85.08453,
+      "rtt_max_ms": 69.076,
+      "rtt_median_ms": 66.698,
+      "samples": 5,
+      "server_minus_workstation_seconds": -85.082261,
+      "server_timestamp_utc": "2026-09-22T05:38:08.707Z"
+    }
+  },
+  "ready": false,
+  "reference": "median of midpoint-corrected ulc01/ulc02/ulc03 utc-now probes",
+  "server_minus_workstation_seconds": null,
+  "workstation_calibration_limit_seconds": 300.0,
+  "workstation_drift_limit_seconds": 0.1
+}

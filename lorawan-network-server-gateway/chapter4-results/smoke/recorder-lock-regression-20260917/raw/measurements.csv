@@ -1,0 +1,27 @@
+measurement_id,time,event_key,dev_eui,metric_name,metric_value,metric_text,metric_bool,unit,quality,source_field
+19657,2026-09-17 06:24:15.504623+00,04cb5bd0-4fdd-4dbb-986e-552e9dfe449f,ac1f09fffe296d29,soil_moisture_percent,4,,,%,measured,soil_moisture_percent
+19658,2026-09-17 06:24:15.504623+00,04cb5bd0-4fdd-4dbb-986e-552e9dfe449f,ac1f09fffe296d29,soil_temperature_c,29.3,,,Cel,measured,soil_temperature_c
+19659,2026-09-17 06:24:15.504623+00,04cb5bd0-4fdd-4dbb-986e-552e9dfe449f,ac1f09fffe296d29,uv_index,0,,,1,measured,uv_index
+19660,2026-09-17 06:24:15.504623+00,04cb5bd0-4fdd-4dbb-986e-552e9dfe449f,ac1f09fffe296d29,barometer_pressure_pa,101114,,,Pa,measured,barometer_pressure_pa
+19661,2026-09-17 06:24:15.504623+00,04cb5bd0-4fdd-4dbb-986e-552e9dfe449f,ac1f09fffe296d29,barometer_temperature_c,24.54,,,Cel,measured,barometer_temperature_c
+19662,2026-09-17 06:24:15.504623+00,04cb5bd0-4fdd-4dbb-986e-552e9dfe449f,ac1f09fffe296d29,light_veml7700_lux,179.71,,,lx,measured,light_veml7700_lux
+19663,2026-09-17 06:24:15.504623+00,04cb5bd0-4fdd-4dbb-986e-552e9dfe449f,ac1f09fffe296d29,light_opt3001_lux,162.32,,,lx,measured,light_opt3001_lux
+19664,2026-09-17 06:24:15.504623+00,04cb5bd0-4fdd-4dbb-986e-552e9dfe449f,ac1f09fffe296d29,environment_temperature_c,27.85,,,Cel,measured,environment_temperature_c
+19665,2026-09-17 06:24:15.504623+00,04cb5bd0-4fdd-4dbb-986e-552e9dfe449f,ac1f09fffe296d29,environment_humidity_percent,52.45,,,%,measured,environment_humidity_percent
+19666,2026-09-17 06:24:15.504623+00,04cb5bd0-4fdd-4dbb-986e-552e9dfe449f,ac1f09fffe296d29,environment_pressure_pa,100779,,,Pa,measured,environment_pressure_pa
+19667,2026-09-17 06:24:15.504623+00,04cb5bd0-4fdd-4dbb-986e-552e9dfe449f,ac1f09fffe296d29,environment_gas_resistance_ohm,52465,,,ohm,measured,environment_gas_resistance_ohm
+19668,2026-09-17 06:24:15.504623+00,04cb5bd0-4fdd-4dbb-986e-552e9dfe449f,ac1f09fffe296d29,rain_wet,,,f,boolean,measured,rain_wet
+19669,2026-09-17 06:24:15.504623+00,04cb5bd0-4fdd-4dbb-986e-552e9dfe449f,ac1f09fffe296d29,battery_v,,,,V,invalid,battery_v
+19670,2026-09-17 06:24:30.32939+00,033e1344-04bd-40d5-b0c5-2d7bed9a5f50,ac1f09fffe296d29,soil_moisture_percent,4,,,%,measured,soil_moisture_percent
+19671,2026-09-17 06:24:30.32939+00,033e1344-04bd-40d5-b0c5-2d7bed9a5f50,ac1f09fffe296d29,soil_temperature_c,29.3,,,Cel,measured,soil_temperature_c
+19672,2026-09-17 06:24:30.32939+00,033e1344-04bd-40d5-b0c5-2d7bed9a5f50,ac1f09fffe296d29,uv_index,0,,,1,measured,uv_index
+19673,2026-09-17 06:24:30.32939+00,033e1344-04bd-40d5-b0c5-2d7bed9a5f50,ac1f09fffe296d29,barometer_pressure_pa,101116,,,Pa,measured,barometer_pressure_pa
+19674,2026-09-17 06:24:30.32939+00,033e1344-04bd-40d5-b0c5-2d7bed9a5f50,ac1f09fffe296d29,barometer_temperature_c,24.53,,,Cel,measured,barometer_temperature_c
+19675,2026-09-17 06:24:30.32939+00,033e1344-04bd-40d5-b0c5-2d7bed9a5f50,ac1f09fffe296d29,light_veml7700_lux,165.02,,,lx,measured,light_veml7700_lux
+19676,2026-09-17 06:24:30.32939+00,033e1344-04bd-40d5-b0c5-2d7bed9a5f50,ac1f09fffe296d29,light_opt3001_lux,150.08,,,lx,measured,light_opt3001_lux
+19677,2026-09-17 06:24:30.32939+00,033e1344-04bd-40d5-b0c5-2d7bed9a5f50,ac1f09fffe296d29,environment_temperature_c,27.83,,,Cel,measured,environment_temperature_c
+19678,2026-09-17 06:24:30.32939+00,033e1344-04bd-40d5-b0c5-2d7bed9a5f50,ac1f09fffe296d29,environment_humidity_percent,52.34,,,%,measured,environment_humidity_percent
+19679,2026-09-17 06:24:30.32939+00,033e1344-04bd-40d5-b0c5-2d7bed9a5f50,ac1f09fffe296d29,environment_pressure_pa,100778,,,Pa,measured,environment_pressure_pa
+19680,2026-09-17 06:24:30.32939+00,033e1344-04bd-40d5-b0c5-2d7bed9a5f50,ac1f09fffe296d29,environment_gas_resistance_ohm,52334,,,ohm,measured,environment_gas_resistance_ohm
+19681,2026-09-17 06:24:30.32939+00,033e1344-04bd-40d5-b0c5-2d7bed9a5f50,ac1f09fffe296d29,rain_wet,,,f,boolean,measured,rain_wet
+19682,2026-09-17 06:24:30.32939+00,033e1344-04bd-40d5-b0c5-2d7bed9a5f50,ac1f09fffe296d29,battery_v,,,,V,invalid,battery_v

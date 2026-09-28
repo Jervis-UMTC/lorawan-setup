@@ -1,0 +1,14 @@
+measurement_id,time,event_key,dev_eui,metric_name,metric_value,metric_text,metric_bool,unit,quality,source_field
+29459,2026-09-18 02:52:36.248895+00,b883b386-a1ee-428d-9fa5-3ce7b57f6b8c,ac1f09fffe296d29,soil_moisture_percent,5,,,%,measured,soil_moisture_percent
+29460,2026-09-18 02:52:36.248895+00,b883b386-a1ee-428d-9fa5-3ce7b57f6b8c,ac1f09fffe296d29,soil_temperature_c,30.1,,,Cel,measured,soil_temperature_c
+29461,2026-09-18 02:52:36.248895+00,b883b386-a1ee-428d-9fa5-3ce7b57f6b8c,ac1f09fffe296d29,uv_index,0,,,1,measured,uv_index
+29462,2026-09-18 02:52:36.248895+00,b883b386-a1ee-428d-9fa5-3ce7b57f6b8c,ac1f09fffe296d29,barometer_pressure_pa,101483,,,Pa,measured,barometer_pressure_pa
+29463,2026-09-18 02:52:36.248895+00,b883b386-a1ee-428d-9fa5-3ce7b57f6b8c,ac1f09fffe296d29,barometer_temperature_c,25.02,,,Cel,measured,barometer_temperature_c
+29464,2026-09-18 02:52:36.248895+00,b883b386-a1ee-428d-9fa5-3ce7b57f6b8c,ac1f09fffe296d29,light_veml7700_lux,170.08,,,lx,measured,light_veml7700_lux
+29465,2026-09-18 02:52:36.248895+00,b883b386-a1ee-428d-9fa5-3ce7b57f6b8c,ac1f09fffe296d29,light_opt3001_lux,153.64,,,lx,measured,light_opt3001_lux
+29466,2026-09-18 02:52:36.248895+00,b883b386-a1ee-428d-9fa5-3ce7b57f6b8c,ac1f09fffe296d29,environment_temperature_c,28.27,,,Cel,measured,environment_temperature_c
+29467,2026-09-18 02:52:36.248895+00,b883b386-a1ee-428d-9fa5-3ce7b57f6b8c,ac1f09fffe296d29,environment_humidity_percent,52.88,,,%,measured,environment_humidity_percent
+29468,2026-09-18 02:52:36.248895+00,b883b386-a1ee-428d-9fa5-3ce7b57f6b8c,ac1f09fffe296d29,environment_pressure_pa,101156,,,Pa,measured,environment_pressure_pa
+29469,2026-09-18 02:52:36.248895+00,b883b386-a1ee-428d-9fa5-3ce7b57f6b8c,ac1f09fffe296d29,environment_gas_resistance_ohm,47362,,,ohm,measured,environment_gas_resistance_ohm
+29470,2026-09-18 02:52:36.248895+00,b883b386-a1ee-428d-9fa5-3ce7b57f6b8c,ac1f09fffe296d29,rain_wet,,,f,boolean,measured,rain_wet
+29471,2026-09-18 02:52:36.248895+00,b883b386-a1ee-428d-9fa5-3ce7b57f6b8c,ac1f09fffe296d29,battery_v,,,,V,invalid,battery_v

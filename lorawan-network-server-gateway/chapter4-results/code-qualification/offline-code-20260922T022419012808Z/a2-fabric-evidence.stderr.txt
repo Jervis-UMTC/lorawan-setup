@@ -1,0 +1,23 @@
+test_cli_refuses_to_overwrite_source (test_a2_fabric_endorsement_evidence.A2OfflineTests.test_cli_refuses_to_overwrite_source) ... ok
+test_duplicate_world_state_key_is_invalid (test_a2_fabric_endorsement_evidence.A2OfflineTests.test_duplicate_world_state_key_is_invalid) ... ok
+test_exact_formal_shape_but_not_counted_research (test_a2_fabric_endorsement_evidence.A2OfflineTests.test_exact_formal_shape_but_not_counted_research) ... ok
+test_fabric_query_mandatory_even_if_client_says_rejected (test_a2_fabric_endorsement_evidence.A2OfflineTests.test_fabric_query_mandatory_even_if_client_says_rejected) ... ok
+test_formal_count_drift_cannot_pass (test_a2_fabric_endorsement_evidence.A2OfflineTests.test_formal_count_drift_cannot_pass) ... ok
+test_json_cli_writes_and_preserves_source (test_a2_fabric_endorsement_evidence.A2OfflineTests.test_json_cli_writes_and_preserves_source) ... ok
+test_missing_endorsement_probe_invalid_not_denominator (test_a2_fabric_endorsement_evidence.A2OfflineTests.test_missing_endorsement_probe_invalid_not_denominator) ... ok
+test_missing_join_manifest_digest_rejected (test_a2_fabric_endorsement_evidence.A2OfflineTests.test_missing_join_manifest_digest_rejected) ... ok
+test_nonfinite_latency_is_invalid (test_a2_fabric_endorsement_evidence.A2OfflineTests.test_nonfinite_latency_is_invalid) ... ok
+test_proven_unauthorized_acceptance_remains_failure (test_a2_fabric_endorsement_evidence.A2OfflineTests.test_proven_unauthorized_acceptance_remains_failure) ... ok
+test_synthetic_cannot_claim_formal_fabric_evidence (test_a2_fabric_endorsement_evidence.A2OfflineTests.test_synthetic_cannot_claim_formal_fabric_evidence) ... ok
+test_three_conditions_synthetic_rehearsal (test_a2_fabric_endorsement_evidence.A2OfflineTests.test_three_conditions_synthetic_rehearsal) ... ok
+test_unchanged_hash_required_on_violation_existing_state (test_a2_fabric_endorsement_evidence.A2OfflineTests.test_unchanged_hash_required_on_violation_existing_state) ... ok
+test_unexpected_valid_rejection_is_failure_not_invalid (test_a2_fabric_endorsement_evidence.A2OfflineTests.test_unexpected_valid_rejection_is_failure_not_invalid) ... ok
+test_unrelated_outage_cannot_masquerade_policy_rejection (test_a2_fabric_endorsement_evidence.A2OfflineTests.test_unrelated_outage_cannot_masquerade_policy_rejection) ... ok
+test_unrelated_rejection_cannot_masquerade_endorsement (test_a2_fabric_endorsement_evidence.A2OfflineTests.test_unrelated_rejection_cannot_masquerade_endorsement) ... ok
+test_valid_commit_requires_readback_of_expected_state (test_a2_fabric_endorsement_evidence.A2OfflineTests.test_valid_commit_requires_readback_of_expected_state) ... ok
+test_wrong_source_system_and_missing_exact_payload_rejected (test_a2_fabric_endorsement_evidence.A2OfflineTests.test_wrong_source_system_and_missing_exact_payload_rejected) ... ok
+
+----------------------------------------------------------------------
+Ran 18 tests in 0.312s
+
+OK

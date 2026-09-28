@@ -1,0 +1,6 @@
+EXCERPT OF chapter4-results\normal-operation\P1-1-20260922-105310\raw\ulc01-chirpstack.log
+2026-09-22T02:53:32.668855154Z 2026-09-22T02:53:32.667095Z  INFO up{deduplication_id=369cf6bc-2a06-4835-91c2-73b27eba1d5d}:data_up{dev_eui="ac1f09fffe296d29"}: chirpstack::storage::device: Device partially updated dev_eui=ac1f09fffe296d29
+2026-09-22T02:53:32.668904306Z 2026-09-22T02:53:32.668115Z  INFO up{deduplication_id=369cf6bc-2a06-4835-91c2-73b27eba1d5d}:data_up{dev_eui="ac1f09fffe296d29"}: chirpstack::storage::metrics: Metrics saved name=device:ac1f09fffe296d29 aggregation=HOUR
+2026-09-22T02:53:32.668913247Z 2026-09-22T02:53:32.668168Z  INFO up{deduplication_id=369cf6bc-2a06-4835-91c2-73b27eba1d5d}:data_up{dev_eui="ac1f09fffe296d29"}: chirpstack::storage::metrics: Metrics saved name=device:ac1f09fffe296d29 aggregation=DAY
+2026-09-22T02:53:32.668941538Z 2026-09-22T02:53:32.668250Z  INFO up{deduplication_id=369cf6bc-2a06-4835-91c2-73b27eba1d5d}:data_up{dev_eui="ac1f09fffe296d29"}: chirpstack::storage::metrics: Metrics saved name=device:ac1f09fffe296d29 aggregation=MONTH
+2026-09-22T02:53:47.670880801Z 2026-09-22T02:53:47.670623Z  INFO up{deduplication_id=f3f61338-a7a9-4829-ab71-254953f79a63}:data_up{dev_eui="ac1f09fffe296d29"}: chirpstack::storage::device: Device partially updated dev_eui=ac1f09fffe296d29

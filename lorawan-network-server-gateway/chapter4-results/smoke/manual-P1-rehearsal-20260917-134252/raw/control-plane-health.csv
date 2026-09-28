@@ -1,0 +1,6 @@
+authoritative_timestamp_utc,workstation_midpoint_utc,server_minus_workstation_seconds,clock_probe_round_trip_ms,status,detail
+,2026-09-17T05:43:51.373Z,,0.149,WARN,live server timestamp not yet available from open resource stream
+2026-09-17T05:44:02.442Z,2026-09-17T05:44:06.384Z,-3.942087,7.046,PASS,all collectors and evidence services healthy
+2026-09-17T05:44:17.570Z,2026-09-17T05:44:21.399Z,-3.829476,7.799,PASS,all collectors and evidence services healthy
+2026-09-17T05:44:32.679Z,2026-09-17T05:44:36.414Z,-3.735456,6.999,PASS,all collectors and evidence services healthy
+2026-09-17T05:44:37.712Z,2026-09-17T05:44:51.372Z,-13.660848,0.354,FAIL,collector process not alive: emu01-serial pid=1244; collector process not alive: gateway-resource pid=15608; collector process not alive: gateway-log pid=3348; collector process not alive: ulc01-host-resource pid=17340; collector process not alive: ulc01-docker-resource pid=17456; collector process not alive: ulc02-host-resource pid=20572; collector process not alive: ulc02-docker-resource pid=7192; collector process not alive: ulc03-host-resource pid=20804; collector process not alive: ulc03-docker-resource pid=1616

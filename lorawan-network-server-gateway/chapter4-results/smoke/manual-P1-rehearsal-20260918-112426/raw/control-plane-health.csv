@@ -1,0 +1,6 @@
+authoritative_timestamp_utc,workstation_midpoint_utc,server_minus_workstation_seconds,clock_probe_round_trip_ms,status,detail
+,2026-09-18T03:25:40.311Z,,6.745,WARN,live server timestamp not yet available from open resource stream
+2026-09-18T03:24:20.095Z,2026-09-18T03:25:55.332Z,-95.237345,8.695,PASS,all collectors and evidence services healthy
+2026-09-18T03:24:35.273Z,2026-09-18T03:26:10.352Z,-95.079107,6.599,PASS,all collectors and evidence services healthy
+2026-09-18T03:24:50.458Z,2026-09-18T03:26:25.370Z,-94.912708,7.930,PASS,all collectors and evidence services healthy
+2026-09-18T03:25:05.685Z,2026-09-18T03:26:40.298Z,-94.613864,12.573,PASS,all collectors and evidence services healthy

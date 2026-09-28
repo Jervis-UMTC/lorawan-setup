@@ -1,0 +1,38 @@
+[
+  {
+    "node": "ulc01",
+    "kind": "loss",
+    "returncode": 124,
+    "lines": 0,
+    "selected_count": 0,
+    "selected": [],
+    "stderr": ""
+  },
+  {
+    "node": "ulc01",
+    "kind": "recent",
+    "returncode": 124,
+    "lines": 0,
+    "selected_count": 0,
+    "selected": [],
+    "stderr": ""
+  },
+  {
+    "node": "ulc02",
+    "kind": "loss",
+    "returncode": 124,
+    "lines": 0,
+    "selected_count": 0,
+    "selected": [],
+    "stderr": ""
+  },
+  {
+    "node": "ulc02",
+    "kind": "recent",
+    "returncode": 124,
+    "lines": 0,
+    "selected_count": 0,
+    "selected": [],
+    "stderr": ""
+  }
+]
