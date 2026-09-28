@@ -22,7 +22,8 @@ EMU-01
 firmware
   payload version = 2
   payload length  = 46 bytes
-  interval        = 15 seconds
+  local sample    = 60 seconds
+normal uplink   = 300 seconds nominal, ±15-second jitter
   healthy validity bitmap = 0x007F
 ```
 
@@ -59,11 +60,11 @@ With EMU-01 powered off, verify:
 [ ] RAK4631 is seated in CPU slot
 [ ] LoRa antenna is connected to the LoRa RF connector
 [ ] Sensor A = RAK1903
-[ ] Sensor B = EMPTY / NA
+[ ] Sensor B = RAK12010
 [ ] Sensor C = RAK12019
 [ ] Sensor D = RAK12011
 [ ] Sensor E = RAK1906
-[ ] Sensor F = RAK12010
+[ ] Sensor F = EMPTY / NA
 [ ] WisIO 1 = RAK12023 + one RAK12035
 [ ] WisIO 2 = RAK12005 + RAK12030
 [ ] mapper GPIO roles are WB_IO1=OPT INT, WB_IO2=3V3_S, WB_IO3=UV INT, WB_IO4=SOIL, WB_IO5=BARO INT, WB_IO6=RAIN
@@ -170,22 +171,24 @@ All ten normal preflight cycles should show `0x007F` unless you are intentionall
 
 **NO-GO if:** a required validity bit repeatedly clears or the firmware silently reuses stale data as valid.
 
-## Step 7 - Check the 15-second scheduler
+## Step 7 - Check the production scheduler
 
 Compare the source timestamps/uptime values for the ten cycles.
 
-Expected pattern:
+Expected production behavior:
 
 ```text
-seq N       around T0
-seq N+1     around T0 + 15 s
-seq N+2     around T0 + 30 s
-...
+local physical sample refresh = every 60 seconds
+normal uplink interval         = 300 seconds nominal
+normal uplink jitter window    = 285-315 seconds
+rain-transition event uplink   = separately randomized/rate-limited and identified by source `reason=event`
 ```
 
-Minor execution/timestamp granularity is expected, but the schedule must not progressively stretch because of sensor-read time.
+Use consecutive source `reason=normal` transmissions when judging the 285-315 second network cadence. Do not treat an intentional rain-event uplink as scheduler drift. `SENSOR_TX` is emitted for actual transmission attempts, not for every 60-second local sample refresh, so the 60-second sampling setting is verified from the frozen firmware/configuration while normal-uplink timing is verified from `SENSOR_TX`/gateway/application timestamps.
 
-**NO-GO if:** the interval drifts substantially or the device misses scheduled cycles before the network is even considered.
+Minor execution/timestamp granularity is expected, but the normal schedule must not progressively stretch because of sensor-read time.
+
+**NO-GO if:** normal uplinks fall outside the frozen jitter policy without an explained event/rejoin condition, the device misses expected source sequence progression, or the configured production sampling/transmission policy differs from the frozen source.
 
 ## Step 8 - Check sequence continuity
 
@@ -219,7 +222,8 @@ first sequence
 last sequence
 10/10 cycles observed = yes/no
 all validity bitmaps = 0x007F yes/no
-15-second scheduling stable = yes/no
+60-second local sampling stable = yes/no
+normal uplink interval within 285-315 seconds = yes/no
 unexpected reset = yes/no
 hardware map matches baseline = yes/no
 result = PASS | NO-GO

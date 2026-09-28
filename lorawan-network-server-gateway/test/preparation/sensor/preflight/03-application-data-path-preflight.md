@@ -66,7 +66,7 @@ APPLICATION_PREFLIGHT_START_UTC=<UTC>
 first expected test_sequence=<N>
 ```
 
-Let EMU-01 continue its normal 15-second operation. Do not reset it merely to start the application preflight.
+Let EMU-01 continue its normal production scheduler. Do not reset it merely to start the application preflight; normal uplinks are nominally five minutes apart with per-node staggering/jitter, so allow enough observation time for the next scheduled frame.
 
 Select **five consecutive sequences** that are already known to be accepted by ChirpStack.
 

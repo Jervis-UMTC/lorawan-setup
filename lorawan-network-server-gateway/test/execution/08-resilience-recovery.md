@@ -1,12 +1,15 @@
 # Execution 8. Resilience and Recovery
+> **Reference procedure only.** Executable operator commands are published only in `chapters/lorawan_research_test_manual_final.md` after live qualification. The fenced snippets below are preserved as implementation/reference text and must not be copied as current commands.
 
-The counted Chapter IV resilience experiment is an **Internet/WAN interruption**, not a Raspberry Pi power-failure test.
+> **Methodology reconciliation warning:** the new `chapters/Zacarias_Chapter3.pdf` requires two distinct resilience experiments: **R1 external-Internet interruption/recovery** and **R2 Fabric-unavailability/database–blockchain reconciliation**. This existing file was written around a Fabric-only reachability interruption and therefore **must not be used as the counted R1 Internet-interruption procedure**. Use [../ZACARIAS-CHAPTER3-TEST-METRICS-SOURCE-OF-TRUTH.md](../ZACARIAS-CHAPTER3-TEST-METRICS-SOURCE-OF-TRUTH.md) as the authority until this manual is split/reconciled.
+
+The procedure below describes an **external-Fabric reachability interruption** and may inform the implementation of R2, but it does not by itself satisfy the new Chapter 3 resilience test set.
 
 ## What this test proves
 
-This experiment separates **local telemetry continuity** from **external Fabric availability**. During WAN loss, the gateway-to-server LAN and all required local server services must stay available; only Internet-dependent work should be interrupted.
+This experiment isolates **external Fabric availability** while the production LoRaWAN/cloud path remains healthy. Gateway-01 must continue using its normal LTE/public-ingress route, the three cloud nodes and private VPC must remain available, and only the Fabric-adapter workers' reachability to the commissioned external Fabric endpoint is interrupted.
 
-The run is INVALID if the WAN cut also disconnects the gateway from the local server, because that creates a different failure condition.
+The run is INVALID if the interruption also breaks Gateway-01 LTE/public MQTT ingress, the Reserved-IP path, ChirpStack, Node-RED/TimescaleDB, the private VPC, or unrelated cloud services, because that creates a different failure condition.
 
 ## Required design
 
@@ -14,73 +17,73 @@ Each run:
 
 ```text
 30 minutes normal
-60 minutes Internet interruption
+60 minutes external-Fabric interruption
 30 minutes recovery
 Total = 2 hours
 ```
 
 Repeat 3 times.
 
-With EMU-01 frozen at a 15-second transmission interval and deterministic `test_sequence`:
+With EMU-01 frozen on the **counted-test-15s** artifact (15-second normal uplinks, 46-byte physical payload-v2, monotonic source sequence):
 
 ```text
 about 120 readings before interruption
 about 240 during interruption
-about 120 after reconnection
+about 120 after Fabric reachability restoration
 about 480 per run
 about 1440 across three runs
 ```
 
 ## Current architecture behavior
 
-The gateway and the **5 GiB / 4-vCPU dissertation test VM** remain on the local test network. The physical host has 8 GiB RAM / 8 threads, but those resources are not assigned entirely to the VM. The Hyperledger Fabric network is external.
+Gateway-01 and the commissioned three-node DigitalOcean POC remain on their normal production path. Gateway-01 keeps its health-gated SIM7600 LTE primary route and public MQTT/TLS ingress; `ulc-01`, `ulc-02`, and `ulc-03` keep their normal private-VPC and HA services. The Hyperledger Fabric network is the isolated external dependency.
 
 Therefore the expected behavior is:
 
 ```text
-LoRaWAN gateway -> stays powered
-local gateway-to-lab LAN -> stays available
-server Mosquitto -> stays available
+Gateway-01 + LTE/public MQTT ingress -> stays available
+Reserved-IP/cloud MQTT path -> stays available
+three-node cloud/VPC/HA services -> stay available
 ChirpStack -> stays available
 Node-RED -> stays available
 TimescaleDB -> keeps storing
-external Fabric -> may become unreachable
+external Fabric endpoint -> deliberately unreachable from active adapter worker(s)
 Fabric outbox -> queues pending work
-Internet returns -> adapter reconciles/drains without duplicate ledger state
+Fabric reachability returns -> adapter reconciles/drains without duplicate ledger state
 ```
 
 Do not claim Fabric transactions committed during the disconnected period if the external Fabric endpoint was unreachable.
 
 ## 1. Choose and rehearse one interruption method
 
-The preferred method is a router/hypervisor/firewall rule that blocks **Internet egress from the lab VM while preserving the local lab subnet**.
+The preferred method is a narrowly scoped, pre-rehearsed rule applied only to the active Fabric-adapter worker path that blocks the commissioned external Fabric endpoint while preserving Gateway-01 ingress, cloud/VPC connectivity, database/KMS access, and operator management.
 
-Do not disable the VM NIC if that also destroys gateway-to-server LAN traffic.
+Do not disable a cloud NIC, default route, Reserved-IP ingress, Gateway-01 LTE path, or broad Internet egress. Those actions would test a different failure mode.
 
 Before the experiment prove:
 
 ```text
-Gateway can reach server MQTT 8883 over LAN
-operator can reach server over LAN
+Gateway-01 production MQTT/TLS path through LTE/Reserved-IP is healthy
+operator management and cloud private-VPC paths are healthy
 external Fabric endpoint is reachable
 ```
 
 During the interruption prove:
 
 ```text
-Gateway can still reach server MQTT 8883 over LAN
-external Internet/Fabric endpoint is not reachable
+Gateway-01 production MQTT/TLS path through LTE/Reserved-IP remains healthy
+the commissioned external Fabric endpoint is not reachable from the selected active adapter worker, while unrelated Internet/cloud paths remain healthy
 ```
 
 Document the exact method used so all three runs use the same interruption.
 
-### Repeatable VM route method for the local lab
+### Legacy local-VM route method - DO NOT USE on the commissioned cloud POC
 
-When the VM and gateway share the same local subnet, removing only the VM's **default route** preserves the directly connected LAN route while removing Internet egress. Use the VM console or a management session that is definitely on the local subnet before doing this.
+The route-removal procedure below belongs only to the obsolete local single-VM laboratory topology and is retained for historical reproducibility. It is **not an authorized interruption method for the commissioned three-node cloud POC**. Before the actual resilience experiment, replace this legacy subsection with the exact external-Fabric endpoint isolation rule proven against the live Fabric handoff.
 
 Before counted runs, record:
 
-```bash
+```text
 mkdir -p "$HOME/chapter4-results/resilience"
 ip route show | tee "$HOME/chapter4-results/resilience/route-before-test.txt"
 ip route show default
@@ -94,7 +97,7 @@ default via <ROUTER_IP> dev <INTERFACE>
 
 Perform one **uncounted rehearsal**:
 
-```bash
+```text
 sudo ip route del default
 ip route
 ```
@@ -109,7 +112,7 @@ external Internet/Fabric endpoint is unreachable
 
 Restore the exact recorded route, for example:
 
-```bash
+```text
 sudo ip route add default via <ROUTER_IP> dev <INTERFACE>
 ```
 
@@ -121,7 +124,7 @@ Complete [Execution 01 - Common Run Preparation](01-common-run-preparation.md).
 
 Also confirm no pre-existing Fabric backlog:
 
-```bash
+```text
 docker compose exec telemetry-db \
   psql -U telemetry_admin -d lorawan_telemetry \
   -c "SELECT status,count(*) FROM telemetry.fabric_outbox GROUP BY status ORDER BY status;"
@@ -146,14 +149,14 @@ Use the same uninterrupted EMU-01 source capture and resource capture across all
 
 At the start of Phase 1:
 
-```bash
+```text
 date -u +%Y-%m-%dT%H:%M:%SZ | tee "$RUN_DIR/phase-1-normal-start.txt"
 ```
 
 1. create a unique run directory;
 2. start resource capture;
 3. record start UTC, first EMU-01 `test_sequence`, and first LoRaWAN frame counter;
-4. let EMU-01 run its frozen physical-sensor payload v2 every 15 seconds for 30 minutes;
+4. let EMU-01 run the exact frozen counted-test-15s artifact and 46-byte physical-sensor payload-v2 for 30 minutes;
 5. confirm local services and Fabric operate normally.
 
 At the end of this period record:
@@ -169,14 +172,14 @@ last frame counter
 
 At the 30-minute boundary, mark both sides of the transition **before** applying the frozen WAN-block method:
 
-```bash
+```text
 date -u +%Y-%m-%dT%H:%M:%SZ | tee "$RUN_DIR/phase-1-normal-end.txt"
 date -u +%Y-%m-%dT%H:%M:%SZ | tee "$RUN_DIR/phase-2-outage-start.txt"
 ```
 
 Do not stop source/resource capture between phases.
 
-Apply the pre-tested Internet block. Do not change the LoRaWAN radio, local LAN, Docker stack, EMU-01 firmware/payload, or its 15-second schedule.
+Apply the pre-tested Internet block. Do not change the LoRaWAN radio, local LAN, Docker stack, EMU-01 firmware/payload, or the archived counted-test-15s cadence profile.
 
 Immediately verify:
 
@@ -190,7 +193,7 @@ Let EMU-01 continue for 60 minutes. Retain its complete source log so the expect
 
 During the interruption, periodically verify:
 
-```bash
+```text
 docker compose ps mosquitto valkey chirpstack node-red telemetry-db openbao fabric-adapter
 
 docker compose exec telemetry-db \
@@ -212,7 +215,7 @@ Record the outbox state at the end of 60 minutes.
 
 At exactly 60 minutes of outage, mark outage end, restore only the frozen WAN route/rule, then mark recovery start:
 
-```bash
+```text
 date -u +%Y-%m-%dT%H:%M:%SZ | tee "$RUN_DIR/phase-2-outage-end.txt"
 # restore the exact frozen route/rule here
 date -u +%Y-%m-%dT%H:%M:%SZ | tee "$RUN_DIR/phase-3-recovery-start.txt"
@@ -220,7 +223,7 @@ date -u +%Y-%m-%dT%H:%M:%SZ | tee "$RUN_DIR/phase-3-recovery-start.txt"
 
 At the end of the 30-minute recovery observation:
 
-```bash
+```text
 date -u +%Y-%m-%dT%H:%M:%SZ | tee "$RUN_DIR/phase-3-recovery-end.txt"
 ```
 
@@ -230,13 +233,13 @@ Record reconnection UTC.
 
 Verify external Fabric reachability returns, then monitor:
 
-```bash
+```text
 docker compose logs -f --tail=100 fabric-adapter
 ```
 
 Periodically query:
 
-```bash
+```text
 docker compose exec telemetry-db \
   psql -U telemetry_admin -d lorawan_telemetry \
   -c "SELECT status,count(*) FROM telemetry.fabric_outbox GROUP BY status ORDER BY status;"
@@ -252,7 +255,7 @@ Continue normal EMU-01 operation for the full 30-minute recovery period and keep
 
 Export telemetry for the complete two-hour window:
 
-```bash
+```text
 docker compose exec -T telemetry-db \
   psql -U telemetry_admin -d lorawan_telemetry -At -F ',' \
   -c "SELECT event_key,time,received_at,dev_eui,gateway_id,f_cnt,payload_json->>'test_sequence' AS test_sequence FROM telemetry.uplinks WHERE dev_eui='<TEST_DEV_EUI>' AND time >= '<RUN_START_UTC>' AND time < '<RUN_END_UTC>' ORDER BY time,f_cnt;" \
@@ -261,7 +264,7 @@ docker compose exec -T telemetry-db \
 
 Export outbox/Fabric state:
 
-```bash
+```text
 docker compose exec -T telemetry-db \
   psql -U telemetry_admin -d lorawan_telemetry -At -F ',' \
   -c "SELECT event_key,source_event_key,status,digest_sha256,fabric_tx_id,created_at,submitted_at,committed_at FROM telemetry.fabric_outbox WHERE created_at >= '<RUN_START_UTC>' AND created_at < '<RUN_END_UTC>' ORDER BY created_at;" \
@@ -270,7 +273,7 @@ docker compose exec -T telemetry-db \
 
 Check duplicate application records:
 
-```bash
+```text
 docker compose exec telemetry-db \
   psql -U telemetry_admin -d lorawan_telemetry \
   -c "SELECT event_key,time,count(*) FROM telemetry.uplinks WHERE dev_eui='<TEST_DEV_EUI>' AND time >= '<RUN_START_UTC>' AND time < '<RUN_END_UTC>' GROUP BY event_key,time HAVING count(*) > 1;"
@@ -303,11 +306,11 @@ For each phase compare the EMU-01 source sequence against stored rows. Explicitl
 A resilience run is INVALID when:
 
 ```text
-the WAN cut also breaks the local gateway-to-server LAN
+the Fabric-endpoint block also breaks Gateway-01 ingress, cloud/VPC connectivity, or another unrelated required service
 EMU-01 source capture is lost
 EMU-01 stops for an unrelated reason
 the frozen interruption method was not applied for the full 60 minutes
-required local service fails for an unrelated setup problem
+a required non-Fabric service fails for an unrelated setup problem
 phase boundaries cannot be reconstructed from evidence
 ```
 

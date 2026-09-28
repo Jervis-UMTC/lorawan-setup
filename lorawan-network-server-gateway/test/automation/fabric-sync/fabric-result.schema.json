@@ -1,0 +1,144 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:zacharias:lorawan-fabric:transaction-result:1.0",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "study_id",
+    "test_id",
+    "run_id",
+    "trial_id",
+    "source_record_id",
+    "payload_sha256",
+    "normalized_status"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "1.0"
+    },
+    "study_id": {
+      "const": "zacharias-lorawan-fabric"
+    },
+    "test_id": {
+      "type": "string"
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "trial_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "phase": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "source_record_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "payload_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "fabric_action": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "submit_started_at_utc": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    },
+    "submit_finished_at_utc": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    },
+    "commit_observed_at_utc": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    },
+    "submit_latency_ms": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "minimum": 0
+    },
+    "commit_latency_ms": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "minimum": 0
+    },
+    "tx_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "validation_code": {
+      "type": [
+        "string",
+        "number",
+        "null"
+      ]
+    },
+    "block_number_or_ref": {
+      "type": [
+        "string",
+        "number",
+        "null"
+      ]
+    },
+    "normalized_status": {
+      "enum": [
+        "COMMITTED",
+        "REJECTED",
+        "UNAVAILABLE",
+        "DUPLICATE_SAME_HASH",
+        "CONFLICT_REJECTED",
+        "UNKNOWN"
+      ]
+    },
+    "raw_error_class": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "raw_error_message": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "observed_payload_sha256": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "duplicate_of_tx_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  },
+  "additionalProperties": true
+}

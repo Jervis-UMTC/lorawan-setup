@@ -1,0 +1,113 @@
+{
+  "schema_version": "1.0",
+  "source_of_truth": "test/ZACARIAS-CHAPTER3-TEST-METRICS-SOURCE-OF-TRUTH.md",
+  "P1": {
+    "repetitions": 3,
+    "duration_seconds": 1800,
+    "interval_seconds": 15,
+    "planned_attempts_per_run": 120
+  },
+  "P2": {
+    "rates_tps": [
+      0.06666666666666667,
+      1,
+      5,
+      10
+    ],
+    "duration_seconds": 300,
+    "repetitions": 3,
+    "matched_control": true,
+    "pair_order": {
+      "1": [
+        "control",
+        "fabric"
+      ],
+      "2": [
+        "fabric",
+        "control"
+      ],
+      "3": [
+        "control",
+        "fabric"
+      ]
+    },
+    "with_fabric_records": 14460
+  },
+  "R1": {
+    "repetitions": 3,
+    "phases_seconds": {
+      "normal": 1800,
+      "outage": 3600,
+      "recovery": 1800
+    },
+    "lte_path_proof_required": true
+  },
+  "R2": {
+    "normal": 10,
+    "outage": 10,
+    "reconcile_same_outage_records": 10
+  },
+  "A1": {
+    "conditions": 9,
+    "attempts_each": 10,
+    "total": 90
+  },
+  "A2": {
+    "conditions": 3,
+    "attempts_each": 10,
+    "total": 30
+  },
+  "S1": {
+    "counted_attempts": 40,
+    "gateway_reception_required": true
+  },
+  "S2": {
+    "status": "BLOCKED_BY_METHODOLOGY"
+  },
+  "F1": {
+    "rates_per_second": [
+      0,
+      10,
+      50
+    ],
+    "duration_seconds": 300,
+    "repetitions": 3,
+    "recovery_seconds": 300
+  },
+  "F2": {
+    "rates_per_second": [
+      0,
+      10,
+      50
+    ],
+    "duration_seconds": 300,
+    "repetitions": 3,
+    "recovery_seconds": 300
+  },
+  "I1": {
+    "control": 10,
+    "altered": 10
+  },
+  "I2": {
+    "control": 10,
+    "tampered": 10
+  },
+  "I3": {
+    "baseline": 10,
+    "duplicate": 10,
+    "conflict": 10
+  },
+  "T1": {
+    "trials": 10,
+    "records": 10
+  },
+  "T2": {
+    "trials": 10,
+    "records": 50,
+    "records_per_trial": 5
+  },
+  "traceability_total": {
+    "trials": 20,
+    "records": 60
+  }
+}

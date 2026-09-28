@@ -10,7 +10,7 @@ EMU-01
   + one complete A-set of Agriculture Kit sensors
   + final Arduino firmware
   + legitimate OTAA credentials
-  + physical sensor payload every 15 seconds
+  + physical sensor payload on the accepted production scheduler (60-second local sampling; nominal 5-minute uplinks ±15 seconds)
 
 SEC-02
   = RAK19007 + second RAK4631
@@ -276,7 +276,7 @@ Follow [01-configure-rak4631-emulators.md](01-configure-rak4631-emulators.md).
 The final firmware performs this loop:
 
 ```text
-Every 15 seconds
+Normal network uplinks nominally every 5 minutes with ±15-second jitter; local sampling every 60 seconds
       │
       ├─ read soil
       ├─ read UV
@@ -361,7 +361,7 @@ sensor library versions
 final firmware/source hash
 payload version = 2
 payload length = 46 bytes
-15-second interval
+production scheduler
 frozen plain AS923 configuration (`LORAMAC_REGION_AS923`; server/topic `as923`)
 EMU-01 DevEUI (non-secret)
 ChirpStack device-profile information

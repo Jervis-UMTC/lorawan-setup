@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:zacharias:lorawan-fabric:record-manifest:1.0",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "study_id",
+    "run_manifest_sha256",
+    "sealed_at_utc",
+    "record_count",
+    "records"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "1.0"
+    },
+    "study_id": {
+      "const": "zacharias-lorawan-fabric"
+    },
+    "run_manifest_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "sealed_at_utc": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "record_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "records": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "trial_id",
+          "source_record_id",
+          "authenticated_source_system_id",
+          "source_type",
+          "producer",
+          "produced_at_utc",
+          "schema_version",
+          "exact_payload_base64",
+          "payload_sha256"
+        ],
+        "properties": {
+          "trial_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "source_record_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "authenticated_source_system_id": {
+            "const": "lorawan-gateway-evidence"
+          },
+          "source_type": {
+            "type": "string",
+            "minLength": 1
+          },
+          "producer": {
+            "type": "string",
+            "minLength": 1
+          },
+          "produced_at_utc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "schema_version": {
+            "type": "string",
+            "minLength": 1
+          },
+          "exact_payload_base64": {
+            "type": "string",
+            "minLength": 1
+          },
+          "payload_sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "expected_fabric_status": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": true
+}

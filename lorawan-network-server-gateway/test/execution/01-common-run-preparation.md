@@ -1,6 +1,9 @@
 # Execution 1. Common Run Preparation and Evidence Capture
+> **Reference procedure only.** Executable operator commands are published only in `chapters/lorawan_research_test_manual_final.md` after live qualification. The fenced snippets below are preserved as implementation/reference text and must not be copied as current commands.
 
 This is the operating procedure used before every counted experiment. Complete the full setup once, then repeat the short preflight and capture steps for each experiment group.
+
+> **Current-cloud override:** the commissioned dissertation system is Gateway-01 plus the three-node DigitalOcean POC (`ulc-01`, `ulc-02`, `ulc-03`). Any remaining `/opt/lorawan-lab`, single-VM, `docker compose exec telemetry-db`, or “seven required services” examples below are legacy laboratory examples and are **not authoritative for counted production-path evidence**. For the current system, freeze and inspect the live distributed placement recorded in the cloud-production checkpoint; query `lorawan_telemetry` through the active Spilo/PostgreSQL deployment; and retain per-node health/resource evidence. For `RUN_SCOPE=LORAWAN_ONLY`, Fabric-adapter standby/pending outbox state is not a blocker, but Gateway-01, LTE/public MQTT ingress, ChirpStack, Node-RED/TimescaleDB observation, clocks, and evidence capture are required. Fabric-dependent scopes still require full-stack GO and a confirmed Fabric control.
 
 ## 1. Freeze the test configuration
 
@@ -8,7 +11,7 @@ Do not change images, flows, schemas, credentials, region settings, payload form
 
 On the server VM:
 
-```bash
+```text
 cd /opt/lorawan-lab
 mkdir -p "$HOME/chapter4-results/_configuration"
 docker compose config > "$HOME/chapter4-results/_configuration/compose-baseline.yml"
@@ -36,7 +39,7 @@ Fabric contract/adapter version
 
 ## 2. Create the complete result tree once
 
-```bash
+```text
 mkdir -p "$HOME/chapter4-results"/{baseline,authentication,replay-spoofing,integrity,traceability,flooding,resilience,summaries,_invalid,_safety-backup}
 ```
 
@@ -68,22 +71,34 @@ Do not delete the invalid attempt's evidence.
 
 ## 4. Confirm clocks before the experiment group
 
+For the current commissioned system, run the automated recorder preflight first. It performs the live server clock comparison and fails closed when source chronology is unsafe:
+
+```text
+python .\lorawan-network-server-gateway\test\automation\research-recorder\research_recorder.py preflight --require-emu --require-sec
+```
+
+The current hard gate requires the median midpoint-corrected cloud-minus-workstation offset to be within **±0.250 s**, with no more than **0.250 s** spread across the three ULC cloud nodes. It also requires Gateway-01 to be within **±1.500 s** of cloud UTC using three midpoint-corrected read-only gateway snapshots. A failed clock gate means **NO-GO for counted timing-sensitive work**; do not create a formal run and do not reinterpret the failure as a research result. The cockpit at `http://127.0.0.1:8765/` displays continuous staging estimates, but the recorder preflight is authoritative for starting a run.
+
+This workstation is domain joined. If its configured domain NTP source is wrong, fix the domain time source/synchronization rather than permanently overriding the workstation to an unrelated public NTP server. On 2026-09-14 the root PDC `svtgm-ad.ad.hijo.com` (`10.17.100.20`) was repaired with the dedicated `SmartAgri PDC Authoritative Time Source` GPO so that the forest-root PDC follows external NTP while domain members continue to use the AD hierarchy. The fix survived a deliberate `gpupdate /force`, W32Time restart, and rediscovery cycle.
+
+A full post-repair recorder preflight on 2026-09-14 returned `CLOCK_GATE=PASS`: workstation-to-cloud skew `+0.036231 s`, cloud-node spread `0.009252 s`, and Gateway-01-to-cloud skew `-0.373203 s`. Gateway-01 also had an active LTE/QMI address and LTE default route with established production MQTT/TLS sessions. These values are validation evidence, not permanent constants; every counted experiment group must still run a fresh preflight and pass the same hard limits before recording data.
+
 On the server VM:
 
-```bash
+```text
 date -u
 timedatectl status
 ```
 
 On the gateway:
 
-```sh
+```text
 date -u
 ```
 
 On the test laptop:
 
-```bash
+```text
 date -u
 ```
 
@@ -93,7 +108,7 @@ The EMU-01 serial log is authoritative for scheduled `test_sequence`, sampled ph
 
 ### Server VM
 
-```bash
+```text
 cd /opt/lorawan-lab
 free -h
 docker compose ps
@@ -105,7 +120,7 @@ Pass only when the seven required services are running and no required service i
 
 ### Gateway
 
-```sh
+```text
 monit status
 logread -e chirpstack-concentratord | tail -50
 logread -e chirpstack-mqtt-forwarder | tail -50
@@ -125,7 +140,10 @@ correct AS923 band
 joined = yes
 payload version = 2
 sensor validity bitmap = 0x007F
-15-second schedule active
+EMU01_TRAFFIC_PROFILE=COUNTED_TEST_15S
+EMU01_SAMPLE_INTERVAL_MS=15000
+EMU01_NORMAL_TX_INTERVAL_MS=15000
+EMU01_TX_JITTER_MS=0
 test_sequence increasing normally
 ```
 
@@ -133,13 +151,15 @@ test_sequence increasing normally
 
 Keep SEC-02 idle unless the experiment explicitly uses it. Confirm it does not contain legitimate EMU-01 root/session keys.
 
+Retain the EMU-01 boot banner with run evidence. A 15-second-looking stream without the explicit counted-test banner is not sufficient. If it reports `PRODUCTION_5MIN`, stop and load the archived counted-test artifact before starting the counted window.
+
 ## 6. Run one known-good control before the group
 
 Generate one real EMU-01 uplink and prove it reaches the normal path.
 
 On the server:
 
-```bash
+```text
 docker compose exec telemetry-db \
   psql -U telemetry_admin -d lorawan_telemetry \
   -c "SELECT event_key,time,dev_eui,gateway_id,f_cnt,payload_json->>'test_sequence' AS test_sequence FROM telemetry.uplinks ORDER BY time DESC LIMIT 5;"
@@ -157,7 +177,7 @@ If this control fails, stop. Repair the normal path before starting a security/f
 
 For each measured run:
 
-```bash
+```text
 GROUP='<GROUP>'
 RUN_ID='<RUN_ID>'
 RUN_DIR="$HOME/chapter4-results/$GROUP/$RUN_ID"
@@ -166,7 +186,7 @@ mkdir -p "$RUN_DIR"
 
 Create a run metadata file before applying the test condition:
 
-```bash
+```text
 cat > "$RUN_DIR/run-meta.txt" <<EOF
 run_id=$RUN_ID
 group=$GROUP
@@ -176,7 +196,13 @@ gateway_eui=<GATEWAY_EUI>
 test_dev_eui=<EMU01_DEV_EUI>
 payload_version=2
 sensor_validity_expected=0x007F
+emu_profile=counted-test-15s
 emu_interval_seconds=15
+emu_payload_version=2
+emu_payload_bytes=46
+emu_boot_profile=COUNTED_TEST_15S
+emu_build_artifact_sha256=<SHA256>
+emu_build_record=<ARCHIVED_BUILD_RECORD>
 EOF
 ```
 
@@ -186,7 +212,7 @@ Do not put secrets in `run-meta.txt`.
 
 Record the start time first:
 
-```bash
+```text
 RUN_START_UTC="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 printf '%s\n' "$RUN_START_UTC" | tee "$RUN_DIR/start-utc.txt"
 ip -s link > "$RUN_DIR/network-before.txt"
@@ -194,7 +220,7 @@ ip -s link > "$RUN_DIR/network-before.txt"
 
 Start server/container sampling every five seconds:
 
-```bash
+```text
 (
   printf 'timestamp,container,cpu,memory,memory_percent\n'
   while true; do
@@ -212,7 +238,7 @@ printf '%s\n' "$RESOURCE_LOG_PID" > "$RUN_DIR/docker-stats.pid"
 
 Use the logger prepared in [Test Tools Preparation](../preparation/tools/01-prepare-test-tools.md):
 
-```sh
+```text
 /tmp/resource-log.sh /tmp/<RUN_ID>-gateway-resource.csv &
 echo $! > /tmp/gateway-resource.pid
 ```
@@ -270,7 +296,7 @@ Record the exact time the condition starts when timing matters.
 
 At the end of the run:
 
-```bash
+```text
 RUN_END_UTC="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 printf '%s\n' "$RUN_END_UTC" | tee "$RUN_DIR/end-utc.txt"
 
@@ -281,7 +307,7 @@ ip -s link > "$RUN_DIR/network-after.txt"
 
 Stop the gateway resource logger when used:
 
-```sh
+```text
 kill "$(cat /tmp/gateway-resource.pid)" 2>/dev/null || true
 rm -f /tmp/gateway-resource.pid
 ```
@@ -290,7 +316,7 @@ rm -f /tmp/gateway-resource.pid
 
 Use the recorded start time:
 
-```bash
+```text
 docker compose logs --since "$RUN_START_UTC" \
   mosquitto chirpstack node-red telemetry-db openbao fabric-adapter \
   > "$RUN_DIR/server.log"
@@ -302,7 +328,7 @@ Save the matching gateway log window as `gateway.log`. Do not copy private keys 
 
 For experiments made of individual attempts, create a header before the first trial:
 
-```bash
+```text
 printf '%s\n' 'trial_id,layer,test_condition,expected_result,actual_result,start_utc,end_utc,device_eui,frame_counter_or_event_key,test_sequence,gateway_received,application_reached,database_changed,fabric_tx_id,response_or_verification_time,trial_status,log_reference,notes' \
   > "$RUN_DIR/trial-results.csv"
 ```
@@ -314,7 +340,7 @@ Append one row immediately after each trial while evidence is fresh.
 A run/trial is **INVALID** when any of these occur:
 
 - the attack/test packet never reached the layer whose decision is being measured;
-- EMU-01 stopped/reset/departed from the 15-second schedule for an unrelated reason;
+- EMU-01 stopped/reset/departed from the frozen 15-second counted-test cadence for an unrelated reason;
 - a required service restarted or was OOM-killed for an unrelated reason;
 - the generator produced the wrong rate/credentials/fixture;
 - timestamps required for the metric cannot be correlated;
@@ -347,7 +373,7 @@ The next counted condition starts only after one normal EMU-01 control uplink su
 
 Before controlled database tampering:
 
-```bash
+```text
 mkdir -p "$HOME/chapter4-results/_safety-backup"
 docker compose exec -T telemetry-db \
   pg_dump -U telemetry_admin -d lorawan_telemetry -Fc \

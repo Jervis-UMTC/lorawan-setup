@@ -4,17 +4,19 @@ This file freezes the **permanent physical slot assignment** for the RAK19001 us
 
 Do not choose slots ad hoc during assembly. Use this map unless the actual installed hardware revision or the current RAK WisBlock Pin Mapper reports a conflict. If that happens, stop, record the mapper result, and revise the documented baseline before continuing.
 
+**Layout review 2026-09-02:** RAK12010/VEML7700 was moved from lower-side Sensor F to Sensor B. RAK12010 is officially valid in A-F and its WisConnector uses only I2C, `3V3_S`, and GND, so it does not consume Slot-B `WB_IO2` as an interrupt. The change preserves `WB_IO2` as the shared `3V3_S` enable, improves optical exposure, and leaves F as a reserve. The final firmware is I2C-based for VEML7700, so no code pin change is required; the Pin Mapper record and physical/preflight verification must use this revised map.
+
 ## Final permanent map
 
 ```text
 RAK19001 / EMU-01
 
 Sensor Slot A  -> RAK1903   OPT3001 ambient light
-Sensor Slot B  -> EMPTY     reserved / do not use
+Sensor Slot B  -> RAK12010  VEML7700 ambient light
 Sensor Slot C  -> RAK12019  UV sensor
 Sensor Slot D  -> RAK12011  barometer + temperature
 Sensor Slot E  -> RAK1906   BME680 environmental sensor
-Sensor Slot F  -> RAK12010  VEML7700 ambient light
+Sensor Slot F  -> EMPTY     reserve / do not populate
 
 WisIO Slot 1   -> RAK12023 -> one RAK12035 soil probe
 WisIO Slot 2   -> RAK12005 -> RAK12030 rain pad
@@ -38,8 +40,8 @@ This diagram is a logical slot map. Follow the **A-F / WisIO silkscreen on the a
   │    ambient light         │        │ RAK12023                 │
   │    INT -> WB_IO1         │        │   │                      │
   │                          │        │   └──> RAK12035 SOIL     │
-  │ B  EMPTY                 │        │       I2C1 + WB_IO4      │
-  │    reserve WB_IO2        │        │                          │
+  │ B  RAK12010 VEML7700     │        │       I2C1 + WB_IO4      │
+  │    I2C + 3V3_S only      │        │                          │
   │                          │        │ WisIO 2                  │
   │ C  RAK12019 UV           │        │ RAK12005                 │
   │    INT -> WB_IO3         │        │   │                      │
@@ -50,8 +52,8 @@ This diagram is a logical slot map. Follow the **A-F / WisIO silkscreen on the a
   │ E  RAK1906 BME680        │
   │    I2C only              │
   │                          │
-  │ F  RAK12010 VEML7700     │
-  │    I2C only              │
+  │ F  EMPTY / RESERVE       │
+  │    WB_IO6 kept for rain  │
   └─────────────┬─────────────┘
                 │
                 ▼
@@ -71,24 +73,24 @@ The RAK19001 slot-to-default GPIO mapping used by interrupt-capable WisBlock Sen
 | Sensor slot | Default slot GPIO | Decision in this project |
 |---|---:|---|
 | A | `WB_IO1` | RAK1903 |
-| B | `WB_IO2` | **EMPTY** |
+| B | `WB_IO2` | RAK12010; I2C + `3V3_S` only, no interrupt claim on `WB_IO2` |
 | C | `WB_IO3` | RAK12019 |
 | D | `WB_IO5` | RAK12011 |
 | E | `WB_IO4` | RAK1906, which does not require the slot interrupt GPIO |
-| F | `WB_IO6` | RAK12010, which does not require the slot interrupt GPIO |
+| F | `WB_IO6` | **EMPTY / reserve**; `WB_IO6` remains the rain-output role |
 
-### Reason 1 - Slot B stays empty
+### Reason 1 - Slot B is the best place for RAK12010
 
-`WB_IO2` controls the RAK19001 `3V3_S` switched sensor-power rail. The project therefore does not place an interrupt-dependent sensor in Slot B.
+`WB_IO2` controls the RAK19001 `3V3_S` switched sensor-power rail, so Slot B must not host a module that needs its slot GPIO as an interrupt or independent output.
 
-Leaving B empty gives the integrated firmware one simple rule:
+RAK12010 is a special safe case: its WisConnector uses only I2C, `3V3_S`, and GND. It does not connect an interrupt to Slot-B `WB_IO2`. Therefore the integrated firmware still has one simple rule:
 
 ```text
 WB_IO2 = shared 3V3_S power control
 not a sensor interrupt line
 ```
 
-This also preserves one physical Sensor slot as a troubleshooting/reserve position.
+Using B for VEML7700 is better than the old F placement because B is on the accessible/top side of the base and avoids making a light measurement depend on a lower-side optical path. Sensor F becomes the troubleshooting/reserve slot instead.
 
 ### Reason 2 - The interrupt-capable modules use A, C, and D
 
@@ -125,13 +127,11 @@ Therefore Sensor Slot E is **not** used for an interrupt-dependent module in thi
 
 RAK1906 is safe in E because the BME680 module uses I2C plus power/ground and does not require the slot GPIO for its normal sensor readings.
 
-### Reason 4 - Rain uses WB_IO6
+### Reason 4 - Rain uses WB_IO6, so F stays empty
 
 RAK12005 exposes its rain/water digital output on `WB_IO6`.
 
-Therefore Sensor Slot F is **not** used for an interrupt-dependent module in this build, because a typical slot-F interrupt maps to `WB_IO6`.
-
-RAK12010 is safe in F because its VEML7700 communication is I2C based and the normal measurement path does not require the slot GPIO.
+Sensor Slot F is therefore not used for an interrupt-dependent module. RAK12010 would be electrically safe in F because it does not use the slot GPIO, but F is the lower-side position and is a worse optical location. Moving VEML7700 to B improves the light path and leaves F empty while `WB_IO6` remains unambiguously the rain-output role.
 
 ## Environmental placement decisions
 
@@ -157,11 +157,13 @@ RAK12019 is restricted to Sensor C-F. Slot C is selected because:
 - Slot C can be oriented outward when the base/mechanical build permits it;
 - the UV optical surface can be kept clear of the core, antenna cable, and enclosure wall.
 
+Prefer the outward/sticking-out orientation described by RAK for Slot C. If the final enclosure still blocks the UV field of view, keep the **electrical Slot-C assignment** and use a compatible 24-pin sensor-extension strategy rather than moving RAK12019 to E/F, where its interrupt would collide with the soil/rain GPIO roles. RAK19005 is RAK's 24-pin sensor extension intended to move environmental sensors away from the base; confirm compatibility with the installed module/cable revision before adopting it.
+
 ### RAK12011 in Slot D
 
 RAK12011 works on A and C-F, but not B. Slot D gives it `WB_IO5`, which is not consumed by the soil or rain IO modules.
 
-Keep the pressure sensing area open to ambient air. Water tolerance of the sensor module does **not** make the RAK19001 base waterproof.
+Keep the pressure sensing area open to ambient air. Water tolerance of the sensor module does **not** make the RAK19001 base waterproof. If enclosure pressure equalization is poor, RAK explicitly documents RAK19005 as an option to position RAK12011 away from the base while preserving its Slot-D electrical assignment.
 
 ### RAK1906 in Slot E
 
@@ -178,11 +180,11 @@ never use a just-powered reading as the environmental baseline
 
 If later enclosure measurements prove base-board heat materially biases the BME680, solve that mechanically (airflow, enclosure spacing, or a supported extension strategy) and document the change; do not silently move the module to a GPIO-conflicting slot.
 
-### RAK12010 in Slot F
+### RAK12010 in Slot B
 
-RAK12010 supports A-F and uses I2C for the VEML7700 measurement. Slot F therefore avoids consuming the interrupt GPIOs required by A/C/D.
+RAK12010 supports A-F. Its WisConnector uses only I2C, `3V3_S`, and GND, so Slot B does not turn `WB_IO2` into a sensor interrupt and does not conflict with the shared `3V3_S` enable.
 
-Keep the optical surface unobstructed and record it separately from the RAK1903 OPT3001 reading.
+B is preferred over F because it keeps the VEML7700 on the accessible/top side of the RAK19001. Keep its optical surface unobstructed and record it separately from the RAK1903 OPT3001 reading. Sensor F remains empty/reserve.
 
 ## WisIO Slot assignment
 
@@ -199,18 +201,20 @@ Do not swap them after the testbed baseline is frozen, even though the two base-
 
 ## Shared 3V3_S rule
 
-RAK12023 and RAK12005 use the switched `3V3_S` sensor-power rail, controlled through `WB_IO2` on the base/core interface.
+`WB_IO2` controls the shared `3V3_S` rail used by the switched-power sensor modules. In this build that includes RAK12010, RAK12019, RAK12011, and RAK12023. RAK12005 exposes both 3V3 and optional `3V3_S`; its datasheet states the default supply is 3V3, so do not claim the rain module is on the switched rail unless the actual board configuration is verified.
 
-Treat it as a shared rail:
+Treat `WB_IO2` as one shared rail control:
 
 ```text
 WB_IO2 HIGH/active as required
       │
-      ├── powers switched sensor rail used by soil path
-      └── powers switched sensor rail used by rain path
+      ├── RAK12010 VEML7700
+      ├── RAK12019 UV
+      ├── RAK12011 barometer
+      └── RAK12023 soil interface
 ```
 
-Do not write firmware that assumes `WB_IO2` independently powers only one of these modules.
+Do not write firmware that assumes `WB_IO2` independently powers only one sensor.
 
 ## Pin Mapper values to enter
 
@@ -221,11 +225,11 @@ WisBase        = RAK19001
 WisCore        = RAK4631
 
 Sensor Slot A  = RAK1903
-Sensor Slot B  = NA / unused
+Sensor Slot B  = RAK12010
 Sensor Slot C  = RAK12019
 Sensor Slot D  = RAK12011
 Sensor Slot E  = RAK1906
-Sensor Slot F  = RAK12010
+Sensor Slot F  = NA / unused
 
 WisIO Slot 1   = RAK12023
 WisIO Slot 2   = RAK12005
@@ -244,7 +248,7 @@ WB_IO5 -> RAK12011 interrupt/output
 WB_IO6 -> RAK12005 rain digital output
 ```
 
-This is why the map uses every available `WB_IO1` through `WB_IO6` exactly once by role and leaves Sensor B physically unused.
+This is why the interrupt/output roles remain clean: `WB_IO1/3/5` belong to OPT/UV/BARO, `WB_IO4/6` belong to soil/rain, and `WB_IO2` remains the shared `3V3_S` enable. RAK12010 can occupy B without claiming `WB_IO2`; F is the physical reserve.
 
 ## Mapper acceptance record
 
@@ -260,11 +264,11 @@ Record:
 WisBase=RAK19001
 WisCore=RAK4631
 Sensor_A=RAK1903
-Sensor_B=NA
+Sensor_B=RAK12010
 Sensor_C=RAK12019
 Sensor_D=RAK12011
 Sensor_E=RAK1906
-Sensor_F=RAK12010
+Sensor_F=NA
 WisIO_1=RAK12023
 WisIO_2=RAK12005
 WB_IO1=RAK1903_INT
@@ -286,11 +290,11 @@ Once this map passes integrated sensor verification and preflight:
 
 ```text
 A = RAK1903
-B = EMPTY
+B = RAK12010
 C = RAK12019
 D = RAK12011
 E = RAK1906
-F = RAK12010
+F = EMPTY
 IO1 = RAK12023
 IO2 = RAK12005
 ```
@@ -319,3 +323,4 @@ Changing a slot can change the GPIO seen by firmware, mechanical exposure, and m
 - RAK12010 datasheet: `https://docs.rakwireless.com/product-categories/wisblock/rak12010/datasheet/`
 - RAK12023 datasheet: `https://docs.rakwireless.com/product-categories/wisblock/rak12023/datasheet/`
 - RAK12005 datasheet: `https://docs.rakwireless.com/product-categories/wisblock/rak12005/datasheet/`
+- RAK19005 sensor extension: `https://docs.rakwireless.com/product-categories/wisblock/rak19005/overview/`

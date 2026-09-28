@@ -1,0 +1,108 @@
+{
+  "checks": {
+    "a1_nine_conditions": true,
+    "a2_counts_frozen": true,
+    "contract_self_validation": true,
+    "f1_target_broker_counter_source": true,
+    "f2_generator_target_rates": true,
+    "i1_pre_alteration_hash_required": true,
+    "i2_pre_tamper_anchor_required": true,
+    "i3_post_attempt_query_required": true,
+    "p2_open_loop_frozen": true,
+    "p2_pair_order_frozen": true,
+    "p2_sync_manifest_and_bad_hash_guard": true,
+    "r1_live_route_gate_implemented": true,
+    "r1_lte_no_fallback_contract": true,
+    "r2_exact_same_set_guard": true,
+    "r2_query_before_resubmit_source_guard": true,
+    "s1_gateway_reception_required": true,
+    "s2_blocked": true,
+    "t1_formal_count": true,
+    "t2_non_overlap_guard": true,
+    "traceability_totals": true
+  },
+  "generated_utc": "2026-09-28T00:35:24Z",
+  "status": "PASS",
+  "tests": {
+    "A1": {
+      "detail": "Non-counted real LoRaWAN authentication rehearsal passed 3/3 (valid OTAA, wrong AppKey, unregistered DevEUI); isolated MQTT broker rehearsal passed 30/30 with observer delivery, zero false acceptance, and inactive-listener cleanup. The Fabric authentication third and full nine-condition x10 synchronized orchestration remain uncommissioned; counted A1 is not released.",
+      "implementation_level": "MQTT_LIVE_COMMISSIONED_LORAWAN_FABRIC_PENDING",
+      "runner_status": "CAPTURE_READY"
+    },
+    "A2": {
+      "detail": "A controlled missing-required-endorsement fixture with world-state pre/post proof is required.",
+      "implementation_level": "CONTRACT_READY_FABRIC_FIXTURE_PENDING",
+      "runner_status": "HARNESS_REQUIRED"
+    },
+    "F1": {
+      "detail": "Real non-counted 0/10/50 connection/s cloud-UTC rehearsal passed with legitimate EMU-01 delivery in every window and zero invalid acceptance (20260921-141932); complete formal 300-second x3-repetition release remains withheld.",
+      "implementation_level": "HARNESS_READY_LIVE_COMMISSIONING_PENDING",
+      "runner_status": "CAPTURE_READY"
+    },
+    "F2": {
+      "detail": "Real non-counted 0/10/50 malformed-message/s window results passed, legitimate EMU-01 delivered in each, all 186 sealed evidence files verified (20260921-143817). However, the outer MCP command timed out after the windows before final session/exit and needed independent listener cleanup; exact one-block completion and formal 300-second x3-repetition release remain withheld.",
+      "implementation_level": "HARNESS_READY_LIVE_COMMISSIONING_PENDING",
+      "runner_status": "CAPTURE_READY"
+    },
+    "I1": {
+      "detail": "Controlled post-hash/pre-storage alteration fixture is required.",
+      "implementation_level": "CONTRACT_READY_HARNESS_PENDING",
+      "runner_status": "HARNESS_REQUIRED"
+    },
+    "I2": {
+      "detail": "Live EMU-01 Fabric outbox uses telemetry-attestation-v2 and immutable HRC finalized_payload anchors; existing I2 Go read-only recompute/Python scorer are v1-only synthetic code (explicit v2 fail-closed). Requires verified gateway lineage, separate original exact-payload Fabric vs sealed-evidence canonical digest checks, controlled isolated tamper/restore and independent HRC readback before live release.",
+      "implementation_level": "CONTRACT_READY_HARNESS_PENDING",
+      "runner_status": "HARNESS_REQUIRED"
+    },
+    "I3": {
+      "detail": "Dedicated synthetic Fabric duplicate/overwrite mutation namespace and world-state query proof are required.",
+      "implementation_level": "CONTRACT_READY_FABRIC_FIXTURE_PENDING",
+      "runner_status": "HARNESS_REQUIRED"
+    },
+    "P1": {
+      "detail": "Complete normal-operation orchestration is commissioned: warm-up gating, closed 30-minute measurement window, calibrated source/ChirpStack/database correlation, bounded Fabric settlement, sealed evidence, and strict post-run validation.",
+      "implementation_level": "READY",
+      "runner_status": "READY"
+    },
+    "P2": {
+      "detail": "LoRaWAN-side synchronized manifests, deterministic matched payload sets, frozen control/Fabric ordering, and fail-closed Fabric-result validation are implemented; the real production-path open-loop Fabric injector and live commissioning are still required.",
+      "implementation_level": "SYNC_READY_INJECTOR_PENDING",
+      "runner_status": "HARNESS_REQUIRED"
+    },
+    "PRE": {
+      "detail": "Full-stack preflight is implemented by the recorder.",
+      "implementation_level": "READY",
+      "runner_status": "READY"
+    },
+    "R1": {
+      "detail": "The LTE-only WAN/no-fallback route gate is implemented and live-proven; full evidence capture works. Release remains withheld until the 30m/60m/30m outage/restore action is deployed through a dedicated gateway mutation path that preserves br-lan management and local LoRa capture.",
+      "implementation_level": "CONTRACT_READY_HARNESS_PENDING",
+      "runner_status": "CAPTURE_READY"
+    },
+    "R2": {
+      "detail": "Real non-counted two-record Fabric Prepare outage/reconciliation passed: 2/2 same-source keys and digests confirmed after restore, 56.370-second recovery, adapter-only rule removed (20260921-160954). The complete ten-record formal R2 and independently queried HRC ledger / prepared-Tx runtime proof remain uncommissioned.",
+      "implementation_level": "HARNESS_READY_LIVE_COMMISSIONING_PENDING",
+      "runner_status": "HARNESS_REQUIRED"
+    },
+    "S1": {
+      "detail": "Real non-counted replay 1/1 and modified-MIC DevAddr spoof 1/1 were independently RAK5146-received with zero accepted application/DB/outbox rows, and SEC-01 was restored. Explicit MIC-error logs, 40-attempt controls and one-block formal orchestration remain uncommissioned; counted S1 is not released.",
+      "implementation_level": "VALIDITY_RULE_FROZEN_ORCHESTRATOR_PENDING",
+      "runner_status": "CAPTURE_READY"
+    },
+    "S2": {
+      "detail": "Chapter 3 does not define count, duration, injection boundary, acceptance rule, or analysis formula for the application-layer duplicate/replay test.",
+      "implementation_level": "BLOCKED_BY_METHODOLOGY",
+      "runner_status": "METHODOLOGY_REQUIRED"
+    },
+    "T1": {
+      "detail": "Complete ten-record persisted source-to-DB-to-Fabric retrieval/scoring harness exists; release is withheld until a clean live commissioning rehearsal passes.",
+      "implementation_level": "HARNESS_READY_LIVE_COMMISSIONING_PENDING",
+      "runner_status": "CAPTURE_READY"
+    },
+    "T2": {
+      "detail": "Complete ten non-overlapping x five-record chronology reconstruction/scoring harness exists; release is withheld until a clean live commissioning rehearsal passes.",
+      "implementation_level": "HARNESS_READY_LIVE_COMMISSIONING_PENDING",
+      "runner_status": "CAPTURE_READY"
+    }
+  }
+}

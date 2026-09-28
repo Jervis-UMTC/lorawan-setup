@@ -596,7 +596,7 @@ Create `/opt/lorawan-lab/configuration/chirpstack/chirpstack.toml`:
 level = "info"
 
 [postgresql]
-dsn = "postgresql://chirpstack:chirpstack_pass@telemetry-db:5432/chirpstack?sslmode=disable"
+dsn = "postgresql://chirpstack:<PROTECTED_LAB_DB_SECRET>@telemetry-db:5432/chirpstack?sslmode=disable"
 max_open_connections = 10
 
 [redis]

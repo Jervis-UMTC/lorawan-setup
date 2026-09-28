@@ -1,4 +1,5 @@
 # Execution 2. Normal-Operation Performance
+> **Reference procedure only.** Executable operator commands are published only in `chapters/lorawan_research_test_manual_final.md` after live qualification. The fenced snippets below are preserved as implementation/reference text and must not be copied as current commands.
 
 Use this test to establish the baseline before security, flooding, or outage experiments.
 
@@ -7,7 +8,7 @@ Use this test to establish the baseline before security, flooding, or outage exp
 ```text
 Runs:             3
 Duration per run: 30 minutes
-EMU-01 interval:  15 seconds
+EMU-01 profile:   counted-test-15s (15-second normal uplinks; production profile is not used in counted windows)
 Expected readings: about 120 per run
 Attack traffic:   none
 Service failures: none
@@ -31,7 +32,7 @@ Complete [Execution 01 - Common Run Preparation](01-common-run-preparation.md), 
 ```text
 [ ] gateway acceptance passed
 [ ] server seven-service stack passed
-[ ] EMU-01 is joined and stable at 15 seconds
+[ ] EMU-01 is joined and stable on the archived counted-test-15s artifact
 [ ] SEC-02 is idle/off
 [ ] EMU-01 serial capture works
 [ ] server resource capture works
@@ -69,7 +70,7 @@ EMU-01 firmware/build identifier
 payload contract = Agriculture Kit physical-sensor v2 (46 bytes)
 first expected test_sequence
 first expected frame counter
-sensor-node interval = 15 s
+sensor-node profile = counted-test-15s; normal uplink interval = 15 s; payload-v2 = 46 bytes
 run start UTC
 ```
 
@@ -77,7 +78,7 @@ The EMU-01 sensor source log is authoritative for sequence assignment, sampled p
 
 ## 3. Start result capture
 
-```bash
+```text
 RUN_ID=baseline-run-1
 RUN_DIR="$HOME/chapter4-results/baseline/$RUN_ID"
 mkdir -p "$RUN_DIR"
@@ -88,7 +89,7 @@ Start the resource logger from [Execution 01](01-common-run-preparation.md).
 
 Save initial database counts:
 
-```bash
+```text
 docker compose exec -T telemetry-db \
   psql -U telemetry_admin -d lorawan_telemetry -At \
   -c "SELECT count(*) FROM telemetry.uplinks;" \
@@ -138,7 +139,7 @@ Record any EMU-01 `send_started=0`, reset, rejoin, or other source-side transmis
 
 At the end:
 
-```bash
+```text
 date -u +%Y-%m-%dT%H:%M:%SZ | tee "$RUN_DIR/end-utc.txt"
 ```
 
@@ -148,7 +149,7 @@ Stop the resource logger and save logs using [Execution 01](01-common-run-prepar
 
 Replace the placeholders with the exact run boundaries:
 
-```bash
+```text
 docker compose exec -T telemetry-db \
   psql -U telemetry_admin -d lorawan_telemetry -At -F ',' \
   -c "SELECT event_key,time,received_at,dev_eui,gateway_id,f_cnt,payload_json->>'test_sequence' AS test_sequence,rssi_dbm,snr_db FROM telemetry.uplinks WHERE dev_eui='<TEST_DEV_EUI>' AND time >= '<RUN_START_UTC>' AND time < '<RUN_END_UTC>' ORDER BY time;" \
@@ -157,7 +158,7 @@ docker compose exec -T telemetry-db \
 
 Check duplicates:
 
-```bash
+```text
 docker compose exec -T telemetry-db \
   psql -U telemetry_admin -d lorawan_telemetry \
   -c "SELECT event_key,time,count(*) FROM telemetry.uplinks WHERE dev_eui='<TEST_DEV_EUI>' AND time >= '<RUN_START_UTC>' AND time < '<RUN_END_UTC>' GROUP BY event_key,time HAVING count(*) > 1;" \
@@ -168,7 +169,7 @@ Required result: zero duplicate rows.
 
 ## 7. Export Fabric results
 
-```bash
+```text
 docker compose exec -T telemetry-db \
   psql -U telemetry_admin -d lorawan_telemetry -At -F ',' \
   -c "SELECT event_key,status,digest_sha256,fabric_tx_id,submitted_at,committed_at FROM telemetry.fabric_outbox WHERE created_at >= '<RUN_START_UTC>' AND created_at < '<RUN_END_UTC>' ORDER BY created_at;" \
@@ -267,7 +268,7 @@ A baseline run is valid when:
 
 ```text
 run lasted 30 minutes
-EMU-01 interval remained 15 seconds and payload/firmware stayed frozen
+EMU-01 remained on the exact archived counted-test-15s artifact; 46-byte payload-v2/radio/application configuration stayed frozen
 no attack/outage was introduced
 no required service restarted unexpectedly
 no OOM kill occurred

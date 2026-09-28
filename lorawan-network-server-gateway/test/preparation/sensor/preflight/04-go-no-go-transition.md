@@ -1,6 +1,6 @@
 # Sensor Preflight 4 - GO / NO-GO and Transition to Counted Tests
 
-This is the final sensor readiness gate.
+This is the final sensor readiness gate for the complete Chapter IV stack. It also records a narrower LoRaWAN-track decision so independent RF/LoRaWAN security experiments are not unnecessarily blocked by an external dependency downstream of ChirpStack.
 
 Do not fix hardware, reflash firmware, edit the codec, or change Node-RED while filling out this page. If something is wrong, record **NO-GO**, repair it, and rerun the affected preflight.
 
@@ -42,7 +42,7 @@ Require:
 [ ] LoRa antenna installed correctly
 [ ] ten consecutive source cycles captured
 [ ] sequence continuity passed
-[ ] 15-second scheduler passed
+[ ] production scheduler passed: ~60-second local sampling and normal uplinks within 285-315 seconds
 [ ] all normal validity bitmaps = 0x007F
 [ ] no unexplained reset
 ```
@@ -114,7 +114,7 @@ Before GO, confirm the test laptop/server can create the evidence required by Ex
 EMU-01 serial capture works
 server resource logger works
 gateway resource logger works
-UTC clocks can be inspected/correlated
+UTC clocks can be inspected/correlated; workstation/cloud offsets must be measured from exact payload matches before cross-host timing or PDR-window interpretation
 result directories are writable
 ```
 
@@ -138,17 +138,51 @@ gateway_eui=<real Gateway EUI>
 firmware_hash=<hash>
 payload_version=2
 payload_length=46
-normal_interval_seconds=15
+traffic_profile=production_5min
+local_sample_interval_seconds=60
+normal_interval_seconds=300
+normal_interval_jitter_seconds=15
+counted_test_interval_seconds=15
 last_preflight_test_sequence=<N>
 preflight_1_hardware_firmware=PASS|FAIL
 preflight_2_lorawan_chirpstack=PASS|FAIL
-preflight_3_application_path=PASS|FAIL
+preflight_3_application_path=PASS|BLOCKED|FAIL
 sec02_ready=yes|no
 evidence_tools_ready=yes|no
+external_fabric_condition=PASS|BLOCKED|NOT_APPLICABLE
 notes=<short explanation>
 ```
 
 Do not store any secret credential in this file.
+
+Also create the scoped LoRaWAN decision file:
+
+```text
+chapter4-results/_preflight/sensor/04-go-no-go/lorawan-track-status.txt
+```
+
+Use:
+
+```text
+LORAWAN_TRACK_STATUS=GO|NO-GO
+preflight_completed_utc=<UTC>
+EMU01_DEV_EUI=<non-secret DevEUI>
+gateway_eui=<real Gateway EUI>
+firmware_hash=<hash>
+payload_version=2
+payload_length=46
+preflight_1_hardware_firmware=PASS|FAIL
+preflight_2_lorawan_chirpstack=PASS|FAIL
+sec02_ready=yes|no
+sec02_raw_rf_rehearsal=PASS|FAIL
+evidence_tools_ready=yes|no
+full_stack_status=GO|NO-GO
+full_stack_blocker=<none|short external/downstream blocker>
+authorized_counted_scope=Execution 03 Part A; Execution 04
+notes=<short explanation>
+```
+
+Set `LORAWAN_TRACK_STATUS=GO` only when Preflight 1, Preflight 2, SEC-02 readiness/raw-RF rehearsal, and the required source/gateway/ChirpStack evidence tools pass. A downstream Fabric blocker may keep the full-stack status at NO-GO without invalidating this narrower LoRaWAN decision.
 
 ## GO decision
 
@@ -158,9 +192,9 @@ Write:
 SENSOR_PREFLIGHT_STATUS=GO
 ```
 
-only when every required check above passes.
+only when every required **full-stack** check above passes.
 
-A GO means:
+A full-stack GO means:
 
 ```text
 we have proven the final sensor hardware
@@ -197,7 +231,9 @@ SEC-02 contains the wrong credentials
 required evidence logger not working
 ```
 
-Do not reinterpret NO-GO as a failed dissertation trial. Preflight failures are setup defects and are repaired before counted testing begins.
+Do not reinterpret full-stack NO-GO as a failed dissertation trial. Preflight failures or blocked external dependencies are setup/readiness conditions, not counted outcomes.
+
+A full-stack NO-GO does **not** automatically forbid the scoped LoRaWAN security track. When `LORAWAN_TRACK_STATUS=GO`, only Execution 03 Part A and Execution 04 may proceed before Fabric activation. Those results remain valid counted LoRaWAN results because their decision point is Gateway-01/ChirpStack and their pass criteria do not require a successful Fabric commit. Do not use this exception to start any Fabric-dependent result.
 
 ## Step 7 - Freeze the transition point
 

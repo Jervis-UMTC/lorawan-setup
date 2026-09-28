@@ -5,10 +5,10 @@
 Grafana remains private on `ulc-03` and is not exposed on a public interface. The research workstation reaches it through an SSH local-forward only:
 
 - local Grafana health: `http://127.0.0.1:3000/api/health`
-- research dashboard: `http://127.0.0.1:3000/d/lorawan-research-cockpit/lorawan-research-test-cockpit?orgId=1&refresh=15s`
+- research dashboard: `http://127.0.0.1:3000/d/lorawan-research-cockpit/lorawan-research-test-cockpit?orgId=1&refresh=15s&from=now-6h&to=now`
 - local recorder cockpit: `http://127.0.0.1:8765/`
 
-The Grafana research dashboard UID is `lorawan-research-cockpit`. The commissioned dashboard has 14 panels and a 15-second refresh interval. Grafana authentication remains enabled; the tunnel does not bypass the normal login policy.
+The Grafana research dashboard UID is `lorawan-research-cockpit`. **Dated commissioned workstation-access checkpoint:** the dashboard at that checkpoint had 14 panels and a 15-second refresh interval. **Newer inspected repository source (2026-09-21):** `test/automation/research-recorder/grafana-research-cockpit.json` defines 21 panels and default `refresh=10s`. The URL above explicitly requests `refresh=15s`, which can override a dashboard's JSON default in that browser session. The latest source file has **not** been established as the live deployed version by this documentation audit; query the authenticated live dashboard UID and reconcile its panel count, refresh and source hash before claiming either is current. Grafana authentication remains enabled; the tunnel does not bypass the normal login policy.
 
 ## Tunnel identity and restriction
 

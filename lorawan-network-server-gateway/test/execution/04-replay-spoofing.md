@@ -1,6 +1,9 @@
 # Execution 4. LoRaWAN Replay and Spoofing
+> **Reference procedure only.** Executable operator commands are published only in `chapters/lorawan_research_test_manual_final.md` after live qualification. The fenced snippets below are preserved as implementation/reference text and must not be copied as current commands.
 
 Perform this only on the isolated/authorized LoRaWAN test environment.
+
+This is an independent counted LoRaWAN experiment and may start under `LORAWAN_TRACK_STATUS=GO` even while the full-stack status remains NO-GO solely because external Fabric is unavailable. Record `RUN_SCOPE=LORAWAN_ONLY`. A rejected replay/invalid-MIC frame is decided by ChirpStack before the application path, so a successful external Fabric commit is not part of the attack-decision prerequisite.
 
 ## Required design
 
@@ -90,6 +93,22 @@ Save the capture only in the protected test-result directory.
 
 This legitimate message is the control for that replay trial.
 
+The workstation helper `test/automation/research-recorder/sec02_replay.py` may build this fixture directly from the immutable Gateway-01 journal plus the correlated gateway MQTT evidence. The physical board labelled `SEC-01` by the operator is the same security-node role historically named `SEC-02` in this repository. The helper never provisions EMU-01 keys; it handles only already-captured ciphertext PHYPayload bytes and observed RF parameters.
+
+For a fresh uncounted rehearsal or a supervised counted trial, write the fixture under that run's protected `chapter4-results/` directory. The helper defaults to requiring the selected accepted EMU-01 packet to be at least three FCnt values behind the latest accepted EMU-01 FCnt and refuses capture otherwise:
+
+```text
+python .\test\automation\research-recorder\sec02_replay.py capture `
+  --output <RUN-DIR>\replay-R01\fixture.json `
+  --minimum-fcnt-age 3
+
+python .\test\automation\research-recorder\sec02_replay.py send `
+  --fixture <RUN-DIR>\replay-R01\fixture.json `
+  --dry-run
+```
+
+Only after the dry-run output is reviewed and the formal recorder is already retaining EMU-01, SEC, Gateway-01 and cloud evidence should the same `send` command be run without `--dry-run`. The helper returns the RUI3 security node to its parked AS923 OTAA state after the transmission attempt.
+
 ### Step A2 - Advance the legitimate frame counter
 
 Allow EMU-01 to transmit at least three additional uplinks. Confirm both `test_sequence` and the LoRaWAN frame counter advance beyond the captured value.
@@ -100,7 +119,7 @@ This makes the captured frame clearly old.
 
 Using SEC-02 in the raw LoRa P2P transmit mode prepared in [Sensor Preparation](../preparation/sensor/01-configure-rak4631-emulators.md), retransmit the **same captured LoRaWAN PHYPayload bytes** using the captured/legal RF parameters required for the gateway to receive it.
 
-Transmit in a quiet gap between EMU-01's scheduled 15-second uplinks when practical so an RF collision does not make the trial ambiguous. Do not stop frame-counter validation or change ChirpStack settings.
+Transmit in a quiet gap between EMU-01's scheduled 15-second **counted-test-profile** uplinks when practical so an RF collision does not make the trial ambiguous. Do not change the cadence profile, stop frame-counter validation, or alter ChirpStack settings.
 
 Do not rebuild, decrypt, re-encrypt, or modify the replay PHYPayload. Do not alter ChirpStack frame-counter settings. SEC-02 must not contain EMU-01's legitimate AppKey or session keys.
 
@@ -119,7 +138,7 @@ gateway received replay = yes
 new ChirpStack application uplink = no
 MQTT/Node-RED accepted event = no
 new TimescaleDB row from replay = no
-new Fabric transaction from replay = no
+new Fabric outbox/ledger work attributable to replay = no; when the external ledger is unavailable, prove the stronger upstream fact that no accepted application/DB/outbox event exists and record external-ledger verification as NOT_REQUIRED_FOR_REJECTED_FRAME
 ```
 
 Record the ChirpStack rejection/retransmission evidence and decision time when timestamps permit.
@@ -185,7 +204,7 @@ ChirpStack accepted application uplink = no
 MIC/authentication rejection evidence = yes
 MQTT/Node-RED accepted event = no
 TimescaleDB row = no
-Fabric transaction = no
+Fabric outbox/ledger work attributable to forged frame = no; when the external ledger is unavailable, prove no accepted application/DB/outbox event exists and record external-ledger verification as NOT_REQUIRED_FOR_REJECTED_FRAME
 ```
 
 Repeat until **10 received forged attempts** are recorded.
@@ -196,7 +215,7 @@ For every attack trial, use its time range, DevEUI, frame-counter/source identit
 
 Example inspection:
 
-```bash
+```text
 docker compose exec telemetry-db \
   psql -U telemetry_admin -d lorawan_telemetry \
   -c "SELECT event_key,time,dev_eui,f_cnt FROM telemetry.uplinks WHERE dev_eui='<TEST_DEV_EUI>' ORDER BY time DESC LIMIT 30;"
@@ -204,7 +223,7 @@ docker compose exec telemetry-db \
 
 Also inspect recent outbox rows:
 
-```bash
+```text
 docker compose exec telemetry-db \
   psql -U telemetry_admin -d lorawan_telemetry \
   -c "SELECT event_key,status,fabric_tx_id,created_at FROM telemetry.fabric_outbox ORDER BY created_at DESC LIMIT 30;"
@@ -249,7 +268,7 @@ all legitimate controls accepted
 all 10 received replay frames rejected before application processing
 all 10 received invalid-MIC frames rejected before application processing
 zero attack-created database rows
-zero attack-created Fabric transactions
+zero attack-created Fabric outbox jobs; zero attack-created Fabric ledger transactions when an external ledger is active. Under the current LoRaWAN-only scope, absence of any accepted application event and outbox job is sufficient downstream-propagation proof.
 ```
 
 Continue to [Execution 05 - Data Integrity](05-data-integrity.md).

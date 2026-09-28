@@ -204,11 +204,25 @@ RAK5146 can be proven to receive a SEC-02 raw transmission
 
 RUI3 provides P2P raw transmission through `AT+PSEND=<hex>` / `api.lora.psend(...)` on current firmware. Do not count the experiment merely because SEC-02 reports TX success; the RAK5146 gateway log must prove reception.
 
+**Security-node preparation status - updated 2026-09-03:** the operator-labelled `SEC-01` board is the single second-RAK4631 security role called `SEC-02` elsewhere in these manuals. It is now on RUI3 **4.2.4** after an official RAK4631-R USB DFU update. AS923-1 remains fixed as `AT+BAND=8`. The newer runtime exposes the public syncword/IQ controls required by the raw-LoRaWAN fixture. An uncounted P2P rehearsal at the live AS923 923.2 MHz / SF7 / BW125 parameters used public syncword `3444`; SEC reported `TXP2P DONE` and Gateway-01 independently received raw uplink ID `1355632844`, which was not an EMU-01 application uplink. Raw-RF reception readiness is therefore **PASS**. SEC was restored afterward to LoRaWAN/OTAA/Class-A, `NJS=0`, all-zero DevEUI, with no EMU-01 credential/session material installed. Invalid-OTAA and counted replay/spoof attempts remain test-time fixtures; use their exact authorized vectors rather than guessing.
+
 SEC-02 must not contain EMU-01's legitimate AppKey or legitimate LoRaWAN session keys for the invalid-MIC spoofing test.
 
-## 5. Prepare Raspberry Pi resource logging
+## 5. Prepare Raspberry Pi and cloud resource logging
 
-Chapter III asks for Raspberry Pi CPU and memory measurements. The current architecture also needs server-VM/container measurements. Collect both separately.
+Chapter III asks for Raspberry Pi CPU and memory measurements. The current architecture also needs server-VM/container measurements. The commissioned Chapter 4 research recorder now collects both automatically through its locked-down Gateway-01/cloud forced-command collectors; do not create a second competing logger during a counted run.
+
+The preferred operator path is:
+
+```powershell
+$R = '.\\lorawan-network-server-gateway\\test\\automation\\research-recorder\\research_recorder.py'
+python $R preflight --require-emu --require-sec
+python $R run --group <GROUP> --run-id <RUN_ID> --scope lorawan --capture-sec
+```
+
+`run` keeps a foreground supervisor active, samples gateway and all three cloud hosts/containers, checks collector/evidence health every 15 seconds, and finalizes/hashes the run when Ctrl+C is pressed. Use `--interval 1` for flooding and the default `--interval 5` for normal resource measurements. A bounded `--skip-serial --duration-seconds 60` run is allowed only as an uncounted collector smoke test.
+
+The standalone `/tmp/resource-log.sh` below remains a **fallback/manual reproduction method** for a lab where the commissioned recorder is unavailable. Do not run it concurrently with the automated recorder and do not substitute it for the recorder's cloud/container evidence.
 
 On the gateway create `/tmp/resource-log.sh`:
 
@@ -282,8 +296,12 @@ Before counted tests confirm:
 [ ] invalid-message generator hits the pilot rate
 [ ] temporary test listener is reachable only from the test laptop
 [ ] RAK4631 SEC-02 passes the Sensor Preparation invalid-OTAA and raw-RF acceptance checks
+[ ] research-recorder preflight passes for all four targets and the one-leader Patroni topology
+[ ] `evidence-ready` passes, or only the documented ulc-02 legacy-wrapper fallback is used with the verifier container `Up`
+[ ] supervised recorder health remains PASS throughout an uncounted 60-second smoke
 [ ] gateway resource CSV advances every 5 seconds
-[ ] server resource CSV advances every 5 seconds
+[ ] all three server host/container resource CSVs advance every 5 seconds
+[ ] recorder finalization leaves no `_recorder-active.json`, no `stop-errors.txt`, and produces `SHA256SUMS.csv`
 ```
 
 If a tool cannot create or observe the intended condition, fix the tool before counting experiments.

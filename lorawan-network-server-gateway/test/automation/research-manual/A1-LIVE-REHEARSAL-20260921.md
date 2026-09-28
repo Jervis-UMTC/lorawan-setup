@@ -1,0 +1,24 @@
+# A1 live authentication commissioning — 2026-09-21 (non-counted)
+
+**Outcome:** The two LoRaWAN-controlled authentication components are live-rehearsed: LoRaWAN **3/3 PASS**, isolated MQTT **30/30 PASS**. The separate Fabric authentication third is NOT commissioned and the complete nine-condition x10 A1 formal experiment remains `CAPTURE_READY`, not `READY`.
+
+## LoRaWAN exact real test
+
+- Ran `py -3 test/automation/authentication/a1_lorawan_harness.py --rehearsal`; exit code 0, summary `chapter4-results/authentication/lorawan/A1-LORAWAN-rehearsal-20260921-131919/a1-lorawan-summary.json`, serial/DFU/trial evidence in same folder.
+- Real preconditions: SEC-01 RUI3 4.2.4, AS923 band 8, NWM=1, OTAA, Class A, `NJS=0`, parked DevEUI all zero; EMU-01 USB COM11, SHA-256 verified counted-profile image `c1f09de8eb6d8e00bbdd432765db90c66eaa87a530f490e54d04558e81bbd6b1`. Restricted ULC-01 identity guard reported legitimate registered, unregistered fixture absent, no fixture key collision. Recorder server v10 and gateway v3.
+- **Wrong AppKey for registered DevEUI:** gateway journal independently observed one exact-byte JoinRequest after the pre-attempt sequence watermark (journal sequence 3864); SEC not joined and legitimate ChirpStack session fingerprint, DevAddr and fCnt unchanged. REJECT, false acceptance false.
+- **Unregistered DevEUI:** gateway journal independently observed its distinct JoinRequest (sequence 3865); ChirpStack registered=0 before and after, not joined. REJECT, false acceptance false.
+- **Legitimate EMU-01:** exact JoinRequest (journal sequence 3866), OTAA JOIN PASS, successful source uplink, ChirpStack new DevAddr/session fingerprint and fCnt reset. ALLOW, false rejection false.
+- `sec_cleanup=PASS` (parked), `emu_cleanup=PASS` (same hashed image restored). Trial count exactly 3, all conditions correct, counted_research false. Actual fresh join frames distinguish this from the earlier standalone unregistered RF probe.
+
+## MQTT isolated listener real test and compatibility repair
+
+- First `a1_mqtt_harness.py --rehearsal` correctly failed closed: ULC-01 helper supplied six-field `AUTH_TRIAL` rows instead of the now-required seven-field observer delivery proof. Preserve this failed report at `chapter4-results/authentication/mqtt/A1-MQTT-rehearsal-20260921-132035/` — do not recast it as successful.
+- Compared installed root helper with repo `test/automation/mqtt-test-listener/mqtt_test_listener.sh`: the live old script SHA-256 was `da05515b883b14cee9235f88a2ac11ecf3b5a966d9123abb9fed0c0864435dcf`; repo current `cb0487fdc21f29b6aa9c002e0c1d1b98dd0ec197777ad8f454f2ffd7b79965db`. The diff was limited to AUTH_TRIAL delivery proof/latency handling and stronger safe fixture teardown. The auth listener was inactive.
+- Through authenticated admin SSH, staged syntax-checked, hash-verified repo helper and installed **only** `/usr/local/sbin/lorawan-research-mqtt-test-listener` on ULC-01, preserving a timestamped original under `/var/backups/lorawan-research-mqtt-test-listener.pre-20260921-*`. No production Mosquitto service/config or main broker restart occurred. The repository helper is the reproducible deploy source; wrapper `test/automation/research-actions/deploy_research_actions.sh` also deploys that file but changes other research-action files, so a helper-only change was used here.
+- Reran `py -3 test/automation/authentication/a1_mqtt_harness.py --rehearsal`; exit 0, `A1_MQTT_HARNESS=PASS formal=False trials=30`. Report: `chapter4-results/authentication/mqtt/A1-MQTT-rehearsal-20260921-132300/a1-mqtt-summary.json`.
+- **MQTT_ALLOWED:** 10/10 ALLOW, 10/10 confirmed delivered to observer. **MQTT_WRONG_PASSWORD:** 10/10 REJECT and 0 observer deliveries. **MQTT_PROHIBITED_TOPIC:** 10/10 REJECT and 0 observer deliveries. Across 30 cases: false acceptance 0; false rejection 0; unauthorized observer delivery/state change 0; fixture_smoke PASS; cleanup PASS. Fresh `auth-listener-status` confirmed `listener=INACTIVE`.
+
+## Readiness and next step
+
+The last complete offline suite is **198/198 PASS** across 16 suites (before this helper-only deployment and wording edit, neither changes scorer code). A1's local/repo source and deployed isolated MQTT helper are now aligned, and LoRaWAN and MQTT both have genuine live outcomes. The complete A1 chapter methodology comprises **three** authentication layers; do not claim 90/90, formal research trial count, or production Fabric authentication outcome from these two isolated rehearsals. Coordinate Fabric-side actual endorsement/authentication fixture and pre/post world-state evidence separately. Next safe non-counted objective: one isolated F1 or F2 flood-window commissioning if the exact harness supports short rehearsals and legitimate EMU traffic, or live Fabric A1 fixture when ready.

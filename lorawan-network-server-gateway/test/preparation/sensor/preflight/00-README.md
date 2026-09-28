@@ -50,7 +50,7 @@ Do not delete normal telemetry history merely to hide preflight packets. Instead
 
 ## Required order
 
-1. [01-hardware-firmware-preflight.md](01-hardware-firmware-preflight.md) - prove the physical A-set, final firmware, serial output, 15-second scheduler, and validity bitmap.
+1. [01-hardware-firmware-preflight.md](01-hardware-firmware-preflight.md) - prove the physical A-set, final firmware, Serial output, production scheduler (60-second local sampling; nominal 5-minute uplinks with ±15-second jitter), and validity bitmap.
 2. [02-lorawan-chirpstack-preflight.md](02-lorawan-chirpstack-preflight.md) - prove RAK5146 reception, OTAA, ChirpStack acceptance, payload decoding, and stable consecutive uplinks.
 3. [03-application-data-path-preflight.md](03-application-data-path-preflight.md) - prove Node-RED, TimescaleDB, source-to-database equality, and one selected Fabric evidence path.
 4. [04-go-no-go-transition.md](04-go-no-go-transition.md) - review all evidence, create the GO/NO-GO record, freeze the sensor state, and transition to counted execution.

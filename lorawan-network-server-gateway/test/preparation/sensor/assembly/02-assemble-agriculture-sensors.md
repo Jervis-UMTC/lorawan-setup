@@ -50,11 +50,11 @@ Open [02a-rak19001-fixed-slot-map.md](02a-rak19001-fixed-slot-map.md) and use th
 
 ```text
 Sensor A = RAK1903
-Sensor B = EMPTY / NA
+Sensor B = RAK12010
 Sensor C = RAK12019
 Sensor D = RAK12011
 Sensor E = RAK1906
-Sensor F = RAK12010
+Sensor F = EMPTY / NA
 WisIO 1  = RAK12023 -> RAK12035
 WisIO 2  = RAK12005 -> RAK12030
 ```
@@ -66,7 +66,7 @@ Then:
 1. open the current WisBlock Pin Mapper;
 2. select `RAK19001` and `RAK4631`;
 3. enter exactly the A-F and WisIO assignments above;
-4. select `NA` / unused for Sensor B;
+4. select `NA` / unused for Sensor F;
 5. inspect every highlighted pin/conflict indication;
 6. require no unresolved conflict;
 7. save the accepted mapping as `sensor-pin-map.txt` and, when practical, retain a screenshot/export.
@@ -82,7 +82,7 @@ WB_IO5 -> RAK12011 interrupt/output
 WB_IO6 -> RAK12005 rain output
 ```
 
-RAK1906 and RAK12010 occupy E/F because their normal measurements use I2C without consuming the E/F slot GPIOs that would otherwise collide with `WB_IO4`/`WB_IO6`.
+RAK1906 remains in E because its normal measurements use I2C without consuming Slot-E `WB_IO4`. RAK12010 moves to B because it uses only I2C + `3V3_S` and does not consume Slot-B `WB_IO2` as an interrupt. This preserves `WB_IO2` as the shared switched-power control while moving the VEML7700 off the lower-side Slot F and leaving F as a reserve.
 
 ---
 
@@ -96,11 +96,11 @@ Permanent layout:
        SENSOR SLOTS                         WISIO SLOTS
 
   A -> RAK1903 OPT3001                WisIO 1 -> RAK12023 -> SOIL-A RAK12035
-  B -> EMPTY / NA                     WisIO 2 -> RAK12005 -> RAIN-A RAK12030
+  B -> RAK12010 VEML7700              WisIO 2 -> RAK12005 -> RAIN-A RAK12030
   C -> RAK12019 UV
   D -> RAK12011 BAROMETER
   E -> RAK1906 BME680
-  F -> RAK12010 VEML7700
+  F -> EMPTY / NA
 
                      CPU -> RAK4631 Core A
                               │
@@ -119,9 +119,13 @@ This is now the project baseline, not merely a starting suggestion. The saved Pi
 6. When the mechanical build permits, use the outward-facing Slot-A orientation so the OPT3001 is not shaded by the base/core.
 7. Keep the light-sensitive surface unobstructed.
 
-## Step 4B - Leave Sensor B empty
+## Step 4B - Install LIGHT-VEML-A / RAK12010 in Sensor B
 
-Do not install a Sensor module in B for the permanent EMU-01 build. Slot B maps the slot GPIO to `WB_IO2`, which this project reserves for `3V3_S` power control.
+1. Install RAK12010 specifically in Sensor B.
+2. Seat the connector fully and install the retaining screw.
+3. RAK12010 uses only I2C, `3V3_S`, and GND; it does **not** connect a sensor interrupt to Slot-B `WB_IO2`.
+4. Keep `WB_IO2` reserved in firmware as the shared `3V3_S` switched-power control.
+5. Keep the VEML7700 optical surface unobstructed. Slot B is preferred over the previous lower-side Slot F placement because it gives a simpler top-side light path.
 
 ## Step 4C - Install UV-A / RAK12019 in Sensor C
 
@@ -146,15 +150,11 @@ Do not install a Sensor module in B for the permanent EMU-01 build. Slot B maps 
 4. Leave airflow around the sensor.
 5. Keep it away from direct MCU/regulator heat as much as the enclosure allows.
 
-## Step 4F - Install LIGHT-VEML-A / RAK12010 in Sensor F
+## Step 4F - Leave Sensor F empty / reserve
 
-1. Install RAK12010 specifically in Sensor F.
-2. Seat the connector fully.
-3. Install the screw.
-4. Its normal VEML7700 measurement uses I2C and does not need the Slot-F `WB_IO6` line.
-5. Keep its optical surface exposed to the intended room/environment light.
+Do not install a permanent sensor in F. `WB_IO6` remains the rain digital-output role through RAK12005 in WisIO 2. RAK12010 is now in Sensor B, so keeping F empty avoids an unnecessary lower-side optical placement and leaves one reserve Sensor slot for troubleshooting.
 
-Both light sensors are required and remain separate payload fields.
+Both light sensors are required and remain separate payload fields: RAK1903 in A and RAK12010 in B.
 
 ## Step 4G - Install SOIL-A / RAK12023 + RAK12035 in WisIO 1
 

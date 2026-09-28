@@ -1,0 +1,5 @@
+# Narrow privilege boundary for Chapter 3 research fixtures.
+# No shell access, production MQTT control, host default-route changes, or arbitrary firewall commands.
+Cmnd_Alias LORAWAN_RESEARCH_MQTT = /usr/local/sbin/lorawan-research-mqtt-test-listener start auth 127.0.0.1 1884, /usr/local/sbin/lorawan-research-mqtt-test-listener stop auth, /usr/local/sbin/lorawan-research-mqtt-test-listener status auth, /usr/local/sbin/lorawan-research-mqtt-test-listener smoke auth, /usr/local/sbin/lorawan-research-mqtt-test-listener run auth, /usr/local/sbin/lorawan-research-mqtt-test-listener start flood 127.0.0.1 1885, /usr/local/sbin/lorawan-research-mqtt-test-listener stop flood, /usr/local/sbin/lorawan-research-mqtt-test-listener status flood, /usr/local/sbin/lorawan-research-mqtt-test-listener smoke flood
+Cmnd_Alias LORAWAN_RESEARCH_FABRIC_ISOLATION = /usr/local/sbin/lorawan-fabric-endpoint-isolation status, /usr/local/sbin/lorawan-fabric-endpoint-isolation apply, /usr/local/sbin/lorawan-fabric-endpoint-isolation remove
+opsadmin ALL=(root) NOPASSWD: LORAWAN_RESEARCH_MQTT, LORAWAN_RESEARCH_FABRIC_ISOLATION

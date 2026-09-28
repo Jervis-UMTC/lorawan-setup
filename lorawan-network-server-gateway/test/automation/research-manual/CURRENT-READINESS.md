@@ -1,0 +1,23 @@
+# Current Research Readiness
+
+Generated UTC: `2026-09-28T00:35:54Z`
+
+Technical gate: **PASS**
+
+Tool compile: **PASS**
+Recorder state: **CLEAN**
+MQTT tooling self-test: **PASS**
+Research contract/synchronization tests: **PASS**
+Per-test oversight audit: **PASS**
+Counted firmware archive: **PASS**
+Gateway LTE invariant: **PASS**
+Live PRE: **PASS**
+
+## Released operator blocks
+
+| Test | Status | Validation |
+|---|---|---|
+| PRE | READY | PASS |
+| P1 | READY | PASS |
+
+Only complete `READY` actions are allowed to have code blocks in the final manual. Other Chapter 3 tests remain documented without operator code until their complete harness is commissioned.

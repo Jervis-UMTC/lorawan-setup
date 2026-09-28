@@ -90,7 +90,7 @@ Do not continue unless:
 ```text
 [ ] EMU-01 = RAK19001 + Core A
 [ ] all seven A-set sensor types installed
-[ ] fixed RAK19001 map is A=RAK1903, B=EMPTY, C=RAK12019, D=RAK12011, E=RAK1906, F=RAK12010, WisIO1=RAK12023, WisIO2=RAK12005
+[ ] fixed RAK19001 map is A=RAK1903, B=RAK12010, C=RAK12019, D=RAK12011, E=RAK1906, F=EMPTY/RESERVE, WisIO1=RAK12023, WisIO2=RAK12005
 [ ] Pin Mapper result for that exact map is saved with no unresolved conflict
 [ ] LoRa antenna attached
 [ ] Arduino IDE installed
@@ -222,7 +222,7 @@ approved project AS923 configuration
 DevEUI
 JoinEUI/AppEUI
 AppKey
-15-second application sampling schedule
+60-second local sampling schedule plus 5-minute nominal production uplink schedule with fleet staggering/jitter
 unconfirmed/confirmed uplink choice frozen before testing
 ```
 
@@ -336,7 +336,13 @@ This prevents a sensor failure from being mistaken for an RF packet loss.
 Use this exact logical order:
 
 ```text
-15-second boundary
+60-second local sample boundary
+      │
+      ▼
+refresh latest physical sample
+      │
+      ▼
+5-minute nominal uplink deadline (DevEUI-staggered, ±15 s jitter)
       │
       ▼
 increment test_sequence
@@ -361,29 +367,25 @@ Do not increment `test_sequence` once per sensor. Increment it once per schedule
 
 ---
 
-## Step 11 - Use a monotonic 15-second scheduler
+## Step 11 - Use the production fleet scheduler
 
-Target:
-
-```text
-T0
-T0 + 15 s
-T0 + 30 s
-T0 + 45 s
-...
-```
-
-Do not implement the long-run timing as simply:
+The final EMU-01 firmware separates local sensing from RF transmission:
 
 ```text
-read sensors
-send
-wait 15 seconds
+local physical sampling = every 60 seconds
+normal uplink           = nominally every 300 seconds
+initial uplink phase    = DevEUI-derived offset within the 5-minute window
+per-cycle jitter        = ±15 seconds
+normal uplink type      = unconfirmed
+ADR                     = enabled
+rain event poll         = every 1 second
+rain event backoff      = random 0-5 seconds
+rain event rate limit   = at most one event uplink per 60 seconds
 ```
 
-because sensor work plus the wait can make the actual interval drift beyond 15 seconds.
+The DevEUI-derived initial phase prevents a fleet that boots together from immediately transmitting together. Per-cycle jitter prevents nodes that drift together from remaining synchronized indefinitely. The implementation uses wrap-safe monotonic `millis()` deadlines instead of `delay(300000)`.
 
-Use a monotonic next-deadline design. The entire sensor/read/pack/send-start path must complete before the next scheduled deadline.
+A rain-state transition may schedule one event uplink after randomized backoff. If a normal telemetry deadline is reached at essentially the same time, the normal uplink wins and the pending event is cleared so the node does not immediately transmit duplicate information.
 
 ---
 
@@ -451,7 +453,7 @@ soil calibration loaded/applied
 both light values present separately
 rain state readable
 validity = 0x007F during healthy cycles
-sequence increases once per 15-second cycle
+sequence increases once per actual LoRaWAN transmission attempt; local 60-second samples do not consume sequence numbers
 ```
 
 Capture at least ten final-firmware cycles over USB serial before troubleshooting the network.
@@ -511,7 +513,7 @@ DeviceClass_t g_CurrentClass = CLASS_A;
 #define LORAWAN_APP_INTERVAL 15000
 ```
 
-Use unconfirmed uplinks for the normal 15-second telemetry baseline unless the experiment explicitly freezes a different choice. Do not use the default EU868 region.
+Use unconfirmed uplinks for normal production telemetry. The final EMU-01 firmware uses a nominal 5-minute uplink interval with DevEUI-derived initial staggering and ±15-second jitter; the old 15-second cadence is retained only in historical/bench procedures where explicitly stated. Do not use the default EU868 region.
 
 **Frozen lab region rule:** the already-configured gateway and ChirpStack server use plain `AS923` / region ID and MQTT prefix `as923`. EMU-01 must therefore use exactly `LORAMAC_REGION_AS923`. Do **not** use `LORAMAC_REGION_AS923_3` for this lab unless the gateway and server are deliberately migrated at the same time.
 
@@ -742,7 +744,7 @@ activation: OTAA
 class: A
 region: plain AS923 (firmware `LORAMAC_REGION_AS923`; ChirpStack region `as923`)
 LoRaWAN MAC version: match final firmware
-target interval: 15 seconds
+target normal uplink interval: 5 minutes nominal, ±15-second jitter; local sample interval: 60 seconds
 ```
 
 Enter the legitimate AppKey only in the approved ChirpStack credential field and the secure firmware/provisioning path.
@@ -1005,6 +1007,12 @@ If Core B is still a standard Arduino-BSP RAK4631, convert it to RAK4631-R/RUI3 
 
 Do not copy old bootloader/DFU package names blindly from a screenshot or old note. Use the currently published RAK conversion guide and record the exact package/version used.
 
+**Physical conversion acceptance - 2026-09-02: PASS.** The second RAK4631 plugged in by the operator as `SEC-01` is the hardware role this repository has historically documented as `SEC-02`; do not interpret those labels as two different security nodes unless the project topology is deliberately revised. The board was positively identified on `COM13` as the RAK4631 Arduino USB identity `VID_239A/PID_8029`. The current official RAK two-stage Windows conversion was then executed. The RUI3 bootloader package SHA-256 was `F39A6B14964F1CF308908FD4EBAF068316A4827B1E5EFC08F4BF04EAAE33483B`; after the 1200-baud transition the DFU port appeared as `COM14`, `VID_239A/PID_002A`, and the retry directly on that DFU port reported `Device programmed`. The final RUI3 package SHA-256 was `7885110C39FA2AF1B207026546A4F33122B81AC7C825939AE3B1C654D7EF155B`; Nordic `nrfutil 6.1.7` (executable SHA-256 `FEE3AEED1843A4BFFC082747CEA60DC072929EB36E67D62C8A3FD7471E0DC92D`) programmed it successfully. The application re-enumerated as `COM16`, `VID_1915/PID_521F`.
+
+The initial converted RUI3 identity was `3.4.2-rui3_22q1_update.112`. During the 2026-09-03 security preflight that old build was found unable to expose the public-LoRa syncword/IQ controls required for a faithful raw LoRaWAN replay/spoof waveform, so SEC was upgraded in place through the official RAK4631-R USB DFU path to **`RUI_4.2.4_RAK4631`**. The downloaded `RAK4631_latest_dfu_package.zip` SHA-256 was `738C317DCCDF19B987471AB0620B5AB3CFF6B920A896BC744D2A785EDA9D55CC`; Nordic `nrfutil 6.1.7` remained SHA-256 `FEE3AEED1843A4BFFC082747CEA60DC072929EB36E67D62C8A3FD7471E0DC92D`, and DFU returned `Device programmed`.
+
+RUI3 4.2.4 exposed `AT+SYNCWORD` and `AT+IQINVER`. SEC was configured temporarily at `923200000 Hz`, SF7, 125 kHz, CR 4/5, preamble 8, TX power 14, public LoRaWAN syncword `3444`, and normal uplink IQ. One uncounted short P2P rehearsal returned `TXP2P DONE`; Gateway-01 then received a distinct SF7/923.2 MHz raw frame with gateway uplink ID `1355632844`. That uplink ID had no EMU-01 telemetry row, while the nearest legitimate EMU-01 frame used a different uplink ID, proving the RAK5146 raw-RF rehearsal independently. SEC was immediately returned to the safe parked state: `NWM=1`, **`BAND=8` / AS923-1**, `NJM=1` (OTAA), `CLASS=A`, `NJS=0`, and `DEVEUI=0000000000000000`. No EMU-01 credential/session material was installed or reused.
+
 After conversion, verify:
 
 ```text
@@ -1110,7 +1118,7 @@ Do not enter counted execution from this manual. First satisfy this setup gate, 
 [ ] final Arduino firmware uploaded to EMU-01
 [ ] validity bitmap = 0x007F during healthy pre-run cycles
 [ ] payload v2 frozen at 46 bytes
-[ ] 15-second monotonic schedule proven
+[ ] production scheduler proven: 60-second local sampling, DevEUI-staggered 5-minute nominal unconfirmed uplinks with ±15-second jitter, and rate-limited randomized rain-event uplinks
 [ ] source log matches ChirpStack decoder for ten sequences
 [ ] EMU-01 OTAA join succeeds
 [ ] one physical-sensor record reaches TimescaleDB

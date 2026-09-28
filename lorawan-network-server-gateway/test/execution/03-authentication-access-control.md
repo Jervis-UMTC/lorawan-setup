@@ -1,4 +1,5 @@
 # Execution 3. Authentication and Access Control
+> **Reference procedure only.** Executable operator commands are published only in `chapters/lorawan_research_test_manual_final.md` after live qualification. The fenced snippets below are preserved as implementation/reference text and must not be copied as current commands.
 
 This test contains **90 counted attempts**:
 
@@ -27,7 +28,7 @@ For every condition, write the **expected decision before the attempt**. A rejec
 
 Create:
 
-```bash
+```text
 RUN_DIR="$HOME/chapter4-results/authentication"
 mkdir -p "$RUN_DIR"/{lorawan,mqtt,fabric}
 ```
@@ -35,6 +36,12 @@ mkdir -p "$RUN_DIR"/{lorawan,mqtt,fabric}
 Keep separate CSVs for the three layers so a broker test cannot be confused with a LoRaWAN or Fabric authorization result.
 
 ## Part A - LoRaWAN device authentication
+
+### Scoped start rule
+
+Part A is an independent counted LoRaWAN experiment. It may start when `chapter4-results/_preflight/sensor/04-go-no-go/lorawan-track-status.txt` contains `LORAWAN_TRACK_STATUS=GO`, even if another independent full-stack test track is temporarily `NO-GO`. ULC-01 production Fabric integration is already active; a Fabric-specific research test may still require separately approved test identities or fixtures.
+
+This exception authorizes **only these 30 LoRaWAN attempts**. Record `RUN_SCOPE=LORAWAN_ONLY` in the run metadata. Do not count MQTT or Fabric attempts under this exception, and do not report the 90-attempt table as complete until Parts B and C are later executed.
 
 ### Prepare three conditions
 
@@ -124,7 +131,7 @@ The normal broker intentionally does not publish password-authenticated port `18
 
 On the lab VM:
 
-```bash
+```text
 cd /opt/lorawan-lab
 mkdir -p configuration/mosquitto/auth-test
 cp configuration/mosquitto/passwd configuration/mosquitto/auth-test/passwd
@@ -133,7 +140,7 @@ cp configuration/mosquitto/acl configuration/mosquitto/auth-test/acl
 
 Read the exact Mosquitto image already running in the testbed, then create three temporary test users:
 
-```bash
+```text
 MOSQUITTO_TEST_IMAGE="$(docker inspect mosquitto --format '{{.Config.Image}}')"
 printf 'Using image: %s\n' "$MOSQUITTO_TEST_IMAGE"
 
@@ -169,7 +176,7 @@ topic read test/auth/allowed
 
 On the server:
 
-```bash
+```text
 cd /opt/lorawan-lab
 mkdir -p "$RUN_DIR/mqtt/config-backup"
 cp docker-compose.yml "$RUN_DIR/mqtt/config-backup/docker-compose.yml"
@@ -209,7 +216,7 @@ Run `docker compose config --quiet` before restarting the broker.
 
 Restrict the host firewall to the test laptop:
 
-```bash
+```text
 sudo ufw allow from <TEST_LAPTOP_IP> to any port 1884 proto tcp
 ```
 
@@ -219,7 +226,7 @@ Restart Mosquitto and verify the normal mTLS listener `8883` still works.
 
 Use a second test-laptop terminal:
 
-```bash
+```text
 mkdir -p "$HOME/chapter4-results/authentication/mqtt"
 mosquitto_sub -h <LAB_SERVER_IP> -p 1884 \
   -u auth_observer -P '<AUTH_OBSERVER_PASSWORD>' \
@@ -237,7 +244,7 @@ Before B1-01, publish one harmless observer-check marker with `auth_allowed` and
 
 From the test laptop, publish one unique trial marker:
 
-```bash
+```text
 mosquitto_pub -h <LAB_SERVER_IP> -p 1884 \
   -u auth_allowed -P '<AUTH_ALLOWED_PASSWORD>' \
   -t 'test/auth/allowed' -m 'mqtt-auth-trial-01' -d
@@ -249,7 +256,7 @@ Expected: **allow**.
 
 ### Condition B2 - incorrect password
 
-```bash
+```text
 mosquitto_pub -h <LAB_SERVER_IP> -p 1884 \
   -u auth_allowed -P '<INTENTIONALLY_WRONG_PASSWORD>' \
   -t 'test/auth/allowed' -m 'must-not-arrive' -d
@@ -261,7 +268,7 @@ Expected: **reject**.
 
 ### Condition B3 - valid limited user, prohibited topic
 
-```bash
+```text
 mosquitto_pub -h <LAB_SERVER_IP> -p 1884 \
   -u auth_limited -P '<AUTH_LIMITED_PASSWORD>' \
   -t 'test/auth/allowed' -m 'must-be-denied' -d
@@ -275,7 +282,7 @@ Expected: **reject publish**.
 
 On the test laptop:
 
-```bash
+```text
 kill "$OBSERVER_PID" 2>/dev/null || true
 wait "$OBSERVER_PID" 2>/dev/null || true
 ```
@@ -286,7 +293,7 @@ Save broker logs and verify the isolated `test/auth/...` messages did not create
 
 Because the broker/Compose changes in this part are test-only, restore the exact known-good copies made in Step B2:
 
-```bash
+```text
 cd /opt/lorawan-lab
 cp "$RUN_DIR/mqtt/config-backup/docker-compose.yml" docker-compose.yml
 cp "$RUN_DIR/mqtt/config-backup/mosquitto.conf" configuration/mosquitto/mosquitto.conf
@@ -395,8 +402,21 @@ log_or_tx_reference
 
 ## Pass condition
 
+For the LoRaWAN-only staged completion:
+
 ```text
-90 counted attempts exactly
+Part A = 30 counted attempts exactly
+10/10 legitimate OTAA controls evaluated
+10/10 wrong-AppKey attempts evaluated after proven gateway reception
+10/10 unregistered-DevEUI attempts evaluated after proven gateway reception
+zero LoRaWAN false acceptance
+raw gateway + ChirpStack evidence retained for every counted trial
+```
+
+For the complete authentication/access-control experiment later:
+
+```text
+Parts A+B+C = 90 counted attempts exactly
 all authorized controls accepted
 all unauthorized/prohibited attempts rejected
 zero false acceptance
@@ -404,4 +424,8 @@ zero unauthorized state change
 raw evidence retained for every trial
 ```
 
-Continue to [Execution 04 - Replay and Spoofing](04-replay-spoofing.md).
+Part A may be frozen as completed while Parts B/C remain pending for their own prerequisites. Do not rerun valid Part A data merely because an unrelated MQTT or Fabric test prerequisite is later satisfied.
+
+Continue to [Execution 04 - Replay and Spoofing](04-replay-spoofing.md) when the LoRaWAN track remains healthy.
+
+

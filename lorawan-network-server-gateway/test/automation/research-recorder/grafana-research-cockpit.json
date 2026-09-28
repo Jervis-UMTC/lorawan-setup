@@ -1,1 +1,1016 @@
-{"annotations":{"list":[]},"editable":false,"fiscalYearStartMonth":0,"graphTooltip":1,"id":null,"links":[],"panels":[{"datasource":{"type":"grafana-postgresql-datasource","uid":"lorawan-telemetry"},"fieldConfig":{"defaults":{},"overrides":[]},"gridPos":{"h":4,"w":4,"x":0,"y":0},"id":1,"targets":[{"datasource":{"type":"grafana-postgresql-datasource","uid":"lorawan-telemetry"},"editorMode":"code","format":"table","rawQuery":true,"rawSql":"SELECT round(extract(epoch from (now()-max(time))))::bigint AS \"seconds\" FROM telemetry.uplinks WHERE dev_eui='ac1f09fffe296d29';","refId":"A"}],"title":"Latest reading age","type":"stat","options":{"reduceOptions":{"calcs":["lastNotNull"],"fields":"","values":false},"orientation":"auto","textMode":"auto","colorMode":"value","graphMode":"area","justifyMode":"auto"}},{"datasource":{"type":"grafana-postgresql-datasource","uid":"lorawan-telemetry"},"fieldConfig":{"defaults":{},"overrides":[]},"gridPos":{"h":4,"w":4,"x":4,"y":0},"id":2,"targets":[{"datasource":{"type":"grafana-postgresql-datasource","uid":"lorawan-telemetry"},"editorMode":"code","format":"table","rawQuery":true,"rawSql":"SELECT count(*)::bigint AS \"uplinks\" FROM telemetry.uplinks WHERE dev_eui='ac1f09fffe296d29' AND time >= now()-interval '5 minutes';","refId":"A"}],"title":"Uplinks (last 5 min)","type":"stat","options":{"reduceOptions":{"calcs":["lastNotNull"],"fields":"","values":false},"orientation":"auto","textMode":"auto","colorMode":"value","graphMode":"area","justifyMode":"auto"}},{"datasource":{"type":"grafana-postgresql-datasource","uid":"lorawan-telemetry"},"fieldConfig":{"defaults":{},"overrides":[]},"gridPos":{"h":4,"w":4,"x":8,"y":0},"id":3,"targets":[{"datasource":{"type":"grafana-postgresql-datasource","uid":"lorawan-telemetry"},"editorMode":"code","format":"table","rawQuery":true,"rawSql":"SELECT round(avg(extract(epoch from (received_at-time))*1000.0)::numeric,2) AS \"ms\" FROM telemetry.uplinks WHERE dev_eui='ac1f09fffe296d29' AND time >= now()-interval '5 minutes';","refId":"A"}],"title":"Mean app→DB latency (5 min)","type":"stat","options":{"reduceOptions":{"calcs":["lastNotNull"],"fields":"","values":false},"orientation":"auto","textMode":"auto","colorMode":"value","graphMode":"area","justifyMode":"auto"}},{"datasource":{"type":"grafana-postgresql-datasource","uid":"lorawan-telemetry"},"fieldConfig":{"defaults":{},"overrides":[]},"gridPos":{"h":4,"w":4,"x":12,"y":0},"id":4,"targets":[{"datasource":{"type":"grafana-postgresql-datasource","uid":"lorawan-telemetry"},"editorMode":"code","format":"table","rawQuery":true,"rawSql":"SELECT count(*)::bigint AS \"confirmed\" FROM telemetry.fabric_outbox WHERE status='confirmed' AND committed_at >= now()-interval '1 hour';","refId":"A"}],"title":"Fabric confirmed (1 h)","type":"stat","options":{"reduceOptions":{"calcs":["lastNotNull"],"fields":"","values":false},"orientation":"auto","textMode":"auto","colorMode":"value","graphMode":"area","justifyMode":"auto"}},{"datasource":{"type":"grafana-postgresql-datasource","uid":"lorawan-telemetry"},"fieldConfig":{"defaults":{},"overrides":[]},"gridPos":{"h":4,"w":4,"x":16,"y":0},"id":5,"targets":[{"datasource":{"type":"grafana-postgresql-datasource","uid":"lorawan-telemetry"},"editorMode":"code","format":"table","rawQuery":true,"rawSql":"SELECT count(*)::bigint AS \"verified\" FROM gateway_evidence.verification_status WHERE status='verified';","refId":"A"}],"title":"Evidence verified","type":"stat","options":{"reduceOptions":{"calcs":["lastNotNull"],"fields":"","values":false},"orientation":"auto","textMode":"auto","colorMode":"value","graphMode":"area","justifyMode":"auto"}},{"datasource":{"type":"grafana-postgresql-datasource","uid":"lorawan-telemetry"},"fieldConfig":{"defaults":{},"overrides":[]},"gridPos":{"h":4,"w":4,"x":20,"y":0},"id":6,"targets":[{"datasource":{"type":"grafana-postgresql-datasource","uid":"lorawan-telemetry"},"editorMode":"code","format":"table","rawQuery":true,"rawSql":"SELECT count(*)::bigint AS \"problems\" FROM gateway_evidence.verification_status WHERE status IN ('evidence_gap','integrity_failure');","refId":"A"}],"title":"Evidence problems","type":"stat","options":{"reduceOptions":{"calcs":["lastNotNull"],"fields":"","values":false},"orientation":"auto","textMode":"auto","colorMode":"value","graphMode":"area","justifyMode":"auto"}},{"datasource":{"type":"grafana-postgresql-datasource","uid":"lorawan-telemetry"},"fieldConfig":{"defaults":{},"overrides":[]},"gridPos":{"h":7,"w":12,"x":0,"y":4},"id":7,"targets":[{"datasource":{"type":"grafana-postgresql-datasource","uid":"lorawan-telemetry"},"editorMode":"code","format":"time_series","rawQuery":true,"rawSql":"SELECT time, rssi_dbm AS \"RSSI dBm\", snr_db AS \"SNR dB\" FROM telemetry.uplinks WHERE dev_eui='ac1f09fffe296d29' AND $__timeFilter(time) ORDER BY time;","refId":"A"}],"title":"RF quality (RSSI / SNR)","type":"timeseries","options":{"legend":{"displayMode":"list","placement":"bottom","showLegend":true},"tooltip":{"mode":"multi","sort":"none"}}},{"datasource":{"type":"grafana-postgresql-datasource","uid":"lorawan-telemetry"},"fieldConfig":{"defaults":{},"overrides":[]},"gridPos":{"h":7,"w":12,"x":12,"y":4},"id":8,"targets":[{"datasource":{"type":"grafana-postgresql-datasource","uid":"lorawan-telemetry"},"editorMode":"code","format":"time_series","rawQuery":true,"rawSql":"SELECT time, extract(epoch from (received_at-time))*1000.0 AS \"Latency ms\" FROM telemetry.uplinks WHERE dev_eui='ac1f09fffe296d29' AND $__timeFilter(time) ORDER BY time;","refId":"A"}],"title":"Application→DB latency","type":"timeseries","options":{"legend":{"displayMode":"list","placement":"bottom","showLegend":true},"tooltip":{"mode":"multi","sort":"none"}}},{"datasource":{"type":"grafana-postgresql-datasource","uid":"lorawan-telemetry"},"fieldConfig":{"defaults":{},"overrides":[]},"gridPos":{"h":8,"w":12,"x":0,"y":11},"id":9,"targets":[{"datasource":{"type":"grafana-postgresql-datasource","uid":"lorawan-telemetry"},"editorMode":"code","format":"table","rawQuery":true,"rawSql":"SELECT time, payload_json->>'test_sequence' AS test_sequence, f_cnt, rssi_dbm, snr_db, gateway_frequency_hz, gateway_id FROM telemetry.uplinks WHERE dev_eui='ac1f09fffe296d29' ORDER BY time DESC LIMIT 20;","refId":"A"}],"title":"Latest uplinks / sequence / RF","type":"table","options":{"showHeader":true,"cellHeight":"sm"}},{"datasource":{"type":"grafana-postgresql-datasource","uid":"lorawan-telemetry"},"fieldConfig":{"defaults":{},"overrides":[]},"gridPos":{"h":8,"w":6,"x":12,"y":11},"id":10,"targets":[{"datasource":{"type":"grafana-postgresql-datasource","uid":"lorawan-telemetry"},"editorMode":"code","format":"table","rawQuery":true,"rawSql":"SELECT status, count(*)::bigint AS rows, min(created_at) AS oldest, max(updated_at) AS newest FROM telemetry.fabric_outbox GROUP BY status ORDER BY status;","refId":"A"}],"title":"Fabric queue state","type":"table","options":{"showHeader":true,"cellHeight":"sm"}},{"datasource":{"type":"grafana-postgresql-datasource","uid":"lorawan-telemetry"},"fieldConfig":{"defaults":{},"overrides":[]},"gridPos":{"h":8,"w":6,"x":18,"y":11},"id":11,"targets":[{"datasource":{"type":"grafana-postgresql-datasource","uid":"lorawan-telemetry"},"editorMode":"code","format":"table","rawQuery":true,"rawSql":"SELECT status, count(*)::bigint AS rows, max(verified_at) AS latest_verified_at FROM gateway_evidence.verification_status GROUP BY status ORDER BY status;","refId":"A"}],"title":"Evidence verification state","type":"table","options":{"showHeader":true,"cellHeight":"sm"}},{"datasource":{"type":"grafana-postgresql-datasource","uid":"lorawan-telemetry"},"fieldConfig":{"defaults":{},"overrides":[]},"gridPos":{"h":7,"w":12,"x":0,"y":19},"id":12,"targets":[{"datasource":{"type":"grafana-postgresql-datasource","uid":"lorawan-telemetry"},"editorMode":"code","format":"table","rawQuery":true,"rawSql":"SELECT gateway_id, segment_id, last_sequence, server_received_at, checkpoint_age FROM gateway_evidence.checkpoint_status ORDER BY gateway_id;","refId":"A"}],"title":"Gateway checkpoint freshness","type":"table","options":{"showHeader":true,"cellHeight":"sm"}},{"datasource":{"type":"grafana-postgresql-datasource","uid":"lorawan-telemetry"},"fieldConfig":{"defaults":{},"overrides":[]},"gridPos":{"h":7,"w":12,"x":12,"y":19},"id":13,"targets":[{"datasource":{"type":"grafana-postgresql-datasource","uid":"lorawan-telemetry"},"editorMode":"code","format":"table","rawQuery":true,"rawSql":"SELECT observed_at, status, attempts, left(coalesce(fabric_tx_id,''),24) AS fabric_txid_prefix, committed_at, last_error_category FROM telemetry.fabric_outbox ORDER BY created_at DESC LIMIT 15;","refId":"A"}],"title":"Latest Fabric transactions","type":"table","options":{"showHeader":true,"cellHeight":"sm"}},{"datasource":{"type":"grafana-postgresql-datasource","uid":"lorawan-telemetry"},"fieldConfig":{"defaults":{},"overrides":[]},"gridPos":{"h":9,"w":24,"x":0,"y":26},"id":14,"targets":[{"datasource":{"type":"grafana-postgresql-datasource","uid":"lorawan-telemetry"},"editorMode":"code","format":"table","rawQuery":true,"rawSql":"SELECT time, metric_name, metric_value, metric_bool, unit, quality FROM telemetry.measurements WHERE dev_eui='ac1f09fffe296d29' AND metric_name IN ('soil_moisture_percent','soil_temperature_c','environment_temperature_c','environment_humidity_percent','barometer_pressure_pa','uv_index','rain_wet','battery_v') ORDER BY time DESC, metric_name LIMIT 40;","refId":"A"}],"title":"Latest selected EMU-01 measurements","type":"table","options":{"showHeader":true,"cellHeight":"sm"}}],"refresh":"15s","schemaVersion":41,"tags":["lorawan","research","chapter4","test-cockpit"],"templating":{"list":[]},"time":{"from":"now-30m","to":"now"},"timepicker":{"refresh_intervals":["5s","10s","15s","30s","1m","5m"]},"timezone":"browser","title":"LoRaWAN Research Test Cockpit","uid":"lorawan-research-cockpit","version":1,"weekStart":""}
+{
+  "annotations": {
+    "list": []
+  },
+  "editable": false,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "lorawan-telemetry"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "description": "Seconds since the latest EMU-01 packet reached telemetry storage."
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "lorawan-telemetry"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT round(extract(epoch from (now()-max(time))))::bigint AS \"Age\" FROM telemetry.uplinks WHERE dev_eui='ac1f09fffe296d29';",
+          "refId": "A"
+        }
+      ],
+      "title": "Last sensor packet age",
+      "type": "stat",
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto"
+      }
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "lorawan-telemetry"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "description": "EMU-01 packets stored in the last five minutes."
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 4,
+        "y": 0
+      },
+      "id": 2,
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "lorawan-telemetry"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT count(*)::bigint AS \"Packets\" FROM telemetry.uplinks WHERE dev_eui='ac1f09fffe296d29' AND time >= now()-interval '5 minutes';",
+          "refId": "A"
+        }
+      ],
+      "title": "Packets · last 5 min",
+      "type": "stat",
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto"
+      }
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "lorawan-telemetry"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "description": "Mean application-event to database storage delay."
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 8,
+        "y": 0
+      },
+      "id": 3,
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "lorawan-telemetry"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT round(avg(extract(epoch from (received_at-time))*1000.0)::numeric,2) AS \"Delay\" FROM telemetry.uplinks WHERE dev_eui='ac1f09fffe296d29' AND time >= now()-interval '5 minutes';",
+          "refId": "A"
+        }
+      ],
+      "title": "App → DB delay · 5 min avg",
+      "type": "stat",
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto"
+      }
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "lorawan-telemetry"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "dBm",
+          "description": "Received signal strength of the latest EMU-01 uplink."
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 12,
+        "y": 0
+      },
+      "id": 4,
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "lorawan-telemetry"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT rssi_dbm AS \"RSSI\" FROM telemetry.uplinks WHERE dev_eui='ac1f09fffe296d29' ORDER BY time DESC LIMIT 1;",
+          "refId": "A"
+        }
+      ],
+      "title": "Latest RSSI",
+      "type": "stat",
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto"
+      }
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "lorawan-telemetry"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "dB",
+          "description": "Signal-to-noise ratio of the latest EMU-01 uplink."
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 16,
+        "y": 0
+      },
+      "id": 5,
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "lorawan-telemetry"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT snr_db AS \"SNR\" FROM telemetry.uplinks WHERE dev_eui='ac1f09fffe296d29' ORDER BY time DESC LIMIT 1;",
+          "refId": "A"
+        }
+      ],
+      "title": "Latest SNR",
+      "type": "stat",
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto"
+      }
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "lorawan-telemetry"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "description": "Evidence gaps plus integrity failures. Zero is healthy."
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 20,
+        "y": 0
+      },
+      "id": 6,
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "lorawan-telemetry"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT count(*)::bigint AS \"Issues\" FROM gateway_evidence.verification_status WHERE status IN ('evidence_gap','integrity_failure');",
+          "refId": "A"
+        }
+      ],
+      "title": "Evidence issues",
+      "type": "stat",
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto"
+      }
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "lorawan-telemetry"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "description": "All 13 decoded measurements from the newest EMU-01 observation, with presentation units."
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 24,
+        "x": 0,
+        "y": 4
+      },
+      "id": 7,
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "lorawan-telemetry"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "WITH latest AS (\n  SELECT max(time) AS t FROM telemetry.measurements WHERE dev_eui='ac1f09fffe296d29'\n)\nSELECT\n  m.time AS \"Observed\",\n  round(max(m.metric_value) FILTER (WHERE m.metric_name='environment_temperature_c')::numeric,1) AS \"Air °C\",\n  round(max(m.metric_value) FILTER (WHERE m.metric_name='environment_humidity_percent')::numeric,1) AS \"Air humidity %\",\n  round((max(m.metric_value) FILTER (WHERE m.metric_name='environment_pressure_pa')/1000.0)::numeric,2) AS \"Air pressure kPa\",\n  round((max(m.metric_value) FILTER (WHERE m.metric_name='environment_gas_resistance_ohm')/1000.0)::numeric,2) AS \"Gas kΩ\",\n  round(max(m.metric_value) FILTER (WHERE m.metric_name='barometer_temperature_c')::numeric,1) AS \"Barometer °C\",\n  round((max(m.metric_value) FILTER (WHERE m.metric_name='barometer_pressure_pa')/1000.0)::numeric,2) AS \"Barometer kPa\",\n  round(max(m.metric_value) FILTER (WHERE m.metric_name='soil_moisture_percent')::numeric,1) AS \"Soil moisture %\",\n  round(max(m.metric_value) FILTER (WHERE m.metric_name='soil_temperature_c')::numeric,1) AS \"Soil °C\",\n  round(max(m.metric_value) FILTER (WHERE m.metric_name='light_opt3001_lux')::numeric,1) AS \"OPT3001 lux\",\n  round(max(m.metric_value) FILTER (WHERE m.metric_name='light_veml7700_lux')::numeric,1) AS \"VEML7700 lux\",\n  round(max(m.metric_value) FILTER (WHERE m.metric_name='uv_index')::numeric,1) AS \"UV index\",\n  CASE WHEN bool_or(m.metric_bool) FILTER (WHERE m.metric_name='rain_wet') THEN 'Wet' ELSE 'Dry' END AS \"Rain\",\n  round(max(m.metric_value) FILTER (WHERE m.metric_name='battery_v')::numeric,2) AS \"Battery V\"\nFROM telemetry.measurements m, latest l\nWHERE m.dev_eui='ac1f09fffe296d29' AND m.time=l.t\nGROUP BY m.time;",
+          "refId": "A"
+        }
+      ],
+      "title": "EMU-01 · latest agriculture readings",
+      "type": "table",
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm"
+      }
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "lorawan-telemetry"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "celsius"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 0,
+        "y": 11
+      },
+      "id": 8,
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "lorawan-telemetry"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT time,\n max(metric_value) FILTER (WHERE metric_name='environment_temperature_c') AS \"Air °C\",\n max(metric_value) FILTER (WHERE metric_name='soil_temperature_c') AS \"Soil °C\",\n max(metric_value) FILTER (WHERE metric_name='barometer_temperature_c') AS \"Barometer °C\"\nFROM telemetry.measurements WHERE dev_eui='ac1f09fffe296d29' AND $__timeFilter(time)\n AND metric_name IN ('environment_temperature_c','soil_temperature_c','barometer_temperature_c') GROUP BY time ORDER BY time;",
+          "refId": "A"
+        }
+      ],
+      "title": "Temperature history",
+      "type": "timeseries",
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true,
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      }
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "lorawan-telemetry"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 12,
+        "y": 11
+      },
+      "id": 9,
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "lorawan-telemetry"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT time,\n max(metric_value) FILTER (WHERE metric_name='environment_humidity_percent') AS \"Air humidity %\",\n max(metric_value) FILTER (WHERE metric_name='soil_moisture_percent') AS \"Soil moisture %\"\nFROM telemetry.measurements WHERE dev_eui='ac1f09fffe296d29' AND $__timeFilter(time)\n AND metric_name IN ('environment_humidity_percent','soil_moisture_percent') GROUP BY time ORDER BY time;",
+          "refId": "A"
+        }
+      ],
+      "title": "Humidity & soil moisture",
+      "type": "timeseries",
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true,
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      }
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "lorawan-telemetry"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "pressurekpa"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 0,
+        "y": 18
+      },
+      "id": 10,
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "lorawan-telemetry"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT time,\n max(metric_value/1000.0) FILTER (WHERE metric_name='environment_pressure_pa') AS \"Air kPa\",\n max(metric_value/1000.0) FILTER (WHERE metric_name='barometer_pressure_pa') AS \"Barometer kPa\"\nFROM telemetry.measurements WHERE dev_eui='ac1f09fffe296d29' AND $__timeFilter(time)\n AND metric_name IN ('environment_pressure_pa','barometer_pressure_pa') GROUP BY time ORDER BY time;",
+          "refId": "A"
+        }
+      ],
+      "title": "Pressure history",
+      "type": "timeseries",
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true,
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      }
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "lorawan-telemetry"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "lux"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 12,
+        "y": 18
+      },
+      "id": 11,
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "lorawan-telemetry"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT time,\n max(metric_value) FILTER (WHERE metric_name='light_opt3001_lux') AS \"OPT3001 lux\",\n max(metric_value) FILTER (WHERE metric_name='light_veml7700_lux') AS \"VEML7700 lux\"\nFROM telemetry.measurements WHERE dev_eui='ac1f09fffe296d29' AND $__timeFilter(time)\n AND metric_name IN ('light_opt3001_lux','light_veml7700_lux') GROUP BY time ORDER BY time;",
+          "refId": "A"
+        }
+      ],
+      "title": "Light history",
+      "type": "timeseries",
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true,
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      }
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "lorawan-telemetry"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "kohm"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 8,
+        "x": 0,
+        "y": 25
+      },
+      "id": 12,
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "lorawan-telemetry"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT time, metric_value/1000.0 AS \"Gas resistance kΩ\" FROM telemetry.measurements WHERE dev_eui='ac1f09fffe296d29' AND metric_name='environment_gas_resistance_ohm' AND $__timeFilter(time) ORDER BY time;",
+          "refId": "A"
+        }
+      ],
+      "title": "Gas resistance",
+      "type": "timeseries",
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true,
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      }
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "lorawan-telemetry"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 8,
+        "x": 8,
+        "y": 25
+      },
+      "id": 13,
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "lorawan-telemetry"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT time, metric_value AS \"UV index\" FROM telemetry.measurements WHERE dev_eui='ac1f09fffe296d29' AND metric_name='uv_index' AND $__timeFilter(time) ORDER BY time;",
+          "refId": "A"
+        }
+      ],
+      "title": "UV index",
+      "type": "timeseries",
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true,
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      }
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "lorawan-telemetry"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "volt"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 8,
+        "x": 16,
+        "y": 25
+      },
+      "id": 14,
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "lorawan-telemetry"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT time, metric_value AS \"Battery V\" FROM telemetry.measurements WHERE dev_eui='ac1f09fffe296d29' AND metric_name='battery_v' AND $__timeFilter(time) ORDER BY time;",
+          "refId": "A"
+        }
+      ],
+      "title": "Battery voltage",
+      "type": "timeseries",
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true,
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      }
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "lorawan-telemetry"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 8,
+        "x": 0,
+        "y": 31
+      },
+      "id": 15,
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "lorawan-telemetry"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT time, CASE WHEN metric_bool THEN 1 ELSE 0 END AS \"Wet = 1 / Dry = 0\"\nFROM telemetry.measurements WHERE dev_eui='ac1f09fffe296d29' AND metric_name='rain_wet' AND $__timeFilter(time) ORDER BY time;",
+          "refId": "A"
+        }
+      ],
+      "title": "Rain / wet history",
+      "type": "timeseries",
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true,
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      }
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "lorawan-telemetry"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "dBm"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 8,
+        "x": 8,
+        "y": 31
+      },
+      "id": 16,
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "lorawan-telemetry"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT time, rssi_dbm AS \"RSSI dBm\" FROM telemetry.uplinks WHERE dev_eui='ac1f09fffe296d29' AND $__timeFilter(time) ORDER BY time;",
+          "refId": "A"
+        }
+      ],
+      "title": "RF signal strength",
+      "type": "timeseries",
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true,
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      }
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "lorawan-telemetry"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "dB"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 8,
+        "x": 16,
+        "y": 31
+      },
+      "id": 17,
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "lorawan-telemetry"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT time, snr_db AS \"SNR dB\" FROM telemetry.uplinks WHERE dev_eui='ac1f09fffe296d29' AND $__timeFilter(time) ORDER BY time;",
+          "refId": "A"
+        }
+      ],
+      "title": "RF signal quality",
+      "type": "timeseries",
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true,
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      }
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "lorawan-telemetry"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 0,
+        "y": 37
+      },
+      "id": 18,
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "lorawan-telemetry"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT time, extract(epoch from (received_at-time))*1000.0 AS \"App → DB ms\" FROM telemetry.uplinks WHERE dev_eui='ac1f09fffe296d29' AND $__timeFilter(time) ORDER BY time;",
+          "refId": "A"
+        }
+      ],
+      "title": "Application → database delay",
+      "type": "timeseries",
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true,
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      }
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "lorawan-telemetry"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "description": "Recent packets from the research nodes; only sender, counters and radio measurements are shown."
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 12,
+        "y": 37
+      },
+      "id": 19,
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "lorawan-telemetry"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT time AS \"Arrived\",\n CASE dev_eui WHEN 'ac1f09fffe296d29' THEN 'EMU-01 · Agriculture' WHEN 'ac1f09fffe296aeb' THEN 'SEC-02 · Security' ELSE dev_eui END AS \"Sender\",\n payload_json->>'test_sequence' AS \"Sequence\", f_cnt AS \"FCnt\",\n round(rssi_dbm::numeric,1) AS \"RSSI dBm\", round(snr_db::numeric,1) AS \"SNR dB\",\n round((gateway_frequency_hz/1000000.0)::numeric,3) AS \"Frequency MHz\"\nFROM telemetry.uplinks WHERE dev_eui IN ('ac1f09fffe296d29','ac1f09fffe296aeb') ORDER BY time DESC LIMIT 30;",
+          "refId": "A"
+        }
+      ],
+      "title": "Recent LoRaWAN packets",
+      "type": "table",
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm"
+      }
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "lorawan-telemetry"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "description": "Presentation status only: committed, waiting, or needs attention. Raw queue states remain available in diagnostics/evidence."
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 0,
+        "y": 44
+      },
+      "id": 20,
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "lorawan-telemetry"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT CASE\n WHEN status='confirmed' THEN 'Committed'\n WHEN status IN ('pending','claimed','retry') THEN 'Waiting'\n ELSE 'Needs attention' END AS \"Fabric delivery\",\n count(*)::bigint AS \"Records\"\nFROM telemetry.fabric_outbox\nGROUP BY 1 ORDER BY CASE WHEN CASE WHEN status='confirmed' THEN 'Committed' WHEN status IN ('pending','claimed','retry') THEN 'Waiting' ELSE 'Needs attention' END='Committed' THEN 1 WHEN CASE WHEN status='confirmed' THEN 'Committed' WHEN status IN ('pending','claimed','retry') THEN 'Waiting' ELSE 'Needs attention' END='Waiting' THEN 2 ELSE 3 END;",
+          "refId": "A"
+        }
+      ],
+      "title": "Fabric delivery summary",
+      "type": "table",
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm"
+      }
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "lorawan-telemetry"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "description": "Compact integrity summary. Raw checkpoint IDs and hashes are intentionally omitted from the presentation dashboard."
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 12,
+        "y": 44
+      },
+      "id": 21,
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "lorawan-telemetry"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT CASE\n WHEN status='verified' THEN 'Verified'\n WHEN status='pending' THEN 'Waiting'\n WHEN status IN ('evidence_gap','integrity_failure') THEN 'Needs attention'\n ELSE 'Not required' END AS \"Evidence\",\n count(*)::bigint AS \"Records\"\nFROM gateway_evidence.verification_status GROUP BY 1\nORDER BY CASE WHEN CASE WHEN status='verified' THEN 'Verified' WHEN status='pending' THEN 'Waiting' WHEN status IN ('evidence_gap','integrity_failure') THEN 'Needs attention' ELSE 'Not required' END='Verified' THEN 1 WHEN CASE WHEN status='verified' THEN 'Verified' WHEN status='pending' THEN 'Waiting' WHEN status IN ('evidence_gap','integrity_failure') THEN 'Needs attention' ELSE 'Not required' END='Waiting' THEN 2 WHEN CASE WHEN status='verified' THEN 'Verified' WHEN status='pending' THEN 'Waiting' WHEN status IN ('evidence_gap','integrity_failure') THEN 'Needs attention' ELSE 'Not required' END='Needs attention' THEN 3 ELSE 4 END;",
+          "refId": "A"
+        }
+      ],
+      "title": "Evidence verification summary",
+      "type": "table",
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm"
+      }
+    }
+  ],
+  "refresh": "10s",
+  "schemaVersion": 41,
+  "tags": [
+    "lorawan",
+    "research",
+    "chapter4",
+    "test-cockpit",
+    "presentation"
+  ],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "now-30m",
+    "to": "now"
+  },
+  "timepicker": {
+    "refresh_intervals": [
+      "5s",
+      "10s",
+      "15s",
+      "30s",
+      "1m",
+      "5m"
+    ]
+  },
+  "timezone": "browser",
+  "title": "LoRaWAN Research Test Cockpit",
+  "uid": "lorawan-research-cockpit",
+  "version": 3,
+  "weekStart": "",
+  "description": "Research presentation dashboard: all EMU-01 measurements, LoRaWAN RF/latency, recent senders, and compact integrity/Fabric state. Raw identifiers remain in sealed evidence and diagnostics."
+}

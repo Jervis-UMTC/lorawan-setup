@@ -18,7 +18,7 @@ If a separate minimum seven-service dissertation VM is used, follow the server p
 |---|---|---|
 | [gateway/](gateway/00-README.md) | Raspberry Pi 4B + RAK5146 and secure transport | real EUI stable, AS923 correct, buffer/bridge works, ChirpStack sees gateway |
 | [server/](server/00-README.md) | Ubuntu VM + minimum seven-service stack | required services healthy, telemetry/storage/Fabric path available |
-| [sensor/](sensor/00-README.md) | EMU-01 and SEC-02 | every direct Agriculture Kit sensor copy verified, EMU-01 full-sensor payload v2 works at 15 seconds, SEC-02 invalid/raw-RF functions proven |
+| [sensor/](sensor/00-README.md) | EMU-01 and SEC-02 | every direct Agriculture Kit sensor copy verified, EMU-01 full-sensor payload v2 works with the accepted production scheduler (60-second local sampling; nominal 5-minute uplinks ±15 seconds), SEC-02 invalid/raw-RF functions proven |
 | [tools/](tools/00-README.md) | test laptop, generators, resource capture | pilot rates and resource CSVs work |
 
 ## Phase 1 - Obtain the gateway identity
@@ -82,7 +82,7 @@ All direct sensor assemblies are mandatory. One complete A-set stays installed o
 Required roles:
 
 ```text
-EMU-01 -> legitimate full physical-sensor OTAA node, payload v2 every 15 seconds
+EMU-01 -> legitimate full physical-sensor OTAA node, payload v2 on the accepted production scheduler
 SEC-02 -> second-copy sensor verification, then invalid-credential/raw-RF security node with no legitimate root/session keys
 ```
 
@@ -171,7 +171,7 @@ Do not enter `../execution/` until all are true:
 [ ] Server VM is 5 GiB / 4 vCPU and all seven required services are healthy
 [ ] Every direct Agriculture Kit sensor copy has been physically used and verified
 [ ] EMU-01 retains one complete sensor set with all seven sensor types valid
-[ ] EMU-01 OTAA joins and sends physical-sensor payload v2 every 15 seconds
+[ ] EMU-01 OTAA joins and sends physical-sensor payload v2 on the accepted production scheduler
 [ ] EMU-01 test_sequence increments once per scheduled reading
 [ ] One real EMU-01 reading reaches TimescaleDB
 [ ] One selected event has valid Fabric commit evidence

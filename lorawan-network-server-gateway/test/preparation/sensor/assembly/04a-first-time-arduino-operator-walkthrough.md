@@ -63,11 +63,11 @@ The permanent EMU-01 map must be:
 RAK19001 / EMU-01
 
 Sensor A = RAK1903   OPT3001 ambient light
-Sensor B = EMPTY / NA
+Sensor B = RAK12010  VEML7700 ambient light
 Sensor C = RAK12019  UV
 Sensor D = RAK12011  barometer
 Sensor E = RAK1906   BME680 environment
-Sensor F = RAK12010  VEML7700 ambient light
+Sensor F = EMPTY / NA
 
 WisIO 1  = RAK12023 -> RAK12035 soil probe
 WisIO 2  = RAK12005 -> RAK12030 rain pad
@@ -82,7 +82,8 @@ Before connecting USB:
 [ ] retaining screws installed
 [ ] no loose screw or conductive debris
 [ ] LoRa antenna attached to the LoRa RF connector
-[ ] Sensor B is empty
+[ ] Sensor B contains RAK12010 / VEML7700
+[ ] Sensor F is empty / reserve
 [ ] all other modules match the fixed map
 [ ] soil/rain electronics are dry
 [ ] optical sensors are unobstructed
@@ -670,14 +671,14 @@ sensor value changes
 
 ---
 
-# Part 10 - Second physical sensor: RAK12010 / VEML7700 in Sensor F
+# Part 10 - Second physical sensor: RAK12010 / VEML7700 in Sensor B
 
 Test RAK12010 next because it is another easy I2C device and gives a second independent proof that multiple sensor modules can use the shared bus.
 
 Permanent position:
 
 ```text
-Sensor F = RAK12010 / VEML7700
+Sensor B = RAK12010 / VEML7700
 ```
 
 ## Step 10.1 - Install the correct VEML7700 library
@@ -808,7 +809,7 @@ RAK12010 light = ... lux
 
 ## Step 10.4 - Physical response test
 
-Make sure you manipulate the **RAK12010 in Sensor F**, not the already-tested RAK1903 in Sensor A:
+Make sure you manipulate the **RAK12010 in Sensor B**, not the already-tested RAK1903 in Sensor A:
 
 ```text
 normal room light
@@ -826,38 +827,29 @@ lux should increase
 
 **PASS:** RAK12010 initializes, reports numeric lux, and responds correctly to changing illumination.
 
-## Step 10.5 - Is it okay that RAK12010 is on the bottom side of the RAK19001?
+## Step 10.5 - Why RAK12010 is now in Sensor B
 
-Yes. Keep the project-fixed placement:
+The 2026-09-02 layout review moved RAK12010 from lower-side Sensor F to top-side Sensor B.
 
 ```text
-Sensor F = RAK12010 / VEML7700
+Sensor B = RAK12010 / VEML7700
+Sensor F = EMPTY / reserve
 ```
 
-RAK documents that RAK12010 can be mounted in Sensor Slots A through F. Therefore, Slot F being physically on the lower side of the RAK19001 is not an electrical problem.
+This is electrically valid because RAK documents RAK12010 for Sensor Slots A through F and its WisConnector uses only I2C, `3V3_S`, and GND. It does **not** connect an interrupt line to Slot-B `WB_IO2`; `WB_IO2` remains the RAK19001 shared `3V3_S` enable. The same safe B-slot principle is already used by the SEC-02 Profile A layout.
 
-The important issue is **optical exposure**:
+The change improves measurement quality and assembly simplicity: VEML7700 no longer depends on a lower-side light path or bench standoffs, and Sensor F becomes a reserve slot while `WB_IO6` stays dedicated to the rain path.
 
-```text
-Slot F electrically valid
-        +
-VEML7700 can see intended ambient light
-        =
-valid placement
-```
-
-For bench testing:
+For bench and enclosure testing:
 
 ```text
-[ ] do not lay the RAK12010 face-down against an opaque desk
-[ ] use standoffs / feet / spacers so light can reach the lower-side sensor
-[ ] keep cables and other PCBs away from the VEML7700 optical surface
+[ ] keep the Sensor-B VEML7700 optical surface unobstructed
+[ ] keep cables and other PCBs out of its light path
+[ ] provide a clear enclosure opening/window appropriate to the intended light measurement
 [ ] verify cover -> lux decreases and uncover -> lux increases
 ```
 
-For the final enclosure, provide a suitable opening/window/light path for the RAK12010. A sensor that communicates perfectly over I2C can still produce biased lux measurements if the enclosure physically shades it.
-
-Do **not** move the RAK12010 out of Sensor F just because it is underneath the base. Moving it would change the frozen project slot map and must only be done deliberately with a new Pin Mapper/conflict review.
+Moving F -> B does not require a firmware code change because the VEML7700 path is I2C-only. It **does** require a revised Pin Mapper record plus a fresh RAK12010 response check and integrated EMU-01 sensor/preflight verification before the layout is frozen.
 
 Keep the two final fields separate:
 
@@ -2542,7 +2534,7 @@ RAK1903 library version
 RAK1903 light response result
 RAK12010 library version
 RAK12010 light response result
-RAK12010 underside/light-clearance result
+RAK12010 Sensor-B/top-side light-clearance result
 RAK12011 / Adafruit LPS2X library version
 RAK12011 pressure/temperature result
 RAK1906 / Adafruit BME680 library version

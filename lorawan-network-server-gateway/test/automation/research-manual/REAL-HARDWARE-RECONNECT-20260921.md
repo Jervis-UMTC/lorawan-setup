@@ -1,0 +1,27 @@
+# Live hardware reconnection — 2026-09-21 (non-counted commissioning)
+
+## Verified hardware and network
+
+- Workstation wired NIC `Ethernet` is up at 1 Gbps, `192.168.20.30/24`; Gateway-01 answers restricted SSH on `192.168.20.11` as `research-recorder-gateway-v3`. Workstation's Wi-Fi remains the independent internet path.
+- EMU-01 USB identity `VID_239A/PID_8029`, serial `69D8B0D3239621F1`, `COM11`; SEC-01 identity `VID_1915/PID_521F`, serial `F0B61D25752E`, `COM16`.
+- The real recorder `preflight --require-emu --require-sec` exited 0: ULC-01/02/03 and gateway reachable; Spilo leader ULC-01, replicas ULC-02/03; evidence collectors/verifiers ready. Cloud-node spread 0.006245 s, gateway-cloud skew -0.154809 s, workstation's separately measured cloud offset -86.588603 s; CLOCK_GATE=PASS under calibration rules. Do not silently treat workstation wall time as authoritative server time.
+- Gateway LTE snapshot: `wwan0=100.73.133.167/28`, exclusive gateway default `via 100.73.133.168 dev wwan0`; `br-lan=192.168.20.11/24` remains the management path. Established broker TCP uses the LTE source to `129.212.208.168:8883`. LTE registered; observed RSRP -102 dBm, RSRQ -15 dB, SNR -1 dB (condition may vary).
+- SEC-01 direct RUI3 queries: `RUI_4.2.4_RAK4631`, `AT+BAND=8`, `AT+NWM=1`, `AT+NJS=0`. Exactly one controlled **unregistered** join attempt produced `+EVT:JOIN_FAILED_RX_TIMEOUT`, not a legitimate accepted join. Gateway logged fresh AS923 LoRa SF10 / BW 125 kHz radio receptions; SEC was returned to, and reverified in, its original parked state.
+
+## EMU-01 restoration and end-to-end smoke proof
+
+Initially the application COM11 emitted zero `SENSOR_TX` lines during a 24 s observation and ULC-01 exported zero new EMU uplinks/outbox records over the inspected initial window. Because the stored counted-test firmware archive hashed correctly, the existing known-good `.tmp-emu-reboot-canary.py` safely entered USB DFU at COM12 and successfully programmed the exact `COUNTED_TEST_15S` package SHA-256 `c1f09de8eb6d8e00bbdd432765db90c66eaa87a530f490e54d04558e81bbd6b1`. Its original retained report is at `chapter4-results/authentication/lorawan/A1-LORAWAN-emu-reboot-canary-20260921-122403/`. The original `summary.json` says FAIL only because the transient boot banner was missed when the CDC serial handle opened; **do not rewrite that historical result as PASS**.
+
+Independent actual evidence in the same run: `dfu.stdout.txt` shows `Device programmed.`; `emu-serial.txt` has `EMU01_OTAA_JOIN=PASS` and three consecutive `SENSOR_TX` rows with `join=1,send_status=0,valid=0x7F`, sequence 1/2/3 and uptimes 18402/33409/48415 ms, gaps **15007/15006 ms**. The known archive, successful DFU and two measured 15 s intervals prove the counted firmware profile despite the missed boot-only banner. The canary source now supports that alternative proof, and a permanent, syntax-checked copy is `test/automation/research-recorder/emu_reboot_canary.py`; **do not rerun DFU solely to retest the repaired canary**.
+
+The real ULC-01 read-only `db-export` showed five new accepted EMU uplinks with source sequences 1–5 and **65 measurement rows**, exactly 13 per uplink. Subsequent `db-export packetflow` for gateway `0016c001f139a1cb` over `2026-09-21T04:22:00Z..04:36:00Z` produced 15 EMU packet-flow rows with AS923 channels 923200000/923400000 Hz; at the final sample **9 were evidence-verified and Fabric-confirmed with actual transaction IDs**, and 6 newer rows remained pending verification/outbox settlement. Example verified source sequence 9: broker receipt `2026-09-21 04:25:06.07718+00`, uplink ID `3029191236`, frequency 923200000 Hz, verified, confirmed, Fabric TxID `042c46dbcbf88f79ae85e60c7acfa78423a4573a09e29b37b0575b7eceff69bd`. Separate `evidence-status` showed `evidence_gap=0` and `integrity_failure=0`; pending rows are NOT counted as Fabric-confirmed.
+
+**Do not claim every recent outbox item is immediately confirmed:** the gateway journal checkpoint/evidence verifier runs asynchronously, so newly arriving rows may be pending for a bounded period. One representative **real** gateway → LTE → ChirpStack → PostgreSQL → evidence verification → Fabric transaction was proved. No formal Chapter 4 measurement run was started and no synthetic/rehearsal rows were counted.
+
+## A1 live-discovered harness fix
+
+The RUI3 firmware echoes query commands such as `AT+VER=?` before the real `AT+VER=RUI_4.2.4_RAK4631` answer. `a1_lorawan_harness.query_value` previously read the echoed `?` and incorrectly failed `sec_baseline`. It now skips the echo and requires a real value. The targeted A1 LoRaWAN offline suite passed **16/16** with the new live-derived regression; the SEC parked-state check and one controlled join/park cycle then passed live. This repair changes the earlier 195-check offline baseline: do not claim a new full-suite total until a fresh full suite is run.
+
+## Next
+
+The live stack is qualified for a **non-counted** manual P1 smoke/recorder rehearsal and then selected, individually commissioned formal tests. The experimental operator readiness statuses for uncommissioned A1/F1/F2/R1/R2/T1/T2/I1/I2/I3 remain unchanged by this single smoke. S2 is still methodology-required. If planning to leave sensors powered for a long idle period, account for the loaded research firmware's 15-second traffic profile; production firmware has a different nominal schedule.

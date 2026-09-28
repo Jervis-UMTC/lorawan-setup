@@ -1,0 +1,16 @@
+[
+  {
+    "id": "PRE",
+    "command": "python .\\test\\automation\\research-manual\\run_test.py PRE",
+    "exit_code": 0,
+    "status": "READY",
+    "code_block_test": "PASS"
+  },
+  {
+    "id": "P1",
+    "command": "python .\\test\\automation\\research-manual\\run_test.py P1",
+    "exit_code": 0,
+    "status": "READY",
+    "code_block_test": "PASS"
+  }
+]

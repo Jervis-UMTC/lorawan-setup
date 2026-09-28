@@ -1,4 +1,5 @@
 # Execution 6. Traceability
+> **Reference procedure only.** Executable operator commands are published only in `chapters/lorawan_research_test_manual_final.md` after live qualification. The fenced snippets below are preserved as implementation/reference text and must not be copied as current commands.
 
 This test uses the current stable event identity as the trace identifier.
 
@@ -75,7 +76,7 @@ Wait until each selected reading is stored and, when Fabric-selected, reaches `c
 
 Query recent events:
 
-```bash
+```text
 docker compose exec telemetry-db \
   psql -U telemetry_admin -d lorawan_telemetry \
   -c "SELECT event_key,time,dev_eui,gateway_id,f_cnt,payload_json FROM telemetry.uplinks WHERE dev_eui='<TEST_DEV_EUI>' ORDER BY time DESC LIMIT 20;"
@@ -85,7 +86,7 @@ Choose one event key that belongs to the trace trial.
 
 ### Step A3 - Retrieve the complete database path
 
-```bash
+```text
 docker compose exec telemetry-db \
   psql -U telemetry_admin -d lorawan_telemetry \
   -v event_key='<TRACE_ID>' \
@@ -94,7 +95,7 @@ docker compose exec telemetry-db \
 
 Retrieve normalized measurements:
 
-```bash
+```text
 docker compose exec telemetry-db \
   psql -U telemetry_admin -d lorawan_telemetry \
   -v event_key='<TRACE_ID>' \
@@ -103,7 +104,7 @@ docker compose exec telemetry-db \
 
 ### Step A4 - Retrieve the Fabric linkage
 
-```bash
+```text
 docker compose exec telemetry-db \
   psql -U telemetry_admin -d lorawan_telemetry \
   -v event_key='<TRACE_ID>' \
@@ -175,7 +176,7 @@ Wait for all five readings and their selected Fabric work to settle before query
 
 ### Step B2 - Query the five database records
 
-```bash
+```text
 docker compose exec telemetry-db \
   psql -U telemetry_admin -d lorawan_telemetry \
   -c "SELECT event_key,time,dev_eui,f_cnt,payload_json FROM telemetry.uplinks WHERE dev_eui='<TEST_DEV_EUI>' AND time >= '<SEQUENCE_START_UTC>' AND time <= '<SEQUENCE_END_UTC>' ORDER BY time,f_cnt;"
@@ -185,7 +186,7 @@ The result must contain the expected five records for the sequence. If other liv
 
 ### Step B3 - Query all database-to-Fabric links
 
-```bash
+```text
 docker compose exec telemetry-db \
   psql -U telemetry_admin -d lorawan_telemetry \
   -c "SELECT u.event_key,u.time,u.f_cnt,o.event_key AS fabric_event_key,o.digest_sha256,o.fabric_tx_id,o.status,o.committed_at FROM telemetry.uplinks u LEFT JOIN telemetry.fabric_outbox o ON o.source_event_key=u.event_key AND o.observed_at=u.time WHERE u.dev_eui='<TEST_DEV_EUI>' AND u.time >= '<SEQUENCE_START_UTC>' AND u.time <= '<SEQUENCE_END_UTC>' ORDER BY u.time,u.f_cnt;"

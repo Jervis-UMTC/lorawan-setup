@@ -58,11 +58,11 @@ If this is your first time using Arduino IDE, use [04a-first-time-arduino-operat
                        │ RAK19001 base           │
                        │                         │
   RAK1903 OPT3001 ────>│ Sensor A  / WB_IO1     │
-  EMPTY ──────────────>│ Sensor B  / WB_IO2     │  reserved for 3V3_S control
+  RAK12010 VEML7700 ──>│ Sensor B  / I2C only   │  WB_IO2 stays 3V3_S control
   RAK12019 UV ────────>│ Sensor C  / WB_IO3     │
   RAK12011 BARO ──────>│ Sensor D  / WB_IO5     │
   RAK1906 BME680 ─────>│ Sensor E  / I2C only   │
-  RAK12010 VEML7700 ──>│ Sensor F  / I2C only   │
+  EMPTY / RESERVE ────>│ Sensor F  / WB_IO6     │
                        │                         │
   RAK12023 ───────────>│ WisIO 1 / WB_IO4       │──> RAK12035 soil probe
   RAK12005 ───────────>│ WisIO 2 / WB_IO6       │──> RAK12030 rain pad

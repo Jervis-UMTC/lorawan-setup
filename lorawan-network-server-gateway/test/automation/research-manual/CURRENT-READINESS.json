@@ -1,0 +1,111 @@
+{
+  "generated_utc": "2026-09-28T00:35:54Z",
+  "technical_gate": "PASS",
+  "tooling_gate": "PASS",
+  "verification_scope": "live",
+  "compile": {
+    "status": "PASS",
+    "detail": ""
+  },
+  "documentation": {
+    "status": "PASS",
+    "released_blocks": [
+      "python .\\test\\automation\\research-manual\\run_test.py PRE",
+      "python .\\test\\automation\\research-manual\\run_test.py P1"
+    ],
+    "expected_blocks": [
+      "python .\\test\\automation\\research-manual\\run_test.py PRE",
+      "python .\\test\\automation\\research-manual\\run_test.py P1"
+    ],
+    "legacy_executable_guides": [],
+    "detail": "only live-qualified final-manual blocks are executable"
+  },
+  "mqtt_tools": {
+    "status": "PASS",
+    "returncode": 0,
+    "tail": "test_connect_and_publish_against_mock_broker (__main__.MQTTWireTests.test_connect_and_publish_against_mock_broker) ... ok\ntest_connection_flood_rejected_connack_is_target_observed (__main__.MQTTWireTests.test_connection_flood_rejected_connack_is_target_observed) ... ok\ntest_connection_flood_tool_against_mock_broker (__main__.MQTTWireTests.test_connection_flood_tool_against_mock_broker) ... ok\ntest_packet_headers (__main__.MQTTWireTests.test_packet_headers) ... ok\ntest_publish_stream_against_mock_broker (__main__.MQTTWireTests.test_publish_stream_against_mock_broker) ... ok\n\n----------------------------------------------------------------------\nRan 5 tests in 1.866s\n\nOK"
+  },
+  "research_contract": {
+    "status": "PASS",
+    "tests": [
+      {
+        "script": "test\\automation\\test_research_contract.py",
+        "returncode": 0,
+        "tail": "......\n----------------------------------------------------------------------\nRan 6 tests in 0.000s\n\nOK"
+      },
+      {
+        "script": "test\\automation\\fabric-sync\\test_fabric_sync.py",
+        "returncode": 0,
+        "tail": "..\n----------------------------------------------------------------------\nRan 2 tests in 1.144s\n\nOK"
+      }
+    ],
+    "contract_tail": "RESEARCH_CONTRACT=PASS\nP2_WITH_FABRIC_RECORDS=14460\nTRACEABILITY_TRIALS=20 TRACEABILITY_RECORDS=60"
+  },
+  "oversight_status": {
+    "status": "PASS",
+    "returncode": 0,
+    "tail": "OVERSIGHT_AUDIT=PASS\nPRE=READY\nP1=READY\nP2=SYNC_READY_INJECTOR_PENDING\nR1=CONTRACT_READY_HARNESS_PENDING\nR2=HARNESS_READY_LIVE_COMMISSIONING_PENDING\nA1=MQTT_LIVE_COMMISSIONED_LORAWAN_FABRIC_PENDING\nA2=CONTRACT_READY_FABRIC_FIXTURE_PENDING\nS1=VALIDITY_RULE_FROZEN_ORCHESTRATOR_PENDING\nS2=BLOCKED_BY_METHODOLOGY\nF1=HARNESS_READY_LIVE_COMMISSIONING_PENDING\nF2=HARNESS_READY_LIVE_COMMISSIONING_PENDING\nI1=CONTRACT_READY_HARNESS_PENDING\nI2=CONTRACT_READY_HARNESS_PENDING\nI3=CONTRACT_READY_FABRIC_FIXTURE_PENDING\nT1=HARNESS_READY_LIVE_COMMISSIONING_PENDING\nT2=HARNESS_READY_LIVE_COMMISSIONING_PENDING"
+  },
+  "counted_firmware": {
+    "status": "PASS",
+    "checks": {
+      "profile": true,
+      "compile_define": true,
+      "fqbn": true,
+      "macro_proven": true,
+      "artifact_hash": true,
+      "upload_package_hash": true,
+      "reproducible_rebuild": true,
+      "source_hash": true
+    },
+    "artifact_sha256": "f7ab95071e7c8ad4e14c9b2ad0a7ce2c46c696b9cf2bb73f340634ba2e6ff78f",
+    "upload_package_sha256": "c1f09de8eb6d8e00bbdd432765db90c66eaa87a530f490e54d04558e81bbd6b1",
+    "source_sha256": "dc6fab2b6e9934074360a9223f4786d27a9b1db7cf0a68c05d00ff573fcc4424",
+    "artifact_bytes": 425618,
+    "upload_package_bytes": 152224,
+    "build_record": "chapter4-results\\_configuration\\emu01-counted-test-15s\\build-record.json"
+  },
+  "recorder_state": {
+    "status": "CLEAN",
+    "detail": "no active recorder state or ownership lock"
+  },
+  "manual_blocks": [
+    {
+      "id": "PRE",
+      "command": "python .\\test\\automation\\research-manual\\run_test.py PRE",
+      "returncode": 0,
+      "status": "READY",
+      "released": true,
+      "code_block_test_pass": true,
+      "tail": "TEST_ID=PRE\nSTATUS=READY\nDETAIL=Full-stack preflight is implemented by the recorder.\nType EXECUTE to start this real test command, or press Enter to stop after validation: CODE_BLOCK_TEST=PASS (exact command executed through safe validation path; counted test not started)"
+    },
+    {
+      "id": "P1",
+      "command": "python .\\test\\automation\\research-manual\\run_test.py P1",
+      "returncode": 0,
+      "status": "READY",
+      "released": true,
+      "code_block_test_pass": true,
+      "tail": "TEST_ID=P1\nSTATUS=READY\nDETAIL=Complete normal-operation orchestration is commissioned: warm-up gating, closed 30-minute measurement window, calibrated source/ChirpStack/database correlation, bounded Fabric settlement, sealed evidence, and strict post-run validation.\nType EXECUTE to start this real test command, or press Enter to stop after validation: CODE_BLOCK_TEST=PASS (exact command executed through safe validation path; counted test not started)"
+    }
+  ],
+  "gateway_lte": {
+    "status": "PASS",
+    "returncode": 0,
+    "lte_session_uptime_seconds": 1571,
+    "checks": {
+      "lte_up": true,
+      "lte_default_metric10": true,
+      "cloud_route_lte": true,
+      "mqtt_established": true,
+      "modem_registered": true,
+      "lte_session_uptime_ge_600s": true
+    },
+    "tail": "    cache \n--- mqtt-sockets ---\ntcp        0      0 100.73.166.229:44797    129.212.208.168:8883    TIME_WAIT   \ntcp        0      0 100.73.166.229:54468    129.212.208.168:8883    ESTABLISHED \ntcp        0      0 100.73.166.229:50726    129.212.208.168:8883    ESTABLISHED \n--- serving-system ---\n{\n\t\"registration\": \"registered\",\n\t\"radio_interface\": [\n\t\t\"lte\"\n\t],\n\t\"plmn_mcc\": 515,\n\t\"plmn_mnc\": 66,\n\t\"plmn_description\": \"515 66\",\n\t\"roaming\": false\n}\n--- signal ---\n{\n\t\"type\": \"lte\",\n\t\"rssi\": -69,\n\t\"rsrq\": -13,\n\t\"rsrp\": -99,\n\t\"snr\": 0.000000\n}"
+  },
+  "live_pre": {
+    "status": "PASS",
+    "returncode": 0,
+    "tail": "EVIDENCE_STATUS=LATEST_VERIFIED_AT|2026-09-28T00:31:55.998Z\nEVIDENCE_STATUS=CHECKPOINT|0016c001f139a1cb|336|336|5594|2026-09-28T00:30:09.239Z|246\nEVIDENCE_READY_ULC01=READY|collector-1|http=200\nEVIDENCE_READY_ULC02=READY|verifier-1|http=200\nEVIDENCE_READY_ULC03=READY|collector-2|http=200; READY|verifier-2|http=200\nAUTHORITATIVE_UTC=2026-09-28T00:34:19.764Z\nCLOCK_GATE=PASS\nCLOCK_WORKSTATION_CALIBRATION_LIMIT_SECONDS=300.000\nCLOCK_WORKSTATION_DRIFT_LIMIT_SECONDS=0.100\nCLOCK_CLOUD_SPREAD_LIMIT_SECONDS=0.250\nCLOCK_GATEWAY_CLOUD_SKEW_LIMIT_SECONDS=1.500\nCLOCK_SERVER_MINUS_WORKSTATION_SECONDS=-88.954936\nCLOCK_CLOUD_SPREAD_SECONDS=0.007373\nCLOCK_GATEWAY_MINUS_CLOUD_SECONDS=-0.844756\nCLOCK_ULC01=offset=-88.951831s|rtt_median=70.408ms|samples=5\nCLOCK_ULC02=offset=-88.954936s|rtt_median=74.261ms|samples=5\nCLOCK_ULC03=offset=-88.959204s|rtt_median=63.185ms|samples=5\nCLOCK_GATEWAY=offset=-89.799692s|rtt_median=8.896ms|samples=5\nEMU_PORT=COM11\nSEC_PORT=COM16"
+  }
+}

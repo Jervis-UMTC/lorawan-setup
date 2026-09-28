@@ -1,24 +1,56 @@
 # Counted Test Execution
 
-Use this folder only after every item in [../preparation/00-README.md](../preparation/00-README.md) passes **and** the dedicated [sensor preflight](../preparation/sensor/preflight/00-README.md) has produced `SENSOR_PREFLIGHT_STATUS=GO`.
+Use this folder only after the preparation relevant to the selected experiment scope has passed. The **full-stack** Chapter IV track requires the dedicated [sensor preflight](../preparation/sensor/preflight/00-README.md) to produce `SENSOR_PREFLIGHT_STATUS=GO`. A deliberately narrower **LoRaWAN-only** track may begin earlier when `LORAWAN_TRACK_STATUS=GO`; that scoped exception authorizes only Execution 03 Part A (LoRaWAN authentication) and Execution 04 (LoRaWAN replay/spoofing). It does not authorize the final normal-operation baseline or any Fabric-dependent result.
 
 The manuals are deliberately repetitive at the important points. That is intentional: every experiment tells you what state the system must be in, what to start, what to change, what to record, what makes a trial invalid, and how to restore the testbed afterward.
 
+### Dissertation-source rule
+
+The current research-test authority is [../ZACARIAS-CHAPTER3-TEST-METRICS-SOURCE-OF-TRUTH.md](../ZACARIAS-CHAPTER3-TEST-METRICS-SOURCE-OF-TRUTH.md), derived from the new `chapters/Zacarias_Chapter3.pdf`. Use that source for the **experiment questions, conditions, trial/run counts, durations, measurements, analysis rules, and stated acceptance/security criteria**. Disregard stale architecture/topology/service-placement prose in the chapter. Execute the required tests against the commissioned system that actually exists, using current runbooks and verified live state for implementation. Older Chapter III/IV/V drafts are historical context only when they conflict with the new source-of-truth.
+
+## Counted-test EMU-01 traffic profile
+
+The counted Chapter IV runs intentionally use a **15-second normal-uplink cadence profile** to provide enough observations inside the defined 5-minute, 30-minute, and 2-hour windows. This is an experiment-only timing profile, not the accepted production scheduler.
+
+Freeze these properties across every counted run:
+
+```text
+payload = EMU-01 physical-sensor payload-v2, exactly 46 bytes
+radio = plain AS923, OTAA, Class A
+source identity = the same legitimate EMU-01 identity
+normal counted cadence = 15 seconds
+production cadence = 60-second local sampling + nominal 5-minute uplinks +/-15 seconds
+SEC-02 = separate security fixture; never shares EMU-01 root/session keys
+```
+
+Before counted run 1, compile the tracked source with `EMU01_COUNTED_TEST_PROFILE=1`. Its **only intended behavioral difference from production is timing**. Require the boot banner `EMU01_TRAFFIC_PROFILE=COUNTED_TEST_15S`, sample/normal intervals `15000 ms`, and jitter `0`. Archive source/config hash, exact build settings, BSP/toolchain versions, and compiled artifact SHA-256. Reuse that exact artifact for every 15-second counted run. After the series, rebuild/upload the default profile (`EMU01_COUNTED_TEST_PROFILE=0`), require the `PRODUCTION_5MIN` boot banner, and re-run the lightweight normal-path check.
+
+The source sequence remains the independent delivery/ordering marker; physical sensor values are allowed to vary naturally.
+
 ## Execution order
 
+The existing numbered manuals are being reconciled to the new Zacarias Chapter 3 matrix. Until every affected manual is updated, the source-of-truth controls any conflicting count, condition, duration, metric, or outage definition.
+
 1. [01-common-run-preparation.md](01-common-run-preparation.md) - freeze configuration, define run IDs, start/stop captures, collect logs, and classify VALID/INVALID runs.
-2. [02-normal-operation.md](02-normal-operation.md) - 3 x 30-minute baseline runs; PDR, latency, TSR, throughput, CPU, memory.
-3. [03-authentication-access-control.md](03-authentication-access-control.md) - 90 attempts across LoRaWAN, MQTT, and Fabric authorization.
-4. [04-replay-spoofing.md](04-replay-spoofing.md) - 40 legitimate/replay/invalid-MIC attempts; attack frames count only after proven RAK5146 reception.
-5. [05-data-integrity.md](05-data-integrity.md) - 40 application-layer and post-storage integrity trials.
-6. [06-traceability.md](06-traceability.md) - 20 trials covering 60 records and DB-to-Fabric linkage.
-7. [07-dos-flooding.md](07-dos-flooding.md) - 18 five-minute runs plus recovery observations.
-8. [08-resilience-recovery.md](08-resilience-recovery.md) - 3 x 2-hour WAN interruption runs.
-9. [09-results-and-completion.md](09-results-and-completion.md) - calculate Chapter IV metrics from retained raw evidence.
+2. [02-normal-operation.md](02-normal-operation.md) - **P1**: 3 x 30-minute normal-operation baseline runs. Formal PDR uses the ChirpStack acceptance boundary; exact source-to-database delivery is a separate metric.
+3. [02a-fabric-performance-overhead.md](02a-fabric-performance-overhead.md) - **P2**: 1 tx/15 s, 1 TPS, 5 TPS, and 10 TPS for 5 minutes x 3 repetitions, plus the pre-registered matched no-Fabric controls needed for the overhead calculation.
+4. [03-authentication-access-control.md](03-authentication-access-control.md) - **A1**: 90 attempts across LoRaWAN, MQTT, and Fabric identity/authorization.
+5. [03a-fabric-endorsement-policy.md](03a-fabric-endorsement-policy.md) - **A2**: 10 normal + 10 missing-endorsement violation + 10 post-restoration attempts, with ledger pre/post-state proof.
+6. [04-replay-spoofing.md](04-replay-spoofing.md) - **S1**: 40 legitimate/replay/invalid-MIC attempts; attack frames count only after proven gateway reception.
+7. **S2** - application-layer duplicate/replay remains `BLOCKED_BY_METHODOLOGY`: Chapter 3 lists it but does not define its trial count, exact procedure, metric formula, or pass rule. Do not invent a counted S2 result or silently substitute I3/database deduplication.
+8. [05-data-integrity.md](05-data-integrity.md) - **I1/I2**: 40 application-layer and post-storage integrity trials.
+9. [05a-blockchain-duplicate-overwrite.md](05a-blockchain-duplicate-overwrite.md) - **I3**: 10 baseline anchors + 10 duplicate attempts + 10 conflicting-overwrite attempts, with post-attempt ledger/hash proof.
+10. [06-traceability.md](06-traceability.md) - **T1/T2**: 20 trials covering 60 records and DB-to-Fabric linkage.
+11. [07-dos-flooding.md](07-dos-flooding.md) - **F1/F2**: 18 five-minute runs plus five-minute recovery observation after every run.
+12. [08a-internet-interruption-recovery.md](08a-internet-interruption-recovery.md) - **R1**: 3 x 2-hour external-Internet interruption runs (30 min normal + 60 min outage + 30 min recovery), implemented against the commissioned topology rather than the stale architecture.
+13. [08b-fabric-consistency-reconciliation.md](08b-fabric-consistency-reconciliation.md) - **R2**: 10 controls + 10 records created during Fabric unavailability, then reconcile those same 10 with query-before-resubmission evidence.
+14. [09-results-and-completion.md](09-results-and-completion.md) - calculate Chapter IV metrics from retained raw evidence and enforce the complete dataset checklist.
+
+`08-resilience-recovery.md` remains only a legacy Fabric-endpoint-isolation reference. It is not the counted R1 Internet-interruption procedure.
 
 ## Before starting the first counted test
 
-First confirm this file exists from the uncounted sensor-preflight stage:
+For the complete Chapter IV stack, confirm the full-stack preflight file exists:
 
 ```text
 chapter4-results/_preflight/sensor/04-go-no-go/preflight-status.txt
@@ -30,16 +62,19 @@ and contains:
 SENSOR_PREFLIGHT_STATUS=GO
 ```
 
-Then complete Execution 01 once, and run its short run-level preflight again before every experiment group.
+For the scoped LoRaWAN-only security track, the full-stack file may remain `NO-GO` only for a downstream external dependency. Instead require `chapter4-results/_preflight/sensor/04-go-no-go/lorawan-track-status.txt` to contain `LORAWAN_TRACK_STATUS=GO`. That scoped GO authorizes only Execution 03 Part A (30 LoRaWAN authentication attempts) and Execution 04 (40 replay/spoofing attempts); it does not authorize the final normal-operation baseline or any result requiring a real Fabric submit/query/commit.
 
-The two gates have different purposes:
+Then complete Execution 01 once for the selected scope, and run its short run-level preflight again before every experiment group.
+
+The readiness gates and run-level precheck have different purposes:
 
 ```text
-sensor preflight = prove the final sensor/network/application configuration is test-ready
-Execution 01     = start fresh evidence and prove the system is still healthy immediately before a counted run
+full sensor preflight = prove the entire sensor/network/application/Fabric configuration is test-ready
+LoRaWAN track gate    = prove the independent RF/LoRaWAN security path is test-ready
+Execution 01          = start fresh evidence and prove the selected scope is healthy immediately before a counted run
 ```
 
-Do not reuse preflight packets/log windows as counted research data. Do not start a counted run because the UI merely "looks healthy." You need the earlier sensor GO plus a fresh known-good control uplink and working evidence capture immediately before the experiment group.
+Do not reuse preflight packets/log windows as counted research data. Do not start a counted run because the UI merely "looks healthy." Use the readiness gate appropriate to the selected experiment scope plus a fresh known-good control uplink and working evidence capture immediately before the experiment group.
 
 ## Universal run pattern
 

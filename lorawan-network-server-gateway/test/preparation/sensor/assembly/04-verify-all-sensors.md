@@ -474,7 +474,7 @@ Arduino IDE version
 RAKwireless BSP version
 selected RAK4631 board package
 sensor library versions
-fixed RAK19001 slot map: A=RAK1903, B=NA, C=RAK12019, D=RAK12011, E=RAK1906, F=RAK12010, WisIO1=RAK12023, WisIO2=RAK12005
+fixed RAK19001 slot map: A=RAK1903, B=RAK12010, C=RAK12019, D=RAK12011, E=RAK1906, F=NA/RESERVE, WisIO1=RAK12023, WisIO2=RAK12005
 fixed RAK19007 Profile A map: A=RAK1903-B, B=RAK12010-B, C=RAK12019-B, D=RAK12011-B, IO=RAK12023+RAK12035-B
 fixed RAK19007 Profile B map: A=RAK1906-B, B/C/D=NA, IO=RAK12005+RAK12030-B
 SEC-02 final security baseline: Sensor A-D=EMPTY, IO=EMPTY, Core B + LoRa antenna remain

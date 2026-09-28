@@ -1,4 +1,5 @@
 # Execution 5. Data Integrity
+> **Reference procedure only.** Executable operator commands are published only in `chapters/lorawan_research_test_manual_final.md` after live qualification. The fenced snippets below are preserved as implementation/reference text and must not be copied as current commands.
 
 This test has **40 counted trials**:
 
@@ -259,7 +260,7 @@ For each selected event:
 1. capture the original Fabric digest and transaction ID;
 2. connect interactively with the temporary role so its password is prompted rather than written into the command:
 
-```bash
+```text
 docker compose exec telemetry-db \
   psql -W -U integrity_tamper_test -d lorawan_telemetry
 ```

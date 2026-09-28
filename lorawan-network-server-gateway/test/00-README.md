@@ -2,6 +2,8 @@
 
 This directory is the complete operator path for preparing and executing the Chapter III/IV LoRaWAN dissertation experiments.
 
+> **Current methodology authority:** use [ZACARIAS-CHAPTER3-TEST-METRICS-SOURCE-OF-TRUTH.md](ZACARIAS-CHAPTER3-TEST-METRICS-SOURCE-OF-TRUTH.md) for the formal research tests, conditions, counts, durations, required metrics, evidence rules, and stated acceptance/security criteria extracted from the new `chapters/Zacarias_Chapter3.pdf`. Architecture/topology/deployment prose in that PDF is not current infrastructure truth; execute those tests against the verified commissioned system.
+
 Use this track for the counted research tests only. Do not add production HA, dashboards, or unrelated services to the measured VM unless the research methodology is intentionally changed.
 
 ## Directory structure
@@ -9,6 +11,8 @@ Use this track for the counted research tests only. Do not add production HA, da
 ```text
 test/
 ├── 00-README.md
+├── automation/
+│   └── research-recorder/ # supervised evidence capture, preflight, sealing, recovery, summaries
 ├── preparation/
 │   ├── 00-README.md
 │   ├── gateway/     # Raspberry Pi 4B + RAK5146
@@ -107,7 +111,9 @@ The gateway and server have one deliberate dependency: the server needs the **re
 8. Require `SENSOR_PREFLIGHT_STATUS=GO` and complete the final preparation gate.
 9. Enter [execution/01-common-run-preparation.md](execution/01-common-run-preparation.md) for fresh counted-run capture.
 
-Do not start counted testing until every preparation item passes.
+For full-stack counted testing, do not start until every preparation item passes. The intentionally narrower LoRaWAN security exception is defined only in [execution/00-README.md](execution/00-README.md) and may proceed only when `LORAWAN_TRACK_STATUS=GO`; do not widen that exception to Fabric-dependent experiments.
+
+Use [automation/research-recorder/README.md](automation/research-recorder/README.md) for the accepted automated evidence-capture workflow. Preserve recorder outputs under `chapter4-results/`; smoke, interrupted, failed, and invalid runs are evidence and are not cache directories.
 
 ## Minimum test VM
 
@@ -129,17 +135,26 @@ OpenBao
 Fabric adapter
 ```
 
-## Experiment counts
+## Authoritative experiment inventory
+
+The new Zacarias Chapter 3 expands the formal test set. The concise inventory below is mandatory; use the source-of-truth document for full metric definitions and evidence rules.
 
 ```text
-Normal operation:              3 x 30-minute runs
-Authentication/access control: 90 attempts
-Replay/spoofing:               40 counted attempts
-Data integrity:                40 attempts
-Traceability:                  20 trials / 60 records
-DoS/flooding:                  18 runs + recovery observation
-Resilience:                    3 x 2-hour runs
+P1  End-to-end normal operation:             3 x 30-minute runs
+P2  Fabric performance/overhead:             4 workloads x 3 repetitions = 12 x 5-minute runs
+R1  External-Internet interruption/recovery: 3 x 2-hour runs (30 normal + 60 outage + 30 recovery)
+R2  Fabric consistency/reconciliation:       10 control + 10 Fabric-unavailable; reconcile the same 10 pending
+A1  Authentication/access control:            90 attempts
+A2  Fabric endorsement-policy enforcement:   30 attempts
+S1  LoRaWAN replay/spoofing:                  40 counted attempts
+S2  Application-layer duplicate/replay:       listed by Chapter 3 Table 3.4, but count/procedure/metrics are unspecified -> methodology resolution required
+F1/F2 DoS/flooding:                           18 x 5-minute load runs + 5-minute recovery after each
+I1/I2 Application/post-storage integrity:     40 attempts
+I3  Blockchain duplicate/overwrite:           10 baseline anchors + 10 duplicate + 10 overwrite attempts
+T1/T2 Traceability:                           20 trials / 60 records
 ```
+
+Do not collapse `R1` and `R2`: Internet interruption and Fabric unavailability/reconciliation are separate experiments. Likewise, `P2`, `A2`, and `I3` are required formal tests and must not be omitted simply because older execution indexes did not list them. `S2` is a chapter-internal methodology gap: it is explicitly listed but not defined in the later procedure, so it must remain visible and unresolved rather than being silently dropped or assigned invented counts.
 
 ## The rule for every counted trial
 

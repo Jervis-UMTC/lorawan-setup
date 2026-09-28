@@ -1,4 +1,5 @@
 # Execution 9. Results, Calculations, and Completion
+> **Reference procedure only.** Executable operator commands are published only in `chapters/lorawan_research_test_manual_final.md` after live qualification. The fenced snippets below are preserved as implementation/reference text and must not be copied as current commands.
 
 Use this page after the counted experiments. Do not calculate final percentages from screenshots.
 
@@ -17,18 +18,31 @@ Only valid counted attempts belong in metric denominators. Do not silently delet
 
 ## 1. Required completed dataset
 
+This checklist follows the new Zacarias Chapter 3 testing authority. Do not declare the research-test phase complete using the older, shorter inventory.
+
 ```text
-[ ] 3 normal-operation runs x 30 minutes
-[ ] 90 authentication/access-control attempts
-[ ] 40 counted replay/spoofing attempts
-[ ] 40 data-integrity attempts
-[ ] 20 traceability trials covering 60 records
-[ ] 18 flooding runs + 18 recovery periods
-[ ] 3 resilience runs x 2 hours
+[ ] P1: 3 normal-operation runs x 30 minutes
+[ ] P1: formal PDR uses unique ChirpStack-accepted EMU-01 uplinks / successful SENSOR_TX transmissions; exact source-to-database delivery is retained separately
+[ ] P2: 12 Fabric performance workload runs (4 workloads x 3 repetitions, 5 minutes each)
+[ ] P2: 12 matched no-Fabric controls completed under the pre-registered paired design (project implementation choice; Chapter 3 does not state this comparison-run count)
+[ ] P2: paired with-vs-without-Fabric overhead evidence retained
+[ ] R1: 3 external-Internet interruption/recovery runs x 2 hours (30/60/30)
+[ ] R2: 10 normal Fabric-consistency controls + 10 Fabric-unavailable pending records + reconciliation of those same 10
+[ ] A1: 90 authentication/access-control attempts
+[ ] A2: 30 endorsement-policy attempts (10 normal + 10 violation + 10 recovery)
+[ ] S1: 40 counted LoRaWAN replay/spoofing attempts
+[ ] S2: application-layer duplicate/replay requirement formally resolved (procedure/count/metrics/pass rule approved) OR methodology explicitly amended to remove it; no invented counted result
+[ ] I1/I2: 40 application-layer/post-storage integrity attempts
+[ ] I3: 10 valid baseline anchors + 10 duplicate attempts + 10 conflicting overwrite attempts
+[ ] T1/T2: 20 traceability trials covering 60 records
+[ ] F1/F2: 18 flooding runs + 18 five-minute recovery periods
 [ ] raw logs retained
 [ ] database exports retained
-[ ] Fabric transaction evidence retained
-[ ] resource samples retained
+[ ] Fabric transaction/query evidence retained
+[ ] resource and network-bandwidth samples retained
+[ ] numerator/denominator retained for every reported rate
+[ ] test-data provenance frozen per experiment (synthetic/known-value fixture vs real physical reading); no silent substitution or relabeling
+[ ] every synthetic/load/security fixture is explicitly labeled so generated records cannot be reported as physical agricultural measurements
 [ ] EMU-01 source logs + pinned RAK4631 firmware/payload baseline retained
 [ ] SEC-02 raw-RF/security-node baseline retained without legitimate keys
 [ ] invalid/rerun trials clearly marked and not double-counted
@@ -103,7 +117,32 @@ throughput = unique legitimate records successfully stored / observation minutes
 
 Report mean and maximum CPU/memory for the server testbed. Report gateway Raspberry Pi resource use separately when collected. Do not merge them into one percentage.
 
-## 5. Authentication/access-control summary
+## 5. Fabric performance and overhead summary
+
+For each of the four authoritative workloads (`1 tx/15 s`, `1 TPS`, `5 TPS`, `10 TPS`) aggregate the three five-minute repetitions and report:
+
+```text
+mean/SD Fabric commit latency
+committed transaction throughput (TPS)
+transaction success rate
+average transaction size (bytes)
+average block size (bytes)
+mean/max CPU
+mean/max memory
+```
+
+For paired processing with and without Fabric submission also report:
+
+```text
+additional latency = latency_with_fabric - latency_without_fabric
+percentage latency increase = additional_latency / latency_without_fabric x 100
+CPU overhead = CPU_with_fabric - CPU_without_fabric
+memory overhead = memory_with_fabric - memory_without_fabric
+```
+
+Retain the individual transaction submission/commit timestamps, valid-commit result, transaction size, block reference/size, and raw resource samples used by each aggregate.
+
+## 6. Authentication/access-control summary
 
 For every condition calculate:
 
@@ -124,9 +163,30 @@ false acceptance = 0
 unauthorized state change = 0
 ```
 
-These results feed Chapter IV Table 12.
+These results feed the authentication/access-control results table.
 
-## 6. Replay/spoofing summary
+## 7. Fabric endorsement-policy summary
+
+Calculate separately for normal, policy-violation, and post-restoration conditions:
+
+```text
+endorsement-policy enforcement rate
+valid transaction success rate
+post-restoration recovery transaction success rate
+unauthorized state-change count
+```
+
+Required secure result:
+
+```text
+policy-violation enforcement rate = 100%
+unauthorized state changes = 0
+valid transactions resume after required endorsement is restored
+```
+
+Keep this distinct from Fabric identity authorization: the identity test asks whether an identity may submit; the endorsement test asks whether a transaction lacking a required endorsement can create valid ledger state.
+
+## 8. Replay/spoofing summary
 
 Calculate separately:
 
@@ -141,9 +201,9 @@ mean/SD decision time when measurable
 
 Only SEC-02 attack attempts whose RF reception is proven by RAK5146 belong in the denominator. A security-node TX-success message alone is insufficient.
 
-These results feed Table 13.
+These results feed the replay/spoofing results table.
 
-## 7. Integrity summary
+## 9. Integrity summary
 
 Calculate separately for application-layer and post-storage tests:
 
@@ -165,9 +225,20 @@ unauthorized application-layer altered storage = 0
 
 Keep the experimental Node-RED control hash distinct from the production Fabric adapter/OpenBao evidence digest in the discussion.
 
-These results feed Table 14.
+For the separate blockchain-layer duplicate/overwrite test also calculate:
 
-## 8. Traceability summary
+```text
+duplicate-rejection rate
+overwrite-rejection rate
+original-hash preservation rate
+unauthorized state-change count
+```
+
+The ten established baseline anchors are the reference state; prove after every duplicate/overwrite attempt that the original hash for the corresponding trace ID remains unchanged.
+
+These results feed the integrity results table.
+
+## 10. Traceability summary
 
 Calculate:
 
@@ -182,9 +253,9 @@ mean/SD retrieval time
 mean/SD history reconstruction time
 ```
 
-These results feed Table 15.
+These results feed the traceability results table.
 
-## 9. Flooding summary
+## 11. Flooding summary
 
 For each of the six traffic conditions aggregate the three runs:
 
@@ -201,43 +272,64 @@ mean/SD recovery time
 
 Keep MQTT connection flooding and invalid application-message flooding separate.
 
-These results feed Table 16.
+These results feed the flooding results table.
 
-## 10. Resilience summary
+## 12. External-Internet interruption/recovery summary
 
-Across the three runs summarize each period separately:
+For each of the three R1 runs summarize the three periods separately:
 
 ```text
-normal before interruption
-Internet interruption
-recovery after reconnection
+30-minute normal period
+60-minute external-Internet interruption
+30-minute recovery period
 ```
 
-Calculate:
+Calculate/report:
 
 ```text
-stored/expected readings
-missing records
-duplicate records
 local service availability
-latency
-chronological accuracy
+data-delivery rate
+stored/expected readings
+data-loss count
+duplicate-record count
+database-blockchain consistency rate
+mean/SD end-to-end latency
 recovery time
-Fabric work queued while unreachable
-Fabric work committed after recovery
+chronological accuracy
 ```
 
-Because the current Fabric network is external, do not label queued outbox jobs as successful Fabric commits during Internet loss.
+This is the Internet-connectivity experiment defined by Zacarias Chapter 3. Do not replace it with a Fabric-only outage. Use the live commissioned topology to implement the external-Internet interruption safely while preserving the intended independent variable.
 
-These results feed Table 17, with the actual architecture behavior explained in the discussion.
+## 13. Fabric unavailability / consistency / reconciliation summary
 
-## 11. Standard deviation
+For R2 summarize the ten normal controls, ten Fabric-unavailable records, and reconciliation of those same ten pending records. Report:
+
+```text
+pending-record identification rate
+recovery success rate
+post-recovery hash-consistency rate
+false-verification count
+orphaned database-record count
+missing blockchain-record count
+duplicate blockchain-record count
+conflicting-hash count
+failed-reconciliation count
+records remaining pending after recovery
+recovery time
+mean per-record reconciliation time when measured
+```
+
+Required research criteria are 100% pending identification, zero false verifications, 100% valid-pending recovery, 100% post-recovery hash consistency, and zero missing/duplicate valid integrity anchors.
+
+Do not label queued/local outbox state as a valid Fabric commitment; require confirmed ledger evidence for `VERIFIED`.
+
+## 14. Standard deviation
 
 Use the same sample/population convention consistently throughout the dissertation and state it in the methodology. Do not switch conventions between tables.
 
 For repeated experimental observations, preserve the individual values used to calculate the reported mean and standard deviation.
 
-## 12. Final evidence audit
+## 15. Final evidence audit
 
 For every table value, first be able to answer:
 
@@ -258,11 +350,11 @@ Was the configuration unchanged within the repetition group?
 
 If one of those cannot be answered, reconstruct the result from raw logs before writing the final table.
 
-## 13. Back up the completed dataset
+## 16. Back up the completed dataset
 
 Create a protected archive and copy it off the lab VM:
 
-```bash
+```text
 cd "$HOME"
 tar -czf chapter4-results.tar.gz chapter4-results
 sha256sum chapter4-results.tar.gz > chapter4-results.tar.gz.sha256

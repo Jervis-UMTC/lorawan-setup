@@ -1,4 +1,5 @@
 # Execution 7. DoS / Flooding
+> **Reference procedure only.** Executable operator commands are published only in `chapters/lorawan_research_test_manual_final.md` after live qualification. The fenced snippets below are preserved as implementation/reference text and must not be copied as current commands.
 
 Run flooding only against the isolated test listener and test topic described here.
 
@@ -12,14 +13,14 @@ Do not interpret high CPU alone as failure. The important outcomes are legitimat
 
 1. Run the Execution 01 short preflight.
 2. Confirm the three baseline runs are complete; they define the normal comparison range.
-3. Confirm EMU-01 is stable at 15 seconds and SEC-02 is idle.
+3. Confirm EMU-01 is stable on the archived counted-test-15s artifact and SEC-02 is idle.
 4. Back up `docker-compose.yml`, Mosquitto configuration, Mosquitto ACL, and the current Node-RED test flow.
 5. Record hashes of those backups.
 6. Do not proceed until one ordinary EMU-01 event reaches the normal path.
 
 Create the configuration backup before editing anything:
 
-```bash
+```text
 cd /opt/lorawan-lab
 FLOOD_CFG_BACKUP="$HOME/chapter4-results/flooding/_config-before"
 mkdir -p "$FLOOD_CFG_BACKUP"
@@ -55,7 +56,7 @@ Each condition runs for 5 minutes and is repeated 3 times.
 5-minute recovery after every run
 ```
 
-The legitimate RAK4631 EMU-01 continues its frozen physical-sensor payload v2 every 15 seconds, with a deterministic `test_sequence`, so about 20 legitimate readings are expected per five-minute run. SEC-02 is not used during flooding.
+The legitimate RAK4631 EMU-01 continues the frozen 46-byte physical-sensor payload-v2 on the **15-second counted-test cadence profile**, using its monotonic source sequence, so about 20 legitimate normal uplinks are expected per five-minute run. SEC-02 is not used during flooding.
 
 ## 1. Create a temporary isolated flood listener
 
@@ -69,7 +70,7 @@ Create a test-only password/ACL set under:
 
 Create one `flood_publisher` user using the exact Mosquitto image already running in the testbed:
 
-```bash
+```text
 cd /opt/lorawan-lab
 mkdir -p configuration/mosquitto/flood-test
 : > configuration/mosquitto/flood-test/acl
@@ -114,7 +115,7 @@ Publish host port `1885` only on the lab/test interface:
 
 Permit it through UFW only from the test laptop:
 
-```bash
+```text
 sudo ufw allow from <TEST_LAPTOP_IP> to any port 1885 proto tcp
 ```
 
@@ -187,7 +188,7 @@ Before final runs:
 
 1. verify `10/s` produces a visible but manageable increase in broker/Node-RED work;
 2. verify `50/s` does not immediately destroy the testbed;
-3. verify EMU-01 still produces the expected `test_sequence` every 15 seconds;
+3. verify EMU-01 still produces monotonic source sequences on the frozen 15-second counted-test cadence;
 4. verify resource capture works;
 5. freeze the rates.
 
@@ -223,7 +224,7 @@ For five minutes generate approximately:
 
 Each attempt uses the temporary listener and an intentionally incorrect password. Run:
 
-```bash
+```text
 cd "$HOME/lorawan-test-tools"
 ./connection_flood.py \
   --host <LAB_SERVER_IP> --port 1885 \
@@ -287,7 +288,7 @@ Publish using `flood_publisher` only to `test/flood/invalid`.
 
 Moderate run:
 
-```bash
+```text
 cd "$HOME/lorawan-test-tools"
 ./invalid_message_stream.py --rate 10 --seconds 300 \
   2><RUN_DIR>/generator-count.txt \
@@ -335,7 +336,7 @@ If the system has not recovered by the end of the five-minute observation, recor
 
 After all flooding evidence is saved, restore the exact pre-test broker/Compose files:
 
-```bash
+```text
 cd /opt/lorawan-lab
 cp "$FLOOD_CFG_BACKUP/docker-compose.yml" docker-compose.yml
 cp "$FLOOD_CFG_BACKUP/mosquitto.conf" configuration/mosquitto/mosquitto.conf
@@ -361,7 +362,7 @@ Do not archive the flood-publisher password with the Chapter IV results.
 
 ## Pass condition
 
-A final run is valid when the intended traffic rate occurred, EMU-01 remained active on the frozen 15-second schedule with the full physical-sensor payload and deterministic sequence markers, and raw logs/resource evidence exist.
+A final run is valid when the intended traffic rate occurred, EMU-01 remained active on the frozen counted-test-15s artifact with the full 46-byte physical-sensor payload and monotonic sequence markers, and raw logs/resource evidence exist.
 
 Security success requires:
 

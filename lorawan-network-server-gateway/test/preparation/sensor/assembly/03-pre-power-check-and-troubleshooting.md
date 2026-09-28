@@ -83,11 +83,11 @@ Confirm the fixed map is present exactly:
 
 ```text
 Sensor A = RAK1903
-Sensor B = EMPTY
+Sensor B = RAK12010
 Sensor C = RAK12019
 Sensor D = RAK12011
 Sensor E = RAK1906
-Sensor F = RAK12010
+Sensor F = EMPTY
 WisIO 1  = RAK12023 -> RAK12035
 WisIO 2  = RAK12005 -> RAK12030
 ```
@@ -100,11 +100,11 @@ Do not power the node if a module is in a different slot.
 
 1. Compare every module with `02a-rak19001-fixed-slot-map.md` and the saved Pin Mapper result.
 2. Confirm RAK1903 is in Sensor A (`WB_IO1` interrupt role).
-3. Confirm Sensor B is empty (`WB_IO2` reserved for `3V3_S`).
+3. Confirm RAK12010 is in Sensor B; its connector uses I2C + `3V3_S` and does not claim `WB_IO2` as an interrupt, so `WB_IO2` remains the shared switched-power control.
 4. Confirm RAK12019 is in Sensor C (`WB_IO3` interrupt role).
 5. Confirm RAK12011 is in Sensor D (`WB_IO5` interrupt/output role).
 6. Confirm RAK1906 is in Sensor E and its normal path uses I2C rather than `WB_IO4`.
-7. Confirm RAK12010 is in Sensor F and its normal path uses I2C rather than `WB_IO6`.
+7. Confirm Sensor F is empty; `WB_IO6` remains the rain-output role through WisIO 2.
 8. Confirm RAK12023 is in WisIO 1 with only one RAK12035 and owns the project `WB_IO4` soil role.
 9. Confirm RAK12005 is in WisIO 2, connected to RAK12030, and owns the project `WB_IO6` rain role.
 10. Confirm the saved Pin Mapper result shows no unresolved conflict.
