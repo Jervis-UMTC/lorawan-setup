@@ -386,24 +386,31 @@ claim eligible outbox row with FOR UPDATE SKIP LOCKED
   -> commit worker lease
   -> load fixed source projection
   -> for v2 load exactly one status=verified gateway_evidence result
-  -> build versioned canonical evidence
-  -> RFC 8785 JCS
-  -> exact UTF-8 bytes
-  -> SHA-256 digest
-  -> request OpenBao Transit signature
-  -> persist the complete immutable seal before Fabric call
-  -> re-read and verify persisted seal
-  -> submit compact transaction through Fabric Gateway
-  -> wait for commit status
-  -> confirmed only after VALID commit
+  -> require immutable finalized_payload exact JSON bytes
+  -> build/verify the separate local versioned evidence seal
+  -> RFC 8785 JCS + SHA-256 for the local OpenBao evidence boundary
+  -> request OpenBao Transit signature and persist/verify that seal
+  -> SHA-256 the exact finalized_payload bytes for HRC Task 37
+  -> prepare CreateSourceBoundAnchor with five metadata args
+     + transient hrc.exact_payload = exact finalized_payload bytes
+  -> persist txid + record_id + endorsed transaction bytes + signed commit-status request
+  -> submit the already-prepared transaction through Fabric Gateway
+  -> recover/wait for commit status
+  -> QuerySourceBoundAnchor + VerifySourceBoundDigest
+  -> confirmed only after authoritative commit + exact source-bound verification
 ```
 
 If final commit state is uncertain:
 
 ```text
-submitted_unknown
-  -> query/reconcile ledger
-  -> do not blindly resubmit
+reconciling
+  -> recover the same durable prepared transaction/commit-status state
+  -> query/reconcile the source-bound ledger record
+  -> do not blindly generate a new transaction
+
+needs_attention
+  -> permanent commit/anchor/digest/security conflict
+  -> operator review required
 ```
 
 ---
@@ -488,9 +495,9 @@ The Fabric Adapter's claim query requires the matching v2 verification row to be
 
 `pending`, `evidence_gap`, and `integrity_failure` must never be silently promoted just to drain an outbox queue.
 
-### Stage 12 - Build attestation evidence
+### Stage 12 - Require exact finalized payload and build the local evidence seal
 
-The Fabric Adapter loads the fixed v2 telemetry + gateway-evidence projection and creates the versioned canonical evidence object.
+The Fabric Adapter can claim a row only when immutable `finalized_payload` exists; v2 also requires verifier-owned `verified` state. It preserves those exact payload bytes for HRC and separately builds/verifies the versioned local evidence object protected by OpenBao.
 
 ### Stage 13 - Hash and seal
 
@@ -516,13 +523,13 @@ Fabric evidence digest
 
 The Adapter stores the canonical JSON, SHA-256 digest, signature algorithm, OpenBao key-version ID, complete versioned signature, and seal timestamp before the first Fabric network call.
 
-### Stage 15 - Submit to Fabric
+### Stage 15 - Prepare and submit the source-bound HRC transaction
 
-Only compact attestation fields are submitted through Fabric Gateway. Full raw evidence and telemetry remain off-chain.
+The adapter calls `CreateSourceBoundAnchor(SourceRecordID, sourceType, producer, producedAt, schemaVersion)` and supplies the exact immutable `finalized_payload` bytes only as transient `hrc.exact_payload`. Before the first orderer submit it durably stores the Fabric transaction ID, HRC record ID, endorsed transaction bytes, and signed commit-status request. Full gateway forensic evidence remains off-chain.
 
 ### Stage 16 - Confirm or reconcile
 
-A row becomes `confirmed` only after a valid Fabric commit. Unknown post-submit state becomes `submitted_unknown` and is reconciled against the ledger before any retry decision.
+A row becomes `confirmed` only after successful commit status plus matching `QuerySourceBoundAnchor(SourceRecordID)` and `VerifySourceBoundDigest(SourceRecordID, sha256(finalized_payload))=MATCH`. Uncertain post-submit state becomes `reconciling`; permanent commit/anchor/digest conflicts become `needs_attention`. The migration still permits legacy `submitted_unknown` rows for compatibility, but the current worker does not emit that state.
 
 ---
 
@@ -576,9 +583,11 @@ processing --valid commit--> confirmed
       |
       +--transient pre-submit failure--> failed + backoff
       |
-      +--uncertain post-submit result--> submitted_unknown -> reconcile
+      +--uncertain post-submit result--> reconciling -> recover/query/commit-status reconcile
       |
-      +--permanent/security conflict--> dead_letter
+      +--permanent commit/anchor/security conflict--> needs_attention
+      |
+      +--other exhausted/permanent local work--> dead_letter
 ```
 
 For v2, `pending` outbox status alone does not mean eligible. The matching gateway verification must also be `verified`.
@@ -614,7 +623,7 @@ A safe logical order is:
 5. ChirpStack/application path available
 6. gateway-evidence-verifier starts after DB/evidence dependencies are readable
 7. OpenBao KMS available and unsealed
-8. fabric-adapter starts only after its reviewed image, credentials, and external Fabric handoff exist
+8. fabric-adapter starts only on the explicitly enabled owner after reviewed image, credentials, HRC handoff, and activation preflight pass
 ```
 
 Services may restart independently because security state is durable. Restarting one evidence replica, the verifier pool, or the Fabric Adapter must not erase jobs or require reconstructing previously sealed evidence from mutable current telemetry. Replication never changes trust ownership: two ingestors are still only ingestors, two collectors are still read-only witnesses, and two verifiers still cannot sign.
@@ -695,7 +704,9 @@ trusted decoder mismatch count
 v2 outbox rows blocked waiting for verification
 verified-but-not-sealed age
 failed adapter work
-submitted_unknown count/age
+reconciling count/age
+legacy submitted_unknown count/age (migration compatibility only)
+needs_attention count/age
 dead_letter count
 OpenBao sign/verify failures
 Fabric commit/reconciliation failures
@@ -760,13 +771,14 @@ PgBouncer evidence expansion                                -> three-node ten-ro
 Immutable cloud OCI + ingest/collector/verifier replicas    -> commissioned / PASS
 Evidence PKI + collector MQTT identities/ACLs               -> commissioned / PASS
 Shared anchor :443 SNI + Grafana evidence views             -> commissioned / PASS
-Fabric adapter immutable standbys                           -> disabled / PASS; external activation pending
-Gateway Rust writer/uploader source runtime                 -> 28-test/build PASS; target OpenWrt package pending
+Fabric adapter ULC-01                                      -> enabled continuous writer / PASS
+Fabric adapter ULC-02                                      -> write-disabled; HA fencing/ownership acceptance pending
+Gateway Rust writer/uploader + OpenWrt runtime              -> installed / real lineage PASS
 ```
 
-The cloud implementation is now live rather than a source-only claim. The next work is target-specific: compile/package `concentratord-zmq` in the pinned Gateway OS/OpenWrt toolchain, install the protected gateway identities/config, and prove one physical lineage. The extended Guide 3 / Phase 15 failure matrix does not block that first real normal-path deployment.
+The cloud and target Gateway-01 implementations are live rather than source-only claims. The OpenWrt evidence runtime, protected gateway identities/configuration, IPC permission guard, journal/uploader receipts, and one assembled EMU-01 physical lineage are proven. Preserve this accepted normal path and repeat target compilation/commissioning only after a relevant package/runtime change.
 
-OpenBao audit closure is already complete. Preserve that audit boundary and keep Fabric-adapter SecretID/ledger activation at zero until the external Fabric handoff and enabled-adapter preflight pass.
+OpenBao audit closure and ULC-01 Fabric activation are complete. Preserve that audit boundary and the commissioned ULC-01 least-privilege writer. Keep ULC-02 fail-closed until its separate HA fencing/ownership acceptance gate passes.
 
 ---
 

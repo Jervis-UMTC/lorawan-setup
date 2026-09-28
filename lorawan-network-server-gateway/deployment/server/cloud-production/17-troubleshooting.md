@@ -319,14 +319,18 @@ Do not remove/re-add multiple members at once. Preserve the member IDs and the p
 Check in this order:
 
 ```text
-fabric_outbox oldest pending age and status counts
-adapter-1 / adapter-2 process and database connectivity
+fabric_outbox status counts plus finalized_payload eligibility
+for v2, matching verifier-owned status='verified'
+ULC-01 adapter-1 process/database connectivity and enabled ownership
+ULC-02 adapter-2 remains write-disabled unless an approved takeover is in progress
 live/expired job leases
+reconciling rows and durable txid/record_id/prepared-transaction/commit-status material
+legacy submitted_unknown rows, if any, handled as compatibility reconciliation only
+needs_attention conflicts
 openbao-kms.internal.<DOMAIN>:18200 TLS reachability
 OpenBao 3-member state, seal state, and quorum
 Transit sign/verify errors
-external Fabric DNS/TLS/MSP/channel/chaincode reachability
-submitted_unknown reconciliation state
+HRC private Fabric Gateway TLS/MSP/channel/chaincode reachability and peer commit-status visibility
 ```
 
 Do not make Node-RED call Fabric synchronously to reduce the queue. Restore the first failing asynchronous dependency and let the durable outbox drain under the normal retry/reconciliation rules.

@@ -1,6 +1,6 @@
 # 13. Minimal POC Backup and Recovery
 
-> **Status: 13A FAST-PATH PASS / 13S SERVER-ONLY SNAPSHOT MAY PROCEED / 13B FINAL LATER.** Phase 13A already protects the pre-cutover cloud state. While hardware/provider/Fabric dependencies are unavailable, an interim **13S server-only snapshot/export** may capture the currently commissioned server baseline so backup/export tooling is proven early. **13S is not the final Phase 13B backup set.** Phase 13B must still be recreated after every required pre-test service and real application path are commissioned. Intentional destructive recovery tests belong to Phase 15.
+> **Status: 13A FAST-PATH PASS / 13S SERVER-ONLY SNAPSHOT COMPLETE + LOCALLY VERIFIED / 13B FINAL LATER.** Phase 13A protects the pre-cutover cloud state. Interim **13S server-only snapshot/export** has already captured and locally verified the commissioned server baseline, including the protected PostgreSQL/etcd/OpenBao and reconstruction artifacts described below. **13S is not the final Phase 13B backup set.** Phase 13B must still be recreated after every required pre-test service and real application path are commissioned. Off-host copy and isolated restore proof remain deferred to the pre-Phase-15 destructive/recovery boundary; intentional destructive recovery tests belong to Phase 15.
 
 This HA POC is **not** trying to prove a production disaster-recovery platform. It still needs a real rollback boundary before we deliberately kill leaders, members, and hosts.
 
@@ -22,7 +22,7 @@ Normally complete after Phase 11 and before Phase 12. If the physical gateway is
 
 13S exists only to remove avoidable server-side work from the final commissioning day. It may run now against the commissioned server components and should capture non-secret reconstruction material for etcd, PostgreSQL/Patroni/TimescaleDB, HAProxy/PgBouncer, Mosquitto, Valkey/Sentinel, ChirpStack, Node-RED, Grafana, OpenBao, and the Fabric outbox database layer. It may also record current image digests, configuration hashes, service/listener state, and a fresh logical database backup if the operator deliberately wants a newer rollback point.
 
-Do **not** fabricate missing artifacts. Record these as deferred/BLOCKED in 13S rather than creating substitutes: provider Reserved IPv4/DNS/firewall evidence, physical gateway state, real EMU-01 rows, Fabric adapter image/config/transactions, and gateway-integrity runtimes. Do not place plaintext passwords, private keys, AppKeys, OpenBao root/recovery material, or bearer tokens in the general 13S archive.
+Do **not** fabricate missing artifacts. The original 13S pre-staging pass predated later commissioning of the physical gateway normal path, real EMU-01 rows, the HRC Task 37 handoff, ULC-01 Fabric production writes, adapter images/configuration, and gateway-integrity runtimes; those artifacts now exist and must be included in the next refreshed recovery checkpoint from their verified current locations. The genuinely open infrastructure gates are provider Cloud Firewall/control-plane evidence and Reserved-IP reassignment/failover acceptance, plus ULC-02 Fabric ownership/fencing acceptance and any explicitly deferred destructive restore/failover tests. Do not place plaintext passwords, private keys, AppKeys, OpenBao root/recovery material, Fabric private credentials, or bearer tokens in the general 13S archive.
 
 For normal server preparation, a successful 13S checkpoint means the locally verified server-only package is intact and reproducible. Once `PHASE13S_LOCAL_PACKAGE=PASS` has been reached, treat `SERVER_ONLY_SNAPSHOT_EXPORT=PASS` as satisfied for the current non-destructive commissioning scope and stop repeating backup/export work. Off-host copying, isolated restore rehearsal, and stronger disaster-recovery proof are deferred to the dedicated destructive/failure-testing boundary before Phase 15. This still does **not** satisfy final Phase 13B, which must be refreshed after the remaining provider, hardware, Fabric, and final acceptance work is commissioned.
 
@@ -347,18 +347,19 @@ Do not call a backup tested merely because `pg_dump` exited zero. The restore re
 After restoring `lorawan_telemetry`:
 
 ```text
-1. keep both Fabric adapters stopped
-2. start only adapter-1
-3. inspect pending / processing / submitted_unknown / confirmed rows
-4. release or wait out only leases proven stale
-5. reconcile submitted_unknown against external Fabric commit status
-6. verify no row is falsely marked confirmed
-7. only then start adapter-2
+1. keep both Fabric adapters stopped during database restore
+2. validate the restored outbox and current ownership/fencing state
+3. start only ULC-01 adapter-1 as the commissioned writer
+4. inspect pending / processing / reconciling / confirmed / failed / needs_attention rows; treat submitted_unknown as legacy compatibility state
+5. release or wait out only leases proven stale
+6. reconcile any row with durable Fabric transaction material by commit status plus source-bound query/digest verification
+7. verify no row is falsely marked confirmed
+8. keep ULC-02 adapter-2 write-disabled unless the separate HA takeover gate is deliberately being executed
 ```
 
 Why: a Fabric transaction may have committed even when the client timed out. Blind replay can create duplicate/conflicting work.
 
-If the adapter implementation is not yet available, preserve the outbox and mark this operational step blocked rather than pretending reconciliation has been tested.
+The adapter implementation and ULC-01 production writer are commissioned. If they are unavailable during a disaster recovery event, preserve the outbox and prepared transaction material; do not replace them with an improvised writer or enable ULC-02 outside the approved HA takeover procedure.
 
 ## 13.10 What is deliberately deferred
 

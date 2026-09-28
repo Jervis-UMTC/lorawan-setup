@@ -1,185 +1,165 @@
-# Fabric 1. Collect the External Fabric Handoff
+# Fabric 1. HRC External Fabric Handoff
 
-## Goal
+## Purpose
 
-Collect and verify everything the adapter needs to connect to the Fabric network operated by the other team.
+This repository operates only the LoRaWAN-side Fabric client. The HRC team owns the Fabric organizations, peers, orderers, CAs, channel, and chaincode lifecycle. Do not create a replacement Fabric network from this project.
 
-Do **not** create a Fabric VM, organization, peer, orderer, CA, channel, chaincode deployment, or Fabric test network.
+For the commissioned cloud deployment, the handoff is **complete for ULC-01**. This file records the current contract and the checks required for another adapter host or a future environment. The authoritative cross-team handoff is also summarized in [`../integrations/hyperledger-fabric/02-fabric-network-handoff.md`](../integrations/hyperledger-fabric/02-fabric-network-handoff.md).
 
-## Before you start
-
-The Fabric team must have an existing staging or integration endpoint available for this work.
-
-Create a protected client directory on the **LoRaWAN lab server VM**:
-
-```bash
-sudo install -d -m 700 /opt/fabric-adapter/crypto
-sudo install -d -m 700 /opt/fabric-adapter/crypto/identity
-sudo install -d -m 700 /opt/fabric-adapter/crypto/tls
-```
-
-## Step 1 - Request the connection values
-
-Ask the Fabric team for:
+## Current commissioned HRC boundary
 
 ```text
-Fabric Gateway endpoint: <FABRIC_GATEWAY_ENDPOINT>
-MSP ID: <FABRIC_MSP_ID>
-Channel: <FABRIC_CHANNEL_NAME>
-Chaincode: <FABRIC_CHAINCODE_NAME>
-TLS server name: <FABRIC_TLS_SERVER_NAME>
-Submit function: <FABRIC_SUBMIT_FUNCTION>
-Submit argument contract: schema_version, event_key, event_type, digest, seal_algorithm, seal_key_id, seal_signature
-Query function: <FABRIC_QUERY_FUNCTION>
-Contract/schema version: <FABRIC_CONTRACT_VERSION>
-Endorsement requirements: <FABRIC_ENDORSEMENT_REQUIREMENTS>
-Commit timeout/behavior: <FABRIC_COMMIT_BEHAVIOR>
-Rate limit: <FABRIC_RATE_LIMIT>
-Maintenance window: <FABRIC_MAINTENANCE_WINDOW>
-Support contact: <FABRIC_SUPPORT_CONTACT>
+Fabric Gateway endpoint:       10.104.0.7:7051
+TLS server name:               peer1.hrc.local
+MSP ID:                        HrcMSP
+Channel:                       hrc-channel
+Chaincode:                     hrc-evidence
+Contract namespace:            empty/default
+Authenticated source identity: lorawan-gateway-evidence
+Submit function:               CreateSourceBoundAnchor
+Query function:                QuerySourceBoundAnchor
+Digest verify function:        VerifySourceBoundDigest
+Transient exact-payload key:   hrc.exact_payload
 ```
 
-Do not substitute example values such as `Org1MSP`, `mychannel`, `basic`, or `peer0.org1.example.com` unless the Fabric team explicitly supplied those exact values. Also require the Fabric team to confirm whether the submit function accepts the seven dissertation attestation values as positional strings or as one structured object. Do not begin adapter implementation while the argument order, accepted schema versions, duplicate-key behavior, and commit-status behavior are still ambiguous.
+ULC-01 is the enabled continuous writer with a dedicated non-admin adapter identity. ULC-02 remains `FABRIC_ADAPTER_ENABLED=false` until its separate HA ownership/fencing acceptance gate passes. Do not enable ULC-02 merely for availability.
 
-## Step 2 - Obtain the client identity files securely
+The old K3s `ClusterIP` `10.43.25.198:7051` is not a ULC production endpoint. The legacy functions `CreateAnchor`, `QueryAnchor`, `QueryAnchorByRecordID`, and `VerifyDigest` are forbidden for the commissioned adapter identity and must not be restored from older documentation.
 
-The Fabric team must provide or provision:
+## Current Task 37 source-bound contract
+
+The submit transaction is:
 
 ```text
-<FABRIC_CA_CERT>
-<FABRIC_CLIENT_CERT>
-<FABRIC_CLIENT_KEY>
+CreateSourceBoundAnchor(
+  SourceRecordID,
+  sourceType,
+  producer,
+  producedAt,
+  schemaVersion
+)
 ```
 
-Transfer them using the approved protected channel. Do not paste the private key into chat, Git, Node-RED, Grafana, or a Markdown file.
+The exact immutable payload is **not** a positional argument. The adapter supplies the existing `telemetry.fabric_outbox.finalized_payload` bytes through Fabric transient data:
 
-Install them on the lab server as:
-
-```bash
-sudo install -m 0644 <FABRIC_CA_CERT> \
-  /opt/fabric-adapter/crypto/tls/ca.crt
-sudo install -m 0644 <FABRIC_CLIENT_CERT> \
-  /opt/fabric-adapter/crypto/identity/cert.pem
-sudo install -m 0600 <FABRIC_CLIENT_KEY> \
-  /opt/fabric-adapter/crypto/identity/key.pem
+```text
+hrc.exact_payload = finalized_payload exact bytes
 ```
 
-Verify permissions without printing file contents:
+The current Go implementation treats those bytes as authoritative. It must not rebuild them from JSONB, structs, maps, Node-RED values, `telemetry.uplinks.raw_data`, or another projection. The payload must be valid JSON, non-empty, and no larger than the HRC maximum accepted by the adapter.
 
-```bash
-sudo find /opt/fabric-adapter/crypto -maxdepth 3 -printf '%m %u:%g %p\n'
+The adapter computes SHA-256 over those exact bytes for local verification and later compares the HRC record against the same digest and payload length. HRC binds the authenticated source namespace to the Fabric client identity; `AuthenticatedSourceSystemID` is therefore not a caller-controlled positional argument in `CreateSourceBoundAnchor`.
+
+The LoRaWAN mapping is:
+
+```text
+SourceRecordID = telemetry.fabric_outbox.source_event_key
+sourceType     = telemetry.fabric_outbox.event_type
+producer       = normalized DevEUI from the accepted source row
+producedAt     = observed_at in UTC RFC3339Nano
+schemaVersion  = telemetry.fabric_outbox.schema_version
+exact payload  = telemetry.fabric_outbox.finalized_payload bytes
 ```
 
-## Step 3 - Verify the certificate/key pair
+For `telemetry-attestation-v2`, a matching verifier-owned `gateway_evidence.event_verification` row must be `verified` before the normal worker can claim the row.
 
-Run on the lab server:
+## Read and verification transactions
+
+After submission, use:
+
+```text
+QuerySourceBoundAnchor(SourceRecordID)
+VerifySourceBoundDigest(SourceRecordID, observedDigest)
+```
+
+`QuerySourceBoundAnchor` must return a source-bound record whose authenticated source ID, source record ID, digest, payload length, source type, producer, produced timestamp, and schema version all match the exact prepared anchor. `VerifySourceBoundDigest` must return `MATCH` for SHA-256 of the same immutable `finalized_payload` bytes.
+
+Do not locally mark an event confirmed merely because endorsement succeeded, an orderer accepted a transaction, or a transaction ID exists. The production adapter persists the prepared transaction and signed commit-status request before orderer submission so an uncertain result can be reconciled after restart without inventing a new transaction.
+
+## Dedicated client identity
+
+Each enabled writer must use a dedicated least-privilege non-admin Fabric client certificate/key provisioned through the protected handoff channel. Never use an HRC administrator identity or a benchmark/test writer identity for the LoRaWAN adapter.
+
+Keep private keys out of Git, Markdown, Node-RED, Grafana, PostgreSQL, normal chat, and ordinary logs. Verify a provisioned certificate and key bind to the same public key without printing private material:
 
 ```bash
-CERT_PUB=$(openssl x509 \
-  -in /opt/fabric-adapter/crypto/identity/cert.pem \
-  -pubkey -noout | openssl pkey -pubin -outform DER | sha256sum)
-
-KEY_PUB=$(sudo openssl pkey \
-  -in /opt/fabric-adapter/crypto/identity/key.pem \
-  -pubout -outform DER | sha256sum)
-
-printf 'certificate: %s\nkey:         %s\n' "$CERT_PUB" "$KEY_PUB"
+CERT_PUB=$(openssl x509 -in <CLIENT_CERT> -pubkey -noout \
+  | openssl pkey -pubin -outform DER | sha256sum | awk '{print $1}')
+KEY_PUB=$(openssl pkey -in <CLIENT_KEY> -pubout -outform DER \
+  | sha256sum | awk '{print $1}')
+test "$CERT_PUB" = "$KEY_PUB"
 unset CERT_PUB KEY_PUB
 ```
 
-The hashes must match.
-
-Inspect the public certificate metadata:
+Inspect only public certificate metadata:
 
 ```bash
-openssl x509 \
-  -in /opt/fabric-adapter/crypto/identity/cert.pem \
-  -noout -subject -issuer -serial -dates -fingerprint -sha256
+openssl x509 -in <CLIENT_CERT> -noout \
+  -subject -issuer -serial -dates -fingerprint -sha256
 ```
 
-Record only the non-secret fingerprint, serial, issuer, expiry, MSP ID, and secure storage reference.
+## Network and TLS verification
 
-## Step 4 - Verify DNS and TCP reachability
-
-Resolve the hostname from `<FABRIC_GATEWAY_ENDPOINT>` and test the supplied port:
-
-```bash
-getent ahosts <FABRIC_GATEWAY_HOST>
-nc -vz <FABRIC_GATEWAY_HOST> <FABRIC_GATEWAY_PORT>
-```
-
-A successful TCP connection proves only network reachability. It does not prove TLS identity, MSP authorization, channel access, endorsement, or chaincode behavior.
-
-## Step 5 - Verify TLS server identity
-
-When the Gateway endpoint exposes TLS directly, use the supplied CA and TLS server name:
+For a new adapter host, prove the restricted TCP path and then verify TLS identity. A TCP connection alone does not prove certificate trust, MSP authorization, channel access, endorsement, or chaincode behavior.
 
 ```bash
 openssl s_client \
-  -connect <FABRIC_GATEWAY_HOST>:<FABRIC_GATEWAY_PORT> \
-  -servername <FABRIC_TLS_SERVER_NAME> \
-  -CAfile /opt/fabric-adapter/crypto/tls/ca.crt \
+  -connect 10.104.0.7:7051 \
+  -servername peer1.hrc.local \
+  -verify_hostname peer1.hrc.local \
+  -CAfile <FABRIC_TLS_ROOT_CA_CERT> \
   -verify_return_error </dev/null
 ```
 
-Pass only when the chain validates and the endpoint certificate is valid for `<FABRIC_TLS_SERVER_NAME>`.
+Pass only when certificate verification returns code 0. Never disable hostname or CA verification to make the route work.
 
-Do not disable hostname verification to make a mismatched endpoint work.
+## Activation acceptance
 
-## Step 6 - Confirm the application contract
+Before enabling a new production writer, prove all of the following:
 
-Before deploying the adapter, obtain one read-only/evaluate operation that proves the channel and chaincode contract. Prefer an operation equivalent to:
+1. The private Gateway route is reachable from the intended host.
+2. TLS validates to `peer1.hrc.local` with the pinned HRC root CA.
+3. The dedicated non-admin client certificate/key are present, protected, and matched.
+4. MSP/channel/chaincode/default-contract values match the commissioned HRC handoff.
+5. Submit/query/verify functions are the source-bound Task 37 API above.
+6. The row already has immutable non-empty `finalized_payload`; v2 also has verifier status `verified`.
+7. The adapter prepares and durably records the transaction ID, endorsed transaction bytes, and signed commit-status request before submitting to the orderer.
+8. Commit status is successful/VALID.
+9. `QuerySourceBoundAnchor(SourceRecordID)` exactly matches the prepared anchor.
+10. `VerifySourceBoundDigest(SourceRecordID, sha256(finalized_payload))` returns `MATCH`.
+11. Only then is the local outbox row marked `confirmed`.
 
-```text
-GetContractVersion
-ReadAttestation <NON_EXISTENT_OR_KNOWN_TEST_EVENT_KEY>
-```
+If commit status or post-commit verification is uncertain, preserve the transaction material and reconcile before any resubmission. A stale peer ledger can make client commit-status waiting appear hung even when endorsement and orderer submission succeeded, so isolate endorsement, submission, peer ledger delivery, and commit-status waiting as separate layers.
 
-The exact function names must come from the Fabric team.
+## Current status and remaining HA boundary
 
-Confirm:
+The one-record Task 37 qualification and continuous ULC-01 writer commissioning are already complete; do not repeat the historical qualification candidate just to reconfirm documentation. The next Fabric infrastructure boundary is ULC-02 ownership/fencing acceptance. Until that gate is deliberately passed, ULC-02 must remain write-disabled.
 
-- `<FABRIC_MSP_ID>` is authorized for the intended operation;
-- `<FABRIC_CHANNEL_NAME>` exists and is accessible;
-- `<FABRIC_CHAINCODE_NAME>` resolves;
-- the contract/schema version is the one expected by the adapter;
-- duplicate event behavior is documented;
-- commit-status behavior is documented.
+The September 17 research backlog is not evidence that this handoff reverted. The live diagnostic found the ULC-01 adapter healthy while recent v2 rows remained unclaimed with `attempts=0`; the worker claim predicate requires `finalized_payload IS NOT NULL` and, for v2, verifier status `verified`. Diagnose the upstream finalization/eligibility state before chasing Fabric or OpenBao failures.
 
-## Step 7 - Create the local handoff record
+## Record for a future environment
 
-Keep a non-secret record outside Git or in the approved operations inventory:
+Record only non-secret values:
 
 ```text
 Environment:
 Fabric Gateway endpoint:
 TLS server name:
+TLS root CA SHA-256:
 MSP ID:
 Channel:
 Chaincode:
+Contract namespace:
+Authenticated source identity:
 Submit function:
 Query function:
-Contract/schema version:
+Verify function:
+Transient exact-payload key:
+Client certificate subject/serial/SHA-256/expiry:
+Protected private-key location reference:
 Endorsement requirements:
-Client certificate serial:
-Client certificate SHA-256 fingerprint:
-Client certificate expiry:
-Secure private-key location:
 Rotation contact:
 Support contact:
 ```
 
-## Verify
-
-Do not continue until:
-
-- the endpoint is reachable;
-- TLS validates against the supplied CA and server name;
-- certificate and key match;
-- MSP/channel/chaincode/function names came from the Fabric team;
-- a read-only contract call is available for adapter validation;
-- retry, duplicate, endorsement, and commit semantics are documented.
-
-## Next step
-
-Continue with [01-deploy-openbao-kms.md](01-deploy-openbao-kms.md). After the KMS passes its sign/verify tests, continue with [02-create-outbox-and-adapter.md](02-create-outbox-and-adapter.md).
+Next: [`02-create-outbox-and-adapter.md`](02-create-outbox-and-adapter.md)

@@ -142,8 +142,8 @@ CREATE TABLE IF NOT EXISTS telemetry.fabric_outbox (
     updated_at          TIMESTAMPTZ NOT NULL DEFAULT now(),
     CONSTRAINT fabric_outbox_status_ck CHECK (
       status IN (
-        'pending', 'processing', 'submitted_unknown',
-        'confirmed', 'failed', 'dead_letter'
+        'pending', 'processing', 'submitted_unknown', 'reconciling',
+        'confirmed', 'failed', 'dead_letter', 'needs_attention'
       )
     ),
     CONSTRAINT fabric_outbox_digest_ck CHECK (
@@ -312,7 +312,7 @@ Use at-least-once delivery with duplicate protection and a one-time evidence sea
 10. Mark the outbox row confirmed only after commit status is valid.
 11. Send invalid local seals, gateway-evidence conflicts, permanent failures, and conflicting duplicate digests to `dead_letter` or a dedicated security-conflict path with the reason and operator action.
 
-Never create a new ledger event on every retry simply because the first response timed out. A network timeout does not prove that the transaction was not committed. Move the local record to an explicit `submitted_unknown` state, query by stable event key or transaction ID, and escalate conflicting evidence rather than guessing.
+Never create a new ledger transaction merely because the first client response timed out. The current adapter persists transaction ID, HRC record ID, endorsed transaction bytes, and a signed commit-status request before orderer submission. An uncertain post-submit outcome enters `reconciling`: recover commit status and query `QuerySourceBoundAnchor(SourceRecordID)`/`VerifySourceBoundDigest(...)` using the same durable transaction state. Permanent conflicting ledger evidence enters `needs_attention`. `submitted_unknown` remains only for migration compatibility.
 
 ## 3.6 Time and ordering
 

@@ -329,7 +329,7 @@ regional params: B
 activation:      OTAA
 class:           A
 ADR algorithm:   default
-expected uplink: 15 seconds
+expected production normal uplink: nominal 300 seconds with +/-15-second jitter (285-315 seconds); 15-second timing is reserved for the dissertation counted-test profile only
 ```
 
 The EMU-01 LoRaWAN root key was transferred through protected temporary files and verified byte-for-byte against the previously working lab key without recording or printing the key value. The production JavaScript payload codec was likewise verified byte-for-byte against the reviewed payload-v2 decoder. SEC-02 remains intentionally outside the permanent production registry as a security/test fixture. The temporary global ChirpStack provisioning API key was revoked after provisioning and its protected on-host token file was removed. `PRODUCTION_CHIRPSTACK_REGISTRY=PASS` is authoritative; tomorrow's remaining acceptance requires the real flashed gateway and EMU-01 radio uplink, not more server object creation.

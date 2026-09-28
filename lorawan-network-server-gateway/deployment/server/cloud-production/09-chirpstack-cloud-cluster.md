@@ -1,6 +1,6 @@
 # 9. Two-Node ChirpStack HA on the Minimum Three-Droplet Cluster
 
-> **Status: ACTIVE - PRE-DEPLOYMENT PREFLIGHT / DEPENDENCY CLOSURE.** ChirpStack itself has not yet been installed or started in this cloud build. The database client path, MQTT broker/TLS foundation, and Valkey/Sentinel HA layer are already commissioned. Begin this phase with the read-only gate in section 9.3; do not start ChirpStack until the exact image/config schema is pinned and the remaining MQTT workload-authentication/ACL plus second application-node routing boundary is closed.
+> **Status: COMPLETE / PASS.** ChirpStack `4.19.1` is commissioned on `ulc-01` and `ulc-02` with the approved AS923 configuration, local PgBouncer/Valkey/MQTT HA dependency paths, database migration ownership, reciprocal single-instance survival, two-node coexistence, and clean rejoin proven. Earlier pre-deployment gates below are retained as chronological commissioning evidence; they are not the current runtime state. See `00-current-server-continuation-checkpoint.md` for the newest whole-system status.
 
 ## 9.1 Goal and current architecture
 
@@ -532,11 +532,10 @@ frontend mqtt_tls
 
 backend mqtt_brokers
     mode tcp
-    balance roundrobin
     option tcp-check
 
     server mqtt-ulc01 10.104.0.2:8884 check
-    server mqtt-ulc02 10.104.0.4:8884 check
+    server mqtt-ulc02 10.104.0.4:8884 check backup
 ```
 
 `haproxy -c -V -f /etc/haproxy/haproxy.cfg` returned `Configuration file is valid`. HAProxy was deliberately **not reloaded** in that step.
@@ -807,9 +806,9 @@ Verified configuration:
 ```text
 ulc-01 frontend chirpstack_mqtt_tls -> bind 10.104.0.2:18883
 ulc-02 frontend chirpstack_mqtt_tls -> bind 10.104.0.4:18883
-backend chirpstack_mqtt_brokers -> roundrobin TCP
+backend chirpstack_mqtt_brokers -> active/backup TCP; do not split a ChirpStack MQTT session set across independent brokers
 backend server chirpstack-mqtt-ulc01 -> 10.104.0.2:8885 check
-backend server chirpstack-mqtt-ulc02 -> 10.104.0.4:8885 check
+backend server chirpstack-mqtt-ulc02 -> 10.104.0.4:8885 check backup
 ulc-01 haproxy -c -> PASS
 ulc-02 haproxy -c -> PASS
 ulc-01 live :18883 before reload -> inactive
@@ -908,12 +907,14 @@ PgBouncer :6432
   -> current Patroni primary :5432
 ```
 
-The DSN must retain hostname verification for `pgbouncer.internal.lorawan.com` and use the commissioned `chirpstack` SCRAM credential from protected secret storage. Mount the commissioned PgBouncer CA and use the exact PostgreSQL CA/config field supported by the pinned ChirpStack image.
+Keep `pgbouncer.internal.lorawan.com` as the reviewed service hostname, load the commissioned `chirpstack` SCRAM credential from protected secret storage, and validate the actual TLS certificate trust through the pinned ChirpStack client's separate PostgreSQL CA configuration. Do not infer that the core Rust PostgreSQL DSN accepts libpq-only `sslmode` spellings.
+
+**Correction from the successful 4.19.1 deployment:** the core Rust PostgreSQL client accepts `sslmode=require`, *not* libpq's `verify-full`. The application config separately uses `[postgresql].ca_cert = "/etc/ssl/certs/ca-certificates.crt"` and `[postgresql].connection_recycling_method = "fast"`; the protected DB secret must be URL-encoded. Other clients such as PgBouncer and `psql` have their own reviewed TLS modes and must not be mass-changed. The following is a non-executable DSN template; confirm the actual CA and pinned image config parser before starting.
 
 Illustrative intent only:
 
 ```text
-postgresql://chirpstack:<SECRET_REFERENCE>@pgbouncer.internal.lorawan.com:6432/chirpstack?sslmode=verify-full
+postgresql://chirpstack:<PROTECTED_URL_ENCODED_SECRET>@pgbouncer.internal.lorawan.com:6432/chirpstack?sslmode=require
 ```
 
 Do not start ChirpStack until a TLS login to the same local PgBouncer endpoint succeeds from an equivalent container/network context.

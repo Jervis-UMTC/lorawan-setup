@@ -60,7 +60,7 @@ Document:
 - device tamper detection;
 - loss-of-connectivity behavior.
 
-The agriculture AS923-3 assumption from this project must be revalidated against the receiving site's country, regulator, device frequency variant, antenna, gateway channel plan, ChirpStack region, and operating environment. **Stop here. Do not transmit** until those items agree and local authorization is confirmed.
+This project's commissioned agriculture deployment uses **plain AS923**, not AS923-3. A receiving site must still revalidate the exact locally permitted AS923 channel plan against its country/regulator, device frequency variant, antenna, gateway channel plan, ChirpStack region, and operating environment. **Stop here. Do not transmit** until those items agree and local authorization is confirmed.
 
 ## 6.5 Availability and degraded operation
 

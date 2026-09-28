@@ -2,6 +2,8 @@
 
 The Fabric team creates and operates the network. Use this procedure to exchange the concrete values the adapter needs and to prove them in staging. Sensitive identity material must use the organization's protected provisioning channel rather than a normal message or issue.
 
+> **HRC handoff status — 2026-09-08: ULC-01 EXTERNAL QUALIFICATION PASS.** `hrc-evidence` version 1.1 / sequence 2 is live-qualified across all three Fabric peers. The Adapter uses the Task 37 source-bound API: `CreateSourceBoundAnchor(SourceRecordID, sourceType, producer, producedAt, schemaVersion)` with exact payload bytes only in transient key `hrc.exact_payload`, then `QuerySourceBoundAnchor(SourceRecordID)` and `VerifySourceBoundDigest(SourceRecordID, observedDigest)`. The legacy `CreateAnchor`, `QueryAnchor`, `QueryAnchorByRecordID`, and `VerifyDigest` functions are forbidden for Adapter identities. The frozen source identity is `lorawan-gateway-evidence`. ULC-01 (`10.104.0.2`) is commissioned against the restricted TLS-preserving Gateway `10.104.0.7:7051` with TLS name `peer1.hrc.local`, MSP `HrcMSP`, channel `hrc-channel`, chaincode `hrc-evidence`, and dedicated non-admin client identity `lorawan-gateway-evidence-ulc-01`; authoritative activation-preflight SHA-256 remains `d2e7c9a59270d248ea14b4bd035c671e1a9768ddb1ec8bfa527d675c3b3cca97`. The authorized one-record qualification for outbox `1960` / SourceRecordID `fdadcf14-741e-4293-ad38-39ba89369ea7` completed successfully with exact-payload SHA-256 `827e443857118c0f922c2f03e66f950a79092c74d8d8b947d489ace43d157b51`, Fabric transaction ID `dd11910c1e7c28edd11334a03cce10d80d574692733458c9059d2775be5131b8`, and HRC record ID `hrc-record-ad1258ae5ee243c01d1e091c684df1c950589bcbcde820d736a257f8cd052bfb`. The qualification runner only marks the row `confirmed` after authoritative commit success, `QuerySourceBoundAnchor` returns matching source/record/digest/payload-length fields, and `VerifySourceBoundDigest` returns `MATCH`; final outbox state is `confirmed`, `attempts=1`, with prepared transaction and commit-status request retained. The one-shot qualification container is gone. As re-verified on 2026-09-09, the ULC-01 continuous Adapter is active with `FABRIC_ADAPTER_ENABLED=true`; the production activation preflight passes and 325 records have reached `confirmed` after the worker start. ULC-02 (`10.104.0.4`) remains `FABRIC_ADAPTER_ENABLED=false`/deferred; enabling its HA worker is a separate later boundary that requires the lease-renewal/ownership-fencing gate and must not trigger a repeat of candidate `1960`.
+
 ## 2.1 Information the Fabric team must provide
 
 Request the following:
@@ -10,12 +12,14 @@ Request the following:
 |---|---|---|
 | Fabric version | Exact network and peer versions | Client compatibility and support |
 | Organization name | For example, AgricultureOrg or PortOperatorOrg | MSP and policy identity |
-| MSP ID | Exact case-sensitive MSP identifier | Transaction signing and authorization |
-| Channel name | Exact channel | Ledger routing |
-| Chaincode name | Exact deployed chaincode name | Contract lookup |
-| Chaincode version and sequence | Current definition | Upgrade coordination |
-| Required transaction names | For example, CreateAttestation | Application contract |
-| Query transaction names | For example, ReadAttestation | Verification |
+| MSP ID | `HrcMSP` | Transaction signing and authorization |
+| Channel name | `hrc-channel` | Ledger routing |
+| Chaincode name | `hrc-evidence` | Contract lookup |
+| Chaincode version and sequence | Current definition (still request for change coordination) | Upgrade coordination |
+| Contract namespace | empty/default; **not** Caliper alias `hrcEvidence` | Fabric Contract API lookup |
+| Required transaction | `CreateSourceBoundAnchor(SourceRecordID, sourceType, producer, producedAt, schemaVersion)` plus transient `hrc.exact_payload` | Task 37 application contract |
+| Query transaction | `QuerySourceBoundAnchor(SourceRecordID)` | Verification |
+| Digest verification transaction | `VerifySourceBoundDigest(SourceRecordID, observedDigest)` and require `MATCH` | Post-commit verification |
 | Endorsement policy | Organizations required to endorse | Retry and availability planning |
 | Fabric Gateway endpoint | Host and port | Client connection |
 | Peer endpoint | If the client profile requires it | Gateway and TLS routing |
@@ -46,7 +50,11 @@ Give the Fabric team:
 - example sanitized uplink JSON;
 - example canonical attestation JSON;
 - desired query and verification operations;
-- data classification for each field.
+- data classification for each field;
+- `AuthenticatedSourceSystemID`: `lorawan-gateway-evidence`;
+- DigitalOcean VPC: `10.104.0.0/20`;
+- ULC-01 private/public source addresses: `10.104.0.2` / `143.198.205.54`;
+- ULC-02 private/public source addresses: `10.104.0.4` / `165.22.253.127`.
 
 Do not send passwords, private keys, LoRaWAN root keys, connection profiles containing secrets, or raw personal data in a normal project chat or issue. Exchange certificates and private keys through the approved secure provisioning channel and record only their identifiers, owners, expiry dates, and storage locations in the handoff.
 

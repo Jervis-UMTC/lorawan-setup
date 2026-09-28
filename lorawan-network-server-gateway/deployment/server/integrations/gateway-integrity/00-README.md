@@ -1,4 +1,4 @@
-# Gateway Integrity and Evidence Verification
+﻿# Gateway Integrity and Evidence Verification
 
 These guides define the server-side half of the software-only gateway integrity design.
 
@@ -117,24 +117,23 @@ A later layer cannot make an earlier false input true. Fabric can permanently pr
 
 ## Read in order
 
-1. [01-evidence-contract-and-checkpoints.md](01-evidence-contract-and-checkpoints.md) — What the gateway records, what the server anchors, and the verification-state model.
-2. [02-server-verifier-and-reconciliation.md](02-server-verifier-and-reconciliation.md) — Server components, database model, correlation, trusted decoding, and the Fabric evidence gate.
-3. [03-testing-monitoring-and-limitations.md](03-testing-monitoring-and-limitations.md) — **Extended validation / Phase 15 reference** for outage, reboot, tamper, gap, and other fault cases. These tests are not all prerequisites for the first working evidence-service deployment.
-4. [04-service-architecture-and-runtime-contract.md](04-service-architecture-and-runtime-contract.md) — Canonical long-running service topology, ownership boundaries, exact end-to-end lifecycle, startup order, failure behavior, monitoring, and implementation sequence.
-5. [05-preimplementation-readiness-and-deployment-gate.md](05-preimplementation-readiness-and-deployment-gate.md) — Freeze replicated placement, shared-443/mTLS ingress, PKI, cross-host evidence storage, database/grants/worker leases, dual-broker collector identity, trusted decoder, v2 vector, observability, and the minimum proof required before the missing runtimes are activated.
-6. [06-replicated-ha-deployment-journey.md](06-replicated-ha-deployment-journey.md) — **Minimum commissioning journey:** one guarded block per boundary, two-replica health, one representative functional path, evidence paths, PASS markers, and resume rules. Deep fault testing stays in Guide 3 / Phase 15.
-7. [07-implementation-blueprint-and-ha-placement.md](07-implementation-blueprint-and-ha-placement.md) — Concrete software blueprint: Rust gateway journal/uploader, Go cloud services, raw-storage durability decision, exact HA host placement, verifier work discovery, service health contracts, source-tree shape, and implementation order.
+1. [01-evidence-contract-and-checkpoints.md](01-evidence-contract-and-checkpoints.md) â€” What the gateway records, what the server anchors, and the verification-state model.
+2. [02-server-verifier-and-reconciliation.md](02-server-verifier-and-reconciliation.md) â€” Server components, database model, correlation, trusted decoding, and the Fabric evidence gate.
+3. [03-testing-monitoring-and-limitations.md](03-testing-monitoring-and-limitations.md) â€” **Extended validation / Phase 15 reference** for outage, reboot, tamper, gap, and other fault cases. These tests are not all prerequisites for the first working evidence-service deployment.
+4. [04-service-architecture-and-runtime-contract.md](04-service-architecture-and-runtime-contract.md) â€” Canonical long-running service topology, ownership boundaries, exact end-to-end lifecycle, startup order, failure behavior, monitoring, and implementation sequence.
+5. [05-preimplementation-readiness-and-deployment-gate.md](05-preimplementation-readiness-and-deployment-gate.md) â€” Freeze replicated placement, shared-443/mTLS ingress, PKI, cross-host evidence storage, database/grants/worker leases, dual-broker collector identity, trusted decoder, v2 vector, observability, and the minimum proof required before the missing runtimes are activated.
+6. [06-replicated-ha-deployment-journey.md](06-replicated-ha-deployment-journey.md) â€” **Minimum commissioning journey:** one guarded block per boundary, two-replica health, one representative functional path, evidence paths, PASS markers, and resume rules. Deep fault testing stays in Guide 3 / Phase 15.
+7. [07-implementation-blueprint-and-ha-placement.md](07-implementation-blueprint-and-ha-placement.md) â€” Concrete software blueprint: Rust gateway journal/uploader, Go cloud services, raw-storage durability decision, exact HA host placement, verifier work discovery, service health contracts, source-tree shape, and implementation order.
 
 When another manual or diagram is unclear about **which service watches which boundary**, use Guide 4 as the canonical topology. Use Guide 5 when the question is **what must be ready before those services can be safely installed**, Guide 6 for the guarded deployment journey, and Guide 7 when the question is **what code we are actually building and where its HA replicas will live**. The journal, uploader, evidence ingest, MQTT collector, verifier, trusted decoder, and Fabric Adapter are separate responsibilities; do not collapse them into one privileged watcher.
 
-Current implementation order is now **gateway-target-first** because the cloud evidence lane is commissioned:
+The gateway-target normal path is now commissioned as well as the cloud evidence lane:
 
-1. keep the completed cloud boundary intact: SeaweedFS S0-S9, database/PgBouncer, immutable GHCR images, PKI/MQTT identities, replicas, shared-443 and Grafana evidence views are PASS;
-2. use the pinned Gateway OS/OpenWrt build environment to compile the implemented Rust writer/uploader with `concentratord-zmq` for the exact Raspberry Pi target;
-3. verify the OpenWrt package/UCI/procd ownership, persistent journal/receipt paths, curl dependency, and least-privilege gateway identities;
-4. stage the consolidated MQTT + Evidence gateway handoff bundle and produce the reproducible Gateway OS package/image;
-5. when hardware is reachable, resume [Gateway 4A](../../../gateway/setup/04a-configure-gateway-integrity-journal.md) and [Gateway 6](../../../gateway/setup/06-verify-gateway-os.md) for one real physical lineage;
-6. preserve the already-PASS public ChirpStack/Evidence/MQTT normal path, keep Reserved-IP reassignment/failover authority as the remaining provider gate, and release Fabric signing credentials only after the external Fabric handoff/activation gate.
+1. keep the completed cloud boundary intact: SeaweedFS S0-S9, database/PgBouncer, PKI/MQTT identities, replicas, shared-443 and Grafana evidence views are PASS;
+2. keep the accepted Gateway-01 OpenWrt evidence runtime intact: unprivileged writer, IPC permission guard, uploader, persistent journal/receipts, and protected gateway identities are PASS;
+3. preserve the active/backup MQTT broker policy; the independent Mosquitto brokers do not replicate live sessions and must not be used as a round-robin pair;
+4. real assembled EMU-01 traffic has proven Gateway 4A / Gateway 6 lineage through accepted checkpoint/segment verification; repeat only targeted checks after a relevant runtime/package change;
+5. preserve the already-PASS public ChirpStack/Evidence/MQTT normal path, keep Reserved-IP reassignment/failover authority as the remaining provider gate, preserve ULC-01 as the verified production Fabric writer, and keep ULC-02 write-disabled until its HA fencing/ownership gate is accepted.
 
 ## Initial implementation resource budget
 
@@ -149,7 +148,7 @@ One instance of each of the three server roles would add up to **576 MiB RAM and
 
 ## Implementation-status rule
 
-The repository now contains the contracts, commissioned cloud runtime, and an implemented/tested Rust writer/uploader source runtime. Cloud registry digests and replicated services are live; the remaining implementation blocker is the exact Gateway OS/OpenWrt target build/package and physical lineage. Do not replace that target validation with an unreviewed script, generic host binary, or imaginary image.
+The repository now contains the contracts, commissioned cloud runtime, Gateway OS/OpenWrt packaging and the implemented/tested Rust writer/uploader runtime. Real Gateway-01 / assembled EMU-01 physical lineage is PASS through journal, upload, checkpoint and trusted verification. ULC-01 Fabric production submission is also PASS. Remaining external/HA boundaries are provider Reserved-IP failover acceptance and deliberate ULC-02 Fabric writer fencing/ownership acceptance; do not turn either into a software-only claim.
 
 ## Core rule
 
@@ -161,3 +160,5 @@ Verifier compares independent paths.
 OpenBao seals verified evidence.
 Fabric preserves the final attestation.
 ```
+
+

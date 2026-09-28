@@ -1,4 +1,4 @@
-# 16. Operations, Upgrades, Rotation, Scaling, and Decommissioning
+﻿# 16. Operations, Upgrades, Rotation, Scaling, and Decommissioning
 
 > **Status: STANDBY / DRAFT.** These operating procedures depend on the final deployed versions and service layout. Keep them as design guidance and refine each section only after the corresponding technology has been validated.
 
@@ -330,7 +330,7 @@ For OpenBao, change one Raft member at a time. Before each member restart, prove
 
 For Fabric adapters, update the standby/idle worker first when possible, verify its unique `worker_id`, DB lease behavior, OpenBao identity, and Fabric handoff configuration, then move work and update the other worker. Never run two workers with the same `worker_id` or a shared live lease.
 
-If the reviewed Fabric adapter image still does not exist, this section remains a documented future procedure and is not executable evidence.
+Fabric adapter-1 on ULC-01 is the active production writer; adapter-2 on ULC-02 remains fail-closed/write-disabled. For rolling changes, preserve single-writer ownership, update the standby/disabled side first where applicable, and do not enable ULC-02 until its lease-renewal/ownership-fencing HA gate is deliberately accepted.
 
 ## 16.12B Scaling gateway evidence services
 
@@ -458,3 +458,4 @@ Close a change only when:
 - residual risk and unverified runtime items are documented.
 
 Next: [17-troubleshooting.md](17-troubleshooting.md)
+

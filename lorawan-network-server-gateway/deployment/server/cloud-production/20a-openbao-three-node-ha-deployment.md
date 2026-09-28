@@ -1235,4 +1235,12 @@ Exactly one cryptographic acceptance test then ran on `ulc-01`. The protected bo
 
 **COMPLETE / PASS.** All prepared-boundary checklist items above are now backed by recorded execution evidence. The OpenBao infrastructure is ready to be consumed by the later Fabric adapter without further node-address, Raft, Transit-key, signer-policy, or HAProxy KMS reconfiguration. Keep all three members running. `OPENBAO_3_NODE_NORMAL_PATH=PASS`; `OPENBAO_PHASE15_FAILURE_TESTS=NOT_STARTED`; `FABRIC_ADAPTER_RUNTIME=BLOCKED_UNTIL_IMPLEMENTATION_AND_HANDOFF`.
 
-The adapter block is intentional: the repository still has no completed reviewed/pinned Fabric adapter image. Do not issue the `fabric-adapter` SecretID until that implementation/runtime identity is ready. Server-side outbox/database preparation may proceed independently.
+The adapter block above records the historical 2026-08-27 boundary. It has now been superseded by the commissioning update below.
+
+### Fabric-adapter runtime commissioning update - 2026-09-02
+
+The implementation half of that historical block is now closed. An immutable Fabric-adapter image is deployed on both `ulc-01` and `ulc-02` in `enabled=false` fail-closed standby. A dedicated database credential was rotated into protected custody, the authoritative ten-role SCRAM userlist was refreshed on all three PgBouncer nodes by reload-in-place with unchanged PIDs, and `fabric_adapter` authenticated through all three physical PgBouncer endpoints using `sslmode=verify-full`.
+
+Separate OpenBao AppRole SecretIDs were issued for `fabric-adapter-ulc-01` and `fabric-adapter-ulc-02`, installed `root:65532` mode `0440`, and each identity independently passed AppRole login plus Transit sign/verify and tamper rejection through the stable `:18200` HA endpoint. Both hosts now have `/etc/lorawan-cloud/gateway-evidence/fabric-adapter.env` staged `0600 root:root` with real database/OpenBao settings and explicit placeholders only for the external Fabric Gateway/TLS/MSP/channel/chaincode/contract/function handoff.
+
+`fabric-adapter-enable-preflight.sh` correctly refuses activation while those placeholders remain, and both adapters stay healthy standby. The current boundary is therefore `FABRIC_ADAPTER_RUNTIME=READY_INTERNAL_EXTERNAL_FABRIC_HANDOFF_PENDING`, not missing implementation.

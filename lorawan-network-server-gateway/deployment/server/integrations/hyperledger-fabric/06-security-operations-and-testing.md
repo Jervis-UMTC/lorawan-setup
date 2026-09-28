@@ -47,7 +47,7 @@ Fabric identities use certificates and private keys, and channel or chaincode po
 | OpenBao quorum unavailable or reachable nodes sealed | Telemetry continues; Fabric adapter backs off and does not submit an unverified/unsealed event |
 | Invalid local seal | Adapter fails closed before a Fabric transaction is created |
 | Worker crash | Expired processing lease is reclaimed without duplicate ledger state |
-| Commit timeout | Adapter moves to submitted_unknown and queries before retrying |
+| Commit timeout / uncertain submit | Adapter enters `reconciling`, preserves the prepared transaction + signed commit-status request, recovers commit status/query state, and does not create a fresh transaction blindly |
 | Invalid schema | Adapter rejects before Fabric submission |
 | v2 pending verification | Adapter does not claim/seal the row; telemetry remains available |
 | v2 evidence gap | Row follows explicit gap policy and is never mislabeled gateway-verified |
@@ -66,7 +66,7 @@ Track:
 - pending and failed outbox count;
 - oldest retry-eligible event age;
 - active and expired processing lease count;
-- submitted-unknown count and oldest age;
+- reconciling count and oldest age; legacy submitted-unknown count/age only for migration compatibility; needs-attention count and oldest age;
 - submission success rate;
 - commit invalidation count;
 - unknown timeout count;
@@ -92,7 +92,7 @@ Track:
 - journal-to-MQTT correlation failures/ambiguities;
 - trusted-decoder mismatch count.
 
-Alert when the oldest retry-eligible event exceeds the business SLA, when a processing lease expires, when submitted-unknown rows are not reconciled, when an eligible row remains unsealed unexpectedly, when any local seal fails verification, when an unexpected signing-key ID appears, when the queue grows continuously, or when a Fabric certificate/evidence-key rotation deadline is approaching.
+Alert when the oldest retry-eligible event exceeds the business SLA, when a processing lease expires, when `reconciling` (or legacy `submitted_unknown`) rows are not resolved, when `needs_attention` is nonzero, when an eligible row remains unsealed unexpectedly, when any local seal fails verification, when an unexpected signing-key ID appears, when the queue grows continuously, or when a Fabric certificate/evidence-key rotation deadline is approaching.
 
 ## 6.4 Reconciliation procedure
 
@@ -148,7 +148,7 @@ Use one sanitized staging event and keep its event key and transaction ID so eve
 8. the raw and canonical off-chain data remain available and the same event can be replayed without creating a conflicting ledger entry;
 9. a Fabric outage leaves telemetry ingestion running, preserves the exact pre-existing digest/key-ID/signature tuple, and uses bounded backoff;
 10. an adapter crash releases through lease expiry without producing duplicate ledger state or a replacement evidence seal;
-11. a simulated commit timeout enters `submitted_unknown`, verifies the local seal, and is reconciled before retry;
+11. a simulated uncertain commit enters `reconciling`, preserves the same prepared transaction/commit-status material, verifies the local seal, and is reconciled before any new submission;
 12. an intentionally invalid local seal in an isolated fixture is rejected before any Fabric transaction ID exists;
 13. the Fabric client identity can be rotated and the old identity revoked without using an administrator certificate;
 14. OpenBao key rotation creates a new key version for future seals, historical signatures still verify through their recorded versions, and no old row is rewritten;

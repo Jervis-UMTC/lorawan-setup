@@ -405,9 +405,9 @@ Do not put root tokens, recovery shares, or unseal material in the evidence fold
 
 ## 14.12 Fabric outbox and conditional adapter evidence
 
-The outbox exists even when the adapter implementation is unavailable.
+The outbox is a durable application boundary and must be monitored independently from adapter process health.
 
-Record status counts with a read-only database role, adapting exact status names to the deployed schema:
+Record status counts with a read-only database role using the deployed schema:
 
 ```sql
 SELECT status, count(*)
@@ -418,32 +418,25 @@ ORDER BY status;
 
 Also record oldest eligible/pending age using the actual schema timestamp column documented by the outbox migration.
 
-### When the adapter implementation is BLOCKED
+### Current commissioned adapter evidence
 
 Record:
 
 ```text
-adapter execution: BLOCKED - no reviewed implementation/image
-outbox table: available
-telemetry/outbox atomic commit: PASS/FAIL
-OpenBao HA: PASS/FAIL
-external Fabric handoff: COMPLETE/BLOCKED
+ULC-01 adapter-1 enabled state + process health + worker_id
+ULC-02 adapter-2 write-disabled/fenced state
+outbox eligibility: finalized_payload present; v2 verifier status=verified
+pending / processing / failed / confirmed counts
+reconciling count + oldest age
+needs_attention count + oldest age
+legacy submitted_unknown count only as migration compatibility
+live/expired lease evidence
+OpenBao HA/sign/verify health
+HRC Gateway reachability and TLS identity
+Fabric tx ID + HRC record ID + commit/reconcile result for sampled work
 ```
 
-Do not create fake `adapter-1 health` evidence.
-
-### When the reviewed adapter is deployed
-
-Also capture:
-
-```text
-adapter-1 process health + worker_id
-adapter-2 process health + worker_id
-current lease owner
-lease expiry/reclaim evidence
-Fabric tx ID
-commit/reconcile result
-```
+Do not infer that `pending` with `attempts=0` is a Fabric outage. First prove the row satisfies the current claim predicate. Do not report ULC-02 as an active writer merely because its container/image exists.
 
 During an external Fabric outage the expected pattern is:
 

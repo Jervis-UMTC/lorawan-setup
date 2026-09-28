@@ -1,426 +1,130 @@
-# Minimal 3-Server HA Proof of Concept
+﻿# Cloud Production Documentation
 
-Use this folder to build the **smallest practical cloud version of the future LoRaWAN HA architecture**.
+> For technology-oriented documentation rather than deployment chronology, see [`../../technology-guides/00-README.md`](../../technology-guides/00-README.md). The guides explain each deployed technology separately and link back here for detailed commissioning and recovery procedures.
 
-Think of it as a **scale model of a bridge**:
+This directory is the operator and recovery documentation for the commissioned three-server LoRaWAN cloud deployment. The numbered files are component manuals; they are not a chronological diary.
 
-- the supports and failure paths are real;
-- the traffic is tiny;
-- we are proving that the design works before paying for production-sized machines.
+**Current truth:** read [`00-current-server-continuation-checkpoint.md`](00-current-server-continuation-checkpoint.md) first. Use [`00-build-execution-log.md`](00-build-execution-log.md) only for historical commissioning evidence and troubleshooting provenance.
 
-This POC is **not capacity sizing for production**. A few sensor uplinks are enough. The important result is that one server can fail and the remaining architecture behaves as designed.
+## Current boundary - through 2026-09-17
 
-## Deployment sequence and document status
+| Layer | Status |
+|---|---|
+| etcd | VALIDATED, 3-node quorum |
+| PostgreSQL / Patroni / TimescaleDB | VALIDATED HA cluster |
+| HAProxy / PgBouncer | VALIDATED routing/authentication |
+| Mosquitto | VALIDATED preferred/backup path |
+| Valkey / Sentinel | VALIDATED HA path |
+| ChirpStack | VALIDATED two-node cluster, plain AS923 |
+| OpenBao | VALIDATED 3-node KMS + audit |
+| Node-RED | VALIDATED; A active on ULC-03, B fenced on ULC-02 |
+| Grafana | VALIDATED application/evidence read path |
+| Gateway evidence services | VALIDATED replicated ingest/collector/verifier/storage path |
+| Gateway-01 / EMU-01 | LIVE PASS including RF, LTE backhaul, telemetry and evidence lineage |
+| Fabric | **ULC-01 production writer PASS; ULC-02 write-disabled pending HA fencing/ownership acceptance** |
+| Public Reserved IPv4 path | Normal path PASS; controlled reassignment/failover acceptance remains separate |
+| Research recorder | Operational; follow current `test/` gates for counted work |
+| Current Fabric-outbox research eligibility | Diagnose upstream `finalized_payload` + v2 verifier eligibility before Fabric; `pending`/`attempts=0` alone is not an adapter failure |
 
-The numbering identifies the component manuals, but after Phase 9 the **dependency order is authoritative**. The core cloud HA stack through ChirpStack is commissioned; Phase 13A fast-path backup, OpenBao 3-node KMS normal path, the Fabric outbox database layer, Node-RED A/B server runtime, and Grafana server-only staging are also commissioned. Physical-gateway-dependent acceptance is temporarily deferred. There is no remaining Grafana server mutation to perform while the gateway is unavailable. Intentional host, process, broker, database, KMS, Fabric, or LTE failures remain reserved for Phase 15.
+Do not infer current state from an older dated paragraph in a component manual. If a component manual describes a previous commissioning boundary, the current-state file above wins unless live verification proves otherwise.
 
-Status meaning:
+## Component manuals
 
-- **VALIDATED** — executed on the current three-server build and backed by evidence in `00-build-execution-log.md`.
-- **REFERENCE** — architecture or planning information; useful now but not itself a live deployment phase.
-- **STANDBY / DRAFT** — not yet live-validated. Re-check and refine it from the real server state before executing it.
+| Manual | Purpose / current role |
+|---|---|
+| [`01-architecture-decisions-and-scope.md`](01-architecture-decisions-and-scope.md) | Architecture constraints and design decisions |
+| [`02-capacity-cost-and-ip-plan.md`](02-capacity-cost-and-ip-plan.md) | Resource/cost/IP baseline |
+| [`02a-digitalocean-machine-layout-and-specs.md`](02a-digitalocean-machine-layout-and-specs.md) | Droplet layout/specification baseline |
+| [`03-digitalocean-vpc-droplets-and-firewalls.md`](03-digitalocean-vpc-droplets-and-firewalls.md) | DigitalOcean VPC, public ingress, firewall foundation |
+| [`04-host-hardening-dns-pki-and-secrets.md`](04-host-hardening-dns-pki-and-secrets.md) | Host hardening, DNS, PKI, secret layout |
+| [`04a-host-security-hardening-execution-runbook.md`](04a-host-security-hardening-execution-runbook.md) | Reproducible hardening procedure |
+| [`05-etcd-cluster.md`](05-etcd-cluster.md) | etcd cluster deployment/recovery |
+| [`06-spilo-patroni-postgresql-cluster.md`](06-spilo-patroni-postgresql-cluster.md) | PostgreSQL/Patroni/TimescaleDB HA |
+| [`07-haproxy-and-pgbouncer.md`](07-haproxy-and-pgbouncer.md) | Database routing and pooling |
+| [`08-mqtt-and-valkey.md`](08-mqtt-and-valkey.md) | MQTT and Valkey/Sentinel service layer |
+| [`09-chirpstack-cloud-cluster.md`](09-chirpstack-cloud-cluster.md) | ChirpStack cloud cluster |
+| [`10-self-managed-public-ingress.md`](10-self-managed-public-ingress.md) | Reserved-IP/DNS/TLS ingress and failover design |
+| [`11-raspberry-pi-4g-backhaul.md`](11-raspberry-pi-4g-backhaul.md) | Gateway LTE primary/fallback routing |
+| [`12-gateway-and-device-migration.md`](12-gateway-and-device-migration.md) | Gateway/device provisioning and migration |
+| [`12a-node-red-timescale-telemetry.md`](12a-node-red-timescale-telemetry.md) | Node-RED -> TimescaleDB + Fabric outbox application path |
+| [`13-backup-restore-and-disaster-recovery.md`](13-backup-restore-and-disaster-recovery.md) | Backup, restore, recovery acceptance |
+| [`14a-grafana-cloud-deployment.md`](14a-grafana-cloud-deployment.md) | Grafana deployment and datasource boundary |
+| [`14-observability-alerting-and-logging.md`](14-observability-alerting-and-logging.md) | Observability and logging |
+| [`14b-pre-test-commissioning-gate.md`](14b-pre-test-commissioning-gate.md) | Full pre-test gate |
+| [`15-failover-chaos-and-acceptance-testing.md`](15-failover-chaos-and-acceptance-testing.md) | Intentional failure/failover acceptance |
+| [`16-operations-upgrades-and-scaling.md`](16-operations-upgrades-and-scaling.md) | Operations, maintenance, scaling |
+| [`17-troubleshooting.md`](17-troubleshooting.md) | Symptom-driven troubleshooting |
+| [`18-runbook-and-handoff-checklists.md`](18-runbook-and-handoff-checklists.md) | Operational handoff checklist |
+| [`19-cloud-ha-grafana-deployment-day-runbook.md`](19-cloud-ha-grafana-deployment-day-runbook.md) | **Historical/sequence reference**; not current status authority |
+| [`20-openbao-and-fabric-adapter.md`](20-openbao-and-fabric-adapter.md) | Current OpenBao/Fabric adapter operations and HA boundary |
+| [`20a-openbao-three-node-ha-deployment.md`](20a-openbao-three-node-ha-deployment.md) | OpenBao three-node deployment/recovery |
+| [`00-build-execution-log.md`](00-build-execution-log.md) | Historical detailed commissioning evidence; not current-state authority |
 
-| Order | Manual | Status |
-|---:|---|---|
-| 0 | [00-evidence-services-and-gateway-journal-continuation.md](00-evidence-services-and-gateway-journal-continuation.md) + [00-current-server-continuation-checkpoint.md](00-current-server-continuation-checkpoint.md) | **NEW CHAT: READ EVIDENCE/JOURNAL BOARD FIRST**, then broader checkpoint; build log is historical detail only |
-| 1 | [01-architecture-decisions-and-scope.md](01-architecture-decisions-and-scope.md) | REFERENCE |
-| 2 | [02-capacity-cost-and-ip-plan.md](02-capacity-cost-and-ip-plan.md) + [02a-digitalocean-machine-layout-and-specs.md](02a-digitalocean-machine-layout-and-specs.md) | REFERENCE / recorded baseline |
-| 3 | [03-digitalocean-vpc-droplets-and-firewalls.md](03-digitalocean-vpc-droplets-and-firewalls.md) | three-Droplet/east-west foundation plus working public Reserved-IP/DuckDNS path evidenced; provider-side reassignment authority/failover test remains open |
-| 4 | [04-host-hardening-dns-pki-and-secrets.md](04-host-hardening-dns-pki-and-secrets.md) + [04a-host-security-hardening-execution-runbook.md](04a-host-security-hardening-execution-runbook.md) | VALIDATED host-security checkpoint |
-| 5 | [05-etcd-cluster.md](05-etcd-cluster.md) | **CORE DEPLOYMENT VALIDATED** - bootstrap/quorum/status proven; member-loss/recovery rehearsal not yet recorded |
-| 6 | [06-spilo-patroni-postgresql-cluster.md](06-spilo-patroni-postgresql-cluster.md) | **DATABASE-LAYER POC VALIDATED - PostgreSQL HA + telemetry schema + HBA/auth + logical backup boundary + controlled ulc-01 -> ulc-02 switchover + promoted-primary DB/Timescale/application-auth gates PASS** |
-| 7 | [07-haproxy-and-pgbouncer.md](07-haproxy-and-pgbouncer.md) | **CORE + EVIDENCE AUTH COMPLETE / PASS** - original HAProxy/PgBouncer/failover boundary PASS; all three nodes carry the same ten-role/six-evidence SCRAM userlist and strict verify-full evidence authentication passed through every physical :6432 endpoint |
-| 8 | [08-mqtt-and-valkey.md](08-mqtt-and-valkey.md) | **CORE SERVICE LAYER COMPLETE / VALIDATED - MQTT TLS broker failover PASS; Valkey/Sentinel HA + dual writable-primary HAProxy routing PASS; ChirpStack MQTT workload identity/ACL commissioning remains a Phase 9 dependency** |
-| 9 | [09-chirpstack-cloud-cluster.md](09-chirpstack-cloud-cluster.md) | **COMPLETE / PASS - two private ChirpStack nodes, dependency paths, coexistence, reciprocal single-instance survival, and clean rejoin proven** |
-| 10 | [10-self-managed-public-ingress.md](10-self-managed-public-ingress.md) | **PUBLIC NORMAL PATH PASS / FAILOVER-AUTH PENDING** - Reserved IPv4 `129.212.208.168`, DuckDNS names and public TLS/mTLS paths work; provider API reassignment authority and controlled failover acceptance remain open |
-| 11 | [11-raspberry-pi-4g-backhaul.md](11-raspberry-pi-4g-backhaul.md) | **GATEWAY BUILD/LTE PATH PROVEN; FINAL REAL-RF ACCEPTANCE REQUIRED** - use the accepted 2026-09-01 flash-ready image and the root tomorrow bring-up runbook; do not repeat historical build work |
-| 12 | [12-gateway-and-device-migration.md](12-gateway-and-device-migration.md) | **HARDWARE-DEFERRED REQUIRED SETUP** - authoritative gateway/device cutover or fresh provisioning waits for Phase 11 physical access |
-| 12A | [12a-node-red-timescale-telemetry.md](12a-node-red-timescale-telemetry.md) | **SERVER APPLICATION COMMISSIONING PASS / REAL-RF ACCEPTANCE DEFERRED** - atomic telemetry + outbox enqueue and replay were proven synthetically; A remains active/healthy and B fenced; do not repeat until real gateway/EMU-01 acceptance |
-| 13 | [13-backup-restore-and-disaster-recovery.md](13-backup-restore-and-disaster-recovery.md) | **13A FAST-PATH PASS / 13S SERVER-ONLY SNAPSHOT ACTIVE / 13B FINAL LATER** - current server exports/backup tooling may be pre-staged now; final full-stack snapshot waits for remaining dependencies |
-| 14A | [14a-grafana-cloud-deployment.md](14a-grafana-cloud-deployment.md) | **SERVER-ONLY STAGING COMPLETE / PASS; REAL-DATA ACCEPTANCE DEFERRED** - Grafana 13.2.0 runs loopback-only with strict-TLS `telemetry_reader` datasource and provisioned dashboard; real-reading freshness acceptance waits for hardware |
-| 20 | [20-openbao-and-fabric-adapter.md](20-openbao-and-fabric-adapter.md) | **OPENBAO + OUTBOX + ADAPTER IMMUTABLE STANDBY PASS / FABRIC EXECUTION BLOCKED** - KMS/audit and outbox are live; both immutable adapter containers are deployed healthy with `FABRIC_ADAPTER_ENABLED=false`; SecretID remains intentionally unissued and ledger execution still waits for the external Fabric handoff/activation gate |
-| 14 | [14-observability-alerting-and-logging.md](14-observability-alerting-and-logging.md) | **14S SERVER-ONLY HARNESS PASS / FINAL PHASE 14 AFTER 13B** - `SERVER_ONLY_EVIDENCE_HARNESS=PASS` for the commissioned server baseline; do not repeat it without relevant state change, but rerun the final healthy baseline after all required dependencies are commissioned |
-| 14B | [14b-pre-test-commissioning-gate.md](14b-pre-test-commissioning-gate.md) | **HARD GO/NO-GO** - all setup must pass before Phase 15 |
-| 15 | [15-failover-chaos-and-acceptance-testing.md](15-failover-chaos-and-acceptance-testing.md) | **FIRST FAILURE-INJECTION PHASE** |
-| 16 | [16-operations-upgrades-and-scaling.md](16-operations-upgrades-and-scaling.md) | STANDBY / DRAFT |
-| 17 | [17-troubleshooting.md](17-troubleshooting.md) | LIVING DRAFT; keep proven troubleshooting as we go |
-| 18 | [18-runbook-and-handoff-checklists.md](18-runbook-and-handoff-checklists.md) | STANDBY / DRAFT |
-| 19 | [19-cloud-ha-grafana-deployment-day-runbook.md](19-cloud-ha-grafana-deployment-day-runbook.md) | sequence reference; later phases still STANDBY |
-
-
-**Parallel-safe OpenBao exception:** the OpenBao-only infrastructure subphase in [20A](20a-openbao-three-node-ha-deployment.md) may be commissioned while Phase 11 is compiling because it does not require gateway traffic, Node-RED, Grafana, the Fabric adapter image, or the external Fabric handoff. This exception does not move full Phase 20 ahead of Phase 12A/14A; it only removes idle time by preparing the independent 3-node KMS normal path.
-
-**Authoritative pre-test order:** normal dependency order remains `Phase 10 -> Phase 11 -> Phase 13A -> Phase 12 -> Phase 12A -> Phase 14A -> Phase 20 -> Phase 13B -> Phase 14 -> Phase 14B -> Phase 15`. The numbering is retained for existing filenames; dependency order wins. **Server-first hardware-unavailable exception:** cloud-only work may be prepared or commissioned early when it does not require gateway traffic and does not weaken a later gate. Under that exception, Phase 13A fast backup, OpenBao 20A, the Fabric outbox database layer, Node-RED server runtime, and Grafana server staging may proceed while Phase 11/12 and real-uplink acceptance wait for physical access. Early server staging never converts a hardware-dependent or external-provider gate into PASS. The runtime application path remains `ChirpStack -> Node-RED -> TimescaleDB -> Grafana`; Fabric work remains asynchronous through `telemetry.fabric_outbox`.
-
-**Current continuation boundary:** the commissioned server stack includes etcd, PostgreSQL/Patroni/TimescaleDB, HAProxy/PgBouncer, Mosquitto, Valkey/Sentinel, two-node ChirpStack, Phase 13A backup, three-node OpenBao/KMS + audit, the Fabric outbox, Node-RED A active/B fenced, and Grafana on `ulc-03`. The server-side gateway-evidence lane is now commissioned: SeaweedFS S9 is PASS; all three PgBouncer nodes use the same ten-role/six-evidence SCRAM set; immutable `ghcr.io/jervis-umtc/lorawan/...@sha256` refs are installed; Evidence PKI and four read-only collector MQTT identities are live; ingest-1/2, collector-1/2, verifier-1/2 and the two disabled Fabric adapter standbys are running with the hardened 65532/read-only/192-MiB/0.20-CPU profile; and shared anchor `:443` uses validated TCP/SNI dispatch so ChirpStack keeps normal HTTPS while `evidence.internal.lorawan.com` passes mTLS end-to-end to ingest. A controlled AS923 gateway-style MQTT event produced exactly one deduplicated durable witness, and Grafana now carries read-only checkpoint/verification panels. The remaining gateway-evidence work is target Gateway OS packaging/physical lineage, not cloud service commissioning. The public ChirpStack/Evidence/MQTT normal path is commissioned on Reserved IPv4 `129.212.208.168`; only Reserved-IP reassignment/failover authority and controlled acceptance remain provider-side. Fabric ledger execution still waits for the external handoff and deliberate credential activation.
-
-## POC resources
-
-```text
-OS on ha-01/02/03: Ubuntu Server 24.04 LTS x64
-DigitalOcean image slug: ubuntu-24-04-x64
-
-ha-01  Basic 1 vCPU / 2 GiB / 50 GiB
-ha-02  Basic 1 vCPU / 2 GiB / 50 GiB
-ha-03  Basic 1 vCPU / 2 GiB / 50 GiB
-
-Current public ingress: DigitalOcean Reserved IPv4 `129.212.208.168`, currently assigned to ulc-01; normal ChirpStack/Evidence/MQTT paths are evidenced, while reassignment automation/acceptance remains pending
-0 x managed Network Load Balancer
-```
-
-Use the plain DigitalOcean **Ubuntu 24.04 (LTS) x64** OS image, not a Marketplace/1-Click application image. Pin the exact `ubuntu-24-04-x64` image family on all three hosts; do not write "latest Ubuntu LTS" in the build record because a future rebuild could otherwise select a newer LTS release with different packages and defaults.
-
-The separate single-VM simulation/lab profile may also use Ubuntu, but it has different sizing, networking, firewall, and service-placement instructions. Sharing an OS family does **not** make those VM steps interchangeable with this three-Droplet cloud POC.
-
-The **2-GiB-per-host profile is the minimum full-feature starting floor** for this POC. `512 MiB` and `1 GiB` are not accepted deployment baselines when all documented services are retained, including TimescaleDB, OpenBao, Node-RED/Grafana where assigned, and both Fabric adapter workers. A few sensor messages reduce variable workload; they do not remove the always-on memory cost of the HA control plane.
-
-If a host OOMs or spends significant time swapping during the one-host-failure rehearsal, resize that profile and record the observed minimum. Do not hide a failed sizing experiment, and do not delete a required technology just to make the node fit.
-
-Do not create managed PostgreSQL, managed Valkey, block volumes, dedicated monitoring servers, dedicated MQTT servers, or a separate telemetry database server/service for this POC. When the standby PostgreSQL phase is deployed, the logical `lorawan_telemetry` database is planned to live inside the Patroni cluster.
-
-## Target service placement
-
-The following is the **commissioned server placement** for the evidence lane as of 2026-09-01. Live evidence covers etcd, PostgreSQL/Patroni/TimescaleDB, HAProxy/PgBouncer, Mosquitto, Valkey/Sentinel, two-node ChirpStack, OpenBao 3/3, the Fabric outbox schema, Node-RED A/B atomic-outbox runtime with exactly one active instance, Grafana on `ulc-03`, SeaweedFS, and the complete replicated cloud evidence service placement below. Fabric adapter-1/2 are deployed only in fail-closed standby; ledger submission remains disabled until the explicit activation preflight and external credential/handoff boundary pass. Reserved-IP reassignment/failover acceptance and physical gateway cutover remain separate external/hardware boundaries.
+## Commissioned service placement
 
 ```text
-ha-01 / ulc-01
+ULC-01
   etcd-1
-  PostgreSQL / Patroni-1
-  HAProxy
-  PgBouncer
+  Patroni/PostgreSQL-1
+  HAProxy + PgBouncer
   ChirpStack-1
-  Mosquitto-1 preferred
+  Mosquitto preferred
   Valkey-1 + Sentinel-1
   OpenBao-1
-  gateway-evidence-ingest-1 target
-  gateway-mqtt-evidence-collector-1 target
-  Fabric adapter-1 target
+  evidence ingest / collector placement
+  Fabric adapter production writer (enabled)
 
-ha-02 / ulc-02
+ULC-02
   etcd-2
-  PostgreSQL / Patroni-2
-  HAProxy
-  PgBouncer
+  Patroni/PostgreSQL-2
+  HAProxy + PgBouncer
   ChirpStack-2
-  Mosquitto-2 backup
+  Mosquitto backup
   Valkey-2 + Sentinel-2
   OpenBao-2
-  Node-RED B standby / fenced except during promotion
-  gateway-evidence-ingest-2 target
-  gateway-evidence-verifier-1 + trusted decoder target
-  Fabric adapter-2 target
+  Node-RED B fenced standby
+  evidence ingest / verifier placement
+  Fabric adapter standby (write-disabled)
 
-ha-03 / ulc-03
+ULC-03
   etcd-3
-  PostgreSQL / Patroni-3
-  HAProxy            private DB + internal MQTT routing
-  PgBouncer          telemetry/Grafana DB pooling
+  Patroni/PostgreSQL-3
+  HAProxy + PgBouncer
   Valkey-3 + Sentinel-3
   OpenBao-3
   Node-RED A active
-  Grafana            non-critical visualization; single instance acceptable
-  gateway-mqtt-evidence-collector-2 target
-  gateway-evidence-verifier-2 + trusted decoder target
-
-external / independently durable
-  raw gateway-evidence object storage target
-  must survive one Droplet loss; not two local folders
+  Grafana
+  evidence collector / verifier placement
 ```
 
-## The main simplification: one PostgreSQL HA cluster
+The telemetry database is part of the Patroni PostgreSQL cluster; TimescaleDB is an extension, not a separate database server. `telemetry.fabric_outbox` is an ordinary transactional table and Fabric submission is asynchronous.
 
-There is **no separate TimescaleDB server/container in this POC**. TimescaleDB stays in the architecture as a PostgreSQL extension installed on every Patroni/PostgreSQL member and enabled in the telemetry database.
-
-The planned Patroni PostgreSQL cluster will store two logical databases:
-
-```text
-PostgreSQL / Patroni HA cluster
-
-  chirpstack
-    -> ChirpStack operational state
-
-  lorawan_telemetry [TimescaleDB enabled]
-    -> telemetry.uplinks hypertable
-    -> telemetry.measurements hypertable
-    -> telemetry.fabric_outbox ordinary transactional table
-```
-
-When that phase is deployed, both databases will be inside the same PostgreSQL cluster, so Patroni replication will carry both across `ha-01`, `ha-02`, and `ha-03`.
-
-For the POC, install the same pinned TimescaleDB extension version on all three PostgreSQL members and enable it in `lorawan_telemetry`. Use Timescale hypertables for time-series telemetry so the POC preserves the intended production data model. Keep `fabric_outbox` as an ordinary PostgreSQL table because it is a transactional work queue, not time-series storage.
-
-## Target full three-server architecture
+## Current application and evidence flow
 
 ```text
 FIELD
-=====
+EMU-01 -> AS923 RF -> Raspberry Pi 4B + RAK5146
+       -> local MQTT buffer -> mTLS over SIM7600 LTE -> cloud Mosquitto
+       -> ChirpStack -> Node-RED -> TimescaleDB -> Grafana
+                                  `-> Fabric outbox -> Fabric Adapter -> OpenBao seal/verify -> HRC Fabric
 
-EMU-01 primary multi-sensor telemetry
-SEC-02 temporary legitimate verification / security fixture
-      |
-      | LoRaWAN RF when using the active test profile
-      v
-+---------------------------------------+
-| Raspberry Pi 4B + RAK5146            |
-|---------------------------------------|
-| Concentratord                         |
-| MQTT Forwarder                        |
-| local Mosquitto 127.0.0.1:1883       |
-| persistent QoS 1 uplink buffer        |
-| USB 4G/LTE                            |
-+---------------------------------------+
-      |
-      | mTLS MQTT over 4G/LTE
-      v
-
-                  DigitalOcean Reserved IPv4
-                    TCP 443 / TCP 8883
-                           |
-                  automatic API reassignment
-                   protected by etcd lock
-                        /         \
-                       /           \
-                      v             v
-
-+=================================================+
-| ha-01 | 1 vCPU / 2 GiB / 50 GiB                |
-|-------------------------------------------------|
-| HAProxy                                         |
-| PgBouncer                                       |
-| ChirpStack-1                                    |
-| Mosquitto-1 [preferred]                         |
-| PostgreSQL / Patroni-1                          |
-| etcd-1                                          |
-| Valkey-1 + Sentinel-1                           |
-| OpenBao-1                                       |
-| Fabric adapter-1                                |
-+=================================================+
-
-+=================================================+
-| ha-02 | 1 vCPU / 2 GiB / 50 GiB                |
-|-------------------------------------------------|
-| HAProxy                                         |
-| PgBouncer                                       |
-| ChirpStack-2                                    |
-| Mosquitto-2 [backup]                            |
-| PostgreSQL / Patroni-2                          |
-| etcd-2                                          |
-| Valkey-2 + Sentinel-2                           |
-| OpenBao-2                                       |
-| Fabric adapter-2                                |
-+=================================================+
-
-+=================================================+
-| ha-03 | 1 vCPU / 2 GiB / 50 GiB                |
-|-------------------------------------------------|
-| HAProxy [private DB + MQTT routes]              |
-| PgBouncer                                       |
-| PostgreSQL / Patroni-3                          |
-| etcd-3                                          |
-| Valkey-3 + Sentinel-3                           |
-| OpenBao-3                                       |
-| Node-RED                                        |
-| Grafana                                         |
-+=================================================+
+Gateway journal + MQTT witness + application telemetry
+       -> Evidence ingest/collectors/verifiers -> trusted decoder -> retained evidence storage
 ```
 
-## HA relationships the completed POC is intended to prove
+The gateway normal path is health-gated LTE primary with Wi-Fi fallback; Ethernet is management-only. MQTT uses a preferred broker plus backup because the two brokers do not replicate live sessions; do not restore round-robin routing.
 
-The etcd, PostgreSQL/Patroni, and Valkey/Sentinel relationships below are now live-validated. MQTT broker-backend failover has also been proven behind the commissioned `ulc-01` HAProxy TLS endpoint, but two-HAProxy-node MQTT application routing and ChirpStack workload authentication/ACLs are not yet closed. ChirpStack and OpenBao relationships remain target behavior until their phases are deployed and tested.
+## Deployment/recovery principles
 
-```text
-PostgreSQL
-  Patroni-1 ----- Patroni-2 ----- Patroni-3
-       1 primary + 2 replicas
+- Use Ubuntu Server 24.04 LTS x64 (`ubuntu-24-04-x64`) for the commissioned cloud hosts unless an intentional migration is being performed.
+- Keep the same pinned TimescaleDB extension version on all Patroni members.
+- Preserve private VPC traffic and the narrow Docker-to-host-private firewall allowances documented by the relevant manuals.
+- Never put private keys, passwords, OTAA root keys, OpenBao recovery shares, or secret-bearing transient qualification material in Markdown.
+- Do not broaden ULC-02 Fabric enablement until its HA fencing/ownership boundary is accepted.
+- Do not broadly replay historical Fabric outbox rows that predate exact finalized-payload retention.
+- Treat `chapter4-results/` as research evidence, not disposable generated output.
+- Match verification to the change: do not repeat disruptive HA/failover tests after documentation-only edits.
 
-etcd
-  etcd-1 -------- etcd-2 -------- etcd-3
-       3 voters / quorum 2
+## Research execution
 
-Valkey
-  Valkey-1 ------ Valkey-2 ------ Valkey-3
-  Sentinel-1 ---- Sentinel-2 ---- Sentinel-3
-       1 primary + 2 replicas / Sentinel quorum 2
-
-OpenBao
-  OpenBao-1 ----- OpenBao-2 ----- OpenBao-3
-       Raft / quorum 2
-
-MQTT
-  Mosquitto-1 [preferred] ---- Mosquitto-2 [backup]
-
-ChirpStack
-  ChirpStack-1 ---------------- ChirpStack-2
-
-Fabric worker
-  adapter-1 ------------------- adapter-2
-       same durable PostgreSQL outbox
-```
-
-## Planned database connection pattern
-
-After the database-routing phases are deployed, all database clients will use the same pattern:
-
-```text
-application
-    |
-    v
-PgBouncer :6432
-    |
-    v
-HAProxy :15432
-    |
-    v
-current Patroni PostgreSQL primary :5432
-```
-
-That means:
-
-```text
-ChirpStack -> chirpstack database
-Node-RED   -> lorawan_telemetry database
-Grafana    -> lorawan_telemetry database as read-only user
-Adapters   -> lorawan_telemetry.fabric_outbox
-```
-
-No client needs to know which PostgreSQL node is currently primary.
-
-## Planned telemetry and Fabric flow
-
-```text
-ChirpStack application event
-          |
-          v
-       Node-RED
-          |
-          | one PostgreSQL transaction
-          +----------------------------+
-          |                            |
-          v                            v
-   telemetry row               fabric_outbox row
-          |                            |
-          |                       lease-based work
-          |                       /             \
-          |                      v               v
-          |                adapter-1       adapter-2
-          |                    \             /
-          |                     +-----+-----+
-          |                           |
-          |                           v
-          |                  OpenBao 3-node KMS
-          |                           |
-          |                           v
-          |                  external Fabric Gateway
-          |                           |
-          |                           v
-          |                   channel + chaincode
-          |                           |
-          |                    commit status / tx ID
-          |                           |
-          +---------------------------+
-                                      |
-                                      v
-                              update fabric_outbox
-
-Grafana reads telemetry from lorawan_telemetry.
-```
-
-Fabric or OpenBao failure must **not** cause Node-RED to reject an otherwise valid telemetry insert. The outbox exists specifically so submission can wait and retry.
-
-## What the completed POC must prove
-
-The final pass will require evidence that the **architecture pattern** works:
-
-```text
-one host disappears
-        |
-        v
-quorum remains
-        |
-        v
-new PostgreSQL / Valkey roles are selected when necessary
-        |
-        v
-public ChirpStack and MQTT paths recover automatically
-        |
-        v
-no manual IP / DSN edits are needed
-```
-
-It does **not** prove production capacity, long-term retention, large fleet throughput, multi-region disaster recovery, or production security/compliance sizing.
-
-## Planned public boundary
-
-These are the intended final exposure rules. They do not mean the standby services are currently listening.
-
-Public through the single Reserved IPv4, which is assigned to one healthy HAProxy app host at a time:
-
-```text
-443   ChirpStack UI/API
-8883  gateway MQTT mTLS
-```
-
-Restricted management:
-
-```text
-22    SSH from the administrator source only
-```
-
-Private only:
-
-```text
-5432   PostgreSQL
-6432   PgBouncer
-15432  HAProxy PostgreSQL-primary frontend
-6379   Valkey
-26379  Sentinel
-16379  HAProxy Valkey-primary frontend
-2379   etcd client
-2380   etcd peer
-8008   Patroni REST
-8080   ChirpStack backend
-8884   Mosquitto private TLS backend
-18883  HAProxy internal MQTT frontend
-1880   Node-RED
-3000   Grafana
-8200   OpenBao API
-8201   OpenBao Raft
-18200  HAProxy OpenBao KMS frontend
-```
-
-## Manual index
-
-This is a topic index, **not** a second execution order. Use the sequence/status table above to decide what is active.
-
-| File | Use |
-|---|---|
-| [00-build-execution-log.md](00-build-execution-log.md) | actual commands, failures, fixes, and accepted checkpoints |
-| [01-architecture-decisions-and-scope.md](01-architecture-decisions-and-scope.md) | what the POC does and does not claim |
-| [02-capacity-cost-and-ip-plan.md](02-capacity-cost-and-ip-plan.md) | capacity, cost, IPs, and software worksheet |
-| [02a-digitalocean-machine-layout-and-specs.md](02a-digitalocean-machine-layout-and-specs.md) | exact three-Droplet layout |
-| [03-digitalocean-vpc-droplets-and-firewalls.md](03-digitalocean-vpc-droplets-and-firewalls.md) | cloud foundation and networking |
-| [04-host-hardening-dns-pki-and-secrets.md](04-host-hardening-dns-pki-and-secrets.md) | host security plus future service-security guidance |
-| [04a-host-security-hardening-execution-runbook.md](04a-host-security-hardening-execution-runbook.md) | live hardening steps and verification evidence |
-| [05-etcd-cluster.md](05-etcd-cluster.md) | validated etcd quorum deployment |
-| [06-spilo-patroni-postgresql-cluster.md](06-spilo-patroni-postgresql-cluster.md) | validated PostgreSQL/Patroni/TimescaleDB HA deployment and promotion record |
-| [07-haproxy-and-pgbouncer.md](07-haproxy-and-pgbouncer.md) | validated HAProxy + PgBouncer database client path |
-| [08-mqtt-and-valkey.md](08-mqtt-and-valkey.md) | validated MQTT broker/TLS failover record + completed Valkey/Sentinel HA record; also preserves earlier design/failure history |
-| [09-chirpstack-cloud-cluster.md](09-chirpstack-cloud-cluster.md) | completed two-node private ChirpStack commissioning and recovery evidence |
-| [10-self-managed-public-ingress.md](10-self-managed-public-ingress.md) | active public-ingress setup; automatic host-loss takeover deferred to Phase 15 |
-| [11-raspberry-pi-4g-backhaul.md](11-raspberry-pi-4g-backhaul.md) | required physical-gateway/LTE/persistent-buffer normal-path setup |
-| [12-gateway-and-device-migration.md](12-gateway-and-device-migration.md) | required migration or fresh cloud cutover setup |
-| [12a-node-red-timescale-telemetry.md](12a-node-red-timescale-telemetry.md) | required Node-RED-before-database application ingestion setup |
-| [13-backup-restore-and-disaster-recovery.md](13-backup-restore-and-disaster-recovery.md) | Phase 13A pre-cutover and 13B final pre-test recovery boundaries |
-| [14-observability-alerting-and-logging.md](14-observability-alerting-and-logging.md) | final healthy-baseline evidence harness before testing |
-| [14a-grafana-cloud-deployment.md](14a-grafana-cloud-deployment.md) | required Grafana setup after real Node-RED telemetry exists |
-| [14b-pre-test-commissioning-gate.md](14b-pre-test-commissioning-gate.md) | hard go/no-go before Phase 15 |
-| [15-failover-chaos-and-acceptance-testing.md](15-failover-chaos-and-acceptance-testing.md) | first intentional failure-injection phase |
-| [16-operations-upgrades-and-scaling.md](16-operations-upgrades-and-scaling.md) | standby operations/upgrade plan |
-| [17-troubleshooting.md](17-troubleshooting.md) | living troubleshooting notes, refined as components are deployed |
-| [18-runbook-and-handoff-checklists.md](18-runbook-and-handoff-checklists.md) | standby commissioning/handoff plan |
-| [19-cloud-ha-grafana-deployment-day-runbook.md](19-cloud-ha-grafana-deployment-day-runbook.md) | full target sequence reference; later phases are not yet validated |
-| [20-openbao-and-fabric-adapter.md](20-openbao-and-fabric-adapter.md) | required OpenBao/Fabric setup before full-feature testing despite file number |
-
-## Dissertation-test boundary
-
-This cloud HA POC is a separate architecture experiment. Do not mix its results with the existing counted local-VM resilience experiment unless the research methodology is intentionally revised.
+Production/cloud documentation describes the deployed infrastructure. Dissertation experiment procedure is authoritative under [`../../../test/`](../../../test/00-README.md). Use the automated research recorder and the selected `test/execution/` manual for measured runs; do not improvise test procedure from this deployment directory.

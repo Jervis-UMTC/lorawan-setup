@@ -960,6 +960,8 @@ If organizational policy explicitly requires a custom port, document the port an
 
 # Phase 5 - Firewall and network exposure
 
+> **Current-state override - 2026-09-03:** The sections below preserve the original commissioning sequence, when restrictive host-firewall enforcement was deferred. That is no longer the live host state. UFW was subsequently enabled/hardened on the cloud hosts. During the September 3 live application-path test, narrow Docker-bridge allowances were required and verified for ChirpStack on `ulc-01`/`ulc-02` (`172.18.0.0/16` to each node-local `10.104.0.x` on TCP `16379`, `6432`, and `18883`) and for Node-RED on `ulc-03` (`172.18.0.0/16` to `10.104.0.8` on TCP `18884` and `6432`). Preserve these dependency paths and inspect effective UFW, nftables/iptables, Docker rules, listeners, and fresh SSH reachability before changing firewall policy. The DigitalOcean Cloud Firewall remains a separate externally managed/unverified provider control.
+
 ## 5.1 Provider cloud-firewall boundary
 
 [!] **BLOCKED / EXTERNALLY MANAGED.** The current operator is not authorized to modify or verify the DigitalOcean Cloud Firewall. Keep this section as a provider-owner handoff target, not an execution step for the current operator.

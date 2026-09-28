@@ -1,6 +1,6 @@
-# 7. Evidence Services Implementation Blueprint and HA Placement
+﻿# 7. Evidence Services Implementation Blueprint and HA Placement
 
-> **Status: CLOUD RUNTIME + PUBLIC NORMAL PATH COMMISSIONED / GATEWAY TARGET PACKAGE PENDING.** The full replicated cloud evidence placement is live with SeaweedFS S0-S9, three-node database/PgBouncer auth, immutable GHCR images, Evidence PKI/MQTT identities, ingest/collector/verifier replicas, disabled Fabric standbys, shared-443 and Grafana evidence views. The public ChirpStack/Evidence/MQTT normal path is also PASS. The Rust writer/uploader source runtime is implemented/tested. Remaining work is target-native Gateway OS/OpenWrt `concentratord-zmq` packaging and one real physical lineage; Reserved-IP failover authority and Fabric activation remain external gates.
+> **Status: REPLICATED CLOUD + GATEWAY-01 / EMU-01 + ULC-01 FABRIC NORMAL PATH PASS.** The full evidence placement is live with SeaweedFS S0-S9, database/PgBouncer auth, Evidence PKI/MQTT identities, ingest/collector/verifier replicas, shared-443 and Grafana evidence views. The public ChirpStack/Evidence/MQTT path, target-native Gateway OS/OpenWrt evidence runtime, one real assembled EMU-01 physical lineage, Task 37 qualification, and ULC-01 production Fabric writes are PASS. Reserved-IP failover authority and ULC-02 Fabric HA writer activation remain separate gates.
 
 ## 7.1 Goal
 
@@ -718,11 +718,11 @@ Build in this order:
 8. build `gateway-evidence-verifier` discovery + lease workers
 9. **PASS** - build immutable cloud images, pin the four GHCR `image@sha256` refs and run startup/smoke checks
 10. **PASS** - commission SeaweedFS S9, Evidence PKI and shared-443 TCP/SNI ingress
-11. **PASS** - deploy ingest pair, dual-broker collector pair and verifier/trusted-decoder pair with Guide 6 readiness checks; keep both Fabric adapters disabled
+11. **PASS** - deploy ingest pair, dual-broker collector pair and verifier/trusted-decoder pair with Guide 6 readiness checks; Fabric adapter placement is commissioned, with ULC-01 active and ULC-02 write-disabled
 12. **PASS** - add read-only Grafana evidence checkpoint/verification observability
-13. **CURRENT GATE** - cross-build/package the implemented Rust writer/uploader with `concentratord-zmq` in the pinned Gateway OS/OpenWrt toolchain, install the consolidated gateway identities/config and validate service supervision/filesystem paths
-14. run one real gateway v2 lineage when hardware returns
-15. Fabric adapter cloud standby is already deployed; release its OpenBao/Fabric credentials and enable it only after the external Fabric handoff and one deliberate activation preflight
+13. **PASS** - cross-build/package the Rust writer/uploader with `concentratord-zmq`, install the consolidated gateway identities/config, and validate service supervision/filesystem paths
+14. **PASS** - one real Gateway-01 / assembled EMU-01 v2 lineage proven end to end
+15. **PASS on ULC-01 / DEFERRED on ULC-02** - Task 37 qualification and production activation are complete on ULC-01; keep ULC-02 write-disabled until its HA fencing/ownership gate is accepted
 ```
 
 Do not start with six empty containers. Buildable immutable artifacts and minimum smoke checks come before live credentials/listeners; the extended failure/chaos suite does **not** block the first working deployment.
@@ -820,7 +820,7 @@ PgBouncer evidence userlist                                  THREE-NODE TEN-ROLE
 immutable GHCR release + cloud evidence listeners            LIVE / PASS
 Evidence PKI + collector MQTT mTLS/ACLs                      LIVE / PASS
 shared-443 SNI + Grafana evidence views                      LIVE / PASS
-gateway Rust writer/uploader runtime                         SOURCE TEST PASS; TARGET PACKAGE PENDING
+gateway Rust writer/uploader runtime                         TARGET PACKAGE + PHYSICAL RUNTIME PASS
 ```
 
 The fixed replicated-collector vector is:
@@ -829,7 +829,7 @@ The fixed replicated-collector vector is:
 capture_key_sha256 = de1a848838d6d27e02261e0cc37d3478e70dfd5e0e1d381927349dfe803ead74
 ```
 
-The cloud Go source now has a real reproducible compile/test gate. A project-local, checksum-pinned Go 1.25.0 toolchain runs `gofmt`, `go test ./...`, `go build ./...`, and Linux/amd64 cross-builds without requiring a global Go installation. An offline `-ResetToolchain` run rebuilt the compiler from the verified cached archive and reproduced identical executable hashes. Docker/OCI packaging and live cloud runtime readiness are now commissioned; only the Gateway OS target package/physical lineage remains unclaimed.
+The cloud Go source has a real reproducible compile/test gate. A checksum-pinned Go 1.25.0 toolchain runs module verification, `go test ./...`, `go build ./...`, and Linux/amd64 deployment builds. Docker/OCI packaging and live cloud runtime readiness are commissioned, and the Gateway OS target package/physical lineage is now proven on Gateway-01 with real EMU-01 traffic. The verifier discovery query also excludes already-seen v2 keys before its batch limit so continuous operation cannot starve after the first batch.
 
 Current status:
 
@@ -872,7 +872,7 @@ GATEWAY_SEGMENT_V1_VECTOR=PASS
 GATEWAY_CONCENTRATORD_SCHEMA_PIN=PASS
 GATEWAY_CONCENTRATORD_ADAPTER_RUST=PASS
 MQTT_UPLINK_CORRELATION_V1_SOURCE=PASS
-GATEWAY_CONCENTRATORD_REAL_FIXTURE=BLOCKED
+GATEWAY_CONCENTRATORD_REAL_FIXTURE=PASS
 EVIDENCE_VERIFIER_JOURNAL_READER_STATIC=PASS
 EVIDENCE_INGEST_RECEIPT_V1=PASS
 GATEWAY_UPLOADER_RECEIPT_VALIDATION=PASS
@@ -881,8 +881,8 @@ EVIDENCE_PREIMPLEMENTATION_GATE=PASS
 EVIDENCE_CLOUD_RUNTIME=PASS
 PUBLIC_INGRESS_NORMAL_PATH=PASS
 PUBLIC_RESERVED_IP_FAILOVER=EXTERNAL_AUTH_PENDING
-GATEWAY_EVIDENCE_RUNTIME=SERVER_PASS_GATEWAY_PENDING
-GATEWAY_EVIDENCE_V2_NORMAL_PATH=NOT_YET_CLAIMED
+GATEWAY_EVIDENCE_RUNTIME=PASS
+GATEWAY_EVIDENCE_V2_NORMAL_PATH=PASS
 ```
 
 The trusted-decoder, complete ingest path, replicated MQTT collector, and verifier lineage path are implemented and pass the pinned Go 1.25.0 format/test/build gate. The collector contract is intentionally direct to `10.104.0.2:8884` and `10.104.0.4:8884` with TLS identity `mqtt.internal.lorawan.com`, one persistent client per backend, unique client IDs, dedicated authentication, subscription `as923/gateway/+/event/#`, opaque exact payload bytes, and no publish API. Raw MQTT bytes are written create-if-absent before PostgreSQL metadata; a QoS > 0 PUBLISH is manually acknowledged only after both persistence layers succeed. Duplicate observations converge through `mqtt-capture-v1`; conflicting durable identity fails closed. The fixed capture vector remains `de1a848838d6d27e02261e0cc37d3478e70dfd5e0e1d381927349dfe803ead74`.
@@ -895,4 +895,5 @@ The Rust gateway journal core freezes exact record/segment bytes and passes real
 
 The source-protobuf ambiguity is closed without fabricating a physical capture. Exact upstream inspection proved Concentratord 4.7.1 wraps `gw::UplinkFrame` inside `gw::Event` on `ipc:///tmp/concentratord_event`, while MQTT Forwarder 4.6.0 unwraps that event and publishes `UplinkFrame.encode_to_vec()` to `as923/gateway/<eui>/event/up`. Their locked `chirpstack_api` 4.17.0/4.18.0 artifacts contain byte-identical `gw.proto` SHA-256 `227fda5fd77fb115cb00610fb1ea1fa87c3112d972fc6534342dc7083a6dc12b`. `concentratord-uplink-correlation-v1` therefore correlates Gateway EUI, uplink ID, PHYPayload SHA-256, frequency, and gateway context rather than raw Protobuf bytes. Independent synthetic wire bytes produce digest `a61ccd298370d1ca0edc06f9c6725ad8f2b2887a6fb1fcfa584051ae01325494`; the Rust adapter compiles/tests on Rust 1.82. Go MQTT collector source projects the same fields only after immutable raw-object persistence, and the **live migration** enforces the all-or-none semantic projection. Go compilation is closed for the current four-service tree: the pinned portable Go 1.25.0 full offline gate passes and `build-images.ps1 -Offline -ValidateOnly` reproduces the exact four-binary lock. Registry OCI image build/push/digest pinning is commissioned; production release files use immutable GHCR references and the hardened replicas are running.
 
-The cloud lane is now complete for server commissioning. The remaining engineering boundary is the gateway target: the writer/uploader source includes crash-safe journal persistence, durable receipts, HTTPS/mTLS transport, bounded retry/backoff and continuous loops, and the fresh Rust 1.82 default gate passes 28 tests total plus format/Clippy/locked build. `concentratord-zmq` must now be compiled in the Gateway OS/OpenWrt-capable toolchain, packaged with service supervision and the consolidated gateway identity/config bundle, then proven with real Concentratord bytes. Do not repeat PgBouncer/S9/PKI/OCI/replica/shared-443/Grafana cloud commissioning without a relevant state change. One complete physical v2 lineage remains the gateway acceptance gate; Fabric ledger activation remains external-handoff dependent.
+The cloud lane, target Gateway OS/OpenWrt evidence runtime, real Gateway-01 / EMU-01 v2 lineage, Task 37 qualification, and ULC-01 production Fabric writer are commissioned. Do not repeat PgBouncer/S9/PKI/OCI/replica/shared-443/Grafana, gateway packaging, or physical-lineage commissioning without a relevant state change. Remaining boundaries are provider Reserved-IP failover acceptance and deliberate ULC-02 Fabric HA fencing/ownership acceptance.
+

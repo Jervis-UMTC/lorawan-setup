@@ -1,6 +1,6 @@
 # 11. Gateway OS Delivery Buffer and Integrity Journal over a USB 4G/LTE Dongle
 
-> **Current status: BUILD/LTE/CLOUD NORMAL-PATH COMMISSIONING SUBSTANTIALLY PASS; FINAL PHYSICAL RF ACCEPTANCE REQUIRED.** The accepted 2026-09-01 Gateway OS image includes AS923, SIM7600/QMI, Mosquitto, and the gateway-evidence writer. Historical build/probe failures below are retained only as troubleshooting evidence. For the next physical session use `../../../TOMORROW-SENSOR-GATEWAY-BRINGUP.md`; do not reconstruct the workflow from old continuation checkpoints or repeat passed server/build work. Provider Reserved-IP failover authority and external Fabric execution remain separate acceptance boundaries. **Do not perform LTE-outage, gateway-reboot, broker-loss, or queue-drain failure experiments here; Phase 15 owns those tests after the full setup gate passes.**
+> **Current status: BUILD/LTE/CLOUD/RF NORMAL-PATH PASS; LTE IS THE COMMISSIONED FIELD UPLINK.** Gateway-01 uses the SIM7600 QMI `wwan0` path for normal production Internet traffic, while RJ45/`br-lan` at `192.168.20.11` is management-only. The logical LTE interface deliberately keeps `defaultroute=0`; `/usr/sbin/lte-route-health` owns the metric-10 production default. On 2026-09-15 a live preflight exposed a stale-clock condition caused by an older route-manager policy that could remove the LTE default after a failed MQTT/TLS probe even though the DITO PDP session itself was healthy. The commissioned controller was corrected so a valid QMI address+gateway installs the LTE default **before** external probing and keeps that route available for DNS, NTP, MQTT, and autonomous recovery even if the broker probe is temporarily unavailable. A controlled reboot then proved unattended recovery: DITO re-registered automatically, assigned `100.82.220.182/30` with gateway `100.82.220.181`, the daemon restored `default via 100.82.220.181 dev wwan0 ... metric 10`, and the production MQTT mTLS probe passed without a manual route command. NTP recovered over LTE, and the post-reboot research-recorder preflight exited `0` with `CLOCK_GATE=PASS`, gateway/cloud skew `-0.153889 s`, cloud spread `0.004709 s`, all three ULC nodes reachable, evidence verification `70` with zero pending/gaps/integrity failures, and EMU/SEC fixtures present. Earlier `lte_4` DHCP-child incidents in this document are historical troubleshooting evidence from the pre-direct-QMI commissioning path, not the current runtime design. Provider Reserved-IP failover authority and external Fabric execution remain separate acceptance boundaries. **Do not perform LTE-outage, broker-loss, or queue-drain failure experiments here; the dedicated resilience phase owns those tests.**
 
 ## 11.0 Fast reuse gate - inspect before changing the gateway
 
@@ -8,7 +8,7 @@ Do not reflash Gateway OS or rewrite a working radio configuration merely becaus
 
 The reuse gate must identify: Gateway OS release, UTC time, free persistent storage, active RAK5146/SX1303 Concentratord configuration, authoritative Gateway EUI, plain `as923` topic prefix, UDP Forwarder disabled state, MQTT Forwarder endpoint/backend, any existing loopback Mosquitto listener/configuration, and USB/LTE interfaces. A previous working result is useful context but does not replace this current inspection.
 
-**Current LTE hardware baseline:** the gateway uses a **Waveshare SIM7600G-H 4G DONGLE**. Waveshare documents this model for Linux hosts and lists NDIS/RNDIS/PPP dial-up support. Therefore do **not** assume the dongle is QMI or MBIM and do not send a USB-mode-changing AT command during discovery. First identify the composition currently presented to Gateway OS from `lsusb`, kernel logs, `/dev/ttyUSB*`, `/dev/cdc-wdm*`, and any new network interface. Preserve the working USB composition unless the current Gateway OS cannot use it.
+**Current LTE hardware baseline:** commissioned Gateway-01 uses a **Waveshare SIM7600G-H 4G DONGLE** in a verified QMI composition with control device `/dev/cdc-wdm0` and production data interface `wwan0`. Preserve that working composition and do not send USB-mode-changing AT commands. The broader `lsusb`/kernel/`/dev/ttyUSB*`/`/dev/cdc-wdm*` discovery procedure below remains useful only when commissioning a replacement gateway/dongle or when the live composition genuinely differs; it is not permission to reinterpret the known-working Gateway-01 runtime away from QMI.
 
 **Why:** this shortens the phase while reducing risk. Reflashing or rewriting a functioning gateway would create unnecessary RF identity, networking, and credential changes. Read-only discovery lets the operator skip already-complete setup and mutate only the missing layer.
 
@@ -784,3 +784,79 @@ mqtt.<REAL-DOMAIN>:8883
 ```
 
 First commission the real public FQDN, Reserved IPv4, firewall `8883/tcp`, DNS, and broker certificate SAN for that hostname. Then validate the gateway bridge against the real endpoint with mTLS. Only after that proof should LTE become the gateway's intended normal/default route.
+
+### 2026-09-02 live SIM7600 deep-diagnosis update
+
+Gateway-01 was re-tested after physical unplug/replug and after moving the Waveshare SIM7600G-H from USB path `1-1.1` to `1-1.4`. The modem still intermittently emitted Linux USB `qmi_wwan ... Unexpected error -71` (`EPROTO`) and at times disconnected/re-enumerated, so USB transport stability remains a real secondary concern. No Pi-wide undervoltage was observed (`vcgencmd get_throttled` returned `0x0`), USB runtime power remained active, and no custom watchdog/hotplug script was found that deliberately resets the modem.
+
+A command-by-command QMI isolation proved that `stop-network`, online mode, 802.3/raw-IP negotiation, WDA query, sync, and network registration did not themselves create new `-71` errors. Profile 1 remained `internet.dito.ph`, authentication `none`. Starting profile 1 with autoconnect produced a stable connected bearer and current settings `100.70.234.210/30` via gateway `100.70.234.209` with DITO DNS `131.226.72.19` / `131.226.73.19`.
+
+With a temporary host route through `wwan0`, TCP/HTTP to `1.1.1.1` produced real RX traffic and was redirected by DITO to `filter.dito.ph/nc/`, which returned HTTP 410. This proves the QMI bearer and LTE user plane can carry packets. Standard TLS on port 443 and the production MQTT TLS endpoint `129.212.208.168:8883` did not complete while forced through the LTE bearer. Therefore do not classify the current production-backhaul blocker as an APN, route, QMI-driver, or SIM-registration failure. The strongest current evidence is a DITO restricted / filtered data-service state, with intermittent USB `EPROTO` as a separate secondary reliability issue. Confirm the SIM has an active unrestricted data entitlement/plan before further gateway-side changes. Wi-Fi remains the production default route and Ethernet remains the management path; LTE must not be promoted until unrestricted TLS to the real broker succeeds.
+
+### 2026-09-02 LTE-primary automatic failover policy
+
+Gateway-01 now uses health-based LTE preference instead of unconditional route metrics. Management Wi-Fi `wwan` has metric `50`. Logical `lte` remains QMI on `/dev/cdc-wdm0` with `defaultroute=0`; production now uses `peerdns=1` so DITO's advertised DNS remains usable whenever LTE is the only Internet backhaul. `lte-route-health` runs under procd every 30 seconds. Current direct-QMI operation reads the carrier IPv4/gateway from the logical `lte` interface plus QMI current settings and owns the metric-10 `wwan0` default itself. General LTE dataplane health and production MQTT mTLS health are separate signals: a broker/TLS failure does not remove a valid LTE default or reset the modem, because DNS/NTP and recovery must remain possible. Recovery is driven only by repeated loss of the LTE IP dataplane. Ethernet `br-lan 192.168.20.11/24` remains management/recovery only. The stock `mwan3` package was deliberately not forced because its kernel-module dependencies do not match the custom Gateway OS kernel ABI.
+
+### 2026-09-03 real mobile-data LTE-primary acceptance - PASS
+
+After mobile data became active on the inserted SIM, Gateway-01 was inspected live over the permanent Ethernet management path without changing RF or cloud credentials. The SIM7600 enumerated with `/dev/cdc-wdm0` and `/dev/ttyUSB0..4`; QMI parent `lte` and dynamic child `lte_4` were both up on `wwan0`. The current carrier lease was `100.78.251.124/29` with carrier gateway `100.78.251.125`. `uqmi --get-serving-system` reported `registration=registered`, LTE, MCC `515`, MNC `66`, non-roaming. Signal at acceptance was RSSI `-70 dBm`, RSRP `-102 dBm`, RSRQ `-16 dB`, SNR `-4 dB`: usable but worth monitoring rather than treating as strong RF margin.
+
+The health controller automatically installed the intended LTE default:
+
+```text
+default via 100.78.251.125 dev wwan0 src 100.78.251.124 metric 10
+default via 192.168.8.1 dev phy0-sta0 src 192.168.8.132 metric 50
+192.168.20.0/24 dev br-lan src 192.168.20.11
+```
+
+The production cloud route resolved explicitly as:
+
+```text
+129.212.208.168 via 100.78.251.125 dev wwan0 src 100.78.251.124
+```
+
+This was not only a route-table result. Two live TCP sessions to production MQTT `129.212.208.168:8883` were `ESTABLISHED` with local source `100.78.251.124`, proving the gateway's cloud MQTT path was actually using LTE. A separate HTTPS request explicitly bound to `wwan0` reached `https://smartagri-chirpstack.duckdns.org/` at `129.212.208.168`, returned HTTP `200`, used local IP `100.78.251.124`, and reported TLS verification result `0`. Thus unrestricted TLS traffic to the real production server is now proven through DITO mobile data, superseding the earlier no-load/restricted-data observation.
+
+Persistence is also present: `/etc/rc.d/S95lte-route-health` enables the health controller at boot; `network.lte` remains QMI on `/dev/cdc-wdm0`, APN `internet.dito.ph`, `defaultroute=0`, and now `peerdns=1`; Wi-Fi remains metric `50`. The controller owns the metric-10 LTE default dynamically. It retains that route while the QMI session and general LTE IP dataplane remain usable, even when the production-MQTT probe fails. Enabling LTE peer DNS is necessary because the Mosquitto bridges use the public hostname. In the commissioned field topology, **LTE is the normal production cloud path and Ethernet is management-only**; no automatic Wi-Fi Internet fallback is assumed unless it is deliberately commissioned separately.
+
+### 2026-09-04 bounded SIM7600 QMI boot-stall recovery - PASS
+
+A later gateway boot exposed a recoverable modem-control stall. `/dev/cdc-wdm0` and `/dev/ttyUSB0..4` existed and `AT` returned `OK` with `+CPIN: READY`, but `network.interface.lte` remained `pending`, `wwan0` stayed down, and `qmi.sh` / `uqmi` workers were stuck while the kernel had logged early `qmi_wwan ... Unexpected error -71`. This is not an APN, SIM-presence, or driver-enumeration failure.
+
+Use this recovery only when that exact condition is present and Ethernet management is available:
+
+```sh
+ifdown lte
+sleep 2
+
+# Clear only stale QMI setup workers after the logical interface is down.
+for p in $(ps w | awk '/qmi\.sh|uqmi/ && !/awk/ {print $1}'); do
+    kill "$p" 2>/dev/null || true
+done
+sleep 1
+for p in $(ps w | awk '/qmi\.sh|uqmi/ && !/awk/ {print $1}'); do
+    kill -9 "$p" 2>/dev/null || true
+done
+
+# Reset only the SIM7600, not the gateway.
+stty -F /dev/ttyUSB2 115200 raw -echo 2>/dev/null || true
+exec 3<>/dev/ttyUSB2
+printf 'AT+CFUN=1,1\r' >&3
+exec 3>&-
+exec 3<&-
+
+# Wait for /dev/cdc-wdm0 and /dev/ttyUSB2 to re-enumerate, then rebuild QMI.
+sleep 10
+ifup lte
+```
+
+Do not run the kill/reset sequence merely because mobile data is weak or the health probe rejects a restricted SIM. After recovery, require all of these before calling LTE usable: `network.interface.lte up=true`, dynamic `lte_4` IPv4 on `wwan0`, `uqmi --get-serving-system` registered on the intended carrier, `uqmi --get-data-status` connected, `ip route get 129.212.208.168` selecting `wwan0`, a route-health production MQTT mTLS `PASS`, and the two Mosquitto bridge sockets established to `129.212.208.168:8883`.
+
+The 2026-09-04 recovery produced DITO lease `100.82.66.20/29` via `100.82.66.21`, registration MCC/MNC `515/66`, signal RSSI `-69`, RSRP `-98`, RSRQ `-13`, SNR `4.2`, HTTPS `200` with TLS verification `0` when explicitly bound to `wwan0`, and two established production MQTT/TLS sockets sourced from `100.82.66.20`. The same check exposed the `peerdns=0` production defect described above; after changing it to `peerdns=1` and restarting only Mosquitto, the hostname-based bridges recovered.
+
+### 2026-09-16 autonomous stale-session and SIM7600 recovery - PASS
+
+A live research-preflight rehearsal exposed the failure mode the earlier controller did not repair: QMI could report `connected`, retain an IPv4 address/gateway, and keep a metric-10 route while real Internet, DNS, and MQTT traffic were dead. The controller now proves a general LTE IP dataplane separately from the production broker. Two consecutive dataplane failures trigger bounded stage-1 recovery (`ifdown lte` / `ifup lte`). If the dataplane is still unavailable within the escalation window, stage 2 resets only the SIM7600 by stopping stale `uqmi`, sending `AT+CFUN=1,1` to `/dev/ttyUSB2`, waiting for `/dev/cdc-wdm0` and `/dev/ttyUSB2` to disappear and re-enumerate, then rebuilding `lte`. Interface recovery has a cooldown and firmware reset has a 15-minute cooldown to prevent loops. A healthy IP dataplane plus failed broker/TLS probe never triggers either recovery stage.
+
+Both stages were exercised live over Ethernet management. Stage 1 recovered a stale QMI/PDP user plane and restored DNS plus production MQTT mTLS. Stage 2 was then exercised deliberately: the daemon emitted its stage-2 marker, the SIM7600 re-enumerated, QMI returned `connected`, DITO assigned a fresh `100.86.129.14/30` address via `100.86.129.13`, metric-10 `wwan0` returned, public IP and DNS passed, the production mTLS health command exited `0`, and the daemon failure counter returned to `0`. The deployed script SHA-256 matched the repository copy before the reboot-persistence test. A controlled Gateway-01 reboot then proved persistence: `/etc/rc.d/S95lte-route-health` started the daemon automatically, the repository/deployed SHA-256 remained `39fc435777025484f7543818873d6e106f12fd93e58111a66feace45f6ea995e`, early dataplane failures were held inside the 60-second boot grace instead of causing a reset, QMI converged on a fresh DITO `100.69.117.95/26` lease via `100.69.117.96`, the metric-10 default returned automatically, and the controller logged LTE dataplane plus production MQTT mTLS PASS by roughly 75 seconds after boot. No manual route, interface, or modem command was needed after reboot.
+

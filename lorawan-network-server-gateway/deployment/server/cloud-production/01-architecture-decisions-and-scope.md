@@ -181,14 +181,14 @@ The Fabric adapter never receives an exportable signing private key; it calls Op
 
 ## 1.11 Fabric adapter and outbox
 
-The **target architecture** runs two workers:
+The **target architecture** supports two fenced workers, but only one is currently enabled:
 
 ```text
-ha-01 -> Fabric adapter-1
-ha-02 -> Fabric adapter-2
+ha-01 / ULC-01 -> Fabric adapter-1  ENABLED production writer
+ha-02 / ULC-02 -> Fabric adapter-2  INSTALLED but WRITE-DISABLED standby
 ```
 
-The two adapter workers are **required by the full-feature target architecture** and their capacity is included in node sizing. Runtime deployment is still blocked by the reviewed implementation/image readiness gate in [20-openbao-and-fabric-adapter.md](20-openbao-and-fabric-adapter.md). If that implementation is missing, other infrastructure layers may be tested, but the overall full-feature POC remains **BLOCKED**, not passed.
+The reviewed implementation/image and HRC Task 37 handoff are commissioned. The remaining Fabric HA boundary is proving ownership/fencing so ULC-02 cannot create concurrent external side effects with ULC-01. Until that acceptance is deliberate and recorded, keep adapter-2 disabled.
 
 Both read the **same** `telemetry.fabric_outbox` table from `lorawan_telemetry` through the PostgreSQL HA path.
 
@@ -262,8 +262,8 @@ always executable infrastructure scope:
   no manual client endpoint edits during failover
 
 required full-feature execution gates:
-  Fabric worker redundancy -> required for final full-feature PASS; BLOCKED until the reviewed adapter implementation/image exists
-  gateway-integrity v2     -> required when v2 is in the selected runtime scope; BLOCKED until reviewed v2 runtime components exist
+  Fabric worker redundancy -> ULC-01 writer is commissioned; ULC-02 remains fail-closed until ownership/fencing + failover acceptance
+  gateway-integrity v2     -> reviewed v2 runtime components and real gateway lineage are commissioned; retain the evidence lane during counted tests
 ```
 
 This POC **does not prove**:

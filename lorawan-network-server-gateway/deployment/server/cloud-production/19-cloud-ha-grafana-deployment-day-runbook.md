@@ -1,6 +1,8 @@
 # 19. Absolute-Minimum 3-Server HA POC Runbook
 
-> **Status: SEQUENCE REFERENCE, NOT EXECUTION AUTHORITY.** The live server build includes the core HA stack, Phase 13A fast backup, OpenBao 3-node normal path, Fabric outbox schema, Node-RED server runtime, and Grafana server-only staging. Grafana 13.2.0 is already running loopback-only with strict-TLS read-only PostgreSQL access and a provisioned dashboard; only its real EMU-01 freshness correlation remains hardware-dependent. Gateway/cutover and real-uplink acceptance remain deferred. Full Fabric execution still waits for a reviewed adapter implementation and external handoff. Follow each component manual and `00-build-execution-log.md` for current evidence. **Phase 15 remains the first intentional failure-injection phase**.
+> [!IMPORTANT]
+> **HISTORICAL SEQUENCE REFERENCE.** This file preserves deployment ordering and may contain intermediate commissioning states. It is not current status authority. As of 2026-09-09, ULC-01 Fabric production writes are enabled and verified; ULC-02 remains write-disabled pending its HA fencing/ownership gate. Use [00-current-server-continuation-checkpoint.md](00-current-server-continuation-checkpoint.md) for current truth.
+
 
 Use this runbook to build a **small scale model of the future deployment**.
 
@@ -462,38 +464,31 @@ Keep all three members running. One-member-loss / 2-of-3 survival belongs to Pha
 
 ## 19.17 Fabric adapters
 
-Collect the real external Fabric handoff first, then complete the **adapter implementation readiness gate** in [20-openbao-and-fabric-adapter.md](20-openbao-and-fabric-adapter.md).
+> **Historical first-deployment sequence.** The external HRC Task 37 handoff and reviewed adapter runtime are already commissioned. Current state is ULC-01 enabled as the verified production writer and ULC-02 deployed but write-disabled until its ownership/fencing HA gate passes. Use [00-current-server-continuation-checkpoint.md](00-current-server-continuation-checkpoint.md) and [20-openbao-and-fabric-adapter.md](20-openbao-and-fabric-adapter.md) for current truth.
 
-The repository's detailed adapter reference currently states that a completed reviewed adapter image is not yet present. Therefore:
-
-```text
-IF reviewed adapter image/source is absent
-  -> STOP pre-test commissioning here
-  -> Phase 14B = BLOCKED
-  -> do not invent an image or substitute Node-RED as the adapter
-  -> do not begin counted Phase 15 tests
-
-IF reviewed adapter image/source exists
-  -> deploy adapter-1 on ulc-01
-  -> deploy adapter-2 on ulc-02
-```
-
-Both use the same PostgreSQL HA `lorawan_telemetry.fabric_outbox`, with different worker IDs and lease-safe claiming.
-
-Normal-path setup must prove:
+For a rebuild or a new environment, validate the current HRC handoff/API first; do not recreate the retired pre-Task-37 contract. The required deployment posture is:
 
 ```text
-one selected outbox job
--> fixed evidence projection
--> RFC 8785 canonical JSON
--> SHA-256 digest over exact UTF-8 bytes
--> OpenBao versioned signature
--> external Fabric commit
--> tx ID/status returned to outbox
--> read-only digest/signature reconstruction verifies
+ULC-01 adapter-1 -> enabled production writer after activation preflight
+ULC-02 adapter-2 -> deployed fail-closed / FABRIC_ADAPTER_ENABLED=false
 ```
 
-Keep both adapters and Fabric connectivity healthy. Adapter loss and external Fabric outage belong to Phase 15.
+Both point at the same PostgreSQL HA `lorawan_telemetry.fabric_outbox`, but the standby must not become a second simultaneous writer.
+
+The current normal path proves:
+
+```text
+eligible outbox row with immutable finalized_payload
+-> source-bound HRC Task 37 CreateSourceBoundAnchor
+-> exact finalized_payload bytes in transient hrc.exact_payload
+-> durable prepared transaction + signed commit-status request
+-> VALID commit
+-> QuerySourceBoundAnchor(SourceRecordID)
+-> VerifySourceBoundDigest(...)=MATCH
+-> confirmed outbox state
+```
+
+The separate RFC 8785/OpenBao seal remains an off-chain integrity layer and is verified independently. Keep ULC-01 healthy and ULC-02 fenced during the normal path. Adapter takeover and Fabric outage/recovery belong to the dedicated failure/HA acceptance procedures.
 
 Before `19.18`, complete **Phase 13B**, then Phase 14 healthy evidence capture, then require `PRE_TEST_COMMISSIONING_GATE=PASS` from Phase 14B.
 
@@ -602,3 +597,5 @@ The architecture POC passes when:
 - **full Fabric execution is required for the final full-feature PASS:** the reviewed adapter implementation is deployed, one worker replaces the other after valid lease recovery, a real external Fabric commit is confirmed, and Fabric outage/reconciliation/drain passes; if the implementation is missing, the overall full-feature POC remains BLOCKED;
 - no required host OOMs under the tiny POC traffic;
 - the result is documented as a **scale model of future HA**, not production capacity certification.
+
+

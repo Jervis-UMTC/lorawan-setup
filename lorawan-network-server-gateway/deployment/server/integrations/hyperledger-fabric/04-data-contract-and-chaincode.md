@@ -1,5 +1,7 @@
 # 4. Data Contract and Chaincode Design
 
+> **Current HRC implementation override — Task 37 source-bound API:** the historical sections below preserve this repository's local canonical-evidence/JCS/OpenBao design and earlier proposed generic chaincode shapes, but they are **not** the live HRC transaction API. Production uses `HrcMSP` / `hrc-channel` / `hrc-evidence`, empty/default Fabric contract, `CreateSourceBoundAnchor(SourceRecordID, sourceType, producer, producedAt, schemaVersion)` with the immutable `telemetry.fabric_outbox.finalized_payload` bytes supplied only through transient key `hrc.exact_payload`, followed by `QuerySourceBoundAnchor(SourceRecordID)` and `VerifySourceBoundDigest(SourceRecordID, observedDigest)`. HRC anchors SHA-256 of those exact finalized JSON bytes. The legacy `CreateAnchor`, `QueryAnchor`, `QueryAnchorByRecordID`, `VerifyDigest`, and the older proposed `CreateAttestation` family must not be used by production adapter identities. See `../../fabric-attestation/01-collect-external-fabric-handoff.md` and `02-fabric-network-handoff.md` for the authoritative current mapping.
+
 The Fabric team needs a stable contract, not an informal promise that Node-RED will send some JSON. Freeze the contract before chaincode development.
 
 ## 4.1 Separate the signed evidence from the ledger envelope
@@ -302,9 +304,9 @@ schema_version = telemetry-attestation-v2
 
 The digest and OpenBao signature still cover the exact canonical **v2 evidence object**, not the Fabric envelope. Chaincode may store compact business fields plus digest/seal metadata; it does not need the full journal.
 
-## 4.3 Suggested chaincode transactions
+## 4.3 Historical proposed chaincode transactions — not the live HRC API
 
-Ask the Fabric team whether the contract will expose functions equivalent to:
+The following table is retained only as the project's earlier generic design proposal. The commissioned HRC contract does **not** use these function names; use the Task 37 source-bound API at the top of this file.
 
 | Function | Purpose |
 |---|---|

@@ -2,16 +2,17 @@
 
 Run these tests only after a real telemetry uplink is stored and the telemetry database backup is readable.
 
-## Test 1: Verify the contract before submission
+## Test 1: Verify the HRC contract before submission
 
-From the adapter or an approved Fabric sample application, evaluate `GetContractVersion` and `ReadAttestation` against the Fabric Gateway.
+From the adapter or an approved Fabric sample application, evaluate `QuerySourceBoundAnchor` and `VerifySourceBoundDigest` against the restricted HRC Fabric Gateway using the dedicated LoRaWAN adapter identity. Use the commissioned private Gateway `10.104.0.7:7051`; do not use the K3s-internal `10.43.25.198:7051` address from ULC hosts.
 
 Pass condition:
 
-- TLS validates the Org1 peer;
-- the client identity belongs to the expected MSP;
-- the channel and chaincode resolve;
-- the returned contract version/support list includes the schema being tested. Keep the executable compatibility test on `telemetry-attestation-v1` until the v2 verifier implementation and separate canonicalization vector are reviewed.
+- TLS validates to the pinned HRC root CA and hostname `peer1.hrc.local`;
+- the client certificate is the dedicated least-privilege LoRaWAN `OU=client` identity and belongs to `HrcMSP`;
+- channel `hrc-channel` and chaincode `hrc-evidence` resolve through the default/empty contract;
+- `QuerySourceBoundAnchor(SourceRecordID)` returns the expected known source-bound anchor fields;
+- `VerifySourceBoundDigest(SourceRecordID, observedDigest)` returns `MATCH`.
 
 ## Test 2: Queue one selected uplink
 
@@ -89,9 +90,11 @@ Pass condition:
 - `evidence_sealed_at` is populated before or at `submitted_at`;
 - `fabric_tx_id` is recorded;
 - `committed_at` is after `submitted_at`;
-- querying Fabric by event key returns the same digest and expected seal metadata.
+- Fabric commit validation code is `VALID (0)`;
+- `QuerySourceBoundAnchor(SourceRecordID)` returns the exact source-bound metadata, digest, and payload length derived from the immutable finalized payload;
+- `VerifySourceBoundDigest(SourceRecordID, sha256(finalized_payload))` returns `MATCH`.
 
-A transaction ID without valid commit status is not a pass.
+The HRC ledger digest is SHA-256 of the **exact immutable `telemetry.fabric_outbox.finalized_payload` bytes** supplied transiently as `hrc.exact_payload`. Never recreate those bytes from `raw_data`, JSONB, maps, structs, or another projection. The local OpenBao/JCS evidence seal remains a separate integrity layer. A transaction ID, endorsement, or orderer acknowledgement without successful commit status plus `QuerySourceBoundAnchor` and `VerifySourceBoundDigest=MATCH` is not a pass.
 
 ## Test 4: Verify the exact persisted evidence seal
 
@@ -256,7 +259,7 @@ Pass condition while Fabric is unavailable:
 
 - Node-RED continues storing telemetry;
 - the selected outbox row has a complete evidence seal before any successful Fabric commit;
-- jobs remain `pending`, `failed`, or `submitted_unknown` according to the failure point;
+- jobs remain `pending`/`failed` for eligible pre-submit failures or enter `reconciling` after an uncertain submit; `needs_attention` is reserved for permanent conflicts;
 - no telemetry row is marked invalid merely because Fabric is unavailable;
 - the adapter backs off instead of retrying continuously.
 
@@ -330,13 +333,13 @@ After `Sealed` becomes false, let the adapter retry. Pass recovery only when the
 
 ## Test 7: Duplicate and unknown-commit behavior
 
-Submit the same event key and digest again.
+Exercise the same source-bound record again using the exact same `SourceRecordID`, five metadata arguments, and immutable transient `hrc.exact_payload` bytes. The source namespace is derived from the authenticated adapter identity rather than passed as a transaction argument.
 
-Pass condition: the chaincode returns the existing matching attestation or rejects the duplicate in a documented idempotent way.
+Pass condition: HRC treats identical evidence as an idempotent retry and does not create conflicting ledger state.
 
-Simulate a client timeout after submission. The adapter must set `submitted_unknown`, query the ledger, and only retry when the stable event key is absent.
+Simulate a client timeout after submission. The adapter must preserve the durable transaction ID, record ID, endorsed transaction bytes, and signed commit-status request, move the row into governed `reconciling` behavior, and first recover commit status and/or run `QuerySourceBoundAnchor(SourceRecordID)` plus `VerifySourceBoundDigest(...)=MATCH`. Do not generate a fresh transaction merely because the client timed out.
 
-A duplicate key with a different digest must become a conflict requiring operator review.
+The same authenticated source + `SourceRecordID` with a different finalized-payload digest or conflicting immutable metadata must become a permanent conflict/`needs_attention` condition requiring operator review.
 
 ## Test 8: Recover an expired processing lease
 
@@ -356,7 +359,7 @@ Pass condition:
 - it becomes eligible after lease expiry;
 - a new claim increments `attempts` and records the current worker;
 - no duplicate ledger state is created;
-- `submitted_unknown` rows remain outside the normal retry path.
+- `reconciling` rows remain outside the fresh pending/failed submission path and preserve their durable Fabric transaction material; any legacy `submitted_unknown` row is reconciliation-only.
 
 ## Test 9: Prove a completed database seal cannot be replaced normally
 
@@ -404,7 +407,7 @@ If the adapter has no automated fixture for this behavior, **stop deployment and
 
 Verify the dashboard shows:
 
-- pending, processing, confirmed, failed, submitted_unknown, and dead-letter counts;
+- pending, processing, confirmed, failed, reconciling, needs_attention, dead-letter, and any legacy submitted_unknown counts;
 - oldest pending age and expired processing leases;
 - commit latency;
 - latest error category;
@@ -424,7 +427,8 @@ The simulation passes only when:
 - the one-way database trigger rejects replacement of a completed seal;
 - Fabric outage does not change an already-created digest/signature seal;
 - the adapter rejects an invalid local seal before contacting Fabric;
-- the ledger digest matches the verified canonical off-chain evidence;
+- the HRC ledger digest matches SHA-256 of the exact accepted application-payload bytes and, for v2, matches verifier-owned `raw_app_data_sha256`;
+- the separate local RFC-8785/JCS evidence digest and OpenBao signature remain internally valid and immutable;
 - when v2 is enabled, the sealed canonical evidence contains the exact verifier-owned gateway-evidence references and the event was `verified` before `evidence_sealed_at`;
 - replay is idempotent;
 - Fabric outage does not block telemetry;

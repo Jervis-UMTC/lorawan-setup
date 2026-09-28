@@ -25,7 +25,7 @@ Do not merge these responsibilities into Node-RED. Node-RED owns ingestion and t
 
 The canonical watcher/service topology is documented in [`gateway-integrity/04-service-architecture-and-runtime-contract.md`](../integrations/gateway-integrity/04-service-architecture-and-runtime-contract.md). In that architecture, the Fabric Adapter **does not watch Concentratord, journal files, or gateway MQTT topics**. It watches only durable eligible outbox work and reads verifier-owned `gateway_evidence.event_verification` state for v2. This prevents the signer/submission process from becoming the authority that decides whether its own source evidence is trustworthy.
 
-The immutable cloud adapter image is commissioned as `ghcr.io/jervis-umtc/lorawan/gateway-fabric-adapter@sha256:cd4308e8985d74ea7fab957a2a4adadd1831b776a8f9af2fdd6291179df83e7a`. Adapter-1 on ulc-01 and adapter-2 on ulc-02 are live only in fail-closed `FABRIC_ADAPTER_ENABLED=false` standby. Do not issue a SecretID or enable ledger submission until the external Fabric handoff and activation preflight pass.
+The original immutable standby image documented below is historical commissioning context. Current production state is newer: ULC-01 Adapter-1 passed the HRC Task 37 qualification and now runs the governed continuous writer with `FABRIC_ADAPTER_ENABLED=true`; its live image ID is `sha256:d12e73ae24f7823730b6632fe8209e844c0d6125bd6a9c13e9d75cc330664f74` and service-binary SHA-256 is `a53990277d9032e60a9f0bfb52619a21e8c999a3573477dbfb3efe6ca6fb9591`. ULC-02 Adapter-2 remains fail-closed `FABRIC_ADAPTER_ENABLED=false` standby and must not be enabled until the HA fencing gate passes.
 
 ## Step 1: Back up the telemetry database
 
@@ -586,18 +586,20 @@ Required behavior:
 8. preserve the complete versioned OpenBao signature, derive `openbao:transit:lorawan-evidence:v<version>` from its version tag, and store `canonical_json`, `digest_sha256`, `evidence_signature_alg`, `evidence_signing_key_id`, `evidence_signature`, and `evidence_sealed_at` together before the first Fabric network call;
 9. re-read the persisted seal, recompute its digest, verify that the signature version matches the stored KMS key ID, and require OpenBao Transit verify to return `valid=true` for the exact stored canonical bytes;
 10. for an already sealed row, verify the stored seal and **do not rebuild it from current telemetry**;
-11. submit through Fabric Gateway using the stable event key and the already-verified seal metadata;
-12. wait for valid commit status and mark `confirmed` only after a valid commit;
-13. move an uncertain post-submission result to `submitted_unknown`;
-14. query the ledger before deciding whether an unknown result may be retried;
-15. verify the same stored seal before every retry or reconciliation request;
-16. use bounded exponential backoff with jitter for transient failures without changing the event key or seal;
-17. cap retry delay and maximum attempts using reviewed configuration;
-18. move invalid local seals, conflicting duplicate digests, permanent failures, or exhausted failures to `dead_letter` or the implementation's explicit security-conflict path.
+11. require immutable `telemetry.fabric_outbox.finalized_payload` to exist; preserve those exact JSON bytes without rebuilding them from `raw_data`, JSONB, maps, structs, or projections;
+12. compute SHA-256 and byte length from those exact `finalized_payload` bytes, validate the current HRC payload-size/JSON boundary, and build source metadata from `source_event_key`, `event_type`, DevEUI, `observed_at`, and `schema_version`;
+13. prepare HRC `CreateSourceBoundAnchor(SourceRecordID, sourceType, producer, producedAt, schemaVersion)` with the exact finalized bytes supplied only as transient `hrc.exact_payload`;
+14. durably persist the prepared Fabric transaction ID, endorsed transaction bytes, signed commit-status request, and returned HRC record ID **before** orderer submission;
+15. submit only the already-prepared transaction, then recover/wait for authoritative commit status and require successful validation;
+16. query `QuerySourceBoundAnchor(SourceRecordID)` and require every immutable returned anchor field to match the prepared source-bound anchor;
+17. call `VerifySourceBoundDigest(SourceRecordID, sha256(finalized_payload))` and require `MATCH`; only then mark the outbox row `confirmed`;
+18. treat an uncertain post-submit/commit/query/verification outcome as reconciliation work while preserving all known transaction/prepared-status material; do not blindly generate a new transaction;
+19. verify the same stored local OpenBao/JCS evidence seal before retry/reconciliation where required, and use bounded exponential backoff with jitter for transient failures without changing the immutable finalized payload or source identity;
+20. move invalid local seals, malformed/missing finalized payloads, conflicting source-bound anchors, permanent authorization/contract failures, or exhausted failures to the implementation's explicit attention/dead-letter/security-conflict path.
 
 For transient failures, use a delay equivalent to `min(MAX_DELAY, BASE_DELAY * 2^attempt) + jitter`, with configured bounds rather than an infinite retry loop. Authorization errors, invalid schema, conflicting duplicate digests, and other permanent failures should not be retried as transient network errors.
 
-`CreateAttestation`, `ReadAttestation`, and the other contract names in these guides are examples of project contract names, not built-in Fabric functions. Replace them with the exact function names supplied by the Fabric team.
+**Current HRC override (superseding the September 4 legacy API):** use Task 37 `CreateSourceBoundAnchor`, `QuerySourceBoundAnchor`, and `VerifySourceBoundDigest`; use chaincode `hrc-evidence` on `hrc-channel` with MSP `HrcMSP`, keep `FABRIC_CONTRACT=` empty, and send only the immutable `finalized_payload` bytes through transient key `hrc.exact_payload`. The legacy `CreateAnchor`, `QueryAnchor`, `QueryAnchorByRecordID`, and `VerifyDigest` functions must not be used by adapter identities.
 
 Do not place Fabric signing code, the Fabric client private key, OpenBao AppRole credentials, OpenBao root token, or OpenBao unseal/recovery material in Node-RED. The evidence private key remains inside OpenBao and must never be mounted into the adapter.
 

@@ -255,7 +255,7 @@ Pass:
 - ChirpStack continues;
 - Node-RED continues;
 - TimescaleDB continues storing telemetry;
-- Fabric outbox jobs remain pending/failed/submitted_unknown according to failure point;
+- Fabric outbox jobs remain pending/failed/reconciling according to the failure point; `needs_attention` is reserved for permanent conflicts and `submitted_unknown` is legacy compatibility only;
 - retry delay increases according to bounded exponential backoff;
 - no telemetry row is deleted or rolled back because Fabric is unavailable.
 
@@ -306,7 +306,7 @@ Pass:
 - another worker does not reclaim early;
 - the expired lease is reclaimable;
 - attempts increment;
-- `submitted_unknown` is never retried by the normal pending/failed worker.
+- current uncertain post-submit work enters `reconciling` and is not retried as new pending/failed work; any legacy `submitted_unknown` row is also reconciled rather than blindly retried.
 
 ## Final verification
 

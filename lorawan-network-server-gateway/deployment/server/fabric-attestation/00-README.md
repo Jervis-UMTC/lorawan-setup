@@ -36,9 +36,9 @@ LoRaWAN
 
 The adapter runs with the LoRaWAN application services and the Fabric network is external. In the barebones dissertation VM, the historical lab still uses its existing telemetry database profile. In the **three-Droplet cloud HA POC**, do not deploy a fourth standalone TimescaleDB server: install the same TimescaleDB extension build on all three Patroni/PostgreSQL members, enable it in `lorawan_telemetry`, keep telemetry in Timescale hypertables, and keep the outbox as an ordinary table in that same HA database. See [../cloud-production/20-openbao-and-fabric-adapter.md](../cloud-production/20-openbao-and-fabric-adapter.md).
 
-The gateway-integrity ingestor, MQTT evidence collector, and verifier are documented as **required roles for v2**, but this repository does not yet contain completed reviewed images for them. Do not add invented Compose images. v1 lab testing can continue unchanged; v2 acceptance is blocked until those reviewed implementations and the separate v2 canonicalization test vector exist.
+The gateway-integrity v2 lane is now implemented and commissioned in the cloud build: evidence ingest, MQTT collectors, verifier replicas, trusted decoder, PostgreSQL evidence state, and SeaweedFS-backed evidence storage are deployed and have accepted real gateway lineage. Historical sections that describe these images as missing predate the evidence-runtime implementation. The separate barebones dissertation VM profile remains a lab topology and must not be used to overwrite the commissioned three-Droplet cloud design.
 
-The lab deliberately runs **one** OpenBao container so Test 6/Test 12 can simulate a complete KMS outage. Do not copy that one-node KMS shape into production. The three-Droplet cloud deployment uses **OpenBao-1/2/3 as a three-member Integrated Storage/Raft cluster** and **Fabric adapter-1/2 as two lease-based workers**; see [../cloud-production/20-openbao-and-fabric-adapter.md](../cloud-production/20-openbao-and-fabric-adapter.md). This is the minimum cloud mapping that avoids a single OpenBao node while keeping the external Fabric network outside this repository.
+The lab deliberately runs **one** OpenBao container so outage tests can simulate a complete KMS loss. Do not copy that one-node KMS shape into production. The three-Droplet cloud deployment uses **OpenBao-1/2/3 as a three-member Integrated Storage/Raft cluster**. Two Fabric adapter candidates are packaged, but only ULC-01 is currently enabled as the production writer; ULC-02 remains write-disabled until its HA ownership/fencing acceptance gate passes. See [../cloud-production/20-openbao-and-fabric-adapter.md](../cloud-production/20-openbao-and-fabric-adapter.md).
 
 ## Read in this order
 
@@ -54,9 +54,9 @@ Also read:
 - the reusable [Gateway Integrity manuals](../integrations/gateway-integrity/00-README.md) for v2 source verification; and
 - the reusable [Hyperledger Fabric manuals](../integrations/hyperledger-fabric/00-README.md) for sealing/submission.
 
-## Required values from the Fabric team
+## Fabric values
 
-Do not invent these:
+For a new environment, do not invent these. For the commissioned HRC cloud deployment, the concrete values and source-bound API are already frozen in [the current Fabric handoff](../integrations/hyperledger-fabric/02-fabric-network-handoff.md):
 
 ```text
 <FABRIC_GATEWAY_ENDPOINT>
@@ -104,7 +104,7 @@ Fabric adapter        -> retries/reconciles independently; never bypasses eviden
 - transaction submission uses the existing channel and chaincode;
 - endorsement/submission errors are classified;
 - a transaction ID is not treated as confirmation until commit status is valid;
-- timeouts after submission enter `submitted_unknown` and are reconciled before retry;
+- uncertain post-submit outcomes enter `reconciling`, preserve the prepared transaction/commit-status material, and are reconciled before any new submission; legacy `submitted_unknown` remains schema compatibility only;
 - duplicate retries do not create conflicting ledger state;
 - Fabric outage does not block telemetry ingestion or telemetry PostgreSQL storage;
 - the queue drains after Fabric recovery;

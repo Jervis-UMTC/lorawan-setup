@@ -1,6 +1,6 @@
 # 8. MQTT and Valkey HA on the Three-Node POC
 
-> **Status: CORE SERVICE LAYER COMPLETE / VALIDATED.** Mosquitto `2.0.18` is commissioned on `ulc-01` and `ulc-02` with TLS backend listeners on `:8884`, and the validated MQTT HAProxy TLS passthrough endpoint is `10.104.0.2:8883` using broker certificate identity `mqtt.internal.lorawan.com`; broker-backend failure and recovery have passed. Valkey `7.2.13` is commissioned TLS-only on all three nodes with authenticated replication, three TLS Sentinels (quorum `2`), a least-privilege HAProxy health identity, dual writable-primary HAProxy endpoints `10.104.0.2:16379` and `10.104.0.4:16379`, and automatic promotion/rejoin testing. The most recent failover elected `ulc-02` (`10.104.0.4`) as Valkey primary; keep that Sentinel-elected topology and do not manually fail back. ChirpStack workload MQTT authentication/ACLs and the second application-node MQTT routing boundary are intentionally deferred to Phase 9 before first ChirpStack start.
+> **Status: CORE SERVICE LAYER COMPLETE / VALIDATED.** Mosquitto `2.0.18` is commissioned on `ulc-01` and `ulc-02` with TLS backend listeners on `:8884`, and the validated MQTT HAProxy TLS passthrough endpoint is `10.104.0.2:8883` using broker certificate identity `mqtt.internal.lorawan.com`; broker-backend failure and recovery have passed. Valkey `7.2.13` is commissioned TLS-only on all three nodes with authenticated replication, three TLS Sentinels (quorum `2`), a least-privilege HAProxy health identity, dual writable-primary HAProxy endpoints `10.104.0.2:16379` and `10.104.0.4:16379`, and automatic promotion/rejoin testing. The most recent **Phase 8C.14 commissioning failover checkpoint** elected `ulc-02` (`10.104.0.4`) as Valkey primary. Treat that as dated acceptance evidence, not a claim about today's elected primary; do not manually fail back solely to match documentation. ChirpStack workload MQTT authentication/ACLs and the second application-node MQTT routing boundary are intentionally deferred to Phase 9 before first ChirpStack start.
 
 > **Execution-record authority:** sections 8.1-8.17 preserve the original target design and are useful for rationale, but they contain placeholders and assumptions that were superseded during live commissioning. When those planning sections differ from the observed deployment, sections 8.18-8.21 and the live-state summary above are authoritative. In particular, the commissioned Valkey TLS identity is `valkey.internal.lorawan.com`, not `valkey-ha.internal.<DOMAIN>`, and the commissioned MQTT path is currently `10.104.0.2:8883` -> Mosquitto `:8884`, not the uncommissioned `mqtt-ha.internal.<DOMAIN>:18883` design.
 
@@ -497,7 +497,7 @@ valkey-cli --tls \
 
 Expected routed role: `master`.
 
-The controlled Phase 8C.14 failover proved the complete path: Sentinel promoted ulc-02 after ulc-03 Valkey was stopped; all three Sentinels agreed; both HAProxy `:16379` endpoints followed the new primary automatically without configuration changes or reloads; ten consecutive requests through each endpoint were master-only; pre-failover data survived; post-failover writes succeeded; ulc-03 rejoined as a replica; and the final primary reported two connected replicas. Current Valkey primary is ulc-02 (`10.104.0.4`). Do not manually fail back.
+The controlled Phase 8C.14 failover proved the complete path: Sentinel promoted ulc-02 after ulc-03 Valkey was stopped; all three Sentinels agreed; both HAProxy `:16379` endpoints followed the new primary automatically without configuration changes or reloads; ten consecutive requests through each endpoint were master-only; pre-failover data survived; post-failover writes succeeded; ulc-03 rejoined as a replica; and the final primary reported two connected replicas. At the Phase 8C.14 acceptance checkpoint, the Valkey primary was ulc-02 (`10.104.0.4`). Treat Sentinel as authoritative for the live elected primary and do not manually fail back merely to match this dated checkpoint.
 
 ## 8.17 Final acceptance and Phase 9 handoff
 
@@ -820,11 +820,13 @@ frontend mqtt_tls
 
 backend mqtt_brokers
     mode tcp
-    balance roundrobin
     option tcp-check
 
+    # The two Mosquitto brokers do not replicate live MQTT sessions/topic state.
+    # Keep all normal sessions on ulc-01 so a gateway's separate uplink/downlink
+    # connections and ChirpStack MQTT sessions cannot be split across brokers.
     server mqtt-ulc01 10.104.0.2:8884 check
-    server mqtt-ulc02 10.104.0.4:8884 check
+    server mqtt-ulc02 10.104.0.4:8884 check backup
 ```
 
 Validate:

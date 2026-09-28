@@ -118,17 +118,20 @@ WHERE status = 'processing'
   AND lease_expires_at <= now();
 ```
 
-Example submitted-unknown query:
+Example reconciliation/attention-state query:
 
 ```sql
 SELECT
-  count(*) AS submitted_unknown_jobs,
-  EXTRACT(EPOCH FROM (now() - min(updated_at))) AS oldest_unknown_seconds
+  status,
+  count(*) AS jobs,
+  EXTRACT(EPOCH FROM (now() - min(updated_at))) AS oldest_seconds
 FROM telemetry.fabric_outbox
-WHERE status = 'submitted_unknown';
+WHERE status IN ('reconciling','needs_attention','submitted_unknown')
+GROUP BY status
+ORDER BY status;
 ```
 
-Keep these states separate. A pending or failed item is retry-eligible, an expired processing lease is reclaimable, and a submitted-unknown item requires ledger reconciliation before retry.
+Keep these states separate. Pending/failed work is retry-eligible only when the current claim predicate is satisfied, including `finalized_payload` and the v2 verifier gate. An expired pre-submit processing lease can be reclaimed. `reconciling` is the current uncertain-post-submit state; `needs_attention` requires operator review. `submitted_unknown` is retained only for legacy migration compatibility and must also be reconciled rather than normally retried.
 
 The outbox table is added in the Fabric guide. Dashboard queries should show `no data` before that migration instead of silently failing.
 

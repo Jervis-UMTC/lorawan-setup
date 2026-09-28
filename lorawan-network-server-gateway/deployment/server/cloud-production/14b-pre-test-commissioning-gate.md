@@ -122,39 +122,43 @@ Grafana being unavailable must not be required for LoRaWAN control-plane operati
 
 ## 14B.7 OpenBao + Fabric ready
 
-For the full-feature target require:
+For the commissioned full-feature target require:
 
 ```text
 OpenBao 3-member Raft cluster healthy/unsealed
 one active + two standby/raft peers as expected
 stable HAProxy KMS endpoint healthy
 non-exportable lorawan-evidence P-256 Transit key exists
-fixed RFC 8785 canonicalization vector passes
-SHA-256 digest generation from exact canonical bytes passes
-OpenBao sign + verify passes
-external Fabric handoff is complete
-reviewed Fabric adapter source/image exists and immutable digest is recorded
-adapter-1 running on ulc-01 with unique worker_id
-adapter-2 running on ulc-02 with unique worker_id
-one selected normal event is sealed and reaches confirmed Fabric commit
-Fabric tx ID/commit status returns to the outbox
-read-only digest reconstruction/verification mode required by integrity testing exists
+fixed RFC 8785 canonicalization/signature self-tests pass
+HRC Task 37 handoff is installed and TLS identity is verifiable
+CreateSourceBoundAnchor / QuerySourceBoundAnchor / VerifySourceBoundDigest contract is current
+ULC-01 adapter-1 is enabled, healthy, and owns the production writer role
+ULC-02 adapter-2 is deployed but FABRIC_ADAPTER_ENABLED=false until the ownership/fencing HA gate passes
+one eligible selected event reaches VALID commit and source-bound query/digest verification
+Fabric transaction ID, HRC record ID, prepared transaction, and commit-status material are persisted as required
+reconciling / needs_attention lifecycle and legacy submitted_unknown compatibility are understood
+read-only local-seal and ledger verification paths exist
 ```
 
-The normal evidence path is:
+The commissioned Fabric evidence path is:
 
 ```text
-TimescaleDB source event
-  -> fixed evidence projection
-  -> RFC 8785 canonical JSON
-  -> SHA-256 digest
-  -> OpenBao Transit ECDSA signature
-  -> Hyperledger Fabric attestation
+accepted telemetry/outbox row
+  -> immutable finalized_payload exact bytes
+  -> SHA-256(finalized_payload)
+  -> CreateSourceBoundAnchor(..., transient hrc.exact_payload)
+  -> durable prepared transaction + commit-status material
+  -> VALID commit
+  -> QuerySourceBoundAnchor(SourceRecordID)
+  -> VerifySourceBoundDigest(SourceRecordID, sha256(finalized_payload)) = MATCH
+
+Separate local integrity layer:
+  versioned canonical evidence -> RFC 8785 -> OpenBao Transit signature
 ```
 
-If the reviewed adapter implementation is absent, the **full-feature pre-test gate is BLOCKED**. Do not start counted Phase 15 and later describe the missing adapter as merely a test limitation.
+Older sections that describe a missing adapter image, missing HRC handoff, or two simultaneously enabled writers are historical commissioning states and must not be used as the current gate. Do not enable ULC-02 here; its takeover belongs to the dedicated HA ownership/fencing acceptance procedure.
 
-Do not stop an OpenBao member, adapter, or external Fabric endpoint here.
+Do not stop an OpenBao member, ULC-01 writer, or HRC endpoint during this healthy-path gate.
 
 ## 14B.8 Final recovery boundary ready
 

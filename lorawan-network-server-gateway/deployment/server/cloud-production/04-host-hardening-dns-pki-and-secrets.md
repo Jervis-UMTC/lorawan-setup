@@ -2,7 +2,7 @@
 
 For the **step-by-step execution record on newly provisioned hosts**, use [04a-host-security-hardening-execution-runbook.md](04a-host-security-hardening-execution-runbook.md). That runbook records what was actually executed, why, the verification result, deviations from the supplied Ubuntu hardening document, and the explicitly excluded yellow-highlighted web-server section.
 
-> **Current status:** the host-security baseline is validated. DNS/PKI/secrets guidance for services that have not been deployed yet remains **STANDBY / DRAFT** and must be refined when each service becomes active. Do not read a future PKI example in this file as evidence that the corresponding service already uses it.
+> **Current status:** the host-security baseline is validated, and the major production PKI/secret boundaries for gateway MQTT, Evidence services, OpenBao, PostgreSQL-facing workloads, and the HRC Fabric adapter have since been commissioned in their component runbooks. Treat generic or future examples in this file as design guidance only; the component-specific current checkpoints and protected host configuration remain authoritative for actual listeners, certificate identities, and secret locations.
 
 ## 4.1 Baseline principles
 
@@ -410,9 +410,9 @@ The original host baseline is accepted, but a later full-stack audit found servi
 - only the Spilo image has a detailed recorded vulnerability/hardening review; the other immutable service images still need scan/provenance coverage or an explicitly accepted gap;
 - Docker log/resource/security options are documented consistently for Spilo/OpenBao, but Node-RED, Grafana, ChirpStack, and etcd require a read-only effective-runtime inventory before any hardening recreate is justified;
 - etcd private HTTP remains an explicit POC transport-security exception, not production transport-security signoff;
-- UFW remains intentionally inactive until an independent provider/recovery-console path exists; do not trade remote availability for a cosmetic firewall checkbox.
+- Historical commissioning began with UFW inactive, but the current hosts have since been hardened with UFW. Preserve the September 3 narrow Docker-bridge allowances required by ChirpStack (`172.18.0.0/16` -> each node-local `10.104.0.x` on `16379`, `6432`, `18883`) and Node-RED (`172.18.0.0/16` -> `10.104.0.8` on `18884`, `6432`). Re-audit the effective rules and Docker packet-filter interaction before any firewall rewrite; the provider Cloud Firewall state remains a separate externally managed boundary.
 
-Current server-first priority is the missing gateway/security evidence runtime because it is part of the required v2 architecture and does not need OpenBao/Fabric signing authority. After the evidence services are minimally commissioned, close OpenBao audit evidence **before releasing any Fabric signing credential**, then certificate-expiry monitoring, deterministic Fabric-v1 exact-byte/digest preflight, and live container-security inventory. Do not combine setup with unrelated HA/failure injection.
+The earlier server-first sequence is complete: the gateway/security evidence runtime is commissioned, the OpenBao audit boundary is closed, and ULC-01 has a commissioned least-privilege Fabric writer. Do not repeat those commissioning steps merely because this older hardening guide describes them as future work. Current changes should preserve certificate-expiry monitoring, deterministic exact-byte validation, and container-security inventory; the open Fabric infrastructure boundary is ULC-02 HA fencing/ownership acceptance, while the September 17 research backlog is upstream outbox finalization/claim eligibility.
 
 Complete only when:
 

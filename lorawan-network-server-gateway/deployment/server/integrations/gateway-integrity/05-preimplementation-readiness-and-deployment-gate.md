@@ -1,6 +1,6 @@
-# Gateway Evidence Services Pre-Implementation Readiness and Deployment Gate
+﻿# Gateway Evidence Services Pre-Implementation Readiness and Deployment Gate
 
-> **Status: READINESS CONTRACT PASS / CLOUD RUNTIME + PUBLIC NORMAL PATH COMMISSIONED.** The cloud pre-implementation/deployment gate is closed: SeaweedFS S0-S9, database/HBA/CONNECT/six LOGINs, three-node PgBouncer evidence auth, immutable OCI refs, Evidence PKI/MQTT identities, replicated services, shared-443, read-only evidence observability, and the public ChirpStack/Evidence/MQTT normal path are PASS. The remaining normal-path gate is the Gateway OS/OpenWrt target package plus one real physical lineage; Reserved-IP failover authority and Fabric remain separate external gates.
+> **Status: READINESS + REAL GATEWAY/EMU-01 + FABRIC NORMAL PATH PASS.** SeaweedFS S0-S9, database/HBA/CONNECT roles, PgBouncer evidence auth, Evidence PKI/MQTT identities, replicated services, shared-443, read-only evidence observability, public ChirpStack/Evidence/MQTT, the target Gateway OS/OpenWrt package, one real assembled EMU-01 physical lineage, Task 37 Fabric qualification, and the ULC-01 production Fabric writer are PASS. Remaining boundaries are provider Reserved-IP failover acceptance and deliberate ULC-02 Fabric HA fencing/ownership acceptance.
 
 This guide is for the full cloud/full-feature gateway-integrity path. The minimum dissertation VM remains a separate v1-compatible profile unless its methodology is explicitly changed.
 
@@ -93,18 +93,19 @@ cloud ingest/collector/verifier/trusted-decoder/Fabric adapter source BUILD/TEST
 v1/v2 canonicalization and correlation vectors                       FROZEN / PASS
 ```
 
-Still not live-complete:
+Current completion/open-boundary split:
 
 ```text
-Gateway OS target-native concentratord-zmq build   TARGET TOOLCHAIN PENDING
-Gateway OS package/service installation            PENDING
-real verified gateway journal/uploader lineage     HARDWARE DEPENDENT
+Gateway OS target-native build/package             PASS
+Gateway OS package/service installation            PASS
+real verified gateway journal/uploader lineage     PASS
 public WAN ChirpStack/Evidence/MQTT normal path     PASS
 Reserved-IP reassignment/failover authority          EXTERNAL PROVIDER INPUT
-Fabric ledger activation                           EXTERNAL HANDOFF DEPENDENT
+Fabric ledger activation on ULC-01                  PASS
+ULC-02 Fabric ownership/fencing failover             PENDING ACCEPTANCE
 ```
 
-`GATEWAY_EVIDENCE_RUNTIME=SERVER_PASS_GATEWAY_PENDING` is the accurate current marker: the replicated cloud runtime is commissioned, while the physical gateway lineage is not yet claimed.
+The earlier `GATEWAY_EVIDENCE_RUNTIME=SERVER_PASS_GATEWAY_PENDING` marker is superseded. Current commissioned markers are `GATEWAY_EVIDENCE_RUNTIME=PASS` and `GATEWAY_EVIDENCE_V2_NORMAL_PATH=PASS`; do not restore the old marker from historical sections.
 
 ## 5.4 Decisions and artifacts that can be frozen now
 
@@ -485,17 +486,17 @@ Active implementation work now:
 [x] provision read-only Grafana checkpoint and verification-state panels through the existing `telemetry_reader` datasource
 ```
 
-The cloud source is beyond static-only validation: the pinned project-local Go 1.25.0 build path passes `gofmt`, `go test ./...`, `go build ./...`, and Linux/amd64 cross-builds. The current four-service tree has an accepted exact artifact set frozen in `cloud/packaging/binaries.lock`; `build-images.ps1 -Offline -ValidateOnly` rebuilds all four and passes the binary lock plus minimal `FROM scratch` Dockerfile gate. The checksum-pinned `-ResetToolchain` recovery mechanism was proven earlier; do not claim a new reset replay of the current four-binary tree. The accepted images were built/pushed through the Linux Buildx path and the production hosts now use immutable `ghcr.io/jervis-umtc/lorawan/...@sha256` references; host pull/inspection and runtime startup are commissioned. Rust/Cargo 1.82 also compiles/tests the journal/segment/state core. No physical gateway package was installed.
+The cloud source is beyond static-only validation: the pinned project-local Go 1.25.0 build path passes `gofmt`, `go test ./...`, `go build ./...`, and Linux/amd64 cross-builds. The current four-service tree has an accepted exact artifact set frozen in `cloud/packaging/binaries.lock`; `build-images.ps1 -Offline -ValidateOnly` rebuilds all four and passes the binary lock plus minimal `FROM scratch` Dockerfile gate. The checksum-pinned `-ResetToolchain` recovery mechanism was proven earlier; do not claim a new reset replay of the current four-binary tree. The accepted images were built/pushed through the Linux Buildx path and the production hosts now use immutable `ghcr.io/jervis-umtc/lorawan/...@sha256` references; host pull/inspection and runtime startup are commissioned. Rust/Cargo 1.82 also compiles/tests the journal/segment/state core. The earlier no-physical-package blocker is closed: Gateway-01 was clean-overlay commissioned and real EMU-01 v2 lineage passed.
 
-Verifier boundary: journal bytes, uplink schema, and the deterministic correlation path are implemented rather than guessed. Concentratord 4.7.1 is pinned to commit `0904a8ddf4eeb3150b4675b35f067865cb68827d` / `chirpstack_api 4.17.0`; MQTT Forwarder 4.6.0 is pinned to commit `04e870b4af97bebb278ab29259941fd8b3aad72b` / `chirpstack_api 4.18.0`; both published API artifacts contain byte-identical `gw.proto` SHA-256 `227fda5fd77fb115cb00610fb1ea1fa87c3112d972fc6534342dc7083a6dc12b`. ChirpStack 4.18 preserves `gw.UplinkRxInfo.uplink_id` inside application `rxInfo`, so the reviewed Node-RED provenance fields provide the first reception's Gateway EUI, uplink ID, frequency, context, RSSI, and SNR without a timestamp fallback. The Go verifier reopens/redecodes the MQTT object, verifies the semantic digest, fully verifies the matching closed journal segment and every predecessor object back to segment 1, recomputes the accepted checkpoint digest, and calls the lease-fenced `CompleteVerified` path only after the complete lineage and trusted-decoder comparison succeed. Go compilation/tests and the four deterministic Linux binary candidates are PASS. Live migration/credentials are no longer blockers. Those former cloud blockers are closed: three-node PgBouncer expansion, OCI digest pinning, SeaweedFS S9, Evidence PKI, collector ACLs, replicated services, shared-443 and read-only Grafana evidence views are live PASS. Full v2 normal-path acceptance now waits on the Gateway OS target package/physical lineage, plus public-provider activation where WAN access is required.
+Verifier boundary: journal bytes, uplink schema, and the deterministic correlation path are implemented rather than guessed. Concentratord 4.7.1 is pinned to commit `0904a8ddf4eeb3150b4675b35f067865cb68827d` / `chirpstack_api 4.17.0`; MQTT Forwarder 4.6.0 is pinned to commit `04e870b4af97bebb278ab29259941fd8b3aad72b` / `chirpstack_api 4.18.0`; both published API artifacts contain byte-identical `gw.proto` SHA-256 `227fda5fd77fb115cb00610fb1ea1fa87c3112d972fc6534342dc7083a6dc12b`. ChirpStack 4.18 preserves `gw.UplinkRxInfo.uplink_id` inside application `rxInfo`, so the reviewed Node-RED provenance fields provide the first reception's Gateway EUI, uplink ID, frequency, context, RSSI, and SNR without a timestamp fallback. The Go verifier reopens/redecodes the MQTT object, verifies the semantic digest, fully verifies the matching closed journal segment and every predecessor object back to segment 1, recomputes the accepted checkpoint digest, and calls the lease-fenced `CompleteVerified` path only after the complete lineage and trusted-decoder comparison succeed. Go compilation/tests and the four deterministic Linux binary candidates are PASS. Live migration/credentials are no longer blockers. Those former cloud blockers are closed: three-node PgBouncer expansion, OCI digest pinning, SeaweedFS S9, Evidence PKI, collector ACLs, replicated services, shared-443 and read-only Grafana evidence views are live PASS. Full v2 normal-path acceptance is now PASS through the Gateway OS target package and real assembled EMU-01 physical lineage. Public-provider Reserved-IP failover acceptance and ULC-02 Fabric HA fencing/ownership acceptance remain separate gates.
 
 Uploader boundary: `evidence-ingest-receipt-v1`, the Rust HTTP/mTLS uploader process, durable receipt-file persistence and bounded retry/backoff are implemented and pass the current 28-test/default build gate. PostgreSQL returns the original `server_received_at`/`uploaded_at` on exact retry; Rust validates the returned identity/hash, persists canonical receipts before considering work acknowledged, and is restart-idempotent. SeaweedFS S9 and cloud ingest are commissioned. This is **not** approval to delete local evidence: the Rust source intentionally contains no retirement/delete API and physical-gateway reconciliation/retention policy remains pending.
 
-Collector reliability note: a QoS 1 subscription does not upgrade a publisher's QoS 0 PUBLISH. The collector can withhold protocol acknowledgment only for received QoS > 0; final offline witness durability therefore requires the gateway-side publisher/bridge to use QoS 1 for the evidence topic path. The current gateway staging history still records QoS 0 with final QoS 1 planned, so do not claim outage-proof MQTT evidence until that later gateway boundary is closed.
+Collector reliability note: a QoS 1 subscription does not upgrade a publisher's QoS 0 PUBLISH. The commissioned Gateway-01 runtime now persists QoS 1 and has passed cloud/reboot verification. The accepted immutable SquashFS contains the older QoS 0 default, while the tracked overlay is corrected for future rebuilds; do not rebuild the working gateway solely for that immutable-default mismatch.
 
-The filesystem backend is **development-only** and may not be called HA storage. Production raw storage is the commissioned SeaweedFS S3-compatible path; S0-S9, including the exact locked production Go helper and cross-host retained-object verification, are PASS. Full application acceptance now waits on the physical gateway lineage rather than another storage gate.
+The filesystem backend is **development-only** and may not be called HA storage. Production raw storage is the commissioned SeaweedFS S3-compatible path; S0-S9, including the exact locked production Go helper and cross-host retained-object verification, are PASS. Physical gateway lineage is also accepted; do not treat it as a remaining application-acceptance blocker.
 
-OpenBao audit-device closure is complete. Preserve the commissioned audit path/rotation behavior and keep Fabric-adapter SecretID issuance at zero until the explicit activation preflight plus external Fabric handoff are ready.
+OpenBao audit-device closure is complete. Preserve the commissioned audit path/rotation behavior. ULC-01 Fabric activation and its protected AppRole/runtime material are already commissioned; ULC-02 must remain fail-closed and must not receive an enabled writer posture until the documented HA fencing/ownership gate passes.
 
 ## 5.8 Live deployment stop gate
 
@@ -531,7 +532,7 @@ storage + DB
 -> Fabric v2 eligibility
 ```
 
-Fabric adapter deployment remains its own implementation/handoff gate.
+Fabric adapter deployment is commissioned on ULC-01. ULC-02 remains write-disabled until its separate HA fencing/ownership gate is accepted.
 
 ## 5.9 Current result
 
@@ -545,8 +546,11 @@ EVIDENCE_PREIMPLEMENTATION_GATE=PASS
 EVIDENCE_CLOUD_RUNTIME=PASS
 PUBLIC_INGRESS_NORMAL_PATH=PASS
 PUBLIC_RESERVED_IP_FAILOVER=EXTERNAL_AUTH_PENDING
-GATEWAY_EVIDENCE_RUNTIME=SERVER_PASS_GATEWAY_PENDING
-GATEWAY_EVIDENCE_V2_NORMAL_PATH=NOT_YET_CLAIMED
+GATEWAY_EVIDENCE_RUNTIME=PASS
+GATEWAY_EVIDENCE_V2_NORMAL_PATH=PASS
+FABRIC_ULC01_NORMAL_PATH=PASS
+FABRIC_ULC02_HA_FENCING=PENDING_ACCEPTANCE
 ```
 
-The reviewed cloud implementation/deployment decisions and ordinary public Internet path are no longer blockers. The remaining normal-path gate is target Gateway OS packaging plus one physical gateway lineage; Reserved-IP failover authority/acceptance and Fabric remain separate external gates.
+The reviewed cloud implementation, physical Gateway-01 package/lineage, v2 evidence normal path, ordinary public Internet path, and ULC-01 Fabric normal path are commissioned. Remaining infrastructure acceptance is Reserved-IP reassignment/failover authority and ULC-02 Fabric ownership/fencing failover. Counted research rows still must satisfy their own current finalization/verification eligibility gates.
+
