@@ -1,0 +1,118 @@
+[
+  {
+    "index": 170,
+    "text": "Gateway-01 receives LoRaWAN sensor packets through the RAK5146. Its separate Waveshare SIM7600G-H USB dongle carries MQTT traffic to the cloud. LoRaWAN and LTE use different radios. The RJ45 cable provides local gateway administration. During a research test, do not let Ethernet replace LTE as the Internet path."
+  },
+  {
+    "index": 177,
+    "text": "Check that the DITO nano-SIM has an active data plan. Open the dongle's SIM-slot cover. Move the holder in the direction marked OPEN. Insert the nano-SIM in the printed orientation. Move the holder to LOCK. Close the cover. Do not force the holder. Do not cut a larger SIM by hand."
+  },
+  {
+    "index": 178,
+    "text": "Connect the supplied LTE antenna to the dongle port marked ANT. Keep the antenna upright and away from metal enclosure walls. Do not use the RAK5146 LoRa or GNSS antenna port for LTE."
+  },
+  {
+    "index": 179,
+    "text": "Connect the dongle to the commissioned Raspberry Pi USB port. You may use the verified supplied USB extension cable. Do not use a passive, unpowered USB hub. Keep management Ethernet connected when you need SSH."
+  },
+  {
+    "index": 194,
+    "text": "PASS: The gateway detects SIMCom USB. Device /dev/cdc-wdm0 exists. Network device wwan0 exists. The commissioned AT port historically appeared as /dev/ttyUSB2. Do not assume other ttyUSB numbers. If USB disappears or cdc-wdm0 is absent, check power, USB, and drivers first. Do not begin with APN or ChirpStack changes."
+  },
+  {
+    "index": 195,
+    "text": "The approved custom Gateway OS includes matching USB-serial and QMI drivers. Do not install random stock OpenWrt kernel modules. Do not change USB composition because another tutorial uses PPP, RNDIS, or AT dialing."
+  },
+  {
+    "index": 198,
+    "text": "Read the lte interface configuration. Compare it with Figure 4.2. On a commissioned gateway, inspect without changing a healthy connection. Enter worksheet values only when you provision an approved new card."
+  },
+  {
+    "index": 199,
+    "text": "For the commissioned DITO SIM, set APN to internet.dito.ph. Select QMI Cellular and control device /dev/cdc-wdm0. Select no authentication. The approved effective UCI value is pdptype=IP. LuCI can display IPv4/IPv6 in the selector. Check the effective UCI value before you change a working modem. Do not use another carrier's APN."
+  },
+  {
+    "index": 200,
+    "text": "The route controller requires these netifd settings: default route OFF, peer DNS ON, and automatic lte_4 DHCP child OFF. The controller installs the LTE Internet route itself. Click Save & Apply once only after an authorized change. Wait for reconnection."
+  },
+  {
+    "index": 218,
+    "text": "A green modem or connected indicator does not prove Internet traffic works. Gateway-01 uses /usr/sbin/lte-route-health to manage the LTE default route. The controller checks the IP dataplane and MQTT mTLS separately. Keep Ethernet available for management. Do not use Ethernet as an Internet shortcut."
+  },
+  {
+    "index": 234,
+    "text": "PASS requires a current carrier-assigned LTE IPv4 address. The preferred default and broker route must use wwan0, normally metric 10. Cloud DNS must resolve. UTC must support certificate checks. The controller log must report LTE dataplane PASS. The recorded cloud IP 129.212.208.168 can change. Check the active broker hostname and DNS after any broker migration."
+  },
+  {
+    "index": 244,
+    "text": "PASS requires both intended cloud MQTT TCP sessions in ESTABLISHED state. Each session must reach the configured broker on port 8883. The broker route must use LTE. TCP or TLS success alone does not prove a sensor uplink. Do not create another MQTT client only to observe the existing bridges."
+  },
+  {
+    "index": 252,
+    "text": "Never erase mosquitto.db during a routine test. Never delete the gateway journal. Do not add a permanent Ethernet Internet route. Do not restart all gateway services without a diagnosis. Do not send AT+CUSBPIDSWITCH or AT+CFUN=1,1 as routine checks. Preserve management access and the recorder's active count."
+  },
+  {
+    "index": 253,
+    "text": "If the modem is absent, check power and USB first. If cellular IP works but MQTT fails, check DNS, UTC, TLS, and the broker. Do not reset LTE for a broker-only failure. Use bounded recovery only for a diagnosed outage. Do not run recovery during a counted test."
+  },
+  {
+    "index": 257,
+    "text": "Gateway-01 receives AS923 packets through the RAK5146 and Concentratord. MQTT Forwarder publishes to local Mosquitto at 127.0.0.1:1883. Mosquitto maintains two separately authenticated cloud connections on TLS port 8883. cloud-uplink sends gateway events and state. cloud-downlink receives gateway commands. The SIM7600 LTE path described in Chapter 4 carries both connections. A connected modem alone does not prove MQTT delivery."
+  },
+  {
+    "index": 258,
+    "text": "Local Mosquitto buffers traffic when cloud delivery is unavailable. It does not replace an immutable security log or LoRaWAN authentication. Its persistence file is /etc/mosquitto/data/mosquitto.db. Later chapters cover the gateway integrity journal and cloud evidence verifier. Do not erase the queue or journal during troubleshooting."
+  },
+  {
+    "index": 265,
+    "text": "Open Windows PowerShell. Run ssh root@192.168.20.11. Enter your approved gateway credential at the prompt. Check that the resulting shell belongs to Gateway-01. Run this chapter's shell commands inside Gateway-01's OpenWrt shell. Do not paste them into Windows PowerShell."
+  },
+  {
+    "index": 274,
+    "text": "Expected: The gateway reports its intended name and plausible UTC. The Mosquitto package and process are present. If Mosquitto is absent, follow the approved provisioning or recovery procedure. Do not apply arbitrary Internet configuration to the working system."
+  },
+  {
+    "index": 279,
+    "text": "Compare the installed values with these approved settings: max_queued_messages 100000; max_queued_bytes 104857600; queue_qos0_messages false; autosave_interval 60. These are configuration limits, not a promise of a fixed 100 MB on-disk file. They do not promise a maximum of 60 seconds of data loss."
+  },
+  {
+    "index": 289,
+    "text": "Expected: Mosquitto uses the approved static configuration. The persistent queue directory exists on writable storage. The disk is not full. mosquitto.db may appear only after the first autosave. allow_anonymous true is acceptable only with a loopback-only listener. Do not expose anonymous MQTT on a LAN or public interface."
+  },
+  {
+    "index": 305,
+    "text": "The uplink bridge exports as923/gateway/<GATEWAY_EUI>/event/# and state/# with QoS 1. The downlink bridge imports as923/gateway/<GATEWAY_EUI>/command/# with QoS 0. The angle-bracket EUI is a placeholder. Use the actual deployed EUI when you interpret this example. Do not paste a placeholder into the working configuration."
+  },
+  {
+    "index": 314,
+    "text": "Expected: The bridge file contains two distinct client IDs. It names the approved CA, client certificate, and private-key file paths. It configures outgoing and incoming topics without recurring TLS or ACL errors. Only the Mosquitto service account should access the private key. Never publish its contents in screenshots, transcripts, or appendices."
+  },
+  {
+    "index": 331,
+    "text": "Expected: The cellular interface is active. The cloud route uses LTE. Two broker sockets are established without recurring authentication errors. If local MQTT works but cloud MQTT fails, check LTE first. Then check DNS, gateway UTC, TLS hostname, and broker ACL. Do not change radio settings before these checks."
+  },
+  {
+    "index": 334,
+    "text": "Run the next subscription in a separate Gateway-01 shell. Keep it visible. Option -C 1 stops after the first matching event. Replace the example EUI with the actual Concentratord and ChirpStack gateway EUI. This local check proves the topic path. Binary payload text alone does not prove decoded application delivery."
+  },
+  {
+    "index": 336,
+    "text": "In ChirpStack device Events or the Grafana sensor-ingest view, find a new event for the same device and time. Capture those actual pages during the authorized test. Historical Screens 5A/5B cannot prove delivery during another run."
+  },
+  {
+    "index": 341,
+    "text": "A local gateway topic proves radio, Concentratord, forwarder, and local broker delivery. A matching new ChirpStack event adds cloud processing evidence. Gateway MQTT can contain binary Protobuf, so unreadable payload text alone is normal. Do not mark the full path PASS after synthetic MQTT-only publication."
+  },
+  {
+    "index": 345,
+    "text": "During a planned LTE outage, check that the local MQTT listener still works. Check that QoS-1 events can enter the queue. File size alone does not count delivered or lost events. Mosquitto may update the file only during autosave."
+  },
+  {
+    "index": 346,
+    "text": "Restore LTE. Wait for the two bridges to reconnect. Compare cloud device events and frame counters with the test recorder. Do not assume exactly-once delivery. QoS 1 can resend messages. Downstream processing must handle duplicate events."
+  },
+  {
+    "index": 360,
+    "text": "Expected after recovery: LTE works and both cloud bridges reconnect. Reconcile recorded cloud events against the generated sensor uplinks. A successful bridge reconnect without this end-to-end comparison is not a complete recovery result."
+  }
+]

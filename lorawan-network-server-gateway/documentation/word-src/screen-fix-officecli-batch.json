@@ -1,0 +1,108 @@
+[
+  {
+    "command": "set",
+    "path": "/body/p[@paraId=001004CB]/r[2]",
+    "props": {
+      "src": "lorawan-network-server-gateway/documentation/assets/chirpstack-login-zoomed-20260922.png",
+      "width": "14.6cm",
+      "height": "9.28cm",
+      "alt": "Actual ChirpStack sign-in form with empty credential fields"
+    }
+  },
+  {
+    "command": "set",
+    "path": "/body/p[@paraId=001004CD]",
+    "props": {
+      "text": "Screen 6A. ChirpStack sign-in. Check the site address and enter your approved account."
+    }
+  },
+  {
+    "command": "set",
+    "path": "/body/p[@paraId=001004D1]/r[2]",
+    "props": {
+      "src": "lorawan-network-server-gateway/documentation/assets/chirpstack-operator-20260922.png",
+      "width": "14.4cm",
+      "height": "9.0cm",
+      "alt": "Actual fully loaded ChirpStack tenant dashboard, dedicated browser window with no unrelated tabs"
+    }
+  },
+  {
+    "command": "set",
+    "path": "/body/p[@paraId=001004D3]",
+    "props": {
+      "text": "Screen 6B. ChirpStack tenant dashboard after login. Check the tenant and left navigation."
+    }
+  },
+  {
+    "command": "set",
+    "path": "/body/p[@paraId=00100571]/r[2]",
+    "props": {
+      "width": "14.7cm",
+      "height": "8.56cm"
+    }
+  },
+  {
+    "command": "set",
+    "path": "/body/p[@paraId=0010056D]/r[2]",
+    "props": {
+      "width": "14.7cm",
+      "height": "8.56cm"
+    }
+  },
+  {
+    "command": "set",
+    "path": "/body/p[@paraId=00100569]/r[2]",
+    "props": {
+      "width": "14.7cm",
+      "height": "8.56cm"
+    }
+  },
+  {
+    "command": "set",
+    "path": "/body/p[@paraId=00100565]/r[2]",
+    "props": {
+      "width": "14.7cm",
+      "height": "8.56cm"
+    }
+  },
+  {
+    "command": "set",
+    "path": "/body/p[@paraId=00100561]/r[2]",
+    "props": {
+      "width": "14.7cm",
+      "height": "8.56cm"
+    }
+  },
+  {
+    "command": "set",
+    "path": "/body/p[@paraId=0010055D]/r[2]",
+    "props": {
+      "width": "14.7cm",
+      "height": "8.56cm"
+    }
+  },
+  {
+    "command": "set",
+    "path": "/body/p[@paraId=00100559]/r[2]",
+    "props": {
+      "width": "14.7cm",
+      "height": "8.56cm"
+    }
+  },
+  {
+    "command": "set",
+    "path": "/body/p[@paraId=00100555]/r[2]",
+    "props": {
+      "width": "14.7cm",
+      "height": "8.56cm"
+    }
+  },
+  {
+    "command": "set",
+    "path": "/body/p[@paraId=00100551]/r[2]",
+    "props": {
+      "width": "14.7cm",
+      "height": "8.56cm"
+    }
+  }
+]

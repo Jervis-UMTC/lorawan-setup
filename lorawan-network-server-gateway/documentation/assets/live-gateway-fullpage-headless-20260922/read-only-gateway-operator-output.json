@@ -1,0 +1,30 @@
+{
+  "capture_utc": "2026-09-22T05:50:54.388471+00:00",
+  "host": "192.168.20.11",
+  "checks": {
+    "radio": {
+      "command": "hostname; date -u; uci show chirpstack-concentratord | grep -E 'enabled|model|region|channel_plan' | head -n 16; uci -q get chirpstack-mqtt-forwarder.@mqtt[0].qos",
+      "stdout": "Tue Sep 22 05:49:29 UTC 2026\nchirpstack-concentratord.@global[0].enabled='1'\nchirpstack-concentratord.@sx1301[0].model='imst_ic880a'\nchirpstack-concentratord.@sx1301[0].region='EU868'\nchirpstack-concentratord.@sx1301[0].channel_plan='eu868'\nchirpstack-concentratord.@sx1302[0].model='rak_5146'\nchirpstack-concentratord.@sx1302[0].region='AS923'\nchirpstack-concentratord.@sx1302[0].channel_plan='as923'\nchirpstack-concentratord.@2g4[0].model='semtech_sx1280z3dsfgw1'\nchirpstack-concentratord.@2g4[0].region='ISM2400'\nchirpstack-concentratord.@2g4[0].channel_plan='ism2400'\n1\n",
+      "stderr": "ash: hostname: not found\n",
+      "exit_code": 0
+    },
+    "lte": {
+      "command": "hostname; date -u; echo '-- UCI PDP --'; uci -q get network.lte.pdptype; echo '-- LTE interface --'; ubus call network.interface.lte status | grep -E 'up|device|address' | head -n 8; echo '-- Default route --'; ip route show default; echo '-- Cloud sessions --'; (ss -tn 2>/dev/null || netstat -tn 2>/dev/null) | grep ':8883' | head -n 5",
+      "stdout": "Tue Sep 22 05:49:29 UTC 2026\n-- UCI PDP --\nIP\n-- LTE interface --\n\t\"up\": true,\n\t\"uptime\": 12,\n\t\"l3_device\": \"wwan0\",\n\t\"updated\": [\n\t\t\"addresses\"\n\t\"ipv4-address\": [\n\t\t\t\"address\": \"100.67.22.113\",\n\t\"ipv6-address\": [\n-- Default route --\n-- Cloud sessions --\ntcp        0    720 100.67.22.113:35026     129.212.208.168:8883    ESTABLISHED \ntcp        0      0 100.67.22.113:37691     129.212.208.168:8883    TIME_WAIT   \ntcp        0      0 100.67.22.113:43246     129.212.208.168:8883    ESTABLISHED \n",
+      "stderr": "ash: hostname: not found\n",
+      "exit_code": 0
+    },
+    "mosquitto": {
+      "command": "hostname; date -u; echo '-- Active process --'; ps w | grep '[m]osquitto' | head -n 3; echo '-- Local broker --'; grep -E '^(persistence |persistence_location |autosave_interval |max_queued_messages |max_queued_bytes |queue_qos0_messages |listener |allow_anonymous |include_dir )' /etc/mosquitto/mosquitto.conf; echo '-- Listener --'; (ss -lnt 2>/dev/null || netstat -lnt 2>/dev/null) | grep ':1883' | head -n 3; echo '-- Persistent database --'; ls -lh /etc/mosquitto/data/mosquitto.db 2>/dev/null || true; df -h /etc/mosquitto/data | tail -n 1",
+      "stdout": "Tue Sep 22 05:49:29 UTC 2026\n-- Active process --\n 1521 mosquitt  4684 S    mosquitto -c /etc/mosquitto/mosquitto.conf\n-- Local broker --\npersistence true\npersistence_location /etc/mosquitto/data/\nautosave_interval 60\nmax_queued_messages 100000\nmax_queued_bytes 104857600\nqueue_qos0_messages false\nlistener 1883 127.0.0.1\nallow_anonymous true\ninclude_dir /etc/mosquitto/conf.d\n-- Listener --\ntcp        0      0 127.0.0.1:1883          0.0.0.0:*               LISTEN      \n-- Persistent database --\n-rw-------    1 mosquitt mosquitt     536 Sep 22 05:48 /etc/mosquitto/data/mosquitto.db\noverlayfs:/overlay        4.0G    143.4M      3.8G   4% /\n",
+      "stderr": "ash: hostname: not found\n",
+      "exit_code": 0
+    },
+    "bridges": {
+      "command": "hostname; date -u; echo '-- Bridge identities/destination/topics only --'; grep -E '^(connection |address |remote_clientid |bridge_insecure |topic )' /etc/mosquitto/conf.d/bridge.conf; echo '-- Cloud MQTT sockets --'; (ss -tn 2>/dev/null || netstat -tn 2>/dev/null) | grep ':8883' | head -n 6; echo '-- LTE default route --'; ip route show default",
+      "stdout": "Tue Sep 22 05:49:29 UTC 2026\n-- Bridge identities/destination/topics only --\nconnection cloud-uplink\naddress smartagri-mqtt.duckdns.org:8883\nremote_clientid gw-up-0016c001f139a1cb\nbridge_insecure false\ntopic as923/gateway/0016c001f139a1cb/event/# out 1\ntopic as923/gateway/0016c001f139a1cb/state/# out 1\nconnection cloud-downlink\naddress smartagri-mqtt.duckdns.org:8883\nremote_clientid gw-down-0016c001f139a1cb\nbridge_insecure false\ntopic as923/gateway/0016c001f139a1cb/command/# in 0\n-- Cloud MQTT sockets --\ntcp        0    720 100.67.22.113:35026     129.212.208.168:8883    ESTABLISHED \ntcp        0      0 100.67.22.113:37691     129.212.208.168:8883    TIME_WAIT   \ntcp        0      0 100.67.22.113:43246     129.212.208.168:8883    ESTABLISHED \n-- LTE default route --\n",
+      "stderr": "ash: hostname: not found\n",
+      "exit_code": 0
+    }
+  }
+}

@@ -1,0 +1,54 @@
+[
+  {
+    "index": 78,
+    "text": "SCREEN 2B — STOP/CHECK EXAMPLE (official Raspberry Pi Imager Writing tab). This reference shows Raspberry Pi 5, stock Raspberry Pi OS, and Apple SDXC. All three are WRONG for this project. Your screen must show Raspberry Pi 4 and the approved Gateway OS .img.gz. It must show your identified microSD card. If any value differs, click Back. Source: Raspberry Pi official documentation."
+  },
+  {
+    "index": 116,
+    "text": "Equipment: Raspberry Pi 4B and matching RAK Pi HAT. RAK5146-115 SPI module and 900–930 MHz antenna. Supplied standoffs, pigtail, and stable Raspberry Pi power supply."
+  },
+  {
+    "index": 140,
+    "text": "The worksheet records the commissioning baseline. The adjacent Gateway-01 LuCI screenshots show actual read-only settings on the connected hardware. The worksheet does not replace a check of the displayed live configuration."
+  },
+  {
+    "index": 148,
+    "text": "PASS: SX1302 is enabled with rak_5146 and AS923/as923. The radio daemon runs. The statistics call succeeds. No SPI, reset, or calibration failure repeats. The active startup Gateway ID is 0016c001f139a1cb. If the statistics object is absent, discover the actual installed service name before you reinstall Gateway OS:"
+  },
+  {
+    "index": 157,
+    "text": "PASS: No competing UDP packet forwarder runs. MQTT Forwarder is enabled with prefix as923 and server tcp://127.0.0.1:1883. The approved runtime uses QoS 1. Mosquitto listens only on loopback 127.0.0.1:1883. Do not connect Forwarder directly to the public broker. That would bypass the local buffer."
+  },
+  {
+    "index": 250,
+    "text": "The LTE controller checks approximately every 30 seconds. It permits a short startup grace period. It reconnects in stages only when the cellular IP dataplane fails. A distant MQTT server outage alone must not trigger modem recovery."
+  },
+  {
+    "index": 318,
+    "text": "Run the next command block. Read the approved broker hostname from Section 5.5. Compare that hostname with current DNS. Do not rely on the historical broker IP."
+  },
+  {
+    "index": 343,
+    "text": "Run a planned LTE outage only inside the approved research test window. Check that the recorder is ready first. Do not disconnect cables during an ordinary setup check."
+  },
+  {
+    "index": 362,
+    "text": "In Gateway-01 LuCI, open System → Backup / Flash Firmware. Select Generate archive. Save the archive outside the gateway in the project's protected backup location."
+  },
+  {
+    "index": 375,
+    "text": "Connect the research workstation to the Internet. Open the exact HTTPS address above. Do not enter a bare ULC private address from an off-site browser."
+  },
+  {
+    "index": 397,
+    "text": "In the intended tenant, open Device Profiles. If EMU-01 RAK4631 AS923 exists, open that profile. Compare its live values with the firmware. Do not create another profile with a similar name."
+  },
+  {
+    "index": 488,
+    "text": "Gateway exists but no new events appear: Check the local gateway MQTT topic. Check both TLS bridges and LTE routing. Check cloud broker ACL and the as923 shared subscription. Then check the radio and forwarder."
+  },
+  {
+    "index": 490,
+    "text": "A fresh device event appears but no chart row appears: Check the one active Node-RED writer. Check telemetry PostgreSQL. Do not change gateway radio settings to repair this downstream failure."
+  }
+]

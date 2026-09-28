@@ -1,0 +1,43 @@
+{
+  "calibrated_end_utc": "2026-09-21T07:18:17.082483+00:00",
+  "calibrated_start_utc": "2026-09-21T07:18:10.414483+00:00",
+  "captured_fcnt": 212,
+  "clock_offset_server_minus_workstation_seconds": -86.403517,
+  "clock_proof": "live research-recorder preflight CLOCK_GATE=PASS at 2026-09-21T07:22:46.227Z",
+  "condition": "EXACT_OLD_PHY_PAYLOAD_REPLAY",
+  "counted_research": false,
+  "errors": [],
+  "fcnt_age_at_capture": 7,
+  "formal": false,
+  "original": {
+    "event_key": "2f3d728d-1897-4eed-a3cb-af8f144161f9",
+    "f_cnt": "212",
+    "fabric_tx_id": "ba620cc66b27f3d549f687449523893b595eaaed908cbd490d2e15d6ef2ea4f7",
+    "outbox_status": "confirmed",
+    "test_sequence": "213",
+    "uplink_id": "2124492793"
+  },
+  "phy_payload_sha256": "ee93f1299e77f9371c65c8a2d15f3ffd0e93b538727362dc5377f7d236dc7ad0",
+  "replay": {
+    "broker_received_at": "2026-09-21 07:18:13.929405+00",
+    "database_received_at": "",
+    "event_key": "",
+    "fabric_tx_id": "",
+    "gateway_event_id": "20803",
+    "journal_matches_in_tx_window": [
+      {
+        "captured_at": "2026-09-21T07:18:13.561Z",
+        "record_hash": "9bdef73336a3c4d432e65fe1f6480e97e0fbf744aa803925185e113f52e5cc32",
+        "sequence": 4280
+      }
+    ],
+    "outbox_status": "",
+    "rak5146_frame_received": "Mon Sep 21 07:18:13 2026 user.info chirpstack-concentratord-sx1302[2351]: Frame received, uplink_id: 1391523988, count_us: 2613874250, freq: 923400000, bw: 125000, mod: LoRa, dr: SF7, ftime_received: false, ftime_ns: 0",
+    "uplink_id": "1391523988"
+  },
+  "sec_restored_state": "VERIFIED",
+  "sec_txp2p_done": true,
+  "source_fixture_sha256": "1ca5d8b2fb67b6d40133a4af743ff2e65950f785fe290ed45f04e9e4c7336ff0",
+  "status": "PASS",
+  "test": "S1"
+}

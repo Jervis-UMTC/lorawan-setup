@@ -1,0 +1,19 @@
+﻿Description:
+  Move an element to a new position or parent
+
+Usage:
+  officecli move <file> <path> [options]
+
+Arguments:
+  <file>  Office document path (required even with open/close mode)
+  <path>  DOM path of the element to move
+
+Options:
+  --to <to>          Target parent path. If omitted, reorders within the current parent
+  --index <index>    Insert position (0-based) among the remaining siblings after the element is detached ΓÇö moving p[1] to --index 2 in [P1,P2,P3,P4] gives [P2,P3,P1,P4]. If omitted, appends to end
+  --after <after>    Move after the element at this path
+  --before <before>  Move before the element at this path
+  --prop <prop>      Property to set on the move (e.g. --prop trackChange.author=Alice for tracked moves)
+  --json             Output as JSON (AI-friendly)
+  -?, -h, --help     Show help and usage information
+

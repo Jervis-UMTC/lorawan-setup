@@ -1,0 +1,4 @@
+COMMAND: py -3 test/automation/research-manual/run_test.py S2 --synthetic
+EXIT CODE: 2
+
+TEST_ID=S2 SYNTHETIC=UNAVAILABLE LIVE_TEST=NOT_STARTED (no complete offline suite for this experiment)

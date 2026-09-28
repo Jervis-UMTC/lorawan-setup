@@ -1,0 +1,116 @@
+[
+  {
+    "action": "close",
+    "exit": 0,
+    "output": "LoRaWAN-Operator-Manual-Ch1-QA.docx is already saved to disk; nothing to close.\r\n",
+    "stderr": ""
+  },
+  {
+    "action": "create",
+    "exit": 0,
+    "output": "Created: lorawan-network-server-gateway/documentation/LoRaWAN-Operator-Manual-Ch1-QA.docx (kept open in background for faster subsequent commands)\r\n",
+    "stderr": ""
+  },
+  {
+    "action": "set",
+    "exit": 0,
+    "output": "Updated /section[1]: pageWidth=21cm, pageHeight=29.7cm, marginTop=1.95cm, marginBottom=1.8cm, marginLeft=2.35cm, marginRight=2.35cm, titlePage=true\r\n",
+    "stderr": ""
+  },
+  {
+    "action": "add",
+    "exit": 0,
+    "output": "Added style at /styles/Heading1\r\n",
+    "stderr": ""
+  },
+  {
+    "action": "add",
+    "exit": 0,
+    "output": "Added style at /styles/Heading2\r\n",
+    "stderr": ""
+  },
+  {
+    "action": "add",
+    "exit": 0,
+    "output": "Added markdown at /body/p[@paraId=00100000]\r\n",
+    "stderr": ""
+  },
+  {
+    "action": "add",
+    "exit": 0,
+    "output": "Added markdown at /body/p[@paraId=0010000C]\r\n",
+    "stderr": ""
+  },
+  {
+    "action": "add",
+    "exit": 0,
+    "output": "Added paragraph at /body/p[@paraId=00100016]\r\n",
+    "stderr": ""
+  },
+  {
+    "action": "add",
+    "exit": 0,
+    "output": "Added picture at /body/p[@paraId=00100016]/r[2]\r\n",
+    "stderr": ""
+  },
+  {
+    "action": "add",
+    "exit": 0,
+    "output": "Added paragraph at /body/p[@paraId=00100018]\r\n",
+    "stderr": ""
+  },
+  {
+    "action": "add",
+    "exit": 0,
+    "output": "Added markdown at /body/p[@paraId=0010001A]\r\n",
+    "stderr": ""
+  },
+  {
+    "action": "add",
+    "exit": 0,
+    "output": "Added footer at /footer[1]\r\n",
+    "stderr": ""
+  },
+  {
+    "action": "set",
+    "exit": 0,
+    "output": "Updated /body/p[1]: align=center, size=26pt, bold=true, color=#12636A, spaceBefore=115pt, spaceAfter=25pt\r\n",
+    "stderr": ""
+  },
+  {
+    "action": "set",
+    "exit": 0,
+    "output": "Updated /body/p[2]: align=center, size=14pt, color=#334155, spaceAfter=25pt\r\n",
+    "stderr": ""
+  },
+  {
+    "action": "batch",
+    "exit": 0,
+    "output": "[1] Updated /body/p[1]: style=Normal\r\n[2] Updated /body/p[2]: style=Normal\r\n[3] Updated /body/tbl[1]/tr[1]: cantSplit=true, header=true\r\n[4] Updated /body/tbl[1]/tr[2]: cantSplit=true\r\n[5] Updated /body/tbl[1]/tr[3]: cantSplit=true\r\n[6] Updated /body/tbl[1]/tr[4]: cantSplit=true\r\n[7] Updated /body/tbl[1]/tr[5]: cantSplit=true\r\n[8] Updated /body/tbl[1]/tr[6]: cantSplit=true\r\n[9] Updated /body/tbl[1]/tr[7]: cantSplit=true\r\n[10] Updated /body/tbl[1]/tr[8]: cantSplit=true\r\n[11] Updated /body/tbl[1]/tr[9]: cantSplit=true\r\n[12] Updated /body/tbl[1]/tr[10]: cantSplit=true\r\n[13] Updated /body/tbl[1]/tr[11]: cantSplit=true\r\n[14] Updated /body/tbl[1]/tr[12]: cantSplit=true\r\n[15] Updated /body/tbl[1]/tr[13]: cantSplit=true\r\n[16] Updated /body/tbl[1]/tr[14]: cantSplit=true\r\n[17] Updated /body/tbl[1]/tr[15]: cantSplit=true\r\n[18] Updated /body/tbl[1]/tr[16]: cantSplit=true\r\n[19] Updated /body/tbl[1]/tr[17]: cantSplit=true\r\n[20] Updated /body/tbl[2]/tr[1]: cantSplit=true, header=true\r\n[21] Updated /body/tbl[2]/tr[2]: cantSplit=true\r\n[22] Updated /body/tbl[2]/tr[3]: cantSplit=true\r\n[23] Updated /bod",
+    "stderr": ""
+  },
+  {
+    "action": "set",
+    "exit": 0,
+    "output": "Updated /body/p[7]: pageBreakBefore=true\r\n",
+    "stderr": ""
+  },
+  {
+    "action": "save",
+    "exit": 0,
+    "output": "Saved LoRaWAN-Operator-Manual-Ch1-QA.docx\r\n",
+    "stderr": ""
+  },
+  {
+    "action": "close",
+    "exit": 0,
+    "output": "Resident closed for LoRaWAN-Operator-Manual-Ch1-QA.docx\r\n",
+    "stderr": ""
+  },
+  {
+    "action": "validate",
+    "exit": 0,
+    "output": "Validation passed: no errors found.\r\n",
+    "stderr": ""
+  }
+]

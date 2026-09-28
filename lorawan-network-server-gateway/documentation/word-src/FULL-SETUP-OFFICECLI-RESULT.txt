@@ -1,0 +1,54 @@
+[1] Moved to /body/p[380]
+[2] Moved to /body/p[381]
+[3] Moved to /body/p[382]
+[4] Moved to /body/p[383]
+[5] Moved to /body/p[384]
+[6] Moved to /body/p[385]
+[7] Moved to /body/p[386]
+[8] Moved to /body/p[387]
+[9] Moved to /body/p[388]
+[10] Moved to /body/p[389]
+[11] Moved to /body/p[390]
+[12] Moved to /body/p[391]
+[13] Moved to /body/p[392]
+[14] Moved to /body/p[393]
+[15] Moved to /body/p[394]
+[16] Moved to /body/p[395]
+[17] Moved to /body/p[396]
+[18] Moved to /body/p[397]
+[19] Moved to /body/p[398]
+[20] Moved to /body/p[399]
+[21] Moved to /body/p[400]
+[22] Moved to /body/p[401]
+[23] Moved to /body/p[402]
+[24] Moved to /body/p[403]
+[25] Moved to /body/p[404]
+[26] Moved to /body/p[405]
+[27] Moved to /body/p[406]
+[28] Moved to /body/p[407]
+[29] Moved to /body/p[408]
+[30] Moved to /body/p[409]
+[31] Moved to /body/p[410]
+[32] Moved to /body/p[411]
+[33] Moved to /body/p[412]
+[34] Moved to /body/p[413]
+[35] Updated /body/p[@paraId=001005B9]: text= 
+[36] Added picture at /body/p[@paraId=001005B9]/r[2]
+[37] Updated /body/p[@paraId=001005BB]: text=Screen 6.1A-1. Full Add gateway form ΓÇö name, real EUI, status interval, downlink priority, location and Submit.
+[38] Updated /body/p[@paraId=001005C7]: text= 
+[39] Added picture at /body/p[@paraId=001005C7]/r[2]
+[40] Updated /body/p[@paraId=001005C9]: text=Screen 6.1A-2. Entire blank device-profile form ΓÇö check every required field before creating a new profile.
+[41] Updated /body/p[@paraId=001005CB]: text= 
+[42] Added picture at /body/p[@paraId=001005CB]/r[2]
+[43] Updated /body/p[@paraId=001005CD]: text=Screen 6.1A-3. Existing commissioned EMU-01 AS923 profile ΓÇö reference values to compare with firmware.
+[44] Updated /body/p[@paraId=001005D7]: text= 
+[45] Added picture at /body/p[@paraId=001005D7]/r[2]
+[46] Updated /body/p[@paraId=001005D9]: text=Screen 6.1A-4. Entire Add application form ΓÇö verify name and description before Submit.
+[47] Updated /body/p[@paraId=001005E7]: text= 
+[48] Added picture at /body/p[@paraId=001005E7]/r[2]
+[49] Updated /body/p[@paraId=001005E9]: text=Screen 6.1A-5. Entire Add device form ΓÇö verify both EUIs, profile and frame-counter switch; never submit a duplicate to stage a screenshot.
+[50] Updated /body/p[@paraId=00100598]/r[2]: src=lorawan-network-server-gateway/documentation/assets/live-chirpstack-20260922/08-applications-fullpage.png, width=15.1cm, height=4.30cm, alt=Full real ChirpStack enrollment form
+[51] Updated /body/p[@paraId=0010059A]: text=Screen 6G. Applications list — select dissertation-sensors.
+
+Batch complete: 51 succeeded, 0 failed, 51 total
+

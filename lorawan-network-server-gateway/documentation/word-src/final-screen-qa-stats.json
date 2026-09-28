@@ -1,0 +1,33 @@
+﻿{
+  "success": true,
+  "data": {
+    "paragraphs": 435,
+    "words": 7561,
+    "totalCharacters": 51231,
+    "emptyParagraphs": 0,
+    "consecutiveSpaces": 5,
+    "oleObjects": 0,
+    "styleDistribution": {
+      "Normal": 384,
+      "Heading 2": 45,
+      "Heading 1": 6
+    },
+    "fontUsage": {
+      "Calibri": 742,
+      "Consolas": 212,
+      "Courier New": 1
+    },
+    "fontSizeUsage": {
+      "11pt": 765,
+      "9pt": 104,
+      "16pt": 45,
+      "8.5pt": 26,
+      "18pt": 6,
+      "9.5pt": 5,
+      "8pt": 2,
+      "26pt": 1,
+      "14pt": 1
+    },
+    "pages": 33
+  }
+}

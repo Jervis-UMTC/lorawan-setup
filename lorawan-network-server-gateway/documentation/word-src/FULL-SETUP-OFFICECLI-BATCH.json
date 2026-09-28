@@ -1,0 +1,314 @@
+[
+  {
+    "command": "move",
+    "path": "/body/p[@paraId=001005A9]",
+    "before": "/body/p[@paraId=001004DF]"
+  },
+  {
+    "command": "move",
+    "path": "/body/p[@paraId=001005AB]",
+    "before": "/body/p[@paraId=001004DF]"
+  },
+  {
+    "command": "move",
+    "path": "/body/p[@paraId=001005AD]",
+    "before": "/body/p[@paraId=001004DF]"
+  },
+  {
+    "command": "move",
+    "path": "/body/p[@paraId=001005AF]",
+    "before": "/body/p[@paraId=001004DF]"
+  },
+  {
+    "command": "move",
+    "path": "/body/p[@paraId=001005B1]",
+    "before": "/body/p[@paraId=001004DF]"
+  },
+  {
+    "command": "move",
+    "path": "/body/p[@paraId=001005B3]",
+    "before": "/body/p[@paraId=001004DF]"
+  },
+  {
+    "command": "move",
+    "path": "/body/p[@paraId=001005B5]",
+    "before": "/body/p[@paraId=001004DF]"
+  },
+  {
+    "command": "move",
+    "path": "/body/p[@paraId=001005B7]",
+    "before": "/body/p[@paraId=001004DF]"
+  },
+  {
+    "command": "move",
+    "path": "/body/p[@paraId=001005B9]",
+    "before": "/body/p[@paraId=001004DF]"
+  },
+  {
+    "command": "move",
+    "path": "/body/p[@paraId=001005BB]",
+    "before": "/body/p[@paraId=001004DF]"
+  },
+  {
+    "command": "move",
+    "path": "/body/p[@paraId=001005BD]",
+    "before": "/body/p[@paraId=001004DF]"
+  },
+  {
+    "command": "move",
+    "path": "/body/p[@paraId=001005BF]",
+    "before": "/body/p[@paraId=001004DF]"
+  },
+  {
+    "command": "move",
+    "path": "/body/p[@paraId=001005C1]",
+    "before": "/body/p[@paraId=001004DF]"
+  },
+  {
+    "command": "move",
+    "path": "/body/p[@paraId=001005C3]",
+    "before": "/body/p[@paraId=001004DF]"
+  },
+  {
+    "command": "move",
+    "path": "/body/p[@paraId=001005C5]",
+    "before": "/body/p[@paraId=001004DF]"
+  },
+  {
+    "command": "move",
+    "path": "/body/p[@paraId=001005C7]",
+    "before": "/body/p[@paraId=001004DF]"
+  },
+  {
+    "command": "move",
+    "path": "/body/p[@paraId=001005C9]",
+    "before": "/body/p[@paraId=001004DF]"
+  },
+  {
+    "command": "move",
+    "path": "/body/p[@paraId=001005CB]",
+    "before": "/body/p[@paraId=001004DF]"
+  },
+  {
+    "command": "move",
+    "path": "/body/p[@paraId=001005CD]",
+    "before": "/body/p[@paraId=001004DF]"
+  },
+  {
+    "command": "move",
+    "path": "/body/p[@paraId=001005CF]",
+    "before": "/body/p[@paraId=001004DF]"
+  },
+  {
+    "command": "move",
+    "path": "/body/p[@paraId=001005D1]",
+    "before": "/body/p[@paraId=001004DF]"
+  },
+  {
+    "command": "move",
+    "path": "/body/p[@paraId=001005D3]",
+    "before": "/body/p[@paraId=001004DF]"
+  },
+  {
+    "command": "move",
+    "path": "/body/p[@paraId=001005D5]",
+    "before": "/body/p[@paraId=001004DF]"
+  },
+  {
+    "command": "move",
+    "path": "/body/p[@paraId=001005D7]",
+    "before": "/body/p[@paraId=001004DF]"
+  },
+  {
+    "command": "move",
+    "path": "/body/p[@paraId=001005D9]",
+    "before": "/body/p[@paraId=001004DF]"
+  },
+  {
+    "command": "move",
+    "path": "/body/p[@paraId=001005DB]",
+    "before": "/body/p[@paraId=001004DF]"
+  },
+  {
+    "command": "move",
+    "path": "/body/p[@paraId=001005DD]",
+    "before": "/body/p[@paraId=001004DF]"
+  },
+  {
+    "command": "move",
+    "path": "/body/p[@paraId=001005DF]",
+    "before": "/body/p[@paraId=001004DF]"
+  },
+  {
+    "command": "move",
+    "path": "/body/p[@paraId=001005E1]",
+    "before": "/body/p[@paraId=001004DF]"
+  },
+  {
+    "command": "move",
+    "path": "/body/p[@paraId=001005E3]",
+    "before": "/body/p[@paraId=001004DF]"
+  },
+  {
+    "command": "move",
+    "path": "/body/p[@paraId=001005E5]",
+    "before": "/body/p[@paraId=001004DF]"
+  },
+  {
+    "command": "move",
+    "path": "/body/p[@paraId=001005E7]",
+    "before": "/body/p[@paraId=001004DF]"
+  },
+  {
+    "command": "move",
+    "path": "/body/p[@paraId=001005E9]",
+    "before": "/body/p[@paraId=001004DF]"
+  },
+  {
+    "command": "move",
+    "path": "/body/p[@paraId=001005EB]",
+    "before": "/body/p[@paraId=001004DF]"
+  },
+  {
+    "command": "set",
+    "path": "/body/p[@paraId=001005B9]",
+    "props": {
+      "text": " "
+    }
+  },
+  {
+    "command": "add",
+    "parent": "/body/p[@paraId=001005B9]",
+    "type": "picture",
+    "props": {
+      "src": "lorawan-network-server-gateway/documentation/assets/live-chirpstack-20260922/13-add-gateway-fullpage.png",
+      "width": "15.1cm",
+      "height": "13.58cm",
+      "alt": "Full real ChirpStack enrollment form"
+    }
+  },
+  {
+    "command": "set",
+    "path": "/body/p[@paraId=001005BB]",
+    "props": {
+      "text": "Screen 6.1A-1. Full Add gateway form ΓÇö name, real EUI, status interval, downlink priority, location and Submit."
+    }
+  },
+  {
+    "command": "set",
+    "path": "/body/p[@paraId=001005C7]",
+    "props": {
+      "text": " "
+    }
+  },
+  {
+    "command": "add",
+    "parent": "/body/p[@paraId=001005C7]",
+    "type": "picture",
+    "props": {
+      "src": "lorawan-network-server-gateway/documentation/assets/live-chirpstack-20260922/14-add-device-profile-fullpage.png",
+      "width": "15.1cm",
+      "height": "12.79cm",
+      "alt": "Full real ChirpStack enrollment form"
+    }
+  },
+  {
+    "command": "set",
+    "path": "/body/p[@paraId=001005C9]",
+    "props": {
+      "text": "Screen 6.1A-2. Entire blank device-profile form ΓÇö check every required field before creating a new profile."
+    }
+  },
+  {
+    "command": "set",
+    "path": "/body/p[@paraId=001005CB]",
+    "props": {
+      "text": " "
+    }
+  },
+  {
+    "command": "add",
+    "parent": "/body/p[@paraId=001005CB]",
+    "type": "picture",
+    "props": {
+      "src": "lorawan-network-server-gateway/documentation/assets/live-chirpstack-20260922/15-existing-emu-profile-fullpage.png",
+      "width": "15.1cm",
+      "height": "12.83cm",
+      "alt": "Full real ChirpStack enrollment form"
+    }
+  },
+  {
+    "command": "set",
+    "path": "/body/p[@paraId=001005CD]",
+    "props": {
+      "text": "Screen 6.1A-3. Existing commissioned EMU-01 AS923 profile ΓÇö reference values to compare with firmware."
+    }
+  },
+  {
+    "command": "set",
+    "path": "/body/p[@paraId=001005D7]",
+    "props": {
+      "text": " "
+    }
+  },
+  {
+    "command": "add",
+    "parent": "/body/p[@paraId=001005D7]",
+    "type": "picture",
+    "props": {
+      "src": "lorawan-network-server-gateway/documentation/assets/live-chirpstack-20260922/16-add-application-fullpage.png",
+      "width": "15.1cm",
+      "height": "6.27cm",
+      "alt": "Full real ChirpStack enrollment form"
+    }
+  },
+  {
+    "command": "set",
+    "path": "/body/p[@paraId=001005D9]",
+    "props": {
+      "text": "Screen 6.1A-4. Entire Add application form ΓÇö verify name and description before Submit."
+    }
+  },
+  {
+    "command": "set",
+    "path": "/body/p[@paraId=001005E7]",
+    "props": {
+      "text": " "
+    }
+  },
+  {
+    "command": "add",
+    "parent": "/body/p[@paraId=001005E7]",
+    "type": "picture",
+    "props": {
+      "src": "lorawan-network-server-gateway/documentation/assets/live-chirpstack-20260922/12-add-device-fullpage.png",
+      "width": "15.1cm",
+      "height": "10.12cm",
+      "alt": "Full real ChirpStack enrollment form"
+    }
+  },
+  {
+    "command": "set",
+    "path": "/body/p[@paraId=001005E9]",
+    "props": {
+      "text": "Screen 6.1A-5. Entire Add device form ΓÇö verify both EUIs, profile and frame-counter switch; never submit a duplicate to stage a screenshot."
+    }
+  },
+  {
+    "command": "set",
+    "path": "/body/p[@paraId=00100598]/r[2]",
+    "props": {
+      "src": "lorawan-network-server-gateway/documentation/assets/live-chirpstack-20260922/08-applications-fullpage.png",
+      "width": "15.1cm",
+      "height": "4.30cm",
+      "alt": "Full real ChirpStack enrollment form"
+    }
+  },
+  {
+    "command": "set",
+    "path": "/body/p[@paraId=0010059A]",
+    "props": {
+      "text": "Screen 6G. Applications list — select dissertation-sensors."
+    }
+  }
+]

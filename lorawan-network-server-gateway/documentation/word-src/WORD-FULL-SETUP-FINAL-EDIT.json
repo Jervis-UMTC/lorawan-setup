@@ -1,0 +1,16 @@
+[
+  {
+    "command": "set",
+    "path": "/body/p[@paraId=001004BF]",
+    "props": {
+      "text": "Chapter 6 — Set Up ChirpStack and Register the Gateway and Sensors"
+    }
+  },
+  {
+    "command": "set",
+    "path": "/body/p[@paraId=001001F5]",
+    "props": {
+      "text": "Prerequisite: Gateway-01 runs the approved custom Gateway OS Base image and the workstation is on its management network. On the already commissioned gateway, inspect the live settings without changing them; apply setup actions only for an approved first-time build or restoration."
+    }
+  }
+]

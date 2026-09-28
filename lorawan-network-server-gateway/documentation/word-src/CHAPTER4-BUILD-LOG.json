@@ -1,0 +1,186 @@
+[
+  {
+    "verb": "add",
+    "exit": 0,
+    "ref": "/",
+    "out": "Added markdown at /body/p[@paraId=001002E0]",
+    "error": ""
+  },
+  {
+    "verb": "add",
+    "exit": 0,
+    "ref": "/body",
+    "out": "Added paragraph at /body/p[@paraId=001002FA]",
+    "error": ""
+  },
+  {
+    "verb": "add",
+    "exit": 0,
+    "ref": "/body/p[@paraId=001002FA]",
+    "out": "Added picture at /body/p[@paraId=001002FA]/r[2]",
+    "error": ""
+  },
+  {
+    "verb": "add",
+    "exit": 0,
+    "ref": "/body",
+    "out": "Added paragraph at /body/p[@paraId=001002FC]",
+    "error": ""
+  },
+  {
+    "verb": "add",
+    "exit": 0,
+    "ref": "/",
+    "out": "Added markdown at /body/p[@paraId=001002FE]",
+    "error": ""
+  },
+  {
+    "verb": "add",
+    "exit": 0,
+    "ref": "/body",
+    "out": "Added paragraph at /body/p[@paraId=00100304]",
+    "error": ""
+  },
+  {
+    "verb": "add",
+    "exit": 0,
+    "ref": "/",
+    "out": "Added markdown at /body/p[@paraId=00100314]",
+    "error": ""
+  },
+  {
+    "verb": "add",
+    "exit": 0,
+    "ref": "/body",
+    "out": "Added paragraph at /body/p[@paraId=00100322]",
+    "error": ""
+  },
+  {
+    "verb": "add",
+    "exit": 0,
+    "ref": "/body/p[@paraId=00100322]",
+    "out": "Added picture at /body/p[@paraId=00100322]/r[2]",
+    "error": ""
+  },
+  {
+    "verb": "add",
+    "exit": 0,
+    "ref": "/body",
+    "out": "Added paragraph at /body/p[@paraId=00100324]",
+    "error": ""
+  },
+  {
+    "verb": "add",
+    "exit": 0,
+    "ref": "/",
+    "out": "Added markdown at /body/p[@paraId=00100326]",
+    "error": ""
+  },
+  {
+    "verb": "add",
+    "exit": 0,
+    "ref": "/body",
+    "out": "Added paragraph at /body/p[@paraId=0010034E]",
+    "error": ""
+  },
+  {
+    "verb": "add",
+    "exit": 0,
+    "ref": "/",
+    "out": "Added markdown at /body/p[@paraId=00100358]",
+    "error": ""
+  },
+  {
+    "verb": "add",
+    "exit": 0,
+    "ref": "/body",
+    "out": "Added paragraph at /body/p[@paraId=00100360]",
+    "error": ""
+  },
+  {
+    "verb": "add",
+    "exit": 0,
+    "ref": "/",
+    "out": "Added markdown at /body/p[@paraId=0010037C]",
+    "error": ""
+  },
+  {
+    "verb": "add",
+    "exit": 0,
+    "ref": "/body",
+    "out": "Added paragraph at /body/p[@paraId=00100380]",
+    "error": ""
+  },
+  {
+    "verb": "add",
+    "exit": 0,
+    "ref": "/body/p[@paraId=00100380]",
+    "out": "Added picture at /body/p[@paraId=00100380]/r[2]",
+    "error": ""
+  },
+  {
+    "verb": "add",
+    "exit": 0,
+    "ref": "/body",
+    "out": "Added paragraph at /body/p[@paraId=00100382]",
+    "error": ""
+  },
+  {
+    "verb": "add",
+    "exit": 0,
+    "ref": "/",
+    "out": "Added markdown at /body/p[@paraId=00100384]",
+    "error": ""
+  },
+  {
+    "verb": "add",
+    "exit": 0,
+    "ref": "/body",
+    "out": "Added paragraph at /body/p[@paraId=0010038A]",
+    "error": ""
+  },
+  {
+    "verb": "add",
+    "exit": 0,
+    "ref": "/",
+    "out": "Added markdown at /body/p[@paraId=00100396]",
+    "error": ""
+  },
+  {
+    "verb": "save",
+    "exit": 0,
+    "out": "Saved .manual-chapter4-qa.docx",
+    "error": ""
+  },
+  {
+    "verb": "close",
+    "exit": 0,
+    "out": "Resident closed for .manual-chapter4-qa.docx",
+    "error": ""
+  },
+  {
+    "verb": "set",
+    "exit": 0,
+    "ref": "/body/p[156]",
+    "out": "Updated /body/p[156]: pageBreakBefore=true, keepNext=true",
+    "error": ""
+  },
+  {
+    "verb": "save",
+    "exit": 0,
+    "out": "Saved .manual-chapter4-qa.docx",
+    "error": ""
+  },
+  {
+    "verb": "close",
+    "exit": 0,
+    "out": "Resident closed for .manual-chapter4-qa.docx",
+    "error": ""
+  },
+  {
+    "verb": "validate",
+    "exit": 0,
+    "out": "Validation passed: no errors found.",
+    "error": ""
+  }
+]

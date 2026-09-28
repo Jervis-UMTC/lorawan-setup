@@ -1,0 +1,31 @@
+from PIL import Image,ImageDraw,ImageFont
+from pathlib import Path
+p=Path(__file__).resolve().parent
+im=Image.new('RGB',(1720,970),'#ffffff');d=ImageDraw.Draw(im)
+font=Path('C:/Windows/Fonts')
+reg=lambda n: ImageFont.truetype(str(font/'arial.ttf'),n)
+bold=lambda n: ImageFont.truetype(str(font/'arialbd.ttf'),n)
+d.text((56,43),'SIM7600G-H 4G DONGLE  |  PHYSICAL CHECK',font=bold(56),fill='#153744')
+d.text((56,126),'Model-specific port-and-indicator illustration — not a photo of your unit',font=reg(33),fill='#586D79')
+d.rounded_rectangle((320,315,1400,653),radius=75,fill='#242B2F',outline='#5B6368',width=6)
+d.rectangle((198,416,336,545),fill='#9CA8AF',outline='#67777E',width=5)
+d.rectangle((205,436,274,456),fill='#111827');d.rectangle((205,499,274,519),fill='#111827')
+d.rounded_rectangle((1315,397,1437,564),radius=28,fill='#3A454A')
+d.line((1438,475,1580,350),fill='#2A383D',width=36)
+d.rounded_rectangle((1573,190,1618,366),radius=20,fill='#2A383D')
+d.text((347,348),'SIM7600G-H',font=bold(55),fill='white')
+d.text((348,424),'4G DONGLE',font=bold(51),fill='white')
+d.text((1139,460),'ANT',font=bold(39),fill='#69DC8C')
+for i,(lab,y) in enumerate([('NET',521),('STA',564),('PWR',607)]):
+ d.ellipse((540,y-3,560,y+17),fill='#C1D7D1')
+ d.text((572,y-15),lab,font=reg(28),fill='#EEF7F4')
+def call(x1,y1,x2,y2,label):
+ d.line((x1,y1,x2,y2),fill='#126977',width=5)
+ d.ellipse((x1-7,y1-7,x1+7,y1+7),fill='#126977')
+ d.text((x2+14,y2-28),label,font=bold(32),fill='#126977')
+call(234,470,100,735,'USB-A to Raspberry Pi')
+call(1470,452,1020,735,'Attach supplied LTE antenna')
+d.text((64,815),'Nano-SIM: inside the dongle SIM holder (unplug before opening)',font=bold(31),fill='#153744')
+d.text((64,865),'DO NOT mistake this USB dongle for a second GPIO HAT or the RAK5146 LoRa antenna.',font=reg(27),fill='#A05A1A')
+o=p/'waveshare-sim7600g-h-dongle-physical-illustration.png';im.save(o,optimize=True)
+print('ILLUSTRATION',o.stat().st_size)

@@ -1,0 +1,64 @@
+docx row
+--------------
+Parent: table
+Paths: /body/tbl[N]/tr[R]
+Operations: add set get query remove
+
+Usage:
+  officecli add <file> /body/tbl[N] --type row [--prop key=val ...]
+  officecli set <file> /body/tbl[N]/tr[R] --prop key=val ...
+  officecli get <file> /body/tbl[N]/tr[R]
+  officecli query <file> row
+  officecli remove <file> /body/tbl[N]/tr[R]
+
+Properties:
+  height.exact   length   [add/set]
+    description: row height in twips (Exact rule, cannot grow). Add/Set only G현 Get does not surface a separate exact-height key; inspect `height.rule=exact` paired with `height` instead.
+    example: --prop height.exact=500
+    readback: n/a (inspect height + height.rule)
+  header   bool   [add/set/get]
+    description: repeat row as table header on every page.
+    example: --prop header=true
+    readback: true when header, key absent otherwise
+  cantSplit   bool   [add/set/get]
+    description: w:cantSplit G현 keep the row on one page (no break across pages). Row-scoped: apply per row, not on the table (Word stores it per-row too).
+    example: --prop cantSplit=true
+    readback: true when set, key absent otherwise
+  height.rule   string   [get]
+    description: row height rule readback G현 `exact` when the row enforces a fixed height, otherwise absent (auto/atLeast).
+    readback: `exact` when set
+  cnfStyle   string   [set/get]
+    description: conditional-formatting bitmask (ST_Cnf @val) on the row (trPr). A 12-digit binary string G현 each '0'/'1' flags one region in order: firstRow, lastRow, firstColumn, lastColumn, oddVBand, evenVBand, oddHBand, evenHBand, firstRowFirstColumn, firstRowLastColumn, lastRowFirstColumn, lastRowLastColumn. Short binary input is right-padded to 12. Not a hex number.
+    example: --prop cnfStyle=100000000000
+    readback: 12-digit binary bitmask string
+  gridBefore   int   [add/set/get]
+    description: number of leading grid columns this row skips (w:gridBefore @val). Pairs with wBefore (the preferred width reserved for the skipped span) to indent the row's left edge G현 produces a ragged/indented table edge.
+    example: --prop gridBefore=2
+    readback: integer column count
+  wBefore   string   [add/set/get]
+    description: preferred width of the leading skipped-column span (w:wBefore w:w/w:type). Same unit-qualified form as cell width: 'Ndxa', 'N%', 'auto', or 'nil'.
+    example: --prop wBefore=100dxa
+    readback: 'Ndxa' | 'N%' | 'auto' | 'nil'
+  gridAfter   int   [add/set/get]
+    description: number of trailing grid columns this row skips (w:gridAfter @val). Pairs with wAfter (the preferred width reserved for the skipped span) to shorten the row's right edge G현 produces a ragged/indented table edge.
+    example: --prop gridAfter=1
+    readback: integer column count
+  wAfter   string   [add/set/get]
+    description: preferred width of the trailing skipped-column span (w:wAfter w:w/w:type). Same unit-qualified form as cell width: 'Ndxa', 'N%', 'auto', or 'nil'.
+    example: --prop wAfter=14dxa
+    readback: 'Ndxa' | 'N%' | 'auto' | 'nil'
+  cellSpacing   number   [set/get]
+    description: Spacing between cells in the row, in twips (w:tblCellSpacing on trPr).
+    example: --prop cellSpacing=100
+  cols   int   [add]
+    description: asserts the new row's cell count matches the table grid. The row is structurally locked to the existing <a:tblGrid> G현 to widen, add a column first (or set gridSpan on cell 1 to merge into a wider span). Defaults to the existing grid column count when omitted.
+    example: --prop cols=2
+    readback: n/a (structural G현 cell count surfaces via DocumentNode.Children, not Format)
+  height   length   [add/set/get]
+    description: row height in EMU-parseable length. Defaults to first-row height or ~1cm.
+    example: --prop height=1cm
+    example: --prop height=500
+    readback: length in cm (e.g. "2cm")
+
+Note: Row column count defaults to the parent table grid. height uses AtLeast rule; height.exact forces Exact rule.
+

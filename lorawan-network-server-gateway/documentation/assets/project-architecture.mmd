@@ -1,0 +1,13 @@
+flowchart LR
+  EMU["EMU-01 sensor"] --> GW["Gateway-01 RAK5146"]
+  GW --> CLOUD["MQTT + LTE + cloud"]
+  CLOUD --> CHIRP["ChirpStack"]
+  CHIRP --> SQL["Node-RED + PostgreSQL"]
+  SQL --> GF["Grafana"]
+  GW --> J["Gateway journal + SeaweedFS"]
+  CLOUD --> W["MQTT witnesses"]
+  J --> VER["Verifier"]
+  W --> VER
+  SQL --> VER
+  VER --> FAB["OpenBao + Fabric adapter"]
+  FAB --> HRC["HRC Fabric"]

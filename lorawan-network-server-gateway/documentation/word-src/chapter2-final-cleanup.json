@@ -1,0 +1,10 @@
+[
+  {
+    "command": "remove",
+    "path": "/body/p[104]"
+  },
+  {
+    "command": "remove",
+    "path": "/body/p[103]"
+  }
+]

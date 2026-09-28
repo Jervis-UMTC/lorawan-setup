@@ -1,0 +1,198 @@
+[
+  {
+    "command": "remove",
+    "path": "/body/p[190]"
+  },
+  {
+    "command": "set",
+    "path": "/body/p[185]",
+    "props": {
+      "text": "mosquitto_sub -h 127.0.0.1 -p 1883 -t 'as923/gateway/0016c001f139a1cb/event/#' -v",
+      "font": "Consolas",
+      "size": "9.25pt",
+      "shd": "F1F5F9",
+      "spaceBefore": "0pt",
+      "spaceAfter": "5pt",
+      "leftIndent": "0.23cm",
+      "keepLines": false
+    }
+  },
+  {
+    "command": "set",
+    "path": "/body/p[162]",
+    "props": {
+      "text": "echo '=== LEGACY UDP FORWARDER ==='\nuci show chirpstack-udp-forwarder\nps w | grep -E '[u]dp-forwarder|[p]acket_forwarder' || true\necho '=== MQTT FORWARDER NON-SECRET SETTINGS ==='\nuci -q get 'chirpstack-mqtt-forwarder.@global[0].enabled'\nuci -q get 'chirpstack-mqtt-forwarder.@mqtt[0].topic_prefix'\nuci -q get 'chirpstack-mqtt-forwarder.@mqtt[0].server'\nuci -q get 'chirpstack-mqtt-forwarder.@mqtt[0].qos'\necho '=== LOCAL BROKER ==='\n(ss -lntp 2>/dev/null || netstat -lntp) | grep ':1883'",
+      "font": "Consolas",
+      "size": "9.25pt",
+      "shd": "F1F5F9",
+      "spaceBefore": "0pt",
+      "spaceAfter": "5pt",
+      "leftIndent": "0.23cm",
+      "keepLines": false
+    }
+  },
+  {
+    "command": "remove",
+    "path": "/body/p[180]"
+  },
+  {
+    "command": "remove",
+    "path": "/body/p[179]"
+  },
+  {
+    "command": "remove",
+    "path": "/body/p[178]"
+  },
+  {
+    "command": "remove",
+    "path": "/body/p[177]"
+  },
+  {
+    "command": "remove",
+    "path": "/body/p[176]"
+  },
+  {
+    "command": "remove",
+    "path": "/body/p[175]"
+  },
+  {
+    "command": "remove",
+    "path": "/body/p[174]"
+  },
+  {
+    "command": "remove",
+    "path": "/body/p[173]"
+  },
+  {
+    "command": "remove",
+    "path": "/body/p[172]"
+  },
+  {
+    "command": "remove",
+    "path": "/body/p[171]"
+  },
+  {
+    "command": "remove",
+    "path": "/body/p[170]"
+  },
+  {
+    "command": "remove",
+    "path": "/body/p[169]"
+  },
+  {
+    "command": "remove",
+    "path": "/body/p[168]"
+  },
+  {
+    "command": "remove",
+    "path": "/body/p[167]"
+  },
+  {
+    "command": "remove",
+    "path": "/body/p[166]"
+  },
+  {
+    "command": "remove",
+    "path": "/body/p[165]"
+  },
+  {
+    "command": "remove",
+    "path": "/body/p[164]"
+  },
+  {
+    "command": "remove",
+    "path": "/body/p[163]"
+  },
+  {
+    "command": "set",
+    "path": "/body/p[154]",
+    "props": {
+      "text": "ps w | grep '[c]hirpstack-concentratord'\nls /etc/init.d/*concentratord* 2>/dev/null",
+      "font": "Consolas",
+      "size": "9.25pt",
+      "shd": "F1F5F9",
+      "spaceBefore": "0pt",
+      "spaceAfter": "5pt",
+      "leftIndent": "0.23cm",
+      "keepLines": false
+    }
+  },
+  {
+    "command": "remove",
+    "path": "/body/p[156]"
+  },
+  {
+    "command": "remove",
+    "path": "/body/p[155]"
+  },
+  {
+    "command": "set",
+    "path": "/body/p[137]",
+    "props": {
+      "text": "echo '=== ACTIVE RADIO SETTINGS ==='\nuci show chirpstack-concentratord\necho '=== RUNNING CONCENTRATORD ==='\nps w | grep '[c]hirpstack-concentratord'\necho '=== HARDWARE STATS ==='\nubus call chirpstack-concentratord-sx1302 concentratord_stats\necho '=== LAST RADIO STARTUP ==='\nlogread -e chirpstack-concentratord | tail -n 65",
+      "font": "Consolas",
+      "size": "9.25pt",
+      "shd": "F1F5F9",
+      "spaceBefore": "0pt",
+      "spaceAfter": "5pt",
+      "leftIndent": "0.23cm",
+      "keepLines": false
+    }
+  },
+  {
+    "command": "remove",
+    "path": "/body/p[151]"
+  },
+  {
+    "command": "remove",
+    "path": "/body/p[150]"
+  },
+  {
+    "command": "remove",
+    "path": "/body/p[149]"
+  },
+  {
+    "command": "remove",
+    "path": "/body/p[148]"
+  },
+  {
+    "command": "remove",
+    "path": "/body/p[147]"
+  },
+  {
+    "command": "remove",
+    "path": "/body/p[146]"
+  },
+  {
+    "command": "remove",
+    "path": "/body/p[145]"
+  },
+  {
+    "command": "remove",
+    "path": "/body/p[144]"
+  },
+  {
+    "command": "remove",
+    "path": "/body/p[143]"
+  },
+  {
+    "command": "remove",
+    "path": "/body/p[142]"
+  },
+  {
+    "command": "remove",
+    "path": "/body/p[141]"
+  },
+  {
+    "command": "remove",
+    "path": "/body/p[140]"
+  },
+  {
+    "command": "remove",
+    "path": "/body/p[139]"
+  },
+  {
+    "command": "remove",
+    "path": "/body/p[138]"
+  }
+]

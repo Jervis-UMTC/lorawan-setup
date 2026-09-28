@@ -1,0 +1,25 @@
+Description:
+  Add a new element to the document
+
+Usage:
+  officecli add <file> <parent> [options] [[--] <additional arguments>...]]
+
+Arguments:
+  <file>    Office document path (required even with open/close mode)
+  <parent>  Parent DOM path. Conventions per handler: docx uses /body (or /body/p[N] for nested adds); xlsx uses /Sheet1 (or any sheet name); pptx slide uses '/' (slides hang off the presentation root), pptx shape uses /slide[N]. Wrap paths containing brackets in single quotes for zsh: '/slide[1]'.
+
+Options:
+  --type <type>      Element type to add (e.g. paragraph, run, table, sheet, row, cell, slide, shape, picture, diagram/flowchart, ole, video)
+  --from <from>      Copy from an existing element path (e.g. /slide[1]/shape[2])
+  --index <index>    Insert position (0-based). If omitted, appends to end
+  --after <after>    Insert after the element at this path (e.g. p[@paraId=1A2B3C4D])
+  --before <before>  Insert before the element at this path
+  --prop <prop>      Property to set (key=value, e.g. --prop src=image.png --prop width=6in)
+  --json             Output as JSON (AI-friendly)
+  --force            Force write even if document is protected
+  -?, -h, --help     Show help and usage information
+
+Additional Arguments:
+  Arguments passed to the application that is being run.
+
+

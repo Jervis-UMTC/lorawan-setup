@@ -1,0 +1,41 @@
+[
+  {
+    "command": "set",
+    "path": "/body/p[220]",
+    "props": {
+      "pageBreakBefore": true,
+      "keepNext": true
+    }
+  },
+  {
+    "command": "remove",
+    "path": "/body/p[228]"
+  },
+  {
+    "command": "remove",
+    "path": "/body/p[227]"
+  },
+  {
+    "command": "remove",
+    "path": "/body/p[226]"
+  },
+  {
+    "command": "remove",
+    "path": "/body/p[225]"
+  },
+  {
+    "command": "remove",
+    "path": "/body/p[224]"
+  },
+  {
+    "command": "set",
+    "path": "/body/p[223]",
+    "props": {
+      "text": "grep -E '^(connection |address |remote_clientid|bridge_cafile|bridge_certfile|bridge_keyfile|bridge_insecure|topic )' /etc/mosquitto/conf.d/bridge.conf 2>/dev/null || true\nss -tn 2>/dev/null | grep ':8883' || netstat -tn 2>/dev/null | grep ':8883' || true\nlogread | grep -Ei 'mosquitto|bridge|connack|tls' | tail -n 25",
+      "keepLines": true,
+      "size": "9.2pt",
+      "leftIndent": "0.2cm",
+      "shd": "F1F5F9"
+    }
+  }
+]

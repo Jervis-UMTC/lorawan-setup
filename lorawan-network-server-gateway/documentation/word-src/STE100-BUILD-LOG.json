@@ -1,0 +1,46 @@
+{
+  "edits": 101,
+  "possibleLostTokens": 0,
+  "candidateBytes": 3881730,
+  "summary": [
+    {
+      "group": "ste-edits-ch1-3.json",
+      "count": 35,
+      "status": 0,
+      "msg": "[1] Updated /body/p[@paraId=00100010]: text=EMU-01 measures agricultural conditions. It sends a 46-byte payload over AS923 LoRaWAN. Gateway-01 receives the radio packet. The SIM7600 LTE connection carries gateway data to the cloud. Cloud ChirpStack processes LoRaWAN messages. Node-RED saves measurements in PostgreSQL. "
+    },
+    {
+      "group": "ste-edits-ch4-5.json",
+      "count": 29,
+      "status": 0,
+      "msg": "[1] Updated /body/p[@paraId=001002E4]: text=Gateway-01 receives LoRaWAN sensor packets through the RAK5146. Its separate Waveshare SIM7600G-H USB dongle carries MQTT traffic to the cloud. LoRaWAN and LTE use different radios. The RJ45 cable provides local gateway administration. During a research test, do not let Ether"
+    },
+    {
+      "group": "ste-edits-ch6.json",
+      "count": 24,
+      "status": 0,
+      "msg": "[1] Updated /body/p[@paraId=001004C3]: text=Cloud ChirpStack is the LoRaWAN network server. It is not Gateway-01's local web page. Gateway-01 sends AS923 events through the local broker and LTE. ChirpStack runs on ULC-01 and ULC-02. Both instances use the commissioned PostgreSQL and Valkey service routes. Operators use"
+    },
+    {
+      "group": "ste-edits-supplement.json",
+      "count": 13,
+      "status": 0,
+      "msg": "[1] Updated /body/p[@paraId=001003D6]: text=SCREEN 2B — STOP/CHECK EXAMPLE (official Raspberry Pi Imager Writing tab). This reference shows Raspberry Pi 5, stock Raspberry Pi OS, and Apple SDXC. All three are WRONG for this project. Your screen must show Raspberry Pi 4 and the approved Gateway OS .img.gz. It must show "
+    },
+    {
+      "command": "save",
+      "status": 0,
+      "msg": ".manual-ste100-qa.docx is already saved to disk.\r\n"
+    },
+    {
+      "command": "close",
+      "status": 0,
+      "msg": ".manual-ste100-qa.docx is already saved to disk; nothing to close.\r\n"
+    },
+    {
+      "command": "validate",
+      "status": 0,
+      "msg": "Validation passed: no errors found.\r\n"
+    }
+  ]
+}

@@ -1,0 +1,264 @@
+[
+  {
+    "command": "set",
+    "path": "/body/p[1]",
+    "props": {
+      "style": "Normal"
+    }
+  },
+  {
+    "command": "set",
+    "path": "/body/p[2]",
+    "props": {
+      "style": "Normal"
+    }
+  },
+  {
+    "command": "set",
+    "path": "/body/tbl[1]/tr[1]",
+    "props": {
+      "cantSplit": true,
+      "header": true
+    }
+  },
+  {
+    "command": "set",
+    "path": "/body/tbl[1]/tr[2]",
+    "props": {
+      "cantSplit": true
+    }
+  },
+  {
+    "command": "set",
+    "path": "/body/tbl[1]/tr[3]",
+    "props": {
+      "cantSplit": true
+    }
+  },
+  {
+    "command": "set",
+    "path": "/body/tbl[1]/tr[4]",
+    "props": {
+      "cantSplit": true
+    }
+  },
+  {
+    "command": "set",
+    "path": "/body/tbl[1]/tr[5]",
+    "props": {
+      "cantSplit": true
+    }
+  },
+  {
+    "command": "set",
+    "path": "/body/tbl[1]/tr[6]",
+    "props": {
+      "cantSplit": true
+    }
+  },
+  {
+    "command": "set",
+    "path": "/body/tbl[1]/tr[7]",
+    "props": {
+      "cantSplit": true
+    }
+  },
+  {
+    "command": "set",
+    "path": "/body/tbl[1]/tr[8]",
+    "props": {
+      "cantSplit": true
+    }
+  },
+  {
+    "command": "set",
+    "path": "/body/tbl[1]/tr[9]",
+    "props": {
+      "cantSplit": true
+    }
+  },
+  {
+    "command": "set",
+    "path": "/body/tbl[1]/tr[10]",
+    "props": {
+      "cantSplit": true
+    }
+  },
+  {
+    "command": "set",
+    "path": "/body/tbl[1]/tr[11]",
+    "props": {
+      "cantSplit": true
+    }
+  },
+  {
+    "command": "set",
+    "path": "/body/tbl[1]/tr[12]",
+    "props": {
+      "cantSplit": true
+    }
+  },
+  {
+    "command": "set",
+    "path": "/body/tbl[1]/tr[13]",
+    "props": {
+      "cantSplit": true
+    }
+  },
+  {
+    "command": "set",
+    "path": "/body/tbl[1]/tr[14]",
+    "props": {
+      "cantSplit": true
+    }
+  },
+  {
+    "command": "set",
+    "path": "/body/tbl[1]/tr[15]",
+    "props": {
+      "cantSplit": true
+    }
+  },
+  {
+    "command": "set",
+    "path": "/body/tbl[1]/tr[16]",
+    "props": {
+      "cantSplit": true
+    }
+  },
+  {
+    "command": "set",
+    "path": "/body/tbl[1]/tr[17]",
+    "props": {
+      "cantSplit": true
+    }
+  },
+  {
+    "command": "set",
+    "path": "/body/tbl[2]/tr[1]",
+    "props": {
+      "cantSplit": true,
+      "header": true
+    }
+  },
+  {
+    "command": "set",
+    "path": "/body/tbl[2]/tr[2]",
+    "props": {
+      "cantSplit": true
+    }
+  },
+  {
+    "command": "set",
+    "path": "/body/tbl[2]/tr[3]",
+    "props": {
+      "cantSplit": true
+    }
+  },
+  {
+    "command": "set",
+    "path": "/body/tbl[2]/tr[4]",
+    "props": {
+      "cantSplit": true
+    }
+  },
+  {
+    "command": "set",
+    "path": "/body/tbl[2]/tr[5]",
+    "props": {
+      "cantSplit": true
+    }
+  },
+  {
+    "command": "set",
+    "path": "/body/tbl[2]/tr[6]",
+    "props": {
+      "cantSplit": true
+    }
+  },
+  {
+    "command": "set",
+    "path": "/body/tbl[2]/tr[7]",
+    "props": {
+      "cantSplit": true
+    }
+  },
+  {
+    "command": "set",
+    "path": "/body/tbl[2]/tr[8]",
+    "props": {
+      "cantSplit": true
+    }
+  },
+  {
+    "command": "set",
+    "path": "/body/tbl[3]/tr[1]",
+    "props": {
+      "cantSplit": true,
+      "header": true
+    }
+  },
+  {
+    "command": "set",
+    "path": "/body/tbl[3]/tr[2]",
+    "props": {
+      "cantSplit": true
+    }
+  },
+  {
+    "command": "set",
+    "path": "/body/tbl[3]/tr[3]",
+    "props": {
+      "cantSplit": true
+    }
+  },
+  {
+    "command": "set",
+    "path": "/body/tbl[3]/tr[4]",
+    "props": {
+      "cantSplit": true
+    }
+  },
+  {
+    "command": "set",
+    "path": "/body/tbl[3]/tr[5]",
+    "props": {
+      "cantSplit": true
+    }
+  },
+  {
+    "command": "set",
+    "path": "/body/tbl[3]/tr[6]",
+    "props": {
+      "cantSplit": true
+    }
+  },
+  {
+    "command": "set",
+    "path": "/body/tbl[3]/tr[7]",
+    "props": {
+      "cantSplit": true
+    }
+  },
+  {
+    "command": "set",
+    "path": "/body/tbl[3]/tr[8]",
+    "props": {
+      "cantSplit": true
+    }
+  },
+  {
+    "command": "set",
+    "path": "/body/tbl[3]/tr[9]",
+    "props": {
+      "cantSplit": true
+    }
+  },
+  {
+    "command": "set",
+    "path": "/body/tbl[3]/tr[10]",
+    "props": {
+      "cantSplit": true
+    }
+  }
+]

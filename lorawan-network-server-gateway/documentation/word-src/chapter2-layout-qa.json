@@ -1,0 +1,381 @@
+[
+  {
+    "command": "set",
+    "path": "/body/p[39]",
+    "props": {
+      "pageBreakBefore": true,
+      "keepNext": true
+    }
+  },
+  {
+    "command": "set",
+    "path": "/body/p[118]",
+    "props": {
+      "pageBreakBefore": true,
+      "keepNext": true
+    }
+  },
+  {
+    "command": "set",
+    "path": "/body/p[52]",
+    "props": {
+      "font": "Consolas",
+      "size": "8.5pt",
+      "shd": "F1F5F9",
+      "leftIndent": "0.24cm",
+      "spaceBefore": "0pt",
+      "spaceAfter": "0pt",
+      "keepLines": true,
+      "keepNext": false
+    }
+  },
+  {
+    "command": "set",
+    "path": "/body/p[54]",
+    "props": {
+      "font": "Consolas",
+      "size": "8.5pt",
+      "shd": "F1F5F9",
+      "leftIndent": "0.24cm",
+      "spaceBefore": "0pt",
+      "spaceAfter": "0pt",
+      "keepLines": true,
+      "keepNext": false
+    }
+  },
+  {
+    "command": "set",
+    "path": "/body/p[56]",
+    "props": {
+      "font": "Consolas",
+      "size": "8.5pt",
+      "shd": "F1F5F9",
+      "leftIndent": "0.24cm",
+      "spaceBefore": "0pt",
+      "spaceAfter": "0pt",
+      "keepLines": true,
+      "keepNext": false
+    }
+  },
+  {
+    "command": "set",
+    "path": "/body/p[60]",
+    "props": {
+      "font": "Consolas",
+      "size": "8.5pt",
+      "shd": "F1F5F9",
+      "leftIndent": "0.24cm",
+      "spaceBefore": "0pt",
+      "spaceAfter": "0pt",
+      "keepLines": true,
+      "keepNext": true
+    }
+  },
+  {
+    "command": "set",
+    "path": "/body/p[62]",
+    "props": {
+      "font": "Consolas",
+      "size": "8.5pt",
+      "shd": "F1F5F9",
+      "leftIndent": "0.24cm",
+      "spaceBefore": "0pt",
+      "spaceAfter": "0pt",
+      "keepLines": true,
+      "keepNext": true
+    }
+  },
+  {
+    "command": "set",
+    "path": "/body/p[64]",
+    "props": {
+      "font": "Consolas",
+      "size": "8.5pt",
+      "shd": "F1F5F9",
+      "leftIndent": "0.24cm",
+      "spaceBefore": "0pt",
+      "spaceAfter": "0pt",
+      "keepLines": true,
+      "keepNext": true
+    }
+  },
+  {
+    "command": "set",
+    "path": "/body/p[66]",
+    "props": {
+      "font": "Consolas",
+      "size": "8.5pt",
+      "shd": "F1F5F9",
+      "leftIndent": "0.24cm",
+      "spaceBefore": "0pt",
+      "spaceAfter": "0pt",
+      "keepLines": true,
+      "keepNext": true
+    }
+  },
+  {
+    "command": "set",
+    "path": "/body/p[68]",
+    "props": {
+      "font": "Consolas",
+      "size": "8.5pt",
+      "shd": "F1F5F9",
+      "leftIndent": "0.24cm",
+      "spaceBefore": "0pt",
+      "spaceAfter": "0pt",
+      "keepLines": true,
+      "keepNext": true
+    }
+  },
+  {
+    "command": "set",
+    "path": "/body/p[70]",
+    "props": {
+      "font": "Consolas",
+      "size": "8.5pt",
+      "shd": "F1F5F9",
+      "leftIndent": "0.24cm",
+      "spaceBefore": "0pt",
+      "spaceAfter": "0pt",
+      "keepLines": true,
+      "keepNext": false
+    }
+  },
+  {
+    "command": "set",
+    "path": "/body/p[95]",
+    "props": {
+      "font": "Consolas",
+      "size": "8.5pt",
+      "shd": "F1F5F9",
+      "leftIndent": "0.24cm",
+      "spaceBefore": "0pt",
+      "spaceAfter": "0pt",
+      "keepLines": true,
+      "keepNext": false
+    }
+  },
+  {
+    "command": "set",
+    "path": "/body/p[101]",
+    "props": {
+      "font": "Consolas",
+      "size": "8.5pt",
+      "shd": "F1F5F9",
+      "leftIndent": "0.24cm",
+      "spaceBefore": "0pt",
+      "spaceAfter": "0pt",
+      "keepLines": true,
+      "keepNext": true
+    }
+  },
+  {
+    "command": "set",
+    "path": "/body/p[103]",
+    "props": {
+      "font": "Consolas",
+      "size": "8.5pt",
+      "shd": "F1F5F9",
+      "leftIndent": "0.24cm",
+      "spaceBefore": "0pt",
+      "spaceAfter": "0pt",
+      "keepLines": true,
+      "keepNext": true
+    }
+  },
+  {
+    "command": "set",
+    "path": "/body/p[105]",
+    "props": {
+      "font": "Consolas",
+      "size": "8.5pt",
+      "shd": "F1F5F9",
+      "leftIndent": "0.24cm",
+      "spaceBefore": "0pt",
+      "spaceAfter": "0pt",
+      "keepLines": true,
+      "keepNext": true
+    }
+  },
+  {
+    "command": "set",
+    "path": "/body/p[107]",
+    "props": {
+      "font": "Consolas",
+      "size": "8.5pt",
+      "shd": "F1F5F9",
+      "leftIndent": "0.24cm",
+      "spaceBefore": "0pt",
+      "spaceAfter": "0pt",
+      "keepLines": true,
+      "keepNext": true
+    }
+  },
+  {
+    "command": "set",
+    "path": "/body/p[109]",
+    "props": {
+      "font": "Consolas",
+      "size": "8.5pt",
+      "shd": "F1F5F9",
+      "leftIndent": "0.24cm",
+      "spaceBefore": "0pt",
+      "spaceAfter": "0pt",
+      "keepLines": true,
+      "keepNext": false
+    }
+  },
+  {
+    "command": "set",
+    "path": "/body/p[113]",
+    "props": {
+      "font": "Consolas",
+      "size": "8.5pt",
+      "shd": "F1F5F9",
+      "leftIndent": "0.24cm",
+      "spaceBefore": "0pt",
+      "spaceAfter": "0pt",
+      "keepLines": true,
+      "keepNext": true
+    }
+  },
+  {
+    "command": "set",
+    "path": "/body/p[115]",
+    "props": {
+      "font": "Consolas",
+      "size": "8.5pt",
+      "shd": "F1F5F9",
+      "leftIndent": "0.24cm",
+      "spaceBefore": "0pt",
+      "spaceAfter": "0pt",
+      "keepLines": true,
+      "keepNext": false
+    }
+  },
+  {
+    "command": "set",
+    "path": "/body/p[52]",
+    "props": {
+      "size": "7.8pt"
+    }
+  },
+  {
+    "command": "set",
+    "path": "/body/p[56]",
+    "props": {
+      "size": "7.8pt"
+    }
+  },
+  {
+    "command": "set",
+    "path": "/body/tbl[4]/tr[1]",
+    "props": {
+      "cantSplit": true,
+      "header": true
+    }
+  },
+  {
+    "command": "set",
+    "path": "/body/tbl[4]/tr[2]",
+    "props": {
+      "cantSplit": true
+    }
+  },
+  {
+    "command": "set",
+    "path": "/body/tbl[4]/tr[3]",
+    "props": {
+      "cantSplit": true
+    }
+  },
+  {
+    "command": "set",
+    "path": "/body/tbl[4]/tr[4]",
+    "props": {
+      "cantSplit": true
+    }
+  },
+  {
+    "command": "set",
+    "path": "/body/tbl[4]/tr[5]",
+    "props": {
+      "cantSplit": true
+    }
+  },
+  {
+    "command": "set",
+    "path": "/body/tbl[4]/tr[6]",
+    "props": {
+      "cantSplit": true
+    }
+  },
+  {
+    "command": "remove",
+    "path": "/body/p[116]"
+  },
+  {
+    "command": "remove",
+    "path": "/body/p[114]"
+  },
+  {
+    "command": "remove",
+    "path": "/body/p[110]"
+  },
+  {
+    "command": "remove",
+    "path": "/body/p[108]"
+  },
+  {
+    "command": "remove",
+    "path": "/body/p[106]"
+  },
+  {
+    "command": "remove",
+    "path": "/body/p[104]"
+  },
+  {
+    "command": "remove",
+    "path": "/body/p[102]"
+  },
+  {
+    "command": "remove",
+    "path": "/body/p[96]"
+  },
+  {
+    "command": "remove",
+    "path": "/body/p[71]"
+  },
+  {
+    "command": "remove",
+    "path": "/body/p[69]"
+  },
+  {
+    "command": "remove",
+    "path": "/body/p[67]"
+  },
+  {
+    "command": "remove",
+    "path": "/body/p[65]"
+  },
+  {
+    "command": "remove",
+    "path": "/body/p[63]"
+  },
+  {
+    "command": "remove",
+    "path": "/body/p[61]"
+  },
+  {
+    "command": "remove",
+    "path": "/body/p[57]"
+  },
+  {
+    "command": "remove",
+    "path": "/body/p[55]"
+  },
+  {
+    "command": "remove",
+    "path": "/body/p[53]"
+  }
+]

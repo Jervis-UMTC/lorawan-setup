@@ -1,0 +1,246 @@
+{
+  "screens": 9,
+  "bytes": 2625916,
+  "log": [
+    {
+      "action": "add",
+      "status": 0,
+      "msg": "Added paragraph at /body/p[@paraId=00100551]\r\n"
+    },
+    {
+      "action": "add",
+      "status": 0,
+      "msg": "Added picture at /body/p[@paraId=00100551]/r[2]\r\n"
+    },
+    {
+      "action": "move",
+      "status": 0,
+      "msg": "Moved to /body/p[243]\r\n"
+    },
+    {
+      "action": "add",
+      "status": 0,
+      "msg": "Added paragraph at /body/p[@paraId=00100553]\r\n"
+    },
+    {
+      "action": "move",
+      "status": 0,
+      "msg": "Moved to /body/p[244]\r\n"
+    },
+    {
+      "action": "add",
+      "status": 0,
+      "msg": "Added paragraph at /body/p[@paraId=00100555]\r\n"
+    },
+    {
+      "action": "add",
+      "status": 0,
+      "msg": "Added picture at /body/p[@paraId=00100555]/r[2]\r\n"
+    },
+    {
+      "action": "move",
+      "status": 0,
+      "msg": "Moved to /body/p[194]\r\n"
+    },
+    {
+      "action": "add",
+      "status": 0,
+      "msg": "Added paragraph at /body/p[@paraId=00100557]\r\n"
+    },
+    {
+      "action": "move",
+      "status": 0,
+      "msg": "Moved to /body/p[195]\r\n"
+    },
+    {
+      "action": "add",
+      "status": 0,
+      "msg": "Added paragraph at /body/p[@paraId=00100559]\r\n"
+    },
+    {
+      "action": "add",
+      "status": 0,
+      "msg": "Added picture at /body/p[@paraId=00100559]/r[2]\r\n"
+    },
+    {
+      "action": "move",
+      "status": 0,
+      "msg": "Moved to /body/p[194]\r\n"
+    },
+    {
+      "action": "add",
+      "status": 0,
+      "msg": "Added paragraph at /body/p[@paraId=0010055B]\r\n"
+    },
+    {
+      "action": "move",
+      "status": 0,
+      "msg": "Moved to /body/p[195]\r\n"
+    },
+    {
+      "action": "add",
+      "status": 0,
+      "msg": "Added paragraph at /body/p[@paraId=0010055D]\r\n"
+    },
+    {
+      "action": "add",
+      "status": 0,
+      "msg": "Added picture at /body/p[@paraId=0010055D]/r[2]\r\n"
+    },
+    {
+      "action": "move",
+      "status": 0,
+      "msg": "Moved to /body/p[194]\r\n"
+    },
+    {
+      "action": "add",
+      "status": 0,
+      "msg": "Added paragraph at /body/p[@paraId=0010055F]\r\n"
+    },
+    {
+      "action": "move",
+      "status": 0,
+      "msg": "Moved to /body/p[195]\r\n"
+    },
+    {
+      "action": "add",
+      "status": 0,
+      "msg": "Added paragraph at /body/p[@paraId=00100561]\r\n"
+    },
+    {
+      "action": "add",
+      "status": 0,
+      "msg": "Added picture at /body/p[@paraId=00100561]/r[2]\r\n"
+    },
+    {
+      "action": "move",
+      "status": 0,
+      "msg": "Moved to /body/p[158]\r\n"
+    },
+    {
+      "action": "add",
+      "status": 0,
+      "msg": "Added paragraph at /body/p[@paraId=00100563]\r\n"
+    },
+    {
+      "action": "move",
+      "status": 0,
+      "msg": "Moved to /body/p[159]\r\n"
+    },
+    {
+      "action": "add",
+      "status": 0,
+      "msg": "Added paragraph at /body/p[@paraId=00100565]\r\n"
+    },
+    {
+      "action": "add",
+      "status": 0,
+      "msg": "Added picture at /body/p[@paraId=00100565]/r[2]\r\n"
+    },
+    {
+      "action": "move",
+      "status": 0,
+      "msg": "Moved to /body/p[133]\r\n"
+    },
+    {
+      "action": "add",
+      "status": 0,
+      "msg": "Added paragraph at /body/p[@paraId=00100567]\r\n"
+    },
+    {
+      "action": "move",
+      "status": 0,
+      "msg": "Moved to /body/p[134]\r\n"
+    },
+    {
+      "action": "add",
+      "status": 0,
+      "msg": "Added paragraph at /body/p[@paraId=00100569]\r\n"
+    },
+    {
+      "action": "add",
+      "status": 0,
+      "msg": "Added picture at /body/p[@paraId=00100569]/r[2]\r\n"
+    },
+    {
+      "action": "move",
+      "status": 0,
+      "msg": "Moved to /body/p[133]\r\n"
+    },
+    {
+      "action": "add",
+      "status": 0,
+      "msg": "Added paragraph at /body/p[@paraId=0010056B]\r\n"
+    },
+    {
+      "action": "move",
+      "status": 0,
+      "msg": "Moved to /body/p[134]\r\n"
+    },
+    {
+      "action": "add",
+      "status": 0,
+      "msg": "Added paragraph at /body/p[@paraId=0010056D]\r\n"
+    },
+    {
+      "action": "add",
+      "status": 0,
+      "msg": "Added picture at /body/p[@paraId=0010056D]/r[2]\r\n"
+    },
+    {
+      "action": "move",
+      "status": 0,
+      "msg": "Moved to /body/p[108]\r\n"
+    },
+    {
+      "action": "add",
+      "status": 0,
+      "msg": "Added paragraph at /body/p[@paraId=0010056F]\r\n"
+    },
+    {
+      "action": "move",
+      "status": 0,
+      "msg": "Moved to /body/p[109]\r\n"
+    },
+    {
+      "action": "add",
+      "status": 0,
+      "msg": "Added paragraph at /body/p[@paraId=00100571]\r\n"
+    },
+    {
+      "action": "add",
+      "status": 0,
+      "msg": "Added picture at /body/p[@paraId=00100571]/r[2]\r\n"
+    },
+    {
+      "action": "move",
+      "status": 0,
+      "msg": "Moved to /body/p[94]\r\n"
+    },
+    {
+      "action": "add",
+      "status": 0,
+      "msg": "Added paragraph at /body/p[@paraId=00100573]\r\n"
+    },
+    {
+      "action": "move",
+      "status": 0,
+      "msg": "Moved to /body/p[95]\r\n"
+    },
+    {
+      "action": "save",
+      "status": 0,
+      "msg": "Saved .manual-chapters1-6-screens-qa.docx\r\n"
+    },
+    {
+      "action": "close",
+      "status": 0,
+      "msg": "Resident closed for .manual-chapters1-6-screens-qa.docx\r\n"
+    },
+    {
+      "action": "validate",
+      "status": 0,
+      "msg": "Validation passed: no errors found.\r\n"
+    }
+  ]
+}

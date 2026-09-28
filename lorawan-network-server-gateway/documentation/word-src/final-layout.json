@@ -1,0 +1,14 @@
+[
+  {
+    "command": "remove",
+    "path": "/body/p[37]"
+  },
+  {
+    "command": "set",
+    "path": "/body/p[23]",
+    "props": {
+      "pageBreakBefore": true,
+      "keepNext": true
+    }
+  }
+]

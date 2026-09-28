@@ -1,0 +1,57 @@
+{
+  "edits": 5,
+  "redundantCaptionsRemoved": 2,
+  "bytes": 2625827,
+  "log": [
+    {
+      "a": "set",
+      "exit": 0,
+      "msg": "Updated /body/p[@paraId=001004E5]: text=On the gateway Dashboard, read Last seen; open LoRaWAN frame"
+    },
+    {
+      "a": "set",
+      "exit": 0,
+      "msg": "Updated /body/p[@paraId=001004ED]: text=In the tenant navigation, open Device Profiles; use the prof"
+    },
+    {
+      "a": "set",
+      "exit": 0,
+      "msg": "Updated /body/p[@paraId=001004F9]: text=Open Applications → dissertation-sensors → Devices and selec"
+    },
+    {
+      "a": "set",
+      "exit": 0,
+      "msg": "Updated /body/p[@paraId=00100537]: text=In ChirpStack Gateways → Gateway-01 → LoRaWAN frames, confir"
+    },
+    {
+      "a": "set",
+      "exit": 0,
+      "msg": "Updated /body/p[@paraId=0010031A]: text=In Gateway-01's browser, open Network → Interfaces, select E"
+    },
+    {
+      "a": "remove",
+      "exit": 0,
+      "msg": "Removed /body/p[@paraId=001004CF]\r\n"
+    },
+    {
+      "a": "remove",
+      "exit": 0,
+      "msg": "Removed /body/p[@paraId=001004D5]\r\n"
+    },
+    {
+      "a": "save",
+      "exit": 0,
+      "msg": "Saved .manual-chapters1-6-screens-qa.docx\r\n"
+    },
+    {
+      "a": "close",
+      "exit": 0,
+      "msg": "Resident closed for .manual-chapters1-6-screens-qa.docx\r\n"
+    },
+    {
+      "a": "validate",
+      "exit": 0,
+      "msg": "Validation passed: no errors found.\r\n"
+    }
+  ]
+}

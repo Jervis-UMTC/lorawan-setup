@@ -1,0 +1,118 @@
+﻿docx picture
+--------------
+Parent: paragraph
+Paths: /body/p[@paraId=X]/r[N]
+Operations: add set get query remove
+
+Usage:
+  officecli add <file> /body/p[@paraId=X] --type picture [--prop key=val ...]
+  officecli set <file> /body/p[@paraId=X]/r[N] --prop key=val ...
+  officecli get <file> /body/p[@paraId=X]/r[N]
+  officecli query <file> picture
+  officecli remove <file> /body/p[@paraId=X]/r[N]
+
+Properties:
+  decorative   bool   [add/set/get]
+    description: Mark the picture as decorative for accessibility. Stored as an adec:decorative extension under <wp:docPr> (uri {C183D7F6-DF14-4A22-8298-3B9A5F5C6C3B}). Screen readers skip decorative images; Word treats their alt text as absent.
+    example: --prop decorative=true
+    readback: true (only when the decorative ext is present)
+  crop   string   [add/set/get]
+    description: Crop rectangle in percent (0-100), 1 or 4 comma-separated values (left,top,right,bottom). Stored as <a:srcRect> inside <a:blipFill> (1000ths-of-a-percent). Get emits the canonical 4-value form (e.g. 12,6,18,9); the per-side keys (cropLeft/cropTop/cropRight/cropBottom) are accepted on add/set only.
+    example: --prop crop=10
+    example: --prop crop=12,6,18,9
+    readback: left,top,right,bottom percent
+  cropLeft   string   [add/set]   aliases: cropleft
+    description: Crop from the left edge as percent (0-100). Set/add only ΓÇö Get folds all sides into the canonical crop key.
+    example: --prop cropLeft=10
+  cropTop   string   [add/set]   aliases: croptop
+    description: Crop from the top edge as percent (0-100). Set/add only ΓÇö Get folds all sides into the canonical crop key.
+    example: --prop cropTop=10
+  cropRight   string   [add/set]   aliases: cropright
+    description: Crop from the right edge as percent (0-100). Set/add only ΓÇö Get folds all sides into the canonical crop key.
+    example: --prop cropRight=10
+  cropBottom   string   [add/set]   aliases: cropbottom
+    description: Crop from the bottom edge as percent (0-100). Set/add only ΓÇö Get folds all sides into the canonical crop key.
+    example: --prop cropBottom=10
+  anchor   bool   [add/get]
+    description: true to create a floating (anchored) picture instead of inline. Required to enable wrap/hPosition/vPosition/hRelative/vRelative/behindText.
+    example: --prop anchor=true --prop wrap=square
+    readback: true on floating pictures
+  wrap   string   [add/set/get]
+    description: text wrapping mode for floating picture (none, square, tight, topandbottom, through). For 'behind text', use wrap=none + behindText=true.
+    example: --prop wrap=square
+    readback: wrap token
+  behindText   bool   [add/set/get]
+    description: true when the picture floats behind text (anchor @behindDoc=1).
+    readback: true on behind-text floats
+  relativeHeight   integer   [add/get]
+    description: z-order (stacking) of an anchored/floating picture (anchor @relativeHeight). Higher = nearer the front. Distinct per overlapping float; round-trips the raw OOXML value.
+    example: --prop anchor=true --prop relativeHeight=251664384
+    readback: raw uint z-order on floating pictures (e.g. `251664384`)
+  effectExtent   string   [add]
+    description: drawing visual overflow/effect margin (wp:effectExtent) as 4 comma-separated EMU ints: left,top,right,bottom. Word's inline-picture layout height depends on this even when wp:extent is identical, so the dumpΓåÆbatch round-trip restores it byte-for-byte. Round-trip prop ΓÇö emitted by `dump --format batch`, not by `get`; absent value defaults to 0,0,0,0 (the interactive Add default).
+    example: --prop effectExtent=0,0,9525,9525
+  hPosition   length   [add/set/get]
+    description: absolute horizontal anchor position (positionH/posOffset). Always pass a unit (cm/in/pt) ΓÇö a bare number is interpreted as raw EMU (914400 per inch), so hPosition=3 is a 3-EMU offset.
+    example: --prop hPosition=3cm
+    readback: length in cm (e.g. `5.0cm`)
+  vPosition   length   [add/set/get]
+    description: absolute vertical anchor position (positionV/posOffset). Always pass a unit (cm/in/pt) ΓÇö a bare number is interpreted as raw EMU (914400 per inch), so vPosition=4 is a 4-EMU offset.
+    example: --prop vPosition=4cm
+    readback: length in cm (e.g. `4.0cm`)
+  hRelative   string   [add/set/get]
+    description: horizontal anchor reference frame (e.g. page, margin, column, character).
+    readback: OOXML positionH @relativeFrom token
+  vRelative   string   [add/set/get]
+    description: vertical anchor reference frame (e.g. page, margin, paragraph, line).
+    readback: OOXML positionV @relativeFrom token
+  hAlign   string   [add/get]
+    description: relative horizontal alignment keyword for a floating picture (left, center, right, inside, outside) via positionH/align. Overrides hPosition when set.
+    example: --prop anchor=true --prop hAlign=right --prop hRelative=margin
+    readback: OOXML positionH/align keyword
+  vAlign   string   [add/get]
+    description: relative vertical alignment keyword for a floating picture (top, bottom, center, inside, outside) via positionV/align. Overrides vPosition when set.
+    example: --prop anchor=true --prop vAlign=top --prop vRelative=margin
+    readback: OOXML positionV/align keyword
+  link   string   [add/get]
+    description: click-hyperlink target for the image, making it clickable (<a:hlinkClick> on pic:cNvPr). An absolute URL or relative target round-trips as a TargetMode=External relationship; a '#anchor' or bare bookmark name round-trips as an internal anchor.
+    example: --prop src=logo.png --prop link=https://example.com
+    readback: resolved external URL, or internal anchor name
+  width   length   [add/set/get]   aliases: w
+    description: width (extent.Cx). Always pass a unit (cm/in/pt) ΓÇö a bare number is interpreted as raw EMU (914400 per inch), so width=5 renders an effectively invisible 5-EMU image.
+    example: --prop width=5cm
+    example: --prop width=3in
+    example: --prop w=120pt
+    readback: length string
+  height   length   [add/set/get]   aliases: h
+    description: height (extent.Cy). Always pass a unit (cm/in/pt) ΓÇö a bare number is interpreted as raw EMU (914400 per inch), so height=5 renders an effectively invisible 5-EMU image.
+    example: --prop height=4cm
+    example: --prop height=2in
+    example: --prop h=90pt
+    readback: length string
+  fallback   string   [add]
+    description: optional PNG fallback for SVG sources. When omitted, a 1x1 transparent PNG is generated.
+    example: --prop fallback=/path/to/fallback.png
+    readback: n/a (SVG-only)
+  id   number   [get]
+    description: OOXML shape id; source of the @id in the stable path /picture[@id=ID].
+    readback: integer shape id
+  alt   string   [add/set/get]   aliases: altText, alttext, description
+    description: alternative text (DocProperties.Description). When omitted, no description is written (intentional: an auto-filled filename is worse than none for screen readers). Aliases: alttext, description.
+    example: --prop alt="Logo"
+    example: --prop alt="Company logo"
+    readback: string
+  contentType   string   [get]
+    description: OOXML content-type of the embedded image part (e.g. `image/png`, `image/jpeg`). Read from the package part referenced by the BlipFill embed relationship.
+    readback: MIME-style content-type string from the image part
+  fileSize   number   [get]
+    description: embedded image file size in bytes (length of the image part stream).
+    readback: byte length of the embedded image part
+  relId   string   [get]
+    description: relationship id of the embedded image part (rId-style token). Required input for `get --save <path>` binary extraction.
+    readback: relationship id token
+  src   string   [add/set]   aliases: path
+    description: image source (file path, URL, data-URI); accepted on add/set only. Get does NOT surface this key; the embedded relationship id is exposed under a separate Format["relId"] key.
+    example: --prop src=/path/to/image.png
+    readback: add/set-only input; not echoed by Get. Use Format["relId"] to inspect the embedded image relationship.
+
+Note: Aliases: image, img. 'src' is required (alias 'path'). Image source resolved via ImageSource ΓÇö accepts file path, URL, data-URI, or raw bytes. SVGs auto-generate a PNG fallback.

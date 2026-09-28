@@ -1,0 +1,98 @@
+[
+  {
+    "index": 374,
+    "text": "Cloud ChirpStack is the LoRaWAN network server. It is not Gateway-01's local web page. Gateway-01 sends AS923 events through the local broker and LTE. ChirpStack runs on ULC-01 and ULC-02. Both instances use the commissioned PostgreSQL and Valkey service routes. Operators use https://smartagri-chirpstack.duckdns.org/. The private application listeners use port 18080."
+  },
+  {
+    "index": 377,
+    "text": "Check that the operator home page loads. Find the tenant, applications, device profiles, and gateways in the left menu. Select the intended tenant. An empty list in another tenant does not mean the device was deleted."
+  },
+  {
+    "index": 387,
+    "text": "Use this sequence only for an authorized new installation or documented rebuild. The existing cloud already contains Gateway-01 and EMU-01. Do not create duplicates for screenshots. On a working system, open the existing records and compare their values. First complete the gateway, AS923, forwarding, LTE, and certificate steps in Chapters 2–5."
+  },
+  {
+    "index": 388,
+    "text": "Setup order: 1. Sign in. 2. Select the tenant. 3. Add the gateway only if absent. 4. Add the compatible device profile only if absent. 5. Add the application only if absent. 6. Register the new approved sensor. 7. Configure its protected OTAA keys. 8. Power the sensor. 9. Check for a new accepted up event."
+  },
+  {
+    "index": 390,
+    "text": "Open the cloud ChirpStack login page shown above. Check that the tenant selector shows ChirpStack. In the Tenant menu, open Gateways. Search for Gateway ID 0016c001f139a1cb. Do not create this gateway if it already exists."
+  },
+  {
+    "index": 391,
+    "text": "If the gateway is absent, first confirm authorization to register Gateway-01. Click Add gateway. Screen 6K shows the complete form through Submit. Enter Name: Gateway-01. Enter Gateway ID (EUI64): 0016c001f139a1cb. Set Stats interval (secs): 30. Set Downlink priority: 10. These are the form's current defaults. Description and location are optional. Enter a location only when confirmed. Do not generate a new EUI."
+  },
+  {
+    "index": 392,
+    "text": "Compare the Gateway EUI with the actual Concentratord footer and Chapter 3 readout. If they match and no record exists, click Submit once. Return to Gateways → Gateway-01. If the record exists, use it. Do not submit another record. The Add gateway form does not contain an AS923 region selector. Check AS923 at the gateway and cloud region configuration."
+  },
+  {
+    "index": 398,
+    "text": "In a new tenant, click Add device profile. The blank form can show LoRaWAN 1.0.3, revision A, a 3600-second interval, and device-status requests of 1/day. These defaults are not the commissioned EMU-01 values. Compare every setting with the firmware before Submit."
+  },
+  {
+    "index": 399,
+    "text": "For the commissioned EMU-01 Arduino firmware, set Name: EMU-01 RAK4631 AS923. Set Region and Region configuration: AS923. Set MAC version: LoRaWAN 1.0.2. Set Regional parameters revision: B. Set Expected uplink interval: 15 seconds. Set Device-status request frequency: 0/day. Set RX1 Delay: 0 (system default). Keep Default ADR algorithm for LoRa. Keep Allow roaming OFF. Check that activation uses OTAA, not ABP. Do not enable unsupported Class B or Class C features. Check the compiled firmware and registered profile for additional features or payload codec. Do not copy an EU868 tutorial profile."
+  },
+  {
+    "index": 400,
+    "text": "Screen 6M shows the saved commissioned EMU-01 profile. Different firmware or SEC-01 RUI3 requires its own compatible profile check. Do not clone EMU-01 settings without checking. Click Submit only for an approved missing profile. Check that the new profile appears under Device Profiles."
+  },
+  {
+    "index": 407,
+    "text": "If dissertation-sensors is absent, click Add application. Set Name: dissertation-sensors. Set Description: Permanent Agriculture Kit LoRaWAN sensor application. The application groups sensors. It is not a gateway or device-profile record. Check for duplicates before you click Submit once."
+  },
+  {
+    "index": 413,
+    "text": "Register a new device only with authorization. Click Add device. Enter the approved unique sensor name. Enter the actual hardware or firmware DevEUI. The existing EMU-01 reference is ac1f09fffe296d29. Enter the actual firmware JoinEUI. Existing EMU-01 uses 0000000000000000. Select EMU-01 RAK4631 AS923 only for compatible EMU firmware. The description is optional. Leave Device is disabled OFF. Leave Disable frame-counter validation OFF. Frame-counter validation helps prevent replay."
+  },
+  {
+    "index": 414,
+    "text": "Read every field through Submit in Screen 6O. Never use the random-EUI button for a programmed device. Do not reuse EMU-01's DevEUI or root key for SEC-01. If the selected profile or EUIs differ from firmware, stop. Resolve the mismatch before Submit."
+  },
+  {
+    "index": 415,
+    "text": "After you submit a genuinely new approved device, open OTAA keys. Enter the protected AppKey for that sensor. Confirm that it matches the programmed firmware. LoRaWAN 1.0.x uses this OTAA root key. LoRaWAN 1.1 also uses a separate network root key. Do not invent or publish keys. Do not change only one end of a key pair. Never paste secrets into Word. Never capture an exposed key field. Check key storage with a masked or redacted UI only."
+  },
+  {
+    "index": 416,
+    "text": "Attach the correct antennas. Confirm that the sensor has the approved firmware. Power the authorized sensor. Look for new JoinRequest and JoinAccept traffic in gateway LoRaWAN frames. Then open ChirpStack → Devices → selected sensor → Events. Find a new up event. Compare timestamp, DevEUI, frame counter, and decoded payload. A saved record or gateway Last seen alone does not prove a join. Wi-Fi or LTE connectivity alone does not prove a join."
+  },
+  {
+    "index": 419,
+    "text": "Do not use SEC-01 for a demonstration join. SEC-01 has separate RUI3 firmware and authorization rules. Check test/preparation/sensor/ and the RAK4631 operator firmware guide before you register SEC-01."
+  },
+  {
+    "index": 430,
+    "text": "Do not create a second gateway or change the regional plan to force activity. If no new event appears, use Section 6.6. Check the cloud service, MQTT delivery, and radio separately."
+  },
+  {
+    "index": 433,
+    "text": "Open Device Profiles from the tenant menu. Find the profile attached to the selected EMU-01 or SEC-01 device under Applications → dissertation-sensors → Devices. Open that exact profile. Do not select another profile because its display name looks similar."
+  },
+  {
+    "index": 437,
+    "text": "For the commissioned plain AS923 configuration, check uplink 923.2 and 923.4 MHz. Check RX1 delay 1 s and RX1 DR offset 0. Check RX2 923.2 MHz / DR2. These are recorded commissioning values, not proof of a new sensor measurement."
+  },
+  {
+    "index": 449,
+    "text": "Open Events for the selected test device. If that device is powered and joined, look for a new up event. Check event time, frame counter, and gateway context. Do not expect new events from an idle device."
+  },
+  {
+    "index": 454,
+    "text": "Acceptance: The device identity and assigned profile match the actual sensor. Claim a live uplink only after a new accepted application event appears. Registration review alone is a read-only setup check."
+  },
+  {
+    "index": 480,
+    "text": "Open ChirpStack Gateways → Gateway-01 → LoRaWAN frames. Find the new matching gateway event. Open Applications → Devices → selected sensor → Events. Find the new application uplink. Record the observed DevEUI, frame counter, and timestamp in the research recorder."
+  },
+  {
+    "index": 483,
+    "text": "A local gateway topic proves the RF-to-local-broker path. A matching cloud gateway event adds LTE, bridge, and cloud-ingress evidence. A new ChirpStack device uplink proves accepted LoRaWAN application processing. A matching database row or chart proves the downstream Node-RED/telemetry path. Test trusted journal verification and Fabric anchoring separately."
+  },
+  {
+    "index": 491,
+    "text": "Do not rebuild both application instances for an unclassified missing event. Do not rerun database migrations, rotate device keys, or restart the entire HA system. Before you replace a node, preserve both current configurations. Preserve the pinned image digest, shared API secret, and each MQTT client identity. Check the surviving node before you rejoin the repaired instance."
+  }
+]

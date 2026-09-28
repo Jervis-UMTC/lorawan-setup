@@ -1,0 +1,21 @@
+C:\Program Files\Google\Chrome\Application\chrome.exe exists=True
+C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe exists=True
+C:\Users\smartagriintern\.rel-ai-mcp\node_modules\playwright exists=False
+C:\Users\smartagriintern\.rel-ai-mcp\extensions\node_modules\playwright exists=False
+C:\Users\smartagriintern\.rel-ai-mcp\node_modules\playwright-core exists=False
+selenium False playwright False
+C:\Users\smartagriintern\.rel-ai-mcp\active-mutations
+C:\Users\smartagriintern\.rel-ai-mcp\analytics
+C:\Users\smartagriintern\.rel-ai-mcp\browser
+C:\Users\smartagriintern\.rel-ai-mcp\extensions
+C:\Users\smartagriintern\.rel-ai-mcp\fallback-completions
+C:\Users\smartagriintern\.rel-ai-mcp\fallback-executions
+C:\Users\smartagriintern\.rel-ai-mcp\knowledge
+C:\Users\smartagriintern\.rel-ai-mcp\managed-ngrok
+C:\Users\smartagriintern\.rel-ai-mcp\operation-journal
+C:\Users\smartagriintern\.rel-ai-mcp\output-spills
+C:\Users\smartagriintern\.rel-ai-mcp\processes
+C:\Users\smartagriintern\.rel-ai-mcp\repository-intelligence
+C:\Users\smartagriintern\.rel-ai-mcp\review-checkpoints
+C:\Users\smartagriintern\.rel-ai-mcp\validation-plans
+C:\Users\smartagriintern\.rel-ai-mcp\worktrees

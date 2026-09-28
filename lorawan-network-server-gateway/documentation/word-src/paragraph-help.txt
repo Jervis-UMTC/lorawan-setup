@@ -1,0 +1,475 @@
+docx paragraph
+--------------
+Paths: /body/p[@paraId=ID]  /body/p[N]
+Operations: add set get query remove
+
+Usage:
+  officecli add <file> /body --type paragraph [--prop key=val ...]
+  officecli set <file> /body/p[N] --prop key=val ...
+  officecli get <file> /body/p[N]
+  officecli query <file> paragraph
+  officecli remove <file> /body/p[N]
+
+Properties:
+  lineRule   enum   [add/set/get]   aliases: linerule
+    description: line spacing rule paired with lineSpacing (Word-only: w:spacing@w:lineRule). 'auto' = multiplier (default for 1.5x/150%), 'exact' = exact fixed height (default for Npt), 'atLeast' = minimum height (Npt floor; lines may grow to fit tall content).
+    values: auto, exact, atLeast
+    example: --prop lineSpacing=14pt --prop lineRule=atLeast
+    readback: auto | exact | atLeast
+  align   enum   [add/set/get]   aliases: alignment, halign
+    values: left, center, right, justify, both, distribute
+    example: --prop align=center
+    readback: one of values
+  style   string   [add/set/get]   aliases: styleId, styleid, styleName, stylename
+    description: paragraph styleId (e.g. Heading1, Normal, Quote). Must reference an existing style or one of the built-in style aliases. Aliases mirror the canonical readback keys exposed by Get: styleId targets the OOXML styleId; styleName resolves the display name through the styles part (lenient, falls back to verbatim if no match).
+    example: --prop style=Heading1
+    example: --prop styleId=Heading1
+    example: --prop styleName="Heading 1"
+    readback: styleId as stored on the paragraph
+  spaceBefore   length   [add/set/get]   aliases: spacebefore
+    example: --prop spaceBefore=12pt
+    readback: unit-qualified, e.g. "12pt"
+  spaceAfter   length   [add/set/get]   aliases: spaceafter
+    example: --prop spaceAfter=6pt
+    readback: unit-qualified, e.g. "6pt"
+  spaceBeforeAuto   boolean   [add/set/get]   aliases: beforeAutospacing
+    description: w:spacing @beforeAutospacing GÇö Word's 'automatic spacing between paragraphs of the same style' toggle for the space BEFORE the paragraph. Surfaced on get only when present.
+    example: --prop spaceBeforeAuto=true
+    readback: true|false
+  spaceAfterAuto   boolean   [add/set/get]   aliases: afterAutospacing
+    description: w:spacing @afterAutospacing GÇö automatic spacing toggle for the space AFTER the paragraph. See spaceBeforeAuto.
+    example: --prop spaceAfterAuto=true
+    readback: true|false
+  listStyle   enum   [add/set/get]   aliases: liststyle
+    description: high-level list type. 'bullet' (aliases: unordered, ul) creates a bulleted list; 'ordered' (or any other non-bullet value, e.g. 'decimal') creates a numbered list; 'none'/'remove'/'clear' strips list formatting. Preferred over raw numId. Continues the IMMEDIATELY preceding list of the same type automatically; an intervening non-list paragraph (or a list of the other type) starts a fresh list at 1. To continue numbering across such an interruption, pass an explicit 'numId' referencing the earlier list's instance; pass 'start' to force a restart.
+    values: bullet, ordered, none
+    example: --prop listStyle=bullet --prop text="item"
+    example: --prop listStyle=ordered --prop text="step 1"
+    readback: 'bullet' or 'ordered' (normalized from the numbering format)
+  numId   int   [add/set/get]   aliases: numid
+    description: numbering definition id (w:numId). Low-level entry point GÇö prefer 'listStyle' unless you specifically need to reference an existing numbering instance. Requires the numId to already exist in /numbering (create via `add /numbering --type num` first).
+    example: --prop numId=1
+    readback: numbering id as stored on the paragraph
+  numLevel   int   [add/set/get]   aliases: numlevel, ilvl, listLevel, listlevel, level
+    description: list indent level (w:ilvl), 0..8. Requires numId or listStyle to be effective; Get only surfaces numLevel when numId is present on the paragraph.
+    example: --prop numLevel=1 --prop numId=1
+    example: --prop ilvl=1 --prop numId=1
+    readback: integer level as stored on the paragraph (only when numId is set)
+  start   int   [add/set]
+    description: starting number for an ordered list (w:start / w:startOverride on level 0 of the numbering definition). Only meaningful together with liststyle=ordered or an existing numid. NOTE: this applies to the whole numbering instance shared by the paragraph, so setting it on one item of a multi-item list renumbers the entire list (every paragraph that shares the numId), not just that item onward. To restart numbering for a sub-range mid-list, give those paragraphs a fresh numId instead. Readback not implemented GÇö w:start lives in the separate numbering part and cross-part traversal is fragile; query the numbering directly if you need it.
+    example: --prop liststyle=ordered --prop start=5 --prop text="item"
+    readback: n/a (write-only via paragraph; query numbering part)
+  bold   bool   [add/set/get]
+    description: run-level bold. On Add, applied to the implicit run created by 'text'. On Set, applied to all runs in the paragraph and to the paragraph-mark run properties so subsequent runs inherit.
+    example: --prop bold=true --prop text="Hi"
+  italic   bool   [add/set/get]
+    description: run-level italic. Same scope as 'bold'.
+    example: --prop italic=true --prop text="Hi"
+  font   string   [add/set]
+    description: run-level font family (applied to Ascii/HighAnsi/EastAsia). On Add, applied to the implicit run created by 'text'. On Set, applied to all runs in the paragraph.
+    example: --prop font="Times New Roman" --prop text="Hi"
+  size   font-size   [add/set/get]   aliases: fontsize
+    description: run-level font size. Accepts bare number (pt), '14pt', '10.5pt'.
+    example: --prop size=14 --prop text="Hi"
+    example: --prop size=10.5pt --prop text="Hi"
+  color   color   [add/set/get]
+    description: run-level text color. Accepts #RRGGBB, RRGGBB, named colors (e.g. red), rgb(r,g,b).
+    example: --prop color=red --prop text="Hi"
+    example: --prop color=#FF0000 --prop text="Hi"
+  underline   string   [add/set/get]
+    description: run-level underline. Accepts 'true'/'false' or an underline style (single, double, thick, dotted, dash, wavy, etc.).
+    example: --prop underline=true --prop text="Hi"
+    example: --prop underline=double --prop text="Hi"
+  underline.color   color   [add/set/get]   aliases: underlineColor, underlinecolor, font.underline.color
+    description: underline stroke color, written to w:u/@w:color. Preserved when 'underline' style is toggled.
+    example: --prop underline=single --prop underline.color=#FF0000
+  strike   bool   [add/set/get]   aliases: strikethrough
+    description: run-level single strikethrough.
+    example: --prop strike=true --prop text="Hi"
+  highlight   string   [add/set/get]
+    description: run-level highlight color (w:highlight values: yellow, green, cyan, magenta, blue, red, darkBlue, darkCyan, darkGreen, darkMagenta, darkRed, darkYellow, darkGray, lightGray, black, white, none).
+    example: --prop highlight=yellow --prop text="Hi"
+  caps   bool   [add]   aliases: allCaps
+    description: run-level all caps. On Add only (no paragraph-level Set wrapper).
+    example: --prop caps=true --prop text="Hi"
+  smallcaps   bool   [add]   aliases: smallCaps
+    description: run-level small caps. On Add only.
+    example: --prop smallcaps=true --prop text="Hi"
+  dstrike   bool   [add]
+    description: run-level double strikethrough. On Add only.
+    example: --prop dstrike=true --prop text="Hi"
+  vanish   bool   [add]
+    description: run-level hidden text. On Add only.
+    example: --prop vanish=true --prop text="Hi"
+  outline   bool   [add]
+    description: run-level outline text effect. On Add only.
+    example: --prop outline=true --prop text="Hi"
+  shadow   bool   [add]
+    description: run-level shadow text effect. On Add only.
+    example: --prop shadow=true --prop text="Hi"
+  emboss   bool   [add]
+    description: run-level emboss text effect. On Add only.
+    example: --prop emboss=true --prop text="Hi"
+  imprint   bool   [add]
+    description: run-level imprint (engrave) text effect. On Add only.
+    example: --prop imprint=true --prop text="Hi"
+  noproof   bool   [add]
+    description: run-level no-proofing flag. On Add only.
+    example: --prop noproof=true --prop text="Hi"
+  superscript   bool   [add]
+    description: run-level superscript vertical alignment. On Add only (use vertAlign for Set).
+    example: --prop superscript=true --prop text="x^2"
+  subscript   bool   [add]
+    description: run-level subscript vertical alignment. On Add only (use vertAlign for Set).
+    example: --prop subscript=true --prop text="H2O"
+  vertAlign   enum   [add]   aliases: vertalign
+    description: run-level vertical text alignment. On Add only.
+    values: superscript, subscript, baseline, super, sub
+    example: --prop vertAlign=superscript --prop text="x^2"
+  charSpacing   length   [add]   aliases: charspacing, letterspacing, letterSpacing
+    description: run-level character spacing in points (bare number = pt, or 'Xpt'). Stored as twips. On Add only.
+    example: --prop charSpacing=2 --prop text="Hi"
+  rtl   bool   [add]
+    description: run-level right-to-left text flag. On Add only.
+    example: --prop rtl=true --prop text="Hi"
+  direction   enum   [add/set/get]   aliases: dir, bidi
+    description: paragraph reading direction. 'rtl' writes <w:bidi/> on pPr, <w:rtl/> on the paragraph mark, and <w:rtl/> on every run (so Arabic / Hebrew character order reverses inside runs, not just page-side layout). 'ltr' clears all three.
+    values: ltr, rtl
+    example: --prop direction=rtl
+    readback: rtl | ltr (only emitted when explicitly set)
+  font.cs   string   [add/set/get]   aliases: font.complexscript, font.complex
+    description: Complex-script font slot (rFonts/cs) GÇö Arabic / Hebrew / Thai typefaces.
+    example: --prop font.cs="Arabic Typesetting"
+  font.ea   string   [add/set/get]   aliases: font.eastasia, font.eastasian
+    description: East-Asian font slot (rFonts/eastAsia) GÇö Chinese / Japanese / Korean typefaces.
+    example: --prop font.ea="pâípéñpâ¬pé¬"
+  font.latin   string   [add/set/get]
+    description: Latin font slots (rFonts/ascii + hAnsi) GÇö ASCII / Western text.
+    example: --prop font.latin=Calibri
+  font.asciiTheme   string   [add/set/get]
+    description: Theme font binding for the ascii slot (rFonts/asciiTheme). Values: minorHAnsi, majorHAnsi, minorEastAsia, majorEastAsia, minorBidi, majorBidi.
+    example: --prop font.asciiTheme=minorHAnsi
+  font.hAnsiTheme   string   [add/set/get]
+    description: Theme font binding for the hAnsi slot (rFonts/hAnsiTheme).
+    example: --prop font.hAnsiTheme=minorHAnsi
+  font.eaTheme   string   [add/set/get]   aliases: font.eastAsiaTheme
+    description: Theme font binding for the East-Asia slot (rFonts/eastAsiaTheme). Values: minorEastAsia, majorEastAsia.
+    example: --prop font.eaTheme=minorEastAsia
+  font.csTheme   string   [add/set/get]
+    description: Theme font binding for the complex-script slot (rFonts/cstheme). Values: minorBidi, majorBidi.
+    example: --prop font.csTheme=minorBidi
+  bold.cs   bool   [add/set/get]   aliases: font.bold.cs, boldcs
+    description: complex-script bold for the paragraph's runs (<w:bCs/>). Required for Arabic / Hebrew bold rendering.
+    example: --prop bold.cs=true
+    readback: true | false
+  italic.cs   bool   [add/set/get]   aliases: font.italic.cs, italiccs
+    description: complex-script italic (<w:iCs/>) for the paragraph's runs.
+    example: --prop italic.cs=true
+    readback: true | false
+  size.cs   font-size   [add/set/get]   aliases: font.size.cs, sizecs
+    description: complex-script font size (<w:szCs/>) for the paragraph's runs.
+    example: --prop size.cs=14pt
+    readback: unit-qualified, e.g. "14pt"
+  shd   string   [add/set]   aliases: shading
+    description: shading. Format: 'fill' or 'val;fill' or 'val;fill;color'. Applied at paragraph level on Add (pPr/shd).
+    example: --prop shd=FFFF00
+    example: --prop shd=clear;FFFF00
+  firstLineIndent   length   [add/set/get]   aliases: firstlineindent
+    description: first-line indent. Routed through SpacingConverter.
+    example: --prop firstLineIndent=2cm
+  rightIndent   length   [add/set/get]   aliases: rightindent, indentright
+    description: right indentation. Routed through SpacingConverter.
+    example: --prop rightIndent=1cm
+  hangingIndent   length   [add/set/get]   aliases: hangingindent, hanging
+    description: hanging indent (pairs with left indent). Routed through SpacingConverter.
+    example: --prop hangingIndent=0.5cm
+    readback: unit-qualified length (e.g. "28.35pt")
+  keepNext   bool   [add/set/get]   aliases: keepnext
+    description: keep paragraph with the next paragraph (no page break between).
+    example: --prop keepNext=true
+  keepLines   bool   [add/set/get]   aliases: keeplines, keeptogether, keepTogether
+    description: keep all lines of the paragraph together (no page break within).
+    example: --prop keepLines=true
+  pageBreakBefore   bool   [add/set/get]   aliases: pagebreakbefore, break
+    description: force a page break before this paragraph.
+    example: --prop pageBreakBefore=true
+    example: --prop break=newPage
+  widowControl   bool   [add/set/get]   aliases: widowcontrol
+    description: widow/orphan control.
+    example: --prop widowControl=true
+  wordWrap   bool   [add/set/get]   aliases: wordwrap
+    description: Latin-word break behaviour in CJK paragraphs. Set false to allow ASCII text/whitespace to participate in CJK character flow GÇö required for right-aligned CJK lines that rely on trailing underlined whitespace to align with adjacent lines.
+    example: --prop wordWrap=false
+  contextualSpacing   bool   [add/set/get]   aliases: contextualspacing
+    description: suppress space between paragraphs of the same style. Applied on Add/Set to paragraph pPr; also valid on Style.
+    example: --prop contextualSpacing=true
+  effective.size   font-size   [get]
+    description: inheritance-resolved font size (read-only) GÇö derived from the first run's style chain GåÆ paragraph style GåÆ docDefaults.
+    readback: unit-qualified, e.g. "14pt"
+  effective.size.src   string   [get]
+    description: source pointer for effective.size.
+    readback: style/docDefaults path
+  effective.font.ascii   string   [get]
+    description: inheritance-resolved Latin/ASCII font slot (read-only).
+    readback: font family name
+  effective.font.ascii.src   string   [get]
+    description: source pointer for effective.font.ascii.
+    readback: style/docDefaults path
+  effective.font.eastAsia   string   [get]
+    description: inheritance-resolved East-Asian font slot (read-only).
+    readback: font family name
+  effective.font.eastAsia.src   string   [get]
+    description: source pointer for effective.font.eastAsia.
+    readback: style/docDefaults path
+  effective.font.hAnsi   string   [get]
+    description: inheritance-resolved High-ANSI font slot (read-only).
+    readback: font family name
+  effective.font.hAnsi.src   string   [get]
+    description: source pointer for effective.font.hAnsi.
+    readback: style/docDefaults path
+  effective.font.cs   string   [get]
+    description: inheritance-resolved complex-script font slot (read-only).
+    readback: font family name
+  effective.font.cs.src   string   [get]
+    description: source pointer for effective.font.cs.
+    readback: style/docDefaults path
+  effective.bold   bool   [get]
+    description: inheritance-resolved bold (read-only).
+    readback: true | false
+  effective.bold.src   string   [get]
+    description: source pointer for effective.bold.
+    readback: style/docDefaults path
+  effective.italic   bool   [get]
+    description: inheritance-resolved italic (read-only).
+    readback: true | false
+  effective.italic.src   string   [get]
+    description: source pointer for effective.italic.
+    readback: style/docDefaults path
+  effective.color   color   [get]
+    description: inheritance-resolved font color (read-only). #RRGGBB or scheme color name.
+    readback: #RRGGBB uppercase or scheme color
+  effective.color.src   string   [get]
+    description: source pointer for effective.color.
+    readback: style/docDefaults path
+  effective.underline   string   [get]
+    description: inheritance-resolved underline style (read-only).
+    readback: underline style name
+  effective.underline.src   string   [get]
+    description: source pointer for effective.underline.
+    readback: style/docDefaults path
+  effective.rtl   bool   [get]
+    description: inheritance-resolved right-to-left flag (read-only). Emitted even when 'rtl' is set directly so callers can compare direct vs cascade-resolved state.
+    readback: true | false
+  effective.rtl.src   string   [get]
+    description: source pointer for effective.rtl.
+    readback: style/docDefaults path
+  numFmt   string   [get]
+    description: raw numbering format (e.g. bullet, decimal, lowerLetter). Emitted only when present.
+    readback: numbering format token
+  fill   color   [add/set/get]   aliases: shd, shading
+    description: paragraph background shading (w:shd @fill). A solid background reads back as this canonical key (matching table cells and runs). Accepts a solid color GÇö hex ('FF0000'), '#'-prefixed hex ('#FF0000'), named color ('red'), or rgb(...) notation. For a true pattern shading (pct*/stripe/cross) or a foreground pattern color, pass the legacy `shd`/`shading` triplet form 'PATTERN;FILL[;COLOR]' instead; those read back via the shading.* detail keys.
+    example: --prop fill=FFFF00
+    example: --prop fill=#FF0000
+    example: --prop fill=red
+    example: --prop shd="pct25;FF0000;0000FF"
+    readback: #RRGGBB uppercase
+  shading.val   string   [set/get]
+    description: shading pattern value (decomposed from `shd`). Emitted on get only for a true pattern shading (pct*/stripe/cross); a solid background reads back as the canonical `fill` key. Add/Set use `fill`/`shd`/`shading`.
+    readback: shading pattern token (pattern shading only)
+  shading.fill   string   [set/get]
+    description: shading fill color hex (decomposed from `shd`). Emitted on get only for a true pattern shading; a solid background reads back as the canonical `fill` key.
+    readback: #RRGGBB (pattern shading only)
+  shading.color   string   [set/get]
+    description: shading foreground (pattern) color hex. Pattern shading only.
+    readback: #RRGGBB (pattern shading only)
+  paraId   string   [get]
+    description: paragraph stable id (source of @paraId in stable path). Emitted only when present.
+    readback: paraId hex string
+  outlineLvl   number   [add/set/get]
+    description: outline level (0-9). Used by Word's TOC and document map.
+    readback: integer
+  rStyle   string   [add/set/get]
+    description: Paragraph mark run style id (e.g. FootnoteReference, IntenseEmphasis). Inherited by runs without their own rStyle.
+    readback: style id
+  tabs   array   [set/get]   aliases: tabstops
+    description: tab stops array. Set accepts a comma-separated list of positions (twips, e.g. 720,1440); Get emits the stored tab stops when present.
+    example: --prop tabs=720,1440
+    readback: array of tab stop descriptors
+  pbdr.top   string   [add/set/get]
+    description: paragraph border edge descriptor. Emitted only when present.
+    example: --prop pbdr.top="single;4;#FF0000"
+    readback: n/a (handler does not surface paragraph borders today)
+  pbdr.bottom   string   [add/set/get]
+    description: paragraph border edge descriptor. Emitted only when present.
+    example: --prop pbdr.bottom="single;4;#FF0000"
+    readback: n/a (handler does not surface paragraph borders today)
+  pbdr.left   string   [add/set/get]
+    description: paragraph border edge descriptor. Emitted only when present.
+    example: --prop pbdr.left="single;4;#FF0000"
+    readback: n/a (handler does not surface paragraph borders today)
+  pbdr.right   string   [add/set/get]
+    description: paragraph border edge descriptor. Emitted only when present.
+    example: --prop pbdr.right="single;4;#FF0000"
+    readback: n/a (handler does not surface paragraph borders today)
+  pbdr.between   string   [add/set/get]
+    description: paragraph border edge descriptor. Emitted only when present.
+    example: --prop pbdr.between="single;4;#FF0000"
+    readback: n/a (handler does not surface paragraph borders today)
+  pbdr.bar   string   [add/set/get]
+    description: paragraph border edge descriptor. Emitted only when present.
+    example: --prop pbdr.bar="single;4;#FF0000"
+    readback: n/a (handler does not surface paragraph borders today)
+  firstLineChars   number   [set/get]
+    description: first-line indent in 1/100 character units (CT_Ind @firstLineChars). Word's chars-relative variant of firstLineIndent.
+    readback: integer 1/100-char units
+  hangingChars   number   [set/get]
+    description: hanging indent in 1/100 character units (CT_Ind @hangingChars). Word's chars-relative variant of hangingIndent.
+    readback: integer 1/100-char units
+  markRPr.bold   bool   [set/get]
+    description: paragraph-mark run property GÇö bold flag on the -¦ glyph (w:pPr/w:rPr/w:b). Distinct from per-run bold; affects how the mark itself renders and is inherited by appended runs without their own bold setting.
+    readback: true|false
+  markRPr.italic   bool   [set/get]
+    description: paragraph-mark run italic (w:pPr/w:rPr/w:i).
+    readback: true|false
+  markRPr.strike   bool   [set/get]
+    description: paragraph-mark run strike (w:pPr/w:rPr/w:strike).
+    readback: true|false
+  markRPr.rtl   bool   [add/set/get]
+    description: paragraph-mark run right-to-left flag (w:pPr/w:rPr/w:rtl).
+    readback: true|false
+  markRPr.rStyle   string   [add/set/get]
+    description: paragraph-mark run character style (w:pPr/w:rPr/w:rStyle). Emitted on Get when the style binds the mark only; bare rStyle covers the mark+implicit-run shape.
+  markRPr.underline   string   [set/get]
+    description: paragraph-mark run underline style (w:pPr/w:rPr/w:u @val).
+    readback: underline style enum (single, double, dotted, GÇª)
+  markRPr.size   length   [set/get]
+    description: paragraph-mark run font size (w:pPr/w:rPr/w:sz, half-points internally).
+    readback: unit-qualified pt (e.g. 11pt)
+  markRPr.color   color   [set/get]
+    description: paragraph-mark run color (w:pPr/w:rPr/w:color). Returns scheme color name for theme refs, or #-prefixed hex.
+    readback: scheme color name or #RRGGBB
+  markRPr.highlight   string   [set/get]
+    description: paragraph-mark run highlight color (w:pPr/w:rPr/w:highlight @val).
+    readback: highlight color enum
+  markRPr.font.latin   string   [set/get]
+    description: paragraph-mark run Ascii font (w:pPr/w:rPr/w:rFonts @ascii).
+    readback: font name
+  markRPr.font.ea   string   [set/get]
+    description: paragraph-mark run EastAsia font (w:pPr/w:rPr/w:rFonts @eastAsia).
+    readback: font name
+  markRPr.font.cs   string   [set/get]
+    description: paragraph-mark run ComplexScript font (w:pPr/w:rPr/w:rFonts @cs).
+    readback: font name
+  markRPr.font.hint   string   [set/get]
+    description: paragraph-mark run font slot hint (w:pPr/w:rPr/w:rFonts @hint) GÇö eastAsia / cs / default; selects the font slot for ambiguous characters on the paragraph mark.
+    readback: eastAsia / cs / default
+  markRPr.font.asciiTheme   string   [add/set/get]
+    description: paragraph-mark run theme font binding (w:pPr/w:rPr/w:rFonts/@w:asciiTheme), e.g. minorHAnsi.
+  markRPr.font.hAnsiTheme   string   [add/set/get]
+    description: paragraph-mark run theme font binding (w:pPr/w:rPr/w:rFonts/@w:hAnsiTheme), e.g. minorHAnsi.
+  markRPr.font.eaTheme   string   [add/set/get]
+    description: paragraph-mark run theme font binding (w:pPr/w:rPr/w:rFonts/@w:eastAsiaTheme), e.g. minorHAnsi.
+  markRPr.font.csTheme   string   [add/set/get]
+    description: paragraph-mark run theme font binding (w:pPr/w:rPr/w:rFonts/@w:csTheme), e.g. minorHAnsi.
+  markRPr.charSpacing   length   [set/get]
+    description: paragraph-mark run character spacing (w:pPr/w:rPr/w:spacing @val, twips internally).
+    readback: unit-qualified pt (e.g. 1pt)
+  markRPr.size.cs   length   [set/get]
+    description: paragraph-mark run complex-script font size (w:pPr/w:rPr/w:szCs, half-points internally). The CJK/RTL counterpart of markRPr.size; emitted separately so the -¦ glyph's complex-script metrics survive dumpGåÆbatch.
+    readback: unit-qualified pt (e.g. 11pt)
+  markRPr.bold.cs   bool   [set/get]
+    description: paragraph-mark run complex-script bold (w:pPr/w:rPr/w:bCs). The CJK/RTL counterpart of markRPr.bold.
+    readback: true|false
+  markRPr.italic.cs   bool   [set/get]
+    description: paragraph-mark run complex-script italic (w:pPr/w:rPr/w:iCs). The CJK/RTL counterpart of markRPr.italic.
+    readback: true|false
+  markRPr.kern   integer   [set/get]
+    description: paragraph-mark run kerning threshold (w:pPr/w:rPr/w:kern @val, half-points). Below this font size Word disables kerning on the -¦ glyph.
+    readback: integer half-points
+  markRPr.font.ascii   string   [set/get]
+    description: paragraph-mark run Ascii font (w:pPr/w:rPr/w:rFonts @ascii). Emitted alongside markRPr.font.hAnsi only when the two slots diverge; the symmetric case collapses to markRPr.font.latin.
+    readback: font name
+  markRPr.font.hAnsi   string   [set/get]
+    description: paragraph-mark run HighAnsi font (w:pPr/w:rPr/w:rFonts @hAnsi). Emitted alongside markRPr.font.ascii only when the two slots diverge; the symmetric case collapses to markRPr.font.latin.
+    readback: font name
+  markRPr.lang.latin   string   [set/get]
+    description: paragraph-mark run Latin language tag (w:pPr/w:rPr/w:lang @val, BCP-47 e.g. en-US). Tags the -¦ glyph's language for proofing; mirrors run-level lang.latin.
+    readback: BCP-47 tag
+  markRPr.lang.ea   string   [set/get]
+    description: paragraph-mark run East-Asian language tag (w:pPr/w:rPr/w:lang @eastAsia, BCP-47 e.g. ja-JP). Mirrors run-level lang.ea.
+    readback: BCP-47 tag
+  markRPr.lang.cs   string   [set/get]
+    description: paragraph-mark run complex-script language tag (w:pPr/w:rPr/w:lang @bidi, BCP-47 e.g. ar-SA). Mirrors run-level lang.cs.
+    readback: BCP-47 tag
+  kern   integer   [get]
+    description: kerning threshold on an empty paragraph's -¦-mark run (w:pPr/w:rPr/w:kern @val, half-points). Below this font size Word disables kerning. Get-side readback only GÇö the value is applied via the generic run-formatting path (ApplyRunFormatting), not a dedicated paragraph Set case; text-bearing paragraphs surface the -¦-mark kern under markRPr.kern instead.
+    readback: integer half-points
+  adjustRightInd   boolean   [add/set/get]
+    description: Adjust the right indent to fit the document grid.
+    example: --prop adjustRightInd=false
+  autoSpaceDE   boolean   [add/set/get]
+    description: Auto-add spacing between East-Asian and Latin text.
+    example: --prop autoSpaceDE=false
+  autoSpaceDN   boolean   [add/set/get]
+    description: Auto-add spacing between East-Asian text and numbers.
+    example: --prop autoSpaceDN=false
+  kinsoku   boolean   [add/set/get]
+    description: Apply East-Asian line-breaking (kinsoku) rules.
+    example: --prop kinsoku=false
+  leftChars   number   [add/set/get]
+    description: Left indent in character units (w:leftChars, 1/100 char).
+    example: --prop leftChars=200
+  lineSpacing   string   [add/set/get]
+    description: Line spacing: multiplier (1.5x) or fixed (18pt). Pairs with lineRule.
+    example: --prop lineSpacing=1.5x
+  mirrorIndents   boolean   [add/set/get]
+    description: Swap left/right indents on facing (mirrored) pages.
+    example: --prop mirrorIndents=true
+  overflowPunct   boolean   [add/set/get]
+    description: Allow punctuation to hang past the right margin.
+    example: --prop overflowPunct=false
+  rightChars   number   [add/set/get]
+    description: Right indent in character units (w:rightChars, 1/100 char).
+    example: --prop rightChars=100
+  snapToGrid   boolean   [add/set/get]
+    description: Snap the paragraph lines to the document grid.
+    example: --prop snapToGrid=false
+  spaceAfterLines   number   [add/set/get]
+    description: Space after the paragraph in 1/100 of a line.
+    example: --prop spaceAfterLines=100
+  spaceBeforeLines   number   [add/set/get]
+    description: Space before the paragraph in 1/100 of a line.
+    example: --prop spaceBeforeLines=100
+  suppressAutoHyphens   boolean   [add/set/get]
+    description: Suppress automatic hyphenation for this paragraph.
+    example: --prop suppressAutoHyphens=true
+  suppressLineNumbers   boolean   [add/set/get]
+    description: Suppress line numbers for this paragraph.
+    example: --prop suppressLineNumbers=true
+  suppressOverlap   boolean   [add/set/get]
+    description: Prevent this framed paragraph from overlapping others.
+    example: --prop suppressOverlap=true
+  textAlignment   string   [add/set/get]
+    description: Vertical alignment of text on the line: auto/baseline/top/center/bottom.
+    example: --prop textAlignment=center
+  textboxTightWrap   string   [add/set/get]
+    description: Tight-wrap lines in a text box: none/allLines/firstAndLastLine/firstLineOnly/lastLineOnly.
+    example: --prop textboxTightWrap=allLines
+  topLinePunct   boolean   [add/set/get]
+    description: Compress punctuation at the start of a line.
+    example: --prop topLinePunct=true
+  indent   length   [add/set/get]   aliases: leftindent, leftIndent
+    description: left indentation. Routed through SpacingConverter GÇö accepts twips int or unit-qualified (2cm/0.5in/24pt). Aliases: leftindent/leftIndent/indentleft.
+    example: --prop indent=2cm
+    readback: length string (cm or twips, format-dependent)
+  text   string   [add/set/get]
+    description: Sets plain text on the paragraph by creating an implicit single run. Newline semantics: \n is a PARAGRAPH boundary (the text is split into one paragraph per line, each inheriting the same style/props); \v is a soft line break within the paragraph (Shift+Enter). Do not also add a 'run' child with text on the same paragraph GÇö they will duplicate.
+    example: --prop text="Hello"
+    example: --prop text="Hello world"
+    readback: plain text content of paragraph
+
+Children:
+  run  (0..n)  /r
+
+Note: Get returns canonical keys: spaceBefore/spaceAfter/lineSpacing/align (legacy aliases spacebefore/linespacing/halign still accepted on Add/Set). effective.* keys are read-only values resolved through paragraph style GåÆ docDefaults from the first run; each carries an effective.X.src pointer to the writing layer (e.g. /styles/Heading1). Suppressed when the paragraph (or first run) sets the direct value.
+

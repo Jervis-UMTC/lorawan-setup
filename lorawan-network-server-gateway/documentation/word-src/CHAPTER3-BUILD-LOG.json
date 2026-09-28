@@ -1,0 +1,77 @@
+[
+  {
+    "op": "add",
+    "path": "/",
+    "exit": 0,
+    "output": "Added markdown at /body/p[@paraId=001001D7]",
+    "stderr": ""
+  },
+  {
+    "op": "add",
+    "path": "/body",
+    "exit": 0,
+    "output": "Added paragraph at /body/p[@paraId=001001ED]",
+    "stderr": ""
+  },
+  {
+    "op": "add",
+    "path": "/body/p[@paraId=001001ED]",
+    "exit": 0,
+    "output": "Added picture at /body/p[@paraId=001001ED]/r[2]",
+    "stderr": ""
+  },
+  {
+    "op": "add",
+    "path": "/body",
+    "exit": 0,
+    "output": "Added paragraph at /body/p[@paraId=001001EF]",
+    "stderr": ""
+  },
+  {
+    "op": "add",
+    "path": "/",
+    "exit": 0,
+    "output": "Added markdown at /body/p[@paraId=001001F1]",
+    "stderr": ""
+  },
+  {
+    "op": "add",
+    "path": "/body",
+    "exit": 0,
+    "output": "Added paragraph at /body/p[@paraId=00100203]",
+    "stderr": ""
+  },
+  {
+    "op": "add",
+    "path": "/body/p[@paraId=00100203]",
+    "exit": 0,
+    "output": "Added picture at /body/p[@paraId=00100203]/r[2]",
+    "stderr": ""
+  },
+  {
+    "op": "add",
+    "path": "/body",
+    "exit": 0,
+    "output": "Added paragraph at /body/p[@paraId=00100205]",
+    "stderr": ""
+  },
+  {
+    "op": "add",
+    "path": "/",
+    "exit": 0,
+    "output": "Added markdown at /body/p[@paraId=00100207]",
+    "stderr": ""
+  },
+  {
+    "op": "save",
+    "exit": 0,
+    "output": "Saved .manual-chapter3-qa.docx",
+    "stderr": ""
+  },
+  {
+    "op": "close",
+    "exit": 0,
+    "output": "Resident closed for .manual-chapter3-qa.docx",
+    "stderr": ""
+  }
+]

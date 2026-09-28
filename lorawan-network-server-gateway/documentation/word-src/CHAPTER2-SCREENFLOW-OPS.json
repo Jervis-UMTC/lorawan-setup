@@ -1,0 +1,62 @@
+[
+  {
+    "verb": "add",
+    "position": "/body",
+    "exit": 0,
+    "out": "Added paragraph at /body/p[@paraId=001003D4]",
+    "error": ""
+  },
+  {
+    "verb": "add",
+    "position": "/body/p[@paraId=001003D4]",
+    "exit": 0,
+    "out": "Added picture at /body/p[@paraId=001003D4]/r[2]",
+    "error": ""
+  },
+  {
+    "verb": "add",
+    "position": "/body",
+    "exit": 0,
+    "out": "Added paragraph at /body/p[@paraId=001003D6]",
+    "error": ""
+  },
+  {
+    "verb": "add",
+    "position": "/body",
+    "exit": 0,
+    "out": "Added paragraph at /body/p[@paraId=001003D8]",
+    "error": ""
+  },
+  {
+    "verb": "add",
+    "position": "/body/p[@paraId=001003D8]",
+    "exit": 0,
+    "out": "Added picture at /body/p[@paraId=001003D8]/r[2]",
+    "error": ""
+  },
+  {
+    "verb": "add",
+    "position": "/body",
+    "exit": 0,
+    "out": "Added paragraph at /body/p[@paraId=001003DA]",
+    "error": ""
+  },
+  {
+    "verb": "save",
+    "exit": 0,
+    "out": "Saved .screenflow-chapter2-qa.docx",
+    "error": ""
+  },
+  {
+    "verb": "close",
+    "exit": 0,
+    "out": "Resident closed for .screenflow-chapter2-qa.docx",
+    "error": ""
+  },
+  {
+    "verb": "validate",
+    "exit": 0,
+    "out": "Validation passed: no errors found.",
+    "error": ""
+  }
+]

@@ -1,0 +1,50 @@
+Elements for docx:
+  abstractNum
+    level
+  body
+  diagram
+  document
+  footer
+  header
+  markdown
+  num
+  numbering
+  paragraph
+    bookmark
+    bookmarkEnd
+    chart
+      chart-axis
+      chart-series
+    comment
+    endnote
+    equation
+    field
+    fieldchar
+    footnote
+    formfield
+    hyperlink
+    instrtext
+    ole
+    pagebreak
+    permStart
+    picture
+    ptab
+    revision
+    run
+    sdt
+    tab
+    toc
+  raw
+  section
+  shape
+  style
+  styles
+  table
+    table-column
+    table-row
+      table-cell
+  textbox
+  watermark
+
+Run 'officecli help docx <element>' for detail.
+

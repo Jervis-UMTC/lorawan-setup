@@ -1,0 +1,17 @@
+{
+  "return": 0,
+  "error": "",
+  "matches": 141,
+  "corrections": [
+    {
+      "path": "/body/p[@paraId=001000EB]",
+      "text": "Correction status: ChirpStack stores gateway frames in a Redis collection with a time-to-live of twice the configur"
+    }
+  ],
+  "repair_headings": [
+    {
+      "path": "/body/p[@paraId=001000ED]",
+      "text": "P1 - Recorder correction check"
+    }
+  ]
+}

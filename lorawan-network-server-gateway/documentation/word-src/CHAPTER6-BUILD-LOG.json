@@ -1,0 +1,130 @@
+{
+  "heading": 349,
+  "cover": 5,
+  "images": 2,
+  "blocks": 4,
+  "sourceSections": 7,
+  "candidateBytes": 2123453,
+  "calls": [
+    {
+      "action": "add",
+      "status": 0,
+      "text": "Added markdown at /body/p[@paraId=001004BF]\r\n"
+    },
+    {
+      "action": "add",
+      "status": 0,
+      "text": "Added paragraph at /body/p[@paraId=001004CB]\r\n"
+    },
+    {
+      "action": "add",
+      "status": 0,
+      "text": "Added picture at /body/p[@paraId=001004CB]/r[2]\r\n"
+    },
+    {
+      "action": "add",
+      "status": 0,
+      "text": "Added paragraph at /body/p[@paraId=001004CD]\r\n"
+    },
+    {
+      "action": "add",
+      "status": 0,
+      "text": "Added markdown at /body/p[@paraId=001004CF]\r\n"
+    },
+    {
+      "action": "add",
+      "status": 0,
+      "text": "Added paragraph at /body/p[@paraId=001004D1]\r\n"
+    },
+    {
+      "action": "add",
+      "status": 0,
+      "text": "Added picture at /body/p[@paraId=001004D1]/r[2]\r\n"
+    },
+    {
+      "action": "add",
+      "status": 0,
+      "text": "Added paragraph at /body/p[@paraId=001004D3]\r\n"
+    },
+    {
+      "action": "add",
+      "status": 0,
+      "text": "Added markdown at /body/p[@paraId=001004D5]\r\n"
+    },
+    {
+      "action": "add",
+      "status": 0,
+      "text": "Added paragraph at /body/p[@paraId=001004D9]\r\n"
+    },
+    {
+      "action": "add",
+      "status": 0,
+      "text": "Added markdown at /body/p[@paraId=001004DD]\r\n"
+    },
+    {
+      "action": "add",
+      "status": 0,
+      "text": "Added paragraph at /body/p[@paraId=0010050B]\r\n"
+    },
+    {
+      "action": "add",
+      "status": 0,
+      "text": "Added markdown at /body/p[@paraId=00100519]\r\n"
+    },
+    {
+      "action": "add",
+      "status": 0,
+      "text": "Added paragraph at /body/p[@paraId=0010051D]\r\n"
+    },
+    {
+      "action": "add",
+      "status": 0,
+      "text": "Added markdown at /body/p[@paraId=00100527]\r\n"
+    },
+    {
+      "action": "add",
+      "status": 0,
+      "text": "Added paragraph at /body/p[@paraId=0010052B]\r\n"
+    },
+    {
+      "action": "add",
+      "status": 0,
+      "text": "Added markdown at /body/p[@paraId=0010052F]\r\n"
+    },
+    {
+      "action": "save",
+      "status": 0,
+      "text": "Saved .manual-chapter6-qa.docx\r\n"
+    },
+    {
+      "action": "close",
+      "status": 0,
+      "text": "Resident closed for .manual-chapter6-qa.docx\r\n"
+    },
+    {
+      "action": "set",
+      "status": 0,
+      "text": "Updated /body/p[349]: pageBreakBefore=true, keepNext=true\r\n"
+    },
+    {
+      "action": "set",
+      "status": 0,
+      "text": "Updated /body/p[5]: text=Working draft — Chapters 1–6 — 22 September 2026\r\n"
+    },
+    {
+      "action": "save",
+      "status": 0,
+      "text": "Saved .manual-chapter6-qa.docx\r\n"
+    },
+    {
+      "action": "close",
+      "status": 0,
+      "text": "Resident closed for .manual-chapter6-qa.docx\r\n"
+    },
+    {
+      "action": "validate",
+      "status": 0,
+      "text": "Validation passed: no errors found.\r\n"
+    }
+  ]
+}

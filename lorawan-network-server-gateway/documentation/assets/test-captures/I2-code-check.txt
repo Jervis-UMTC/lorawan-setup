@@ -1,0 +1,10 @@
+COMMAND: py -3 test/automation/research-manual/run_test.py I2 --synthetic
+EXIT CODE: 0
+
+TEST_ID=I2 MODE=SYNTHETIC RESEARCH_SAMPLES=0 LIVE_TEST=NOT_STARTED
+..........................
+----------------------------------------------------------------------
+Ran 26 tests in 0.289s
+
+OK
+OFFLINE_TEST=I2 RESULT=CODE_ONLY_PASS TESTS=26 HARDWARE_USED=NO RESEARCH_SAMPLES=0 LIVE_QUALIFICATION=NOT_PROVEN

@@ -1,0 +1,92 @@
+[
+  {
+    "verb": "close",
+    "exit": 0,
+    "result": "LoRaWAN-Operator-Manual-revised.docx is already saved to disk; nothing to close.",
+    "warnings": ""
+  },
+  {
+    "verb": "create",
+    "exit": 0,
+    "result": "Created: lorawan-network-server-gateway/documentation/LoRaWAN-Operator-Manual-revised.docx (kept open in background for faster subsequent commands)",
+    "warnings": ""
+  },
+  {
+    "verb": "set",
+    "exit": 0,
+    "result": "Updated /section[1]: pageWidth=21cm, pageHeight=29.7cm, marginTop=1.95cm, marginBottom=1.8cm, marginLeft=2.35cm, marginRight=2.35cm, titlePage=true",
+    "warnings": ""
+  },
+  {
+    "verb": "add",
+    "exit": 0,
+    "result": "Added style at /styles/Heading1",
+    "warnings": ""
+  },
+  {
+    "verb": "add",
+    "exit": 0,
+    "result": "Added style at /styles/Heading2",
+    "warnings": ""
+  },
+  {
+    "verb": "add",
+    "exit": 0,
+    "result": "Added markdown at /body/p[@paraId=00100000]",
+    "warnings": ""
+  },
+  {
+    "verb": "add",
+    "exit": 0,
+    "result": "Added markdown at /body/p[@paraId=0010000C]",
+    "warnings": ""
+  },
+  {
+    "verb": "set",
+    "exit": 0,
+    "result": "Updated /body/p[7]: pageBreakBefore=true",
+    "warnings": ""
+  },
+  {
+    "verb": "add",
+    "exit": 0,
+    "result": "Added footer at /footer[1]",
+    "warnings": ""
+  },
+  {
+    "verb": "set",
+    "exit": 0,
+    "result": "Updated /body/p[1]: align=center, size=26pt, bold=true, color=#12636A, spaceBefore=115pt, spaceAfter=25pt",
+    "warnings": ""
+  },
+  {
+    "verb": "set",
+    "exit": 0,
+    "result": "Updated /body/p[2]: align=center, size=14pt, color=#334155, spaceAfter=25pt",
+    "warnings": ""
+  },
+  {
+    "verb": "batch",
+    "exit": 0,
+    "result": "[1] Updated /body/p[1]: style=Normal\r\n[2] Updated /body/p[2]: style=Normal\r\n[3] Updated /body/tbl[1]/tr[1]: cantSplit=true, header=true\r\n[4] Updated /body/tbl[1]/tr[2]: cantSplit=true\r\n[5] Updated /body/tbl[1]/tr[3]: cantSplit=true\r\n[6] Updated /body/tbl[1]/tr[4]: cantSplit=true\r\n[7] Updated /body/tbl[1]/tr[5]: cantSplit=true\r\n[8] Updated /body/tbl[1]/tr[6]: cantSplit=true\r\n[9] Updated /body/tbl[1]/tr[7]: cantSplit=true\r\n[10] Updated /body/tbl[1]/tr[8]: cantSplit=true\r\n[11] Updated /body/tbl[1]/tr[9]: cantSplit=true\r\n[12] Updated /body/tbl[1]/tr[10]: cantSplit=true\r\n[13] Updated /body/tbl[1]/tr[11]: cantSplit=true\r\n[14] Updated /body/tbl[1]/tr[12]: cantSplit=true\r\n[15] Updated /body/tbl[1]/tr[13]: cantSplit=true\r\n[16] Updated /body/tbl[1]/tr[14]: cantSplit=true\r\n[17] Updated /body/tbl[1]/t",
+    "warnings": ""
+  },
+  {
+    "verb": "save",
+    "exit": 0,
+    "result": "Saved LoRaWAN-Operator-Manual-revised.docx",
+    "warnings": ""
+  },
+  {
+    "verb": "close",
+    "exit": 0,
+    "result": "Resident closed for LoRaWAN-Operator-Manual-revised.docx",
+    "warnings": ""
+  },
+  {
+    "verb": "validate",
+    "exit": 0,
+    "result": "Validation passed: no errors found.",
+    "warnings": ""
+  }
+]

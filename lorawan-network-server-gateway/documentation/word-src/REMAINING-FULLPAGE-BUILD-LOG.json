@@ -1,0 +1,218 @@
+{
+  "imagesReplaced": 9,
+  "imagesAdded": 5,
+  "paragraphsCorrected": 5,
+  "bytes": 3883898,
+  "calls": [
+    {
+      "verb": "set",
+      "exit": 0,
+      "msg": "Updated /body/p[@paraId=00100571]/r[2]: src=lorawan-network-server-gateway/documentation/assets/live-gateway-fullpage-headless-20260922/01-luci-login."
+    },
+    {
+      "verb": "set",
+      "exit": 0,
+      "msg": "Updated /body/p[@paraId=0010056D]/r[2]: src=lorawan-network-server-gateway/documentation/assets/live-gateway-fullpage-headless-20260922/09-backup-flas"
+    },
+    {
+      "verb": "set",
+      "exit": 0,
+      "msg": "Updated /body/p[@paraId=00100569]/r[2]: src=lorawan-network-server-gateway/documentation/assets/live-gateway-fullpage-headless-20260922/02-concentrato"
+    },
+    {
+      "verb": "set",
+      "exit": 0,
+      "msg": "Updated /body/p[@paraId=00100565]/r[2]: src=lorawan-network-server-gateway/documentation/assets/live-gateway-fullpage-headless-20260922/03-concentrato"
+    },
+    {
+      "verb": "set",
+      "exit": 0,
+      "msg": "Updated /body/p[@paraId=00100561]/r[2]: src=lorawan-network-server-gateway/documentation/assets/live-gateway-fullpage-headless-20260922/04b-mqtt-forwa"
+    },
+    {
+      "verb": "set",
+      "exit": 0,
+      "msg": "Updated /body/p[@paraId=0010055D]/r[2]: src=lorawan-network-server-gateway/documentation/assets/live-gateway-fullpage-headless-20260922/06-network-int"
+    },
+    {
+      "verb": "set",
+      "exit": 0,
+      "msg": "Updated /body/p[@paraId=00100559]/r[2]: src=lorawan-network-server-gateway/documentation/assets/live-gateway-fullpage-headless-20260922/07-lte-interfa"
+    },
+    {
+      "verb": "set",
+      "exit": 0,
+      "msg": "Updated /body/p[@paraId=00100555]/r[2]: src=lorawan-network-server-gateway/documentation/assets/live-gateway-fullpage-headless-20260922/07b-lte-interf"
+    },
+    {
+      "verb": "set",
+      "exit": 0,
+      "msg": "Updated /body/p[@paraId=00100551]/r[2]: src=lorawan-network-server-gateway/documentation/assets/live-gateway-fullpage-headless-20260922/04b-mqtt-forwa"
+    },
+    {
+      "verb": "set",
+      "exit": 0,
+      "msg": "Updated /body/p[@paraId=00100563]: text=Screen 3C. MQTT Forwarder: confirm as923 and tcp://127.0.0.1:1883. Continue to the next screen for QoS.\r\n"
+    },
+    {
+      "verb": "set",
+      "exit": 0,
+      "msg": "Updated /body/p[@paraId=00100553]: text=Screen 5A. Local MQTT destination. Continue to Screen 5B for QoS and session settings.\r\n"
+    },
+    {
+      "verb": "set",
+      "exit": 0,
+      "msg": "Updated /body/p[@paraId=00100557]: text=Screen 4C. Advanced Settings: default route OFF and peer DNS ON. For fields below the visible form, use the ef"
+    },
+    {
+      "verb": "set",
+      "exit": 0,
+      "msg": "Updated /body/p[@paraId=0010031E]: text=Set the APN for the commissioned DITO SIM to internet.dito.ph. Use QMI Cellular with control device /dev/cdc-w"
+    },
+    {
+      "verb": "set",
+      "exit": 0,
+      "msg": "Updated /body/p[@paraId=001003F5]: text=uname -n\r\n"
+    },
+    {
+      "verb": "add",
+      "exit": 0,
+      "msg": "Added paragraph at /body/p[@paraId=0010060E]\r\n"
+    },
+    {
+      "verb": "add",
+      "exit": 0,
+      "msg": "Added picture at /body/p[@paraId=0010060E]/r[2]\r\n"
+    },
+    {
+      "verb": "move",
+      "exit": 0,
+      "msg": "Moved to /body/p[168]\r\n"
+    },
+    {
+      "verb": "add",
+      "exit": 0,
+      "msg": "Added paragraph at /body/p[@paraId=00100610]\r\n"
+    },
+    {
+      "verb": "move",
+      "exit": 0,
+      "msg": "Moved to /body/p[169]\r\n"
+    },
+    {
+      "verb": "add",
+      "exit": 0,
+      "msg": "Added paragraph at /body/p[@paraId=00100612]\r\n"
+    },
+    {
+      "verb": "add",
+      "exit": 0,
+      "msg": "Added picture at /body/p[@paraId=00100612]/r[2]\r\n"
+    },
+    {
+      "verb": "move",
+      "exit": 0,
+      "msg": "Moved to /body/p[262]\r\n"
+    },
+    {
+      "verb": "add",
+      "exit": 0,
+      "msg": "Added paragraph at /body/p[@paraId=00100614]\r\n"
+    },
+    {
+      "verb": "move",
+      "exit": 0,
+      "msg": "Moved to /body/p[263]\r\n"
+    },
+    {
+      "verb": "add",
+      "exit": 0,
+      "msg": "Added paragraph at /body/p[@paraId=00100616]\r\n"
+    },
+    {
+      "verb": "add",
+      "exit": 0,
+      "msg": "Added picture at /body/p[@paraId=00100616]/r[2]\r\n"
+    },
+    {
+      "verb": "move",
+      "exit": 0,
+      "msg": "Moved to /body/p[238]\r\n"
+    },
+    {
+      "verb": "add",
+      "exit": 0,
+      "msg": "Added paragraph at /body/p[@paraId=00100618]\r\n"
+    },
+    {
+      "verb": "move",
+      "exit": 0,
+      "msg": "Moved to /body/p[239]\r\n"
+    },
+    {
+      "verb": "add",
+      "exit": 0,
+      "msg": "Added paragraph at /body/p[@paraId=0010061A]\r\n"
+    },
+    {
+      "verb": "add",
+      "exit": 0,
+      "msg": "Added picture at /body/p[@paraId=0010061A]/r[2]\r\n"
+    },
+    {
+      "verb": "move",
+      "exit": 0,
+      "msg": "Moved to /body/p[293]\r\n"
+    },
+    {
+      "verb": "add",
+      "exit": 0,
+      "msg": "Added paragraph at /body/p[@paraId=0010061C]\r\n"
+    },
+    {
+      "verb": "move",
+      "exit": 0,
+      "msg": "Moved to /body/p[294]\r\n"
+    },
+    {
+      "verb": "add",
+      "exit": 0,
+      "msg": "Added paragraph at /body/p[@paraId=0010061E]\r\n"
+    },
+    {
+      "verb": "add",
+      "exit": 0,
+      "msg": "Added picture at /body/p[@paraId=0010061E]/r[2]\r\n"
+    },
+    {
+      "verb": "move",
+      "exit": 0,
+      "msg": "Moved to /body/p[318]\r\n"
+    },
+    {
+      "verb": "add",
+      "exit": 0,
+      "msg": "Added paragraph at /body/p[@paraId=00100620]\r\n"
+    },
+    {
+      "verb": "move",
+      "exit": 0,
+      "msg": "Moved to /body/p[319]\r\n"
+    },
+    {
+      "verb": "save",
+      "exit": 0,
+      "msg": "Saved .manual-remaining-fullpage-qa.docx\r\n"
+    },
+    {
+      "verb": "close",
+      "exit": 0,
+      "msg": "Resident closed for .manual-remaining-fullpage-qa.docx\r\n"
+    },
+    {
+      "verb": "validate",
+      "exit": 0,
+      "msg": "Validation passed: no errors found.\r\n"
+    }
+  ]
+}

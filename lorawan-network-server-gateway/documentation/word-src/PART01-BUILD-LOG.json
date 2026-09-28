@@ -1,0 +1,80 @@
+[
+  {
+    "cmd": "set",
+    "exit": 0,
+    "output": "Updated /section[1]: pageWidth=21cm, pageHeight=29.7cm, marginTop=2.2cm, marginBottom=2.1cm, marginLeft=2.45cm, marginRight=2.35cm, titlePage=true",
+    "error": ""
+  },
+  {
+    "cmd": "add",
+    "exit": 0,
+    "output": "Added markdown at /body/p[@paraId=00100000]",
+    "error": "WARNING: style 'Heading1' not found in styles part — will be referenced as-is\r\n  WARNING: style 'Heading2' not found in styles part — will be referenced as-is"
+  },
+  {
+    "cmd": "add",
+    "exit": 0,
+    "output": "Added paragraph at /body/p[@paraId=00100012]",
+    "error": ""
+  },
+  {
+    "cmd": "add",
+    "exit": 0,
+    "output": "Added toc at /toc[1]",
+    "error": ""
+  },
+  {
+    "cmd": "add",
+    "exit": 0,
+    "output": "Added paragraph at /body/p[@paraId=00100014]",
+    "error": ""
+  },
+  {
+    "cmd": "add",
+    "exit": 0,
+    "output": "Added markdown at /body/p[@paraId=00100016]",
+    "error": "WARNING: style 'Heading1' not found in styles part — will be referenced as-is\r\n  WARNING: style 'Heading2' not found in styles part — will be referenced as-is\r\n  WARNING: style 'Heading2' not found in styles part — will be referenced as-is\r\n  WARNING: style 'Heading2' not found in styles part — will be referenced as-is\r\n  WARNING: style 'Heading2' not found in styles part — will be referenced as-is\r\n  WARNING: style 'Heading2' not found in styles part — will be referenced as-is\r\n  WARNING: style 'Heading2' not found in styles part — will be referenced as-is\r\n  WARNING: style 'Heading2' not found in styles part — will be referenced as-is\r\n  WARNING: style 'Heading2' not found in styles part — will be referenced as-is\r\n  WARNING: style 'Heading2' not found in styles part — will be referenced as-is"
+  },
+  {
+    "cmd": "add",
+    "exit": 0,
+    "output": "Added paragraph at /body/p[@paraId=001000E0]",
+    "error": ""
+  },
+  {
+    "cmd": "add",
+    "exit": 0,
+    "output": "Added picture at /body/p[@paraId=001000E0]/r[2]",
+    "error": ""
+  },
+  {
+    "cmd": "add",
+    "exit": 0,
+    "output": "Added markdown at /body/p[@paraId=001000E2]",
+    "error": "WARNING: style 'Heading2' not found in styles part — will be referenced as-is\r\n  WARNING: style 'Heading2' not found in styles part — will be referenced as-is"
+  },
+  {
+    "cmd": "add",
+    "exit": 0,
+    "output": "Added footer at /footer[1]",
+    "error": ""
+  },
+  {
+    "cmd": "save",
+    "exit": 0,
+    "output": "Saved LoRaWAN-Operator-Manual-WIP.docx",
+    "error": ""
+  },
+  {
+    "cmd": "close",
+    "exit": 0,
+    "output": "Resident closed for LoRaWAN-Operator-Manual-WIP.docx",
+    "error": ""
+  },
+  {
+    "cmd": "validate",
+    "exit": 0,
+    "output": "Validation passed: no errors found.",
+    "error": ""
+  }
+]

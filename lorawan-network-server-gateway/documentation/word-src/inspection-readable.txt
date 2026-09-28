@@ -1,0 +1,92 @@
+﻿{
+  "success": true,
+  "data": {
+    "matches": 1,
+    "results": [
+      {
+        "path": "/",
+        "type": "document",
+        "childCount": 4,
+        "format": {
+          "author": "OfficeCLI",
+          "lastModifiedBy": "OfficeCLI",
+          "created": "2026-09-21T21:42:02.0000000+08:00",
+          "modified": "2026-09-21T21:42:02.0000000+08:00",
+          "pageWidth": "21cm",
+          "pageHeight": "29.7cm",
+          "marginTop": "1.95cm",
+          "marginBottom": "1.8cm",
+          "marginLeft": "2.35cm",
+          "marginRight": "2.35cm",
+          "titlePage": true,
+          "footerRef.default": "/footer[1]",
+          "footerRef": "/footer[1]",
+          "protection": "none",
+          "protectionEnforced": false,
+          "docGrid.type": "default",
+          "charSpacingControl": "doNotCompress",
+          "compatibility.mode": 15,
+          "compatibility.spaceForUnderline": true,
+          "compatibility.balanceSingleByteDoubleByteWidth": true,
+          "compatibility.doNotLeaveBackslashAlone": true,
+          "compatibility.underlineTrailingSpaces": true,
+          "compatibility.doNotExpandShiftReturn": true,
+          "compatibility.adjustLineHeightInTable": true,
+          "docDefaults.font": "Calibri",
+          "docDefaults.fontSize": "11pt",
+          "theme.name": "Office Theme",
+          "theme.colorScheme": "Office",
+          "theme.color.dk1": "#000000",
+          "theme.color.lt1": "#FFFFFF",
+          "theme.color.dk2": "#44546A",
+          "theme.color.lt2": "#E7E6E6",
+          "theme.color.accent1": "#4472C4",
+          "theme.color.accent2": "#ED7D31",
+          "theme.color.accent3": "#A5A5A5",
+          "theme.color.accent4": "#FFC000",
+          "theme.color.accent5": "#5B9BD5",
+          "theme.color.accent6": "#70AD47",
+          "theme.color.hlink": "#0563C1",
+          "theme.color.folHlink": "#954F72",
+          "theme.fontScheme": "Office",
+          "theme.font.major.latin": "Calibri Light",
+          "theme.font.major.eastAsia": "",
+          "theme.font.minor.latin": "Calibri",
+          "theme.font.minor.eastAsia": "",
+          "theme.formatScheme": "Office",
+          "extended.application": "OfficeCLI/1.0.151"
+        },
+        "children": [
+          {
+            "path": "/body",
+            "type": "body",
+            "childCount": 248,
+            "format": {},
+            "children": []
+          },
+          {
+            "path": "/styles",
+            "type": "styles",
+            "childCount": 4,
+            "format": {},
+            "children": []
+          },
+          {
+            "path": "/footer[1]",
+            "type": "footer",
+            "childCount": 0,
+            "format": {},
+            "children": []
+          },
+          {
+            "path": "/numbering",
+            "type": "numbering",
+            "childCount": 0,
+            "format": {},
+            "children": []
+          }
+        ]
+      }
+    ]
+  }
+}

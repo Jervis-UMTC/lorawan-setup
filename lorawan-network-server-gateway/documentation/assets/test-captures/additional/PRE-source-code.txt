@@ -1,0 +1,403 @@
+#!/usr/bin/env python3
+"""Next-test-day technical readiness gate for the LoRaWAN research platform.
+
+This command is intentionally safe to run before every research session. It:
+1. checks/compiles the repository-contained operator tooling;
+2. safely seals a stale recorder marker only when none of its owned PIDs are live;
+3. executes every exact manual code block through its non-mutating validation path;
+4. optionally runs the real full-stack PRE gate; and
+5. writes a machine-readable readiness snapshot.
+
+It does not convert methodology/harness gaps into fake PASS results.
+"""
+from __future__ import annotations
+
+import argparse
+import hashlib
+import json
+import os
+import subprocess
+import sys
+from datetime import datetime, timezone
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[3]
+MANUAL_DIR = Path(__file__).resolve().parent
+RECORDER = ROOT / "test" / "automation" / "research-recorder" / "research_recorder.py"
+RUNNER = MANUAL_DIR / "run_test.py"
+STATE = ROOT / "chapter4-results" / "_recorder-active.json"
+LOCK = ROOT / "chapter4-results" / "_recorder-active.lock"
+OUT_JSON = MANUAL_DIR / "CURRENT-READINESS.json"
+OUT_MD = MANUAL_DIR / "CURRENT-READINESS.md"
+VALIDATION_JSON = MANUAL_DIR / "CODE-BLOCK-VALIDATION.json"
+VALIDATION_MD = MANUAL_DIR / "CODE-BLOCK-VALIDATION.md"
+FINAL_MANUAL = ROOT / "chapters" / "lorawan_research_test_manual_final.md"
+EXECUTION_GUIDES = ROOT / "test" / "execution"
+COUNTED_FIRMWARE_DIR = ROOT / "chapter4-results" / "_configuration" / "emu01-counted-test-15s"
+COUNTED_FIRMWARE_HEX = COUNTED_FIRMWARE_DIR / "EMU01_Agriculture_Node.ino.hex"
+COUNTED_FIRMWARE_ZIP = COUNTED_FIRMWARE_DIR / "EMU01_Agriculture_Node.ino.zip"
+COUNTED_FIRMWARE_RECORD = COUNTED_FIRMWARE_DIR / "build-record.json"
+EMU_SOURCE = ROOT / "firmware" / "EMU01_Agriculture_Node" / "EMU01_Agriculture_Node.ino"
+RESEARCH_CONTRACT = ROOT / "test" / "automation" / "research_contract.py"
+RESEARCH_CONTRACT_TEST = ROOT / "test" / "automation" / "test_research_contract.py"
+FABRIC_SYNC = ROOT / "test" / "automation" / "fabric-sync" / "fabric_sync.py"
+FABRIC_SYNC_TEST = ROOT / "test" / "automation" / "fabric-sync" / "test_fabric_sync.py"
+OVERSIGHT_STATUS = ROOT / "test" / "automation" / "oversight_status.py"
+
+PY_TOOLS = (
+    RUNNER,
+    RECORDER,
+    ROOT / "test" / "automation" / "research-recorder" / "summarize-run.py",
+    ROOT / "test" / "automation" / "research-recorder" / "summarize-study.py",
+    ROOT / "test" / "automation" / "research-recorder" / "serial_capture.py",
+    ROOT / "test" / "automation" / "research-recorder" / "sec02_replay.py",
+    ROOT / "test" / "automation" / "load-tools" / "mqtt_wire.py",
+    ROOT / "test" / "automation" / "load-tools" / "connection_flood.py",
+    ROOT / "test" / "automation" / "load-tools" / "invalid_message_stream.py",
+    ROOT / "test" / "automation" / "load-tools" / "mqtt_publish_stream.py",
+    ROOT / "test" / "automation" / "load-tools" / "test_mqtt_wire.py",
+    ROOT / "test" / "automation" / "node-red-flood-test" / "node_red_flood_branch.py",
+    ROOT / "test" / "automation" / "flooding" / "flood_harness.py",
+    ROOT / "test" / "automation" / "traceability" / "traceability_harness.py",
+    ROOT / "test" / "automation" / "resilience" / "r2_fabric_reconciliation.py",
+    RESEARCH_CONTRACT,
+    RESEARCH_CONTRACT_TEST,
+    FABRIC_SYNC,
+    FABRIC_SYNC_TEST,
+    OVERSIGHT_STATUS,
+)
+
+TEST_IDS = ("PRE","P1","P2","R1","R2","A1","A2","S1","S2","F1","F2","I1","I2","I3","T1","T2")
+# Only complete READY actions may be published as operator code blocks.
+# Non-ready experiments remain measurement requirements in the manual without code.
+RELEASED_MANUAL_IDS = ("PRE", "P1")
+MQTT_TEST = ROOT / "test" / "automation" / "load-tools" / "test_mqtt_wire.py"
+GATEWAY_HOST = "root@192.168.20.11"
+GATEWAY_KEY = Path.home() / ".ssh" / "id_ed25519_research_recorder"
+
+
+def now_utc() -> str:
+    return datetime.now(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z")
+
+
+def sha256_file(path: Path) -> str:
+    h = hashlib.sha256()
+    with path.open("rb") as f:
+        for chunk in iter(lambda: f.read(1024 * 1024), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+
+def check_counted_firmware() -> dict[str, object]:
+    required = (COUNTED_FIRMWARE_HEX, COUNTED_FIRMWARE_ZIP, COUNTED_FIRMWARE_RECORD, EMU_SOURCE)
+    missing = [str(p.relative_to(ROOT)) for p in required if not p.is_file()]
+    if missing:
+        return {"status": "FAIL", "missing": missing}
+    try:
+        record = json.loads(COUNTED_FIRMWARE_RECORD.read_text(encoding="utf-8-sig"))
+    except (OSError, json.JSONDecodeError) as exc:
+        return {"status": "FAIL", "detail": f"invalid build record: {exc}"}
+    artifact_hash = sha256_file(COUNTED_FIRMWARE_HEX)
+    upload_package_hash = sha256_file(COUNTED_FIRMWARE_ZIP)
+    source_hash = sha256_file(EMU_SOURCE)
+    checks = {
+        "profile": record.get("profile") == "COUNTED_TEST_15S",
+        "compile_define": record.get("compile_define") == "EMU01_COUNTED_TEST_PROFILE=1",
+        "fqbn": record.get("fqbn") == "rakwireless:nrf52:WisCoreRAK4631Board",
+        "macro_proven": record.get("macro_proven_in_compile_commands") is True,
+        "artifact_hash": record.get("artifact_sha256") == artifact_hash,
+        "upload_package_hash": record.get("upload_package_sha256") == upload_package_hash,
+        "reproducible_rebuild": record.get("reproducible_rebuild_hex_match") is True,
+        "source_hash": record.get("source_sha256") == source_hash,
+    }
+    return {
+        "status": "PASS" if all(checks.values()) else "FAIL",
+        "checks": checks,
+        "artifact_sha256": artifact_hash,
+        "upload_package_sha256": upload_package_hash,
+        "source_sha256": source_hash,
+        "artifact_bytes": COUNTED_FIRMWARE_HEX.stat().st_size,
+        "upload_package_bytes": COUNTED_FIRMWARE_ZIP.stat().st_size,
+        "build_record": str(COUNTED_FIRMWARE_RECORD.relative_to(ROOT)),
+    }
+
+
+def pid_alive(pid: int) -> bool:
+    if pid <= 0:
+        return False
+    if os.name == "nt":
+        cp = subprocess.run(["tasklist", "/FI", f"PID eq {pid}", "/FO", "CSV", "/NH"],
+                            text=True, capture_output=True, timeout=10)
+        text = cp.stdout.strip().lower()
+        return cp.returncode == 0 and text and "no tasks are running" not in text and f'"{pid}"' in text
+    try:
+        os.kill(pid, 0)
+        return True
+    except (ProcessLookupError, PermissionError, OSError):
+        return False
+
+
+def recover_stale_state() -> dict[str, object]:
+    state_exists = STATE.exists()
+    lock_exists = LOCK.exists()
+    if not state_exists and not lock_exists:
+        return {"status": "CLEAN", "detail": "no active recorder state or ownership lock"}
+    if lock_exists and not state_exists:
+        try:
+            lock = json.loads(LOCK.read_text(encoding="utf-8-sig"))
+            detail = f"run_id={lock.get('run_id')} owner_pid={lock.get('owner_pid')}"
+        except Exception as exc:
+            detail = f"lock metadata unreadable: {exc}"
+        return {
+            "status": "FAIL",
+            "detail": "ownership lock exists without active state; fail-closed recovery required before testing (" + detail + ")",
+        }
+    if state_exists and not lock_exists:
+        return {"status": "FAIL", "detail": "active recorder state exists without ownership lock; refusing unsafe recovery"}
+    try:
+        state = json.loads(STATE.read_text(encoding="utf-8-sig"))
+        lock = json.loads(LOCK.read_text(encoding="utf-8-sig"))
+    except Exception as exc:
+        return {"status": "FAIL", "detail": f"active recorder state/lock JSON unreadable: {exc}"}
+    if not state.get("owner_token"):
+        return {"status": "FAIL", "detail": "active recorder state has no ownership token; refusing unsafe recovery"}
+    if state.get("owner_token") != lock.get("owner_token") or state.get("run_id") != lock.get("run_id"):
+        return {
+            "status": "FAIL",
+            "detail": f"recorder ownership mismatch state_run={state.get('run_id')} lock_run={lock.get('run_id')}",
+        }
+    children = state.get("children") or []
+    live = []
+    for child in children:
+        try:
+            pid = int(child.get("pid", 0))
+        except Exception:
+            pid = 0
+        if pid_alive(pid):
+            live.append({"label": child.get("label", "?"), "pid": pid})
+    if live:
+        return {"status": "ACTIVE", "detail": "recorder-owned process is still live; no recovery attempted", "live": live}
+    cp = subprocess.run([sys.executable, str(RECORDER), "recover"], cwd=ROOT,
+                        text=True, capture_output=True, timeout=600)
+    clean = not STATE.exists() and not LOCK.exists()
+    return {
+        "status": "RECOVERED" if cp.returncode == 0 and clean else "FAIL",
+        "detail": "stale recorder sealed through ownership-safe recover path" if cp.returncode == 0 and clean else (cp.stderr.strip() or cp.stdout.strip())[-500:],
+        "returncode": cp.returncode,
+    }
+
+
+def compile_tools() -> dict[str, object]:
+    missing = [str(x.relative_to(ROOT)) for x in PY_TOOLS if not x.is_file()]
+    if missing:
+        return {"status": "FAIL", "missing": missing}
+    cp = subprocess.run([sys.executable, "-m", "py_compile", *map(str, PY_TOOLS)], cwd=ROOT,
+                        text=True, capture_output=True, timeout=60)
+    return {"status": "PASS" if cp.returncode == 0 else "FAIL", "detail": (cp.stderr or cp.stdout).strip()[-1000:]}
+
+
+def test_research_contract() -> dict[str, object]:
+    rows = []
+    for script in (RESEARCH_CONTRACT_TEST, FABRIC_SYNC_TEST):
+        cp = subprocess.run([sys.executable, str(script)], cwd=ROOT,
+                            text=True, capture_output=True, timeout=60)
+        rows.append({
+            "script": str(script.relative_to(ROOT)),
+            "returncode": cp.returncode,
+            "tail": "\n".join(((cp.stdout or "") + (cp.stderr or "")).splitlines()[-12:]),
+        })
+    contract = subprocess.run([sys.executable, str(RESEARCH_CONTRACT)], cwd=ROOT,
+                              text=True, capture_output=True, timeout=30)
+    ok = all(row["returncode"] == 0 for row in rows) and contract.returncode == 0 and "RESEARCH_CONTRACT=PASS" in contract.stdout
+    return {"status": "PASS" if ok else "FAIL", "tests": rows,
+            "contract_tail": "\n".join(((contract.stdout or "") + (contract.stderr or "")).splitlines()[-12:])}
+
+
+def test_oversight_status() -> dict[str, object]:
+    cp = subprocess.run([sys.executable, str(OVERSIGHT_STATUS)], cwd=ROOT,
+                        text=True, capture_output=True, timeout=60)
+    text = (cp.stdout or "") + (cp.stderr or "")
+    ok = cp.returncode == 0 and "OVERSIGHT_AUDIT=PASS" in text
+    return {"status": "PASS" if ok else "FAIL", "returncode": cp.returncode,
+            "tail": "\n".join(text.splitlines()[-20:])}
+
+
+def parse_status(text: str) -> str:
+    for line in text.splitlines():
+        if line.startswith("STATUS="):
+            return line.split("=", 1)[1].strip()
+    return "UNKNOWN"
+
+
+def audit_documentation_surface() -> dict[str, object]:
+    """Fail if any test guide exposes unqualified executable-looking blocks."""
+    import re
+
+    if not FINAL_MANUAL.is_file():
+        return {"status": "FAIL", "detail": f"final manual missing: {FINAL_MANUAL}"}
+    manual_text = FINAL_MANUAL.read_text(encoding="utf-8-sig")
+    executable = []
+    for match in re.finditer(r"```(powershell|bash|sh|cmd|shell)\s*\n(.*?)```", manual_text, re.I | re.S):
+        executable.append({"lang": match.group(1).lower(), "body": match.group(2).strip()})
+    expected = [f"python .\\test\\automation\\research-manual\\run_test.py {test_id}" for test_id in RELEASED_MANUAL_IDS]
+    bodies = [item["body"] for item in executable]
+    legacy = []
+    for path in sorted(EXECUTION_GUIDES.glob("*.md")):
+        text = path.read_text(encoding="utf-8-sig", errors="replace")
+        if re.search(r"^```(?:powershell|bash|sh|cmd|shell)\s*$", text, re.I | re.M):
+            legacy.append(str(path.relative_to(ROOT)))
+    ok = bodies == expected and not legacy
+    return {
+        "status": "PASS" if ok else "FAIL",
+        "released_blocks": bodies,
+        "expected_blocks": expected,
+        "legacy_executable_guides": legacy,
+        "detail": "only live-qualified final-manual blocks are executable" if ok else "manual executable surface mismatch",
+    }
+
+
+def validate_manual_blocks() -> list[dict[str, object]]:
+    """Validate only commands that are actually published in the operator manual."""
+    out = []
+    for test_id in RELEASED_MANUAL_IDS:
+        cp = subprocess.run([sys.executable, str(RUNNER), test_id], cwd=ROOT, input="\n",
+                            text=True, capture_output=True, timeout=90)
+        text = (cp.stdout or "") + (cp.stderr or "")
+        status = parse_status(text)
+        out.append({
+            "id": test_id,
+            "command": f"python .\\test\\automation\\research-manual\\run_test.py {test_id}",
+            "returncode": cp.returncode,
+            "status": status,
+            "released": status == "READY",
+            "code_block_test_pass": status == "READY" and "CODE_BLOCK_TEST=PASS" in text,
+            "tail": "\n".join(text.splitlines()[-5:]),
+        })
+    return out
+
+
+def test_mqtt_tools() -> dict[str, object]:
+    cp = subprocess.run([sys.executable, str(MQTT_TEST)], cwd=ROOT,
+                        text=True, capture_output=True, timeout=45)
+    text = (cp.stdout or "") + (cp.stderr or "")
+    return {"status": "PASS" if cp.returncode == 0 else "FAIL", "returncode": cp.returncode,
+            "tail": "\n".join(text.splitlines()[-20:])}
+
+
+def check_gateway_lte() -> dict[str, object]:
+    if not GATEWAY_KEY.is_file():
+        return {"status": "FAIL", "detail": f"research-recorder key missing: {GATEWAY_KEY}"}
+    cp = subprocess.run([
+        "ssh", "-i", str(GATEWAY_KEY), "-o", "BatchMode=yes", "-o", "ConnectTimeout=8",
+        "-o", "StrictHostKeyChecking=accept-new", GATEWAY_HOST, "snapshot"
+    ], cwd=ROOT, text=True, capture_output=True, timeout=30)
+    text = (cp.stdout or "") + (cp.stderr or "")
+    # Gateway recorder v2 exposes the live OpenWrt/QMI snapshot mostly as
+    # ubus/uqmi JSON plus route/socket text.  Accept both the current JSON form
+    # and the older key=value form so a harmless recorder-format change cannot
+    # create a false LTE preflight failure.
+    checks = {
+        "lte_up": (
+            ('"up": true' in text or "up=true" in text)
+            and ('"l3_device": "wwan0"' in text or "device=wwan0" in text or "dev wwan0" in text)
+        ),
+        "lte_default_metric10": "default via" in text and "dev wwan0" in text and "metric 10" in text,
+        "cloud_route_lte": (
+            ("--- cloud-route ---" in text or "cloud_route=" in text)
+            and "129.212.208.168" in text and "dev wwan0" in text
+        ),
+        "mqtt_established": ":8883" in text and ("ESTABLISHED" in text or "ESTAB" in text),
+        "modem_registered": ('"registration": "registered"' in text or "registration=registered" in text),
+    }
+    ok = cp.returncode == 0 and all(checks.values())
+    return {"status": "PASS" if ok else "FAIL", "returncode": cp.returncode,
+            "checks": checks, "tail": "\n".join(text.splitlines()[-24:])}
+
+
+def run_live_pre() -> dict[str, object]:
+    cp = subprocess.run([sys.executable, str(RECORDER), "preflight", "--require-emu", "--require-sec"],
+                        cwd=ROOT, text=True, capture_output=True, timeout=180)
+    text = (cp.stdout or "") + (cp.stderr or "")
+    return {"status": "PASS" if cp.returncode == 0 else "FAIL", "returncode": cp.returncode,
+            "tail": "\n".join(text.splitlines()[-20:])}
+
+
+def write_report(report: dict[str, object]) -> None:
+    OUT_JSON.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
+    lines = ["# Current Research Readiness", "", f"Generated UTC: `{report['generated_utc']}`", "",
+             f"Technical gate: **{report['technical_gate']}**", "",
+             f"Tool compile: **{report['compile']['status']}**",  # type: ignore[index]
+             f"Recorder state: **{report['recorder_state']['status']}**",  # type: ignore[index]
+             f"MQTT tooling self-test: **{report['mqtt_tools']['status']}**",  # type: ignore[index]
+             f"Research contract/synchronization tests: **{report['research_contract']['status']}**",  # type: ignore[index]
+             f"Per-test oversight audit: **{report['oversight_status']['status']}**",  # type: ignore[index]
+             f"Counted firmware archive: **{report['counted_firmware']['status']}**",  # type: ignore[index]
+             f"Gateway LTE invariant: **{report['gateway_lte']['status']}**",  # type: ignore[index]
+             f"Live PRE: **{report['live_pre']['status']}**", "",  # type: ignore[index]
+             "## Released operator blocks", "",
+             "| Test | Status | Validation |", "|---|---|---|"]
+    for row in report["manual_blocks"]:  # type: ignore[index]
+        lines.append(f"| {row['id']} | {row['status']} | {'PASS' if row['returncode']==0 and row['code_block_test_pass'] else 'FAIL'} |")
+    lines += ["", "Only complete `READY` actions are allowed to have code blocks in the final manual. Other Chapter 3 tests remain documented without operator code until their complete harness is commissioned."]
+    OUT_MD.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    validation = [{"id": row["id"], "command": row["command"], "exit_code": row["returncode"],
+                   "status": row["status"], "code_block_test": "PASS" if row["returncode"] == 0 and row["code_block_test_pass"] else "FAIL"}
+                  for row in report["manual_blocks"]]
+    VALIDATION_JSON.write_text(json.dumps(validation, indent=2) + "\n", encoding="utf-8")
+    vlines = ["# Research Manual Code-Block Validation", "",
+              f"Generated UTC: `{report['generated_utc']}`", "",
+              "Only commands that are actually published in the operator manual appear below.",
+              "These results cover the safe interface-validation path only; they do not prove that a live experiment ran or passed. Consult each row for its actual status. Non-ready tests are intentionally absent.", "",
+              "| Test | Current status | Exact command | Validation |", "|---|---|---|---|"]
+    for row in validation:
+        vlines.append(f"| {row['id']} | {row['status']} | `{row['command']}` | {row['code_block_test']} |")
+    VALIDATION_MD.write_text("\n".join(vlines) + "\n", encoding="utf-8")
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--skip-live-pre", action="store_true", help="validate tooling only; do not contact live infrastructure")
+    args = ap.parse_args()
+
+    compile_result = compile_tools()
+    mqtt_tools = test_mqtt_tools() if compile_result["status"] == "PASS" else {"status": "SKIPPED"}
+    research_contract = test_research_contract() if compile_result["status"] == "PASS" else {"status": "SKIPPED"}
+    oversight_status = test_oversight_status() if compile_result["status"] == "PASS" and research_contract["status"] == "PASS" else {"status": "SKIPPED"}
+    recorder_state = recover_stale_state() if compile_result["status"] == "PASS" else {"status": "SKIPPED"}
+    counted_firmware = check_counted_firmware() if compile_result["status"] == "PASS" else {"status": "SKIPPED"}
+    documentation = audit_documentation_surface() if compile_result["status"] == "PASS" else {"status": "SKIPPED"}
+    manual = validate_manual_blocks() if compile_result["status"] == "PASS" and documentation["status"] == "PASS" and recorder_state["status"] != "ACTIVE" else []
+    blocks_ok = bool(manual) and all(x["returncode"] == 0 and x["code_block_test_pass"] for x in manual)
+    gateway_lte = {"status": "SKIPPED"} if args.skip_live_pre else (check_gateway_lte() if blocks_ok else {"status": "SKIPPED"})
+    live_pre = {"status": "SKIPPED"} if args.skip_live_pre else (run_live_pre() if blocks_ok and gateway_lte["status"] == "PASS" else {"status": "SKIPPED"})
+    tooling_ok = compile_result["status"] == "PASS" and documentation["status"] == "PASS" and mqtt_tools["status"] == "PASS" and research_contract["status"] == "PASS" and oversight_status["status"] == "PASS" and counted_firmware["status"] == "PASS" and recorder_state["status"] in {"CLEAN","RECOVERED"} and blocks_ok
+    technical_ok = tooling_ok and gateway_lte["status"] == "PASS" and live_pre["status"] == "PASS"
+    technical_gate = "SKIPPED" if args.skip_live_pre and tooling_ok else ("PASS" if technical_ok else "FAIL")
+    report = {"generated_utc": now_utc(), "technical_gate": technical_gate,
+              "tooling_gate": "PASS" if tooling_ok else "FAIL",
+              "verification_scope": "tooling_only" if args.skip_live_pre else "live",
+              "compile": compile_result, "documentation": documentation, "mqtt_tools": mqtt_tools, "research_contract": research_contract, "oversight_status": oversight_status, "counted_firmware": counted_firmware,
+              "recorder_state": recorder_state, "manual_blocks": manual,
+              "gateway_lte": gateway_lte, "live_pre": live_pre}
+    write_report(report)
+
+    print(f"TECHNICAL_GATE={report['technical_gate']}")
+    print(f"TOOL_COMPILE={compile_result['status']}")
+    print(f"DOCUMENTATION_EXECUTABLE_SURFACE={documentation['status']}")
+    print(f"MQTT_TOOL_SELFTEST={mqtt_tools['status']}")
+    print(f"RESEARCH_CONTRACT={research_contract['status']}")
+    print(f"OVERSIGHT_STATUS={oversight_status['status']}")
+    print(f"COUNTED_FIRMWARE={counted_firmware['status']}")
+    print(f"RECORDER_STATE={recorder_state['status']}")
+    print(f"GATEWAY_LTE={gateway_lte['status']}")
+    print(f"LIVE_PRE={live_pre['status']}")
+    for row in manual:
+        ok = row["returncode"] == 0 and row["code_block_test_pass"]
+        print(f"TEST={row['id']} STATUS={row['status']} CODE_BLOCK={'PASS' if ok else 'FAIL'}")
+    print(f"READINESS_JSON={OUT_JSON.relative_to(ROOT)}")
+    return 0 if (tooling_ok if args.skip_live_pre else technical_ok) else 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
+

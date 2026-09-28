@@ -1,0 +1,56 @@
+[
+  {
+    "verb": "close",
+    "exit": 0,
+    "summary": "LoRaWAN-Operator-Manual-WIP.docx is already saved to disk; nothing to close.",
+    "err": ""
+  },
+  {
+    "verb": "add",
+    "exit": 0,
+    "summary": "Added markdown at /body/p[@paraId=001000DF]",
+    "err": ""
+  },
+  {
+    "verb": "add",
+    "exit": 0,
+    "summary": "Added paragraph at /body/p[@paraId=001000F1]",
+    "err": ""
+  },
+  {
+    "verb": "add",
+    "exit": 0,
+    "summary": "Added picture at /body/p[@paraId=001000F1]/r[2]",
+    "err": ""
+  },
+  {
+    "verb": "add",
+    "exit": 0,
+    "summary": "Added paragraph at /body/p[@paraId=001000F3]",
+    "err": ""
+  },
+  {
+    "verb": "add",
+    "exit": 0,
+    "summary": "Added markdown at /body/p[@paraId=001000F5]",
+    "err": ""
+  },
+  {
+    "verb": "save",
+    "exit": 0,
+    "summary": "Saved .manual-with-chapter2-qa.docx",
+    "err": ""
+  },
+  {
+    "verb": "close",
+    "exit": 0,
+    "summary": "Resident closed for .manual-with-chapter2-qa.docx",
+    "err": ""
+  },
+  {
+    "verb": "validate",
+    "exit": 0,
+    "summary": "Validation passed: no errors found.",
+    "err": ""
+  }
+]

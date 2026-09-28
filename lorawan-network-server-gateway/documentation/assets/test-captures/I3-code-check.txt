@@ -1,0 +1,10 @@
+COMMAND: py -3 test/automation/research-manual/run_test.py I3 --synthetic
+EXIT CODE: 0
+
+TEST_ID=I3 MODE=SYNTHETIC RESEARCH_SAMPLES=0 LIVE_TEST=NOT_STARTED
+.......................................
+----------------------------------------------------------------------
+Ran 39 tests in 0.431s
+
+OK
+OFFLINE_TEST=I3 RESULT=CODE_ONLY_PASS TESTS=39 HARDWARE_USED=NO RESEARCH_SAMPLES=0 LIVE_QUALIFICATION=NOT_PROVEN

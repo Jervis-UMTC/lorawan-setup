@@ -1,0 +1,195 @@
+{
+  "sourceSections": 12,
+  "codeBlocks": 7,
+  "images": 5,
+  "heading": 493,
+  "cover": 5,
+  "bytes": 4571698,
+  "calls": [
+    {
+      "action": "close",
+      "status": 0,
+      "msg": ".manual-chapter7-qa.docx is already saved to disk; nothing to close.\r\n"
+    },
+    {
+      "action": "add",
+      "status": 0,
+      "msg": "Added markdown at /body/p[@paraId=00100688]\r\n"
+    },
+    {
+      "action": "add",
+      "status": 0,
+      "msg": "Added paragraph at /body/p[@paraId=001006AA]\r\n"
+    },
+    {
+      "action": "add",
+      "status": 0,
+      "msg": "Added picture at /body/p[@paraId=001006AA]/r[2]\r\n"
+    },
+    {
+      "action": "add",
+      "status": 0,
+      "msg": "Added markdown at /body/p[@paraId=001006AC]\r\n"
+    },
+    {
+      "action": "add",
+      "status": 0,
+      "msg": "Added paragraph at /body/p[@paraId=001006FE]\r\n"
+    },
+    {
+      "action": "add",
+      "status": 0,
+      "msg": "Added picture at /body/p[@paraId=001006FE]/r[2]\r\n"
+    },
+    {
+      "action": "add",
+      "status": 0,
+      "msg": "Added markdown at /body/p[@paraId=00100700]\r\n"
+    },
+    {
+      "action": "add",
+      "status": 0,
+      "msg": "Added paragraph at /body/p[@paraId=00100724]\r\n"
+    },
+    {
+      "action": "add",
+      "status": 0,
+      "msg": "Added picture at /body/p[@paraId=00100724]/r[2]\r\n"
+    },
+    {
+      "action": "add",
+      "status": 0,
+      "msg": "Added markdown at /body/p[@paraId=00100726]\r\n"
+    },
+    {
+      "action": "add",
+      "status": 0,
+      "msg": "Added paragraph at /body/p[@paraId=0010073E]\r\n"
+    },
+    {
+      "action": "add",
+      "status": 0,
+      "msg": "Added paragraph at /body/p[@paraId=00100740]\r\n"
+    },
+    {
+      "action": "add",
+      "status": 0,
+      "msg": "Added picture at /body/p[@paraId=00100740]/r[2]\r\n"
+    },
+    {
+      "action": "add",
+      "status": 0,
+      "msg": "Added markdown at /body/p[@paraId=00100742]\r\n"
+    },
+    {
+      "action": "add",
+      "status": 0,
+      "msg": "Added paragraph at /body/p[@paraId=00100752]\r\n"
+    },
+    {
+      "action": "add",
+      "status": 0,
+      "msg": "Added markdown at /body/p[@paraId=0010075E]\r\n"
+    },
+    {
+      "action": "add",
+      "status": 0,
+      "msg": "Added paragraph at /body/p[@paraId=00100782]\r\n"
+    },
+    {
+      "action": "add",
+      "status": 0,
+      "msg": "Added markdown at /body/p[@paraId=00100784]\r\n"
+    },
+    {
+      "action": "add",
+      "status": 0,
+      "msg": "Added paragraph at /body/p[@paraId=00100786]\r\n"
+    },
+    {
+      "action": "add",
+      "status": 0,
+      "msg": "Added markdown at /body/p[@paraId=0010078C]\r\n"
+    },
+    {
+      "action": "add",
+      "status": 0,
+      "msg": "Added paragraph at /body/p[@paraId=0010080A]\r\n"
+    },
+    {
+      "action": "add",
+      "status": 0,
+      "msg": "Added markdown at /body/p[@paraId=00100812]\r\n"
+    },
+    {
+      "action": "add",
+      "status": 0,
+      "msg": "Added paragraph at /body/p[@paraId=00100814]\r\n"
+    },
+    {
+      "action": "add",
+      "status": 0,
+      "msg": "Added markdown at /body/p[@paraId=0010081C]\r\n"
+    },
+    {
+      "action": "add",
+      "status": 0,
+      "msg": "Added paragraph at /body/p[@paraId=00100842]\r\n"
+    },
+    {
+      "action": "add",
+      "status": 0,
+      "msg": "Added picture at /body/p[@paraId=00100842]/r[2]\r\n"
+    },
+    {
+      "action": "add",
+      "status": 0,
+      "msg": "Added markdown at /body/p[@paraId=00100844]\r\n"
+    },
+    {
+      "action": "add",
+      "status": 0,
+      "msg": "Added paragraph at /body/p[@paraId=0010089C]\r\n"
+    },
+    {
+      "action": "add",
+      "status": 0,
+      "msg": "Added markdown at /body/p[@paraId=001008A6]\r\n"
+    },
+    {
+      "action": "save",
+      "status": 0,
+      "msg": "Saved .manual-chapter7-qa.docx\r\n"
+    },
+    {
+      "action": "close",
+      "status": 0,
+      "msg": "Resident closed for .manual-chapter7-qa.docx\r\n"
+    },
+    {
+      "action": "set",
+      "status": 0,
+      "msg": "Updated /body/p[493]: pageBreakBefore=true, keepNext=true\r\n"
+    },
+    {
+      "action": "set",
+      "status": 0,
+      "msg": "Updated /body/p[5]: text=Working draft — Chapters 1–7 — 28 September 2026\r\n"
+    },
+    {
+      "action": "save",
+      "status": 0,
+      "msg": "Saved .manual-chapter7-qa.docx\r\n"
+    },
+    {
+      "action": "close",
+      "status": 0,
+      "msg": "Resident closed for .manual-chapter7-qa.docx\r\n"
+    },
+    {
+      "action": "validate",
+      "status": 0,
+      "msg": "Validation passed: no errors found.\r\n"
+    }
+  ]
+}

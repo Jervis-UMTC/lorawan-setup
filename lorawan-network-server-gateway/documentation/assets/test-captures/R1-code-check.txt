@@ -1,0 +1,10 @@
+COMMAND: py -3 test/automation/research-manual/run_test.py R1 --synthetic
+EXIT CODE: 0
+
+TEST_ID=R1 MODE=SYNTHETIC RESEARCH_SAMPLES=0 LIVE_TEST=NOT_STARTED
+....................
+----------------------------------------------------------------------
+Ran 20 tests in 0.031s
+
+OK
+OFFLINE_TEST=R1 RESULT=CODE_ONLY_PASS TESTS=20 HARDWARE_USED=NO RESEARCH_SAMPLES=0 LIVE_QUALIFICATION=NOT_PROVEN

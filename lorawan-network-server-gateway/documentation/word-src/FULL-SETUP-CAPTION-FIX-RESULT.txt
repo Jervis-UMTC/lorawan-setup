@@ -1,0 +1,7 @@
+﻿[1] Updated /body/p[@paraId=001005BB]: text=Screen 6.1A-1. Full Add gateway form: name, actual gateway EUI, status interval, downlink priority, location and Submit.
+[2] Updated /body/p[@paraId=001005C9]: text=Screen 6.1A-2. Entire blank device-profile form: check every required field before creating a profile.
+[3] Updated /body/p[@paraId=001005CD]: text=Screen 6.1A-3. Existing commissioned EMU-01 AS923 profile: compare these values against the firmware.
+[4] Updated /body/p[@paraId=001005D9]: text=Screen 6.1A-4. Entire Add application form: verify name and description before Submit.
+[5] Updated /body/p[@paraId=001005E9]: text=Screen 6.1A-5. Entire Add device form: verify both EUIs, profile and frame-counter validation; never create a duplicate for a screenshot.
+
+Batch complete: 5 succeeded, 0 failed, 5 total

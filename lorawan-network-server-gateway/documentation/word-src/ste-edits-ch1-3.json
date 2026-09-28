@@ -1,0 +1,142 @@
+[
+  {
+    "index": 8,
+    "text": "EMU-01 measures agricultural conditions. It sends a 46-byte payload over AS923 LoRaWAN. Gateway-01 receives the radio packet. The SIM7600 LTE connection carries gateway data to the cloud. Cloud ChirpStack processes LoRaWAN messages. Node-RED saves measurements in PostgreSQL. Grafana displays measurements. Gateway-01 runs ChirpStack Gateway OS Base. The cloud servers run the ChirpStack network server. Separate evidence services preserve original gateway events. They verify events before eligible records reach Hyperledger Fabric."
+  },
+  {
+    "index": 23,
+    "text": "Check the actual gateway, ChirpStack, and sensor configurations. Compare frequencies, channels, data rates, and RX parameters. Do not assume that all AS923 systems use the same defaults."
+  },
+  {
+    "index": 40,
+    "text": "Gateway-01 is a Raspberry Pi 4B. It runs the approved custom ChirpStack Gateway OS Base 4.12.0 / OpenWrt image. It receives LoRaWAN packets and forwards them to the separate cloud network server. Gateway-01 does not host the full ChirpStack network server. Its custom image includes SIM7600/QMI drivers, local Mosquitto, and gateway-evidence services."
+  },
+  {
+    "index": 43,
+    "text": "Prepare the Raspberry Pi 4B and stable power supply. Prepare the RAK5146-115 SPI module and matching Pi HAT. Prepare the matching LoRa antenna and pigtail. Prepare the SIM7600 USB dongle, SIM, and LTE antennas. Prepare the microSD card and management Ethernet cable."
+  },
+  {
+    "index": 44,
+    "text": "Disconnect Raspberry Pi power. Fit the RAK5146 module into the matching HAT socket. Align the HAT with its Raspberry Pi headers and standoffs. Do not insert the PCIe-shaped module into a computer PCIe slot. Attach the LoRa u.FL pigtail to the LoRa RF port, not GNSS. Attach the matching antenna before power-up."
+  },
+  {
+    "index": 46,
+    "text": "Expected result: The board and HAT lie flat. All headers align. No cable is pinched. The LoRa and LTE antennas are secure. If a connector, radio band, or power connection is uncertain, stop before you connect power."
+  },
+  {
+    "index": 54,
+    "text": "The approved build target uses bcm27xx/bcm2709 and includes rpi-2 in its image name. The installed board is still a Raspberry Pi 4B. Check the approved image hash and byte count. Do not reject the correct image because its target name looks unexpected. The public stock image cannot replace this custom SIM7600/evidence image."
+  },
+  {
+    "index": 64,
+    "text": "A normal OpenWrt configuration backup can omit protected keys, buffered packets, and gateway journal state. Preserve these items separately. Do not reset OverlayFS or erase a queue. Do not discard the journal to obtain a clean setup screen."
+  },
+  {
+    "index": 68,
+    "text": "Open Raspberry Pi Imager. In Device, select Raspberry Pi 4. Click Next (Screen 2A). In OS, select Use custom (Figure 2.2). Select the approved Gateway OS .img.gz that passed the earlier hash check. Click Next. Do not select Raspberry Pi 5 or stock Raspberry Pi OS."
+  },
+  {
+    "index": 73,
+    "text": "In Storage, select the removable microSD card. Check its capacity and reader name. Keep Exclude system drives enabled. If you cannot identify the card, disconnect other removable drives. Do not continue until the target card is clear."
+  },
+  {
+    "index": 76,
+    "text": "If Imager offers Raspberry Pi OS customisation, skip it for this custom OpenWrt image. Open Writing / Summary. Check Raspberry Pi 4. Check the exact approved .img.gz filename. Check the actual removable microSD card. Screen 2B shows WRONG values. If any value differs, click Back. When all values match, click Write. On the erase warning, check the SD reader again. Select I understand, erase and write. Wait until writing and verification finish. Do not boot the card if verification fails."
+  },
+  {
+    "index": 83,
+    "text": "Expected result: The Raspberry Pi boots from the approved custom Gateway OS image. Do not use a stock tutorial's management IP after you restore the commissioned configuration."
+  },
+  {
+    "index": 88,
+    "text": "For a commissioned gateway, obtain its protected root credential from the approved workstation vault. Do not try documentation-era empty passwords. For a truly fresh stock image, follow its first-login procedure. Set a root password immediately."
+  },
+  {
+    "index": 91,
+    "text": "Enter the credential at the password prompt. Do not put the password in a command argument. The approved Windows workstation stores the Gateway-01 credential under current-user DPAPI custody. The Word manual does not store the password."
+  },
+  {
+    "index": 92,
+    "text": "Expected result: The OpenWrt administration page or Gateway-01 BusyBox shell appears. If access fails, check the workstation network. Check Raspberry Pi boot and power. Check the cable and management address. Do not change cloud firewall or LTE settings yet."
+  },
+  {
+    "index": 102,
+    "text": "Expected result: The platform reports the correct Gateway OS and usable UTC. OverlayFS is writable and has space. The management address is correct. Route ownership matches the intended design. The LTE controller owns the wwan0 Internet route. A temporary missing route during modem startup does not justify a permanent Ethernet Internet route."
+  },
+  {
+    "index": 108,
+    "text": "In OpenWrt/LuCI, select System → Backup / Flash Firmware → Generate archive. Save the archive off the gateway in protected custody. Preserve the journal, MQTT queue, and certificates separately before a reflash. ChirpStack Gateway OS uses OverlayFS. Check which files the archive contains. A normal configuration archive is not a complete recovery set."
+  },
+  {
+    "index": 113,
+    "text": "The RAK5146-115 SPI is Gateway-01's LoRaWAN receiver. It contains a Semtech SX1303 concentrator. It connects through the Raspberry Pi HAT, not the SIM7600 LTE modem. ChirpStack Concentratord starts and manages the radio. It receives EMU-01/SEC transmissions. MQTT Forwarder and the independent gateway journal consume its events."
+  },
+  {
+    "index": 114,
+    "text": "AS923 is the project's regional radio plan. SPI connects the Raspberry Pi to the concentrator. LoRa connects the gateway antenna to sensors. GNSS/GPS has a separate antenna connector. GNSS/GPS is not the Internet connection. The SIM7600 carries data over LTE after radio reception."
+  },
+  {
+    "index": 117,
+    "text": "Disconnect all Raspberry Pi power. Read the installed radio label. Confirm RAK5146-115 / SPI / 902–928 MHz. Check that the antenna supports the project's 923 MHz frequencies. If the label or antenna band differs, stop. This procedure cannot certify a different module."
+  },
+  {
+    "index": 118,
+    "text": "Check that the radio sits fully in the RAK Pi HAT module socket. The module resembles a mini-PCIe card. It is not a standard computer PCIe card. Never insert it into a computer PCIe slot."
+  },
+  {
+    "index": 119,
+    "text": "Inspect the HAT's 40-pin Raspberry Pi header from both sides. Check that all pins align. No row or column can be offset. The HAT carries the SPI connection. Do not hand-wire the RAK5146 directly to Raspberry Pi pins."
+  },
+  {
+    "index": 120,
+    "text": "Find the LoRa antenna port on the RAK5146 label. Press the correct u.FL pigtail straight down. Do not attach the LoRa antenna to GPS/GNSS. Attach the 900–930 MHz LoRa antenna before you power the radio."
+  },
+  {
+    "index": 121,
+    "text": "Check the screws and standoffs. Check that cables do not bend sharply. Remove loose metal from under the board. Continue with Gateway OS startup in Chapter 2."
+  },
+  {
+    "index": 126,
+    "text": "Prerequisite: Gateway-01 runs the approved custom Gateway OS Base image. The workstation connects to its management network. On a commissioned gateway, inspect settings without changing them. Change settings only during an approved first build or restore."
+  },
+  {
+    "index": 130,
+    "text": "Open the SX1302 / SX1303 tab. Compare every field with the worksheet below. Select RAK - RAK5146 and AS923. Keep SPI selected and USB unchecked. Keep GNSS checked for the commissioned onboard GNSS. Set Antenna gain to 2 dBi only if the installed antenna is the verified 2 dBi installation."
+  },
+  {
+    "index": 131,
+    "text": "Leave Gateway ID override blank on the active SX1302/SX1303 tab. The radio reports its hardware EUI. The inactive SX1301 tab can show old EU868 settings and a sample ID. Ignore those inactive values."
+  },
+  {
+    "index": 132,
+    "text": "If the commissioned settings match, do not change them. For an approved new or rebuilt card, click Save & Apply once. Wait until Concentratord starts. Then refresh the page. Do not click repeatedly during startup."
+  },
+  {
+    "index": 142,
+    "text": "Check that the gateway radio, cloud ChirpStack, and EMU firmware all use plain AS923. Do not select AS923-3, US915, AU915, or EU868 because a vendor tutorial uses them."
+  },
+  {
+    "index": 143,
+    "text": "The vetted ChirpStack 4.19.1 region_as923.toml supplies the listed uplink frequencies and RX values. These values do not show every active concentrator channel. Check the effective channel list on powered hardware. If frequencies or RX settings differ, record all three configurations. Do not change only one layer."
+  },
+  {
+    "index": 145,
+    "text": "Connect Gateway-01. Open Windows PowerShell. Run ssh root@192.168.20.11. Enter the approved root password at the prompt. Run the next commands in Gateway-01's OpenWrt BusyBox shell. Do not paste them into PowerShell. They inspect the radio without a restart."
+  },
+  {
+    "index": 151,
+    "text": "Do not register the inactive SX1301 sample ID in ChirpStack. If a replacement radio reports a different EUI, stop. Plan the gateway identity migration before you change certificates or MQTT topics."
+  },
+  {
+    "index": 153,
+    "text": "Concentratord owns the SPI radio. MQTT Forwarder reads Concentratord events. The independent gateway journal reads those events too. Do not start the legacy Semtech UDP forwarder on the same radio."
+  },
+  {
+    "index": 158,
+    "text": "After a fresh reflash, check the effective MQTT Forwarder QoS. The accepted September 1 factory image used QoS 0. The later approved runtime configuration changed it to QoS 1. Restore that approved configuration. Do not assume the factory image includes later corrections."
+  },
+  {
+    "index": 162,
+    "text": "PASS with live hardware: An EMU-01 uplink on matching AS923 frequencies produces a new gateway event. The payload can contain binary Protobuf. Unreadable payload text alone is not a failure. If the gateway or sensor is off, mark the RF test deferred. Do not mark it PASS or FAIL."
+  }
+]
